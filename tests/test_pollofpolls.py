@@ -3,7 +3,9 @@ from __future__ import annotations
 import unittest
 from datetime import date
 from pathlib import Path
+from unittest.mock import patch
 
+from scripts.pollofpolls.acquire import USER_AGENT, _read_url
 from scripts.pollofpolls.normalize import (
     enrich_with_swedishpolls,
     merge_homepage_polls,
@@ -179,6 +181,63 @@ class ReconstructionAndValidationTests(unittest.TestCase):
         duplicate = [dict(row, poll_id="swp-duplicate") for row in rows[:10]]
         issues = validate_swedishpolls(rows + duplicate)
         self.assertIn("swedishpolls_duplicate_candidates", {issue["code"] for issue in issues})
+
+
+class AcquisitionIdentityTests(unittest.TestCase):
+    """The ingestion identifies this repository, and nothing more."""
+
+    def test_user_agent_names_the_current_repository(self) -> None:
+        self.assertEqual(
+            USER_AGENT,
+            "election-simulator-pollofpolls-ingestion/1.0 "
+            "(+https://github.com/edvinli/election-simulator)",
+        )
+        # The pre-extraction identity must not resurface.
+        self.assertNotIn("edvinli.github.io", USER_AGENT)
+
+    def test_user_agent_is_only_an_identification_header(self) -> None:
+        """Changing the identity must not change what acquisition requests."""
+
+        captured = {}
+
+        class _Response:
+            status = 200
+            headers = {"content-type": "text/csv"}
+
+            def read(self):
+                return b"payload"
+
+            def geturl(self):
+                return "https://example.invalid/polls.csv"
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *exc):
+                return False
+
+        def _fake_urlopen(request, timeout=None):
+            captured["url"] = request.full_url
+            captured["headers"] = dict(request.headers)
+            captured["timeout"] = timeout
+            return _Response()
+
+        with patch("scripts.pollofpolls.acquire.urllib.request.urlopen", _fake_urlopen):
+            payload, meta = _read_url("https://example.invalid/polls.csv", 30.0)
+
+        self.assertEqual(payload, b"payload")
+        self.assertEqual(meta["http_status"], 200)
+        self.assertEqual(meta["http_headers"], {"content-type": "text/csv"})
+        self.assertEqual(captured["url"], "https://example.invalid/polls.csv")
+        self.assertEqual(captured["timeout"], 30.0)
+        # urllib title-cases header names; the identity is carried in exactly
+        # one header and the request is otherwise unchanged.
+        self.assertEqual(captured["headers"]["User-agent"], USER_AGENT)
+        self.assertEqual(
+            set(captured["headers"]), {"User-agent", "Accept", "Accept-encoding"}
+        )
+        self.assertEqual(captured["headers"]["Accept"], "text/csv,text/html;q=0.9,*/*;q=0.1")
+        self.assertEqual(captured["headers"]["Accept-encoding"], "identity")
 
 
 if __name__ == "__main__":

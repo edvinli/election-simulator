@@ -4,13 +4,21 @@ from __future__ import annotations
 
 from pathlib import Path
 import json
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
 from types import SimpleNamespace
 
 from scripts.simulator.engine import simulate_election
-from scripts.simulator.reproducibility import is_git_worktree_clean
+from scripts.simulator.reproducibility import (
+    SOURCE_REPOSITORY,
+    UNRESOLVED_GIT_COMMIT,
+    get_git_commit_hash,
+    is_git_worktree_clean,
+    require_certified_source_provenance,
+    resolve_source_repository,
+)
 from scripts.static_exporter import export_static_data, validate_published_directory
 from scripts.static_exporter.exporter import validate_publication_contract
 
@@ -25,6 +33,16 @@ class StaticExporterTests(unittest.TestCase):
         # contract tests.
         result.manifest["source_worktree_clean"] = True
         return result
+
+    @staticmethod
+    def _version_dir(publication_root: Path) -> Path:
+        """Resolve the immutable version the pointer addresses.
+
+        The canonical contract publishes no flat aliases, so every read goes
+        through current.json exactly as the browser consumer does.
+        """
+        pointer = json.loads((publication_root / "current.json").read_text())
+        return publication_root / pointer["path"]
 
     def test_export_contract_is_complete_and_deterministic_excluding_timestamp(self) -> None:
         result = self._clean_result()
@@ -74,12 +92,13 @@ class StaticExporterTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             output = Path(tmp) / "publication"
             export_static_data(result, output_dir=output, generated_at_utc="2026-08-27T00:00:00+00:00")
-            old_manifest = (output / "manifest.json").read_bytes()
+            version = self._version_dir(output)
+            old_manifest = (version / "manifest.json").read_bytes()
             # A malformed result fails while contracts are built, before any
             # staging directory is swapped into the live output.
             with self.assertRaises((AttributeError, KeyError, ValueError)):
                 export_static_data(object(), output_dir=output, generated_at_utc="2026-08-27T01:00:00+00:00")
-            self.assertEqual((output / "manifest.json").read_bytes(), old_manifest)
+            self.assertEqual((version / "manifest.json").read_bytes(), old_manifest)
 
     def test_change_since_prior_is_explicit_and_uses_median_deltas(self) -> None:
         result = self._clean_result()
@@ -102,7 +121,8 @@ class StaticExporterTests(unittest.TestCase):
                 prior_snapshot=prior,
             )
             self.assertEqual(contracts["deterministic_content_sha256"].__class__, str)
-            forecast = json.loads((Path(tmp) / "publication" / "forecast.json").read_text())
+            version = self._version_dir(Path(tmp) / "publication")
+            forecast = json.loads((version / "forecast.json").read_text())
             self.assertEqual(forecast["change_since_prior"]["status"], "AVAILABLE")
             self.assertEqual(forecast["change_since_prior"]["prior_as_of"], "2026-08-22")
             self.assertEqual(
@@ -110,7 +130,7 @@ class StaticExporterTests(unittest.TestCase):
                 result.summary.parties["M"].seats_median - 1,
             )
             validate_publication_contract({
-                name: json.loads((Path(tmp) / "publication" / name).read_text())
+                name: json.loads((version / name).read_text())
                 for name in ("forecast.json", "parties.json", "seats.json", "groups.json", "calibration.json", "metadata.json")
             })
 
@@ -137,12 +157,20 @@ class StaticExporterTests(unittest.TestCase):
         result = self._clean_result()
         with tempfile.TemporaryDirectory() as tmp:
             output = Path(tmp) / "publication"
-            fixed_uuid = SimpleNamespace(hex="fixed-generation")
-            with patch("scripts.static_exporter.exporter.uuid.uuid4", return_value=fixed_uuid):
-                export_static_data(result, output_dir=output, generated_at_utc="2026-08-27T00:00:00+00:00")
-                old_pointer = (output / "current.json").read_bytes()
-                with self.assertRaisesRegex(FileExistsError, "already exists"):
-                    export_static_data(result, output_dir=output, generated_at_utc="2026-08-27T01:00:00+00:00")
+            export_static_data(
+                result,
+                output_dir=output,
+                generated_at_utc="2026-08-27T00:00:00+00:00",
+                generation_id="fixed-generation",
+            )
+            old_pointer = (output / "current.json").read_bytes()
+            with self.assertRaisesRegex(FileExistsError, "already exists"):
+                export_static_data(
+                    result,
+                    output_dir=output,
+                    generated_at_utc="2026-08-27T01:00:00+00:00",
+                    generation_id="fixed-generation",
+                )
             self.assertEqual((output / "current.json").read_bytes(), old_pointer)
             self.assertEqual(validate_published_directory(output)["publication_generation"], "fixed-generation")
 
@@ -156,6 +184,145 @@ class StaticExporterTests(unittest.TestCase):
             export_static_data(result, output_dir=output)
             self.assertEqual(marker.read_text(encoding="utf-8"), "legacy")
             self.assertEqual(validate_published_directory(output)["publication_state"], "COMPLETE")
+
+    def test_repository_with_no_resolvable_commit_cannot_certify(self) -> None:
+        """An unresolvable commit must never reach a published artifact."""
+
+        result = self._clean_result()
+        result.manifest["source_git_commit"] = UNRESOLVED_GIT_COMMIT
+        result.manifest.pop("git_commit", None)
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / "publication"
+            with self.assertRaisesRegex(ValueError, "resolvable source Git commit"):
+                export_static_data(result, output_dir=output, generated_at_utc="2026-08-27T00:00:00+00:00")
+            self.assertFalse(output.exists())
+
+        # The same gate rejects an empty or missing commit field outright.
+        for missing in ("", None):
+            result.manifest["source_git_commit"] = missing
+            with tempfile.TemporaryDirectory() as tmp:
+                with self.assertRaisesRegex(ValueError, "resolvable source Git commit"):
+                    export_static_data(result, output_dir=Path(tmp) / "publication")
+
+    def test_real_repository_without_commits_cannot_certify(self) -> None:
+        """End-to-end: a freshly initialised repo has no resolvable commit."""
+
+        with tempfile.TemporaryDirectory() as tmp:
+            empty_repo = Path(tmp) / "empty-repo"
+            empty_repo.mkdir()
+            init = subprocess.run(
+                ["git", "init", "--quiet"], cwd=empty_repo, capture_output=True, text=True
+            )
+            if init.returncode != 0:
+                self.skipTest("git is not available")
+
+            commit = get_git_commit_hash(empty_repo)
+            self.assertEqual(commit, UNRESOLVED_GIT_COMMIT)
+            with self.assertRaisesRegex(ValueError, "resolvable source Git commit"):
+                require_certified_source_provenance(
+                    {"source_git_commit": commit, "source_worktree_clean": True}
+                )
+
+            # And the exporter refuses a result carrying that provenance.
+            result = self._clean_result()
+            result.manifest["source_git_commit"] = commit
+            result.manifest.pop("git_commit", None)
+            output = Path(tmp) / "publication"
+            with self.assertRaisesRegex(ValueError, "resolvable source Git commit"):
+                export_static_data(result, output_dir=output)
+            self.assertFalse(output.exists())
+
+    def test_publication_contains_no_symlinks_and_no_flat_aliases(self) -> None:
+        result = self._clean_result()
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / "publication"
+            manifest = export_static_data(result, output_dir=output, generated_at_utc="2026-08-27T00:00:00+00:00")
+            self.assertEqual({path.name for path in output.iterdir()}, {"current.json", "versions"})
+            for path in output.rglob("*"):
+                self.assertFalse(path.is_symlink(), f"{path} must not be a symlink")
+            version = output / "versions" / manifest["publication_generation"]
+            self.assertEqual(len(list(version.iterdir())), 7)
+            # A symlinked contract must be refused even if its target is valid.
+            forecast = version / "forecast.json"
+            replacement = version / "forecast.real.json"
+            forecast.rename(replacement)
+            forecast.symlink_to(replacement.name)
+            with self.assertRaisesRegex(ValueError, "real file, not a symlink"):
+                validate_published_directory(output)
+
+    def test_generation_id_is_sortable_and_web_safe(self) -> None:
+        result = self._clean_result()
+        with tempfile.TemporaryDirectory() as tmp:
+            first = export_static_data(
+                result, output_dir=Path(tmp) / "a", generated_at_utc="2026-08-27T00:00:00+00:00"
+            )
+            second = export_static_data(
+                result, output_dir=Path(tmp) / "b", generated_at_utc="2026-08-27T09:15:30+00:00"
+            )
+        for manifest in (first, second):
+            generation = manifest["publication_generation"]
+            self.assertRegex(generation, r"^[A-Za-z0-9_-]+$")
+            self.assertRegex(generation, r"^\d{8}T\d{6}Z-[0-9a-f]{8}$")
+        self.assertLess(first["publication_generation"], second["publication_generation"])
+        self.assertTrue(first["publication_generation"].startswith("20260827T000000Z-"))
+
+    def test_previous_generation_is_byte_identical_after_a_new_publish(self) -> None:
+        first_result = self._clean_result(seed=12345)
+        second_result = self._clean_result(seed=54321)
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / "publication"
+            first = export_static_data(
+                first_result, output_dir=output, generated_at_utc="2026-08-27T00:00:00+00:00"
+            )
+            first_version = output / "versions" / first["publication_generation"]
+            before = {path.name: path.read_bytes() for path in first_version.iterdir()}
+
+            second = export_static_data(
+                second_result, output_dir=output, generated_at_utc="2026-08-27T01:00:00+00:00"
+            )
+            after = {path.name: path.read_bytes() for path in first_version.iterdir()}
+            self.assertEqual(after, before, "A new publish must never rewrite an older generation")
+            self.assertNotEqual(first["publication_generation"], second["publication_generation"])
+            # Only the pointer moved; both versions remain independently valid.
+            self.assertEqual(
+                validate_published_directory(output)["publication_generation"],
+                second["publication_generation"],
+            )
+            self.assertEqual(
+                validate_published_directory(first_version)["publication_generation"],
+                first["publication_generation"],
+            )
+
+    def test_publication_records_the_owning_source_repository(self) -> None:
+        result = self._clean_result()
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / "publication"
+            manifest = export_static_data(result, output_dir=output, generated_at_utc="2026-08-27T00:00:00+00:00")
+            version = self._version_dir(output)
+            metadata = json.loads((version / "metadata.json").read_text())
+            self.assertEqual(manifest["schema_version"], "1.1")
+            self.assertEqual(metadata["schema_version"], "1.1")
+            self.assertEqual(manifest["source_repository"], SOURCE_REPOSITORY)
+            self.assertEqual(metadata["source_repository"], SOURCE_REPOSITORY)
+
+    def test_historical_schema_1_0_publications_remain_valid(self) -> None:
+        """A pre-extraction 1.0 version validates and means the old repository."""
+
+        legacy = Path(__file__).resolve().parents[1] / "tests" / "fixtures" / "legacy_flat_publication_2026_08_27"
+        contracts = {
+            name: json.loads((legacy / name).read_text())
+            for name in ("forecast.json", "parties.json", "seats.json", "groups.json", "calibration.json", "metadata.json")
+        }
+        self.assertEqual(contracts["metadata.json"]["schema_version"], "1.0")
+        self.assertNotIn("source_repository", contracts["metadata.json"])
+        self.assertEqual(
+            resolve_source_repository(contracts["metadata.json"].get("source_repository")),
+            "edvinli/edvinli.github.io",
+        )
+        # The 1.0 fixture is uncertified and lacks the pointer-era fields, so
+        # it must fail the certified contract while staying readable as 1.0.
+        with self.assertRaises(ValueError):
+            validate_publication_contract(contracts)
 
     def test_generated_static_output_does_not_dirty_source_provenance(self) -> None:
         generated_status = SimpleNamespace(stdout="?? files/election-simulator\n?? files/election-simulator/versions/abc/forecast.json\n?? files/.election-simulator.versions/abc/seats.json\n")

@@ -16,9 +16,12 @@ from urllib.parse import urlparse
 from .config import SOURCES, Source
 
 
+# Polite identification only.  This names the repository that operates the
+# ingestion so a source maintainer can find us; it carries no credentials and
+# affects nothing about what is requested or how a response is handled.
 USER_AGENT = (
-    "edvinli.github.io-pollofpolls-ingestion/1.0 "
-    "(+https://github.com/edvinli/edvinli.github.io)"
+    "election-simulator-pollofpolls-ingestion/1.0 "
+    "(+https://github.com/edvinli/election-simulator)"
 )
 USEFUL_HEADERS = {
     "content-type",

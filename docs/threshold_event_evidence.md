@@ -34,7 +34,7 @@ Nine parliamentary elections were evaluated under strict anti-leakage eligibilit
 
 ## 2. Dataset Dimensions and Quality Breakdown
 
-The canonical dataset [`party_election_threshold_events.csv`](file:///Users/edvinli/Documents/Git/edvinli.github.io/data/processed/threshold_events/party_election_threshold_events.csv) contains **77 party-election episodes** across all 9 target elections.
+The canonical dataset [`party_election_threshold_events.csv`](../data/processed/threshold_events/party_election_threshold_events.csv) contains **77 party-election episodes** across all 9 target elections.
 
 ### Quality Grade Counts
 - **HIGH (40 episodes, 51.9%)**: $\ge 5$ distinct pollsters, $\ge 15$ eligible polls, $\ge 80\%$ sample size coverage, complete dates.
@@ -214,7 +214,7 @@ Across all 58 usable episodes, mean signed polling errors vary systematically by
 ## 8. Robustness Checks
 
 ### A. Window Sensitivity (7-day vs 14-day vs 21-day)
-Results are saved to [`threshold_window_sensitivity.csv`](file:///Users/edvinli/Documents/Git/edvinli.github.io/data/processed/threshold_events/threshold_window_sensitivity.csv).
+Results are saved to [`threshold_window_sensitivity.csv`](../data/processed/threshold_events/threshold_window_sensitivity.csv).
 
 | Metric | 7-day Window | 14-day Window (Canonical) | 21-day Window |
 | :--- | :---: | :---: | :---: |
@@ -259,7 +259,7 @@ Evaluating near-threshold mean residuals ($3.0\% \le x \le 5.0\%$) when excludin
 ## 10. Processed Datasets
 
 All files are located under `data/processed/threshold_events/`:
-- [`party_election_threshold_events.csv`](file:///Users/edvinli/Documents/Git/edvinli.github.io/data/processed/threshold_events/party_election_threshold_events.csv): Canonical episode dataset (77 rows).
-- [`election_consensus_details.csv`](file:///Users/edvinli/Documents/Git/edvinli.github.io/data/processed/threshold_events/election_consensus_details.csv): Pollster-level contributing poll audit records (380 rows).
-- [`threshold_window_sensitivity.csv`](file:///Users/edvinli/Documents/Git/edvinli.github.io/data/processed/threshold_events/threshold_window_sensitivity.csv): 7d, 14d, and 21d sensitivity comparison (187 rows).
-- [`validation_report.json`](file:///Users/edvinli/Documents/Git/edvinli.github.io/data/processed/threshold_events/validation_report.json): Complete machine-readable QA, quadrant diagnostics, and LOO summaries.
+- [`party_election_threshold_events.csv`](../data/processed/threshold_events/party_election_threshold_events.csv): Canonical episode dataset (77 rows).
+- [`election_consensus_details.csv`](../data/processed/threshold_events/election_consensus_details.csv): Pollster-level contributing poll audit records (380 rows).
+- [`threshold_window_sensitivity.csv`](../data/processed/threshold_events/threshold_window_sensitivity.csv): 7d, 14d, and 21d sensitivity comparison (187 rows).
+- [`validation_report.json`](../data/processed/threshold_events/validation_report.json): Complete machine-readable QA, quadrant diagnostics, and LOO summaries.

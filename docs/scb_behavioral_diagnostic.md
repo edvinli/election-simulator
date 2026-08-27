@@ -99,7 +99,7 @@ Sub-sample regressions for individual threshold parties confirm that no single p
 
 ## 5. Party Profile Trajectories: L, KD, MP, C
 
-Historical 29-wave trajectory profiles in [`party_threshold_profiles.csv`](file:///Users/edvinli/Documents/Git/edvinli.github.io/data/processed/scb_behavioral_diagnostic/party_threshold_profiles.csv) reveal why $\alpha \le 0$ empirically:
+Historical 29-wave trajectory profiles in [`party_threshold_profiles.csv`](../data/processed/scb_behavioral_diagnostic/party_threshold_profiles.csv) reveal why $\alpha \le 0$ empirically:
 
 ```mermaid
 flowchart LR
@@ -156,7 +156,7 @@ EVIDENCE SUMMARY:
 ## 8. Processed Data Artifacts
 
 All processed artifacts are located under `data/processed/scb_behavioral_diagnostic/`:
-- [`scb_behavioral_regression_results.csv`](file:///Users/edvinli/Documents/Git/edvinli.github.io/data/processed/scb_behavioral_diagnostic/scb_behavioral_regression_results.csv): Full table of regression coefficients, bootstrap SEs, and 95% CIs across all specifications.
-- [`identification_coverage_gate.csv`](file:///Users/edvinli/Documents/Git/edvinli.github.io/data/processed/scb_behavioral_diagnostic/identification_coverage_gate.csv): Pre-regression wave distribution and identification metrics.
-- [`party_threshold_profiles.csv`](file:///Users/edvinli/Documents/Git/edvinli.github.io/data/processed/scb_behavioral_diagnostic/party_threshold_profiles.csv): 29-wave panel of empirical donor pools, $R$, $A$, and conversion ratios for L, KD, MP, C.
-- [`scb_behavioral_validation_report.json`](file:///Users/edvinli/Documents/Git/edvinli.github.io/data/processed/scb_behavioral_diagnostic/scb_behavioral_validation_report.json): Complete machine-readable QA report and bootstrap distributions.
+- [`scb_behavioral_regression_results.csv`](../data/processed/scb_behavioral_diagnostic/scb_behavioral_regression_results.csv): Full table of regression coefficients, bootstrap SEs, and 95% CIs across all specifications.
+- [`identification_coverage_gate.csv`](../data/processed/scb_behavioral_diagnostic/identification_coverage_gate.csv): Pre-regression wave distribution and identification metrics.
+- [`party_threshold_profiles.csv`](../data/processed/scb_behavioral_diagnostic/party_threshold_profiles.csv): 29-wave panel of empirical donor pools, $R$, $A$, and conversion ratios for L, KD, MP, C.
+- [`scb_behavioral_validation_report.json`](../data/processed/scb_behavioral_diagnostic/scb_behavioral_validation_report.json): Complete machine-readable QA report and bootstrap distributions.

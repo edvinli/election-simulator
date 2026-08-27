@@ -2,6 +2,11 @@
 
 A leakage-safe, empirically validated probabilistic forecasting model for Swedish parliamentary elections.
 
+Repository: [`edvinli/election-simulator`](https://github.com/edvinli/election-simulator).
+Extracted from `edvinli/edvinli.github.io` on 2026-08-27; see
+[`docs/MIGRATION.md`](docs/MIGRATION.md) for provenance of pre-extraction
+artifacts.
+
 ---
 
 ## 🎯 Modeling Philosophy & Architecture
@@ -58,7 +63,10 @@ For a detailed breakdown of our modeling philosophy, comparisons with Poll of Po
 ## 🛠️ Reproduction & Testing
 
 ```bash
-# Run full unit test suite (92 tests)
+# Run the full unit test suite (295 tests) exactly as CI does
+uv run python -m unittest discover -s tests -t .
+
+# Targeted suites
 make test-mandate-allocation
 make test-scb-support-voting
 make test-threshold-events
@@ -70,4 +78,33 @@ make process-scb-support-voting
 make process-threshold-events
 make run-scb-behavioral-diagnostic
 make run-pop-state-diagnostics
+```
+
+Node is required for the publication contract tests. Two layers exist and are
+not interchangeable:
+
+- `tests/test_actual_browser_consumer.py` (**authoritative**) evaluates the
+  deployed `edvinli.github.io/assets/js/election-simulator.js` byte for byte. It
+  needs that checkout and skips without it; override the location with
+  `ELECTION_SIMULATOR_WEBSITE_REPO`.
+- `tests/test_reference_publication_contract.py` (**portable, not
+  authoritative**) runs an independent reimplementation of the same rules so CI
+  has contract coverage with no website checkout.
+
+See [`docs/static_publication.md`](docs/static_publication.md) for why the split
+exists and how the duplication is retired.
+
+## 📤 Publication
+
+The frozen simulator publishes an immutable static contract. See
+[`docs/static_publication.md`](docs/static_publication.md) for the full
+contract, and note that publishing to the website is a separate, explicit
+step that never simulates, commits, or pushes:
+
+```bash
+# 1. Simulate, archive one immutable snapshot, publish one immutable version
+uv run python -m scripts.publication_pipeline --as-of 2026-09-01 --samples 100000
+
+# 2. Mirror that certified generation into the website repository
+uv run python -m scripts.site_publisher --site-repo ../edvinli.github.io
 ```

@@ -23,10 +23,21 @@ import numpy as np
 
 from scripts.simulator.config import MODEL_PARTIES_9, PARLIAMENTARY_PARTIES_8
 from scripts.simulator.pipeline import build_canonical_summary_dict
-from scripts.simulator.reproducibility import compute_file_sha256
+from scripts.simulator.reproducibility import (
+    GENERATION_ID_PATTERN,
+    SOURCE_REPOSITORY,
+    build_generation_id,
+    compute_file_sha256,
+    require_certified_source_provenance,
+    resolve_source_repository,
+)
 
 
-PUBLICATION_SCHEMA_VERSION = "1.0"
+# 1.0 is the pre-extraction publication schema.  1.1 adds ``source_repository``
+# to metadata and manifests.  Validators accept both so historical 1.0
+# publications stay readable and are never rewritten; only 1.1 is written.
+PUBLICATION_SCHEMA_VERSION = "1.1"
+SUPPORTED_PUBLICATION_SCHEMA_VERSIONS: tuple[str, ...] = ("1.0", "1.1")
 PUBLICATION_FILES: tuple[str, ...] = (
     "forecast.json",
     "parties.json",
@@ -307,6 +318,7 @@ def _build_contracts(
         "as_of": summary["as_of"],
         "election_date": summary["election_date"],
         "model": {"name": "ElectionSimulator", "version": manifest.get("model_version"), "candidate": "A"},
+        "source_repository": SOURCE_REPOSITORY,
         "source_git_commit": manifest.get("source_git_commit", manifest.get("git_commit")),
         "source_worktree_clean": manifest.get("source_worktree_clean"),
         "input_hashes": {
@@ -333,7 +345,7 @@ def validate_publication_contract(contracts: Mapping[str, Mapping[str, Any]]) ->
     if set(contracts) != set(PUBLICATION_FILES):
         raise ValueError(f"Publication files must be exactly {list(PUBLICATION_FILES)}")
     for name, value in contracts.items():
-        if value.get("schema_version") != PUBLICATION_SCHEMA_VERSION:
+        if value.get("schema_version") not in SUPPORTED_PUBLICATION_SCHEMA_VERSIONS:
             raise ValueError(f"{name} has unsupported schema version")
     forecast = contracts["forecast.json"]
     parties = contracts["parties.json"]
@@ -355,8 +367,13 @@ def validate_publication_contract(contracts: Mapping[str, Mapping[str, Any]]) ->
     metadata = contracts["metadata.json"]
     if not metadata.get("deterministic_payload_sha256"):
         raise ValueError("metadata.json must link the deterministic simulation payload")
-    if metadata.get("source_worktree_clean") is not True:
-        raise ValueError("Certified publication metadata must record source_worktree_clean=true")
+    # An unresolvable Git commit and a dirty worktree are both hard
+    # certification failures; neither may reach a published artifact.
+    require_certified_source_provenance(metadata)
+    # Missing on historical 1.0 artifacts, where it means the original
+    # repository; required on everything this exporter writes.
+    if metadata.get("schema_version") != "1.0" and metadata.get("source_repository") != SOURCE_REPOSITORY:
+        raise ValueError(f"metadata.json must record source_repository={SOURCE_REPOSITORY!r}")
     payload_hash = metadata["deterministic_payload_sha256"]
     for name, contract in contracts.items():
         if contract.get("deterministic_payload_sha256") != payload_hash:
@@ -386,6 +403,10 @@ def _validate_publication_version(
     contracts: dict[str, dict[str, Any]] = {}
     for filename in PUBLICATION_FILES:
         path = root / filename
+        # Every published version file must be a real file.  A symlink would
+        # not survive static hosting and would break the immutability promise.
+        if path.is_symlink():
+            raise ValueError(f"Published contract must be a real file, not a symlink: {path}")
         if not path.is_file():
             raise ValueError(f"Published contract is missing {path}")
         with path.open(encoding="utf-8") as handle:
@@ -395,12 +416,22 @@ def _validate_publication_version(
         contracts[filename] = value
     validate_publication_contract(contracts)
     manifest_path = root / "manifest.json"
+    if manifest_path.is_symlink():
+        raise ValueError(f"Published manifest must be a real file, not a symlink: {manifest_path}")
     if not manifest_path.is_file():
         raise ValueError(f"Published manifest is missing: {manifest_path}")
     with manifest_path.open(encoding="utf-8") as handle:
         manifest = json.load(handle)
-    if manifest.get("schema_version") != PUBLICATION_SCHEMA_VERSION:
+    if manifest.get("schema_version") not in SUPPORTED_PUBLICATION_SCHEMA_VERSIONS:
         raise ValueError("Published manifest has unsupported schema version")
+    if manifest.get("schema_version") != contracts["metadata.json"].get("schema_version"):
+        raise ValueError("Published manifest and metadata disagree on schema version")
+    # Historical 1.0 artifacts legitimately carry no source_repository and are
+    # read as belonging to the original repository; they are never rewritten.
+    if resolve_source_repository(manifest.get("source_repository")) != resolve_source_repository(
+        contracts["metadata.json"].get("source_repository")
+    ):
+        raise ValueError("Published manifest and metadata disagree on source repository")
     if manifest.get("publication_state") != "COMPLETE":
         raise ValueError("Published manifest is not marked COMPLETE")
     generation = manifest.get("publication_generation")
@@ -434,6 +465,27 @@ def _validate_publication_version(
     return manifest
 
 
+def validate_publication_version(
+    version_dir: Path | str,
+    *,
+    expected_generation: str | None = None,
+    expected_manifest_sha256: str | None = None,
+) -> dict[str, Any]:
+    """Validate one immutable version directory in isolation.
+
+    Public entry point for consumers that address a version directly rather
+    than through ``current.json`` — notably the cross-repository site
+    publisher, which validates the source and the copied destination
+    independently.
+    """
+
+    return _validate_publication_version(
+        Path(version_dir),
+        expected_generation=expected_generation,
+        expected_manifest_sha256=expected_manifest_sha256,
+    )
+
+
 def validate_published_directory(output_dir: Path | str) -> dict[str, Any]:
     """Validate the active immutable version addressed by ``current.json``."""
 
@@ -450,7 +502,7 @@ def validate_published_directory(output_dir: Path | str) -> dict[str, Any]:
         pointer = json.load(handle)
     if not isinstance(pointer, dict):
         raise ValueError("Current publication pointer is not a JSON object")
-    if pointer.get("schema_version") != PUBLICATION_SCHEMA_VERSION:
+    if pointer.get("schema_version") not in SUPPORTED_PUBLICATION_SCHEMA_VERSIONS:
         raise ValueError("Current publication pointer has unsupported schema version")
     if pointer.get("publication_state") != "COMPLETE":
         raise ValueError("Current publication pointer is not marked COMPLETE")
@@ -522,36 +574,19 @@ def _write_pointer(output: Path, *, generation: str, version_path: Path) -> None
         raise
 
 
-def _write_legacy_aliases(output: Path, version_path: Path) -> None:
-    """Refresh legacy top-level names as best-effort aliases.
-
-    The pointer is the authoritative publication contract.  These aliases
-    preserve the old URLs for callers that have not learned ``current.json``;
-    they are deliberately excluded from validation because a crash can leave
-    a legacy alias stale while the canonical pointer remains valid.
-    """
-
-    for filename in (*PUBLICATION_FILES, "manifest.json"):
-        alias = output / filename
-        temporary = output / f".{filename}.{uuid.uuid4().hex}.alias"
-        os.symlink(os.path.relpath(version_path / filename, output), temporary)
-        try:
-            os.replace(temporary, alias)
-        finally:
-            if os.path.lexists(temporary):
-                os.unlink(temporary)
-
-
 def _swap_directory(staging: Path, output: Path, *, generation: str | None = None) -> None:
     """Publish an immutable version by atomically replacing ``current.json``.
 
-    ``output`` is a normal, stable directory so static hosting and existing
-    paths remain compatible.  Each complete staged payload is moved into
+    ``output`` is a normal, stable directory so static hosting works without
+    special configuration.  Each complete staged payload is moved into
     ``output/versions/<generation>``.  The only authoritative switch is the
-    atomic replacement of ``output/current.json``; a crash before that rename
-    leaves the previous pointer and version loadable, while a crash after it
-    exposes only the complete new version.  Legacy top-level JSON names are
-    refreshed afterward as non-authoritative aliases.
+    atomic replacement of ``output/current.json``, which is always written
+    last; a crash before that rename leaves the previous pointer and version
+    loadable, while a crash after it exposes only the complete new version.
+
+    No flat top-level aliases are written.  The pointer plus the immutable
+    version directory is the entire canonical contract; any flat files already
+    present in ``output`` are legacy artifacts and are left untouched.
     """
 
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -562,7 +597,9 @@ def _swap_directory(staging: Path, output: Path, *, generation: str | None = Non
     output.mkdir(parents=True, exist_ok=True)
     versions = output / "versions"
     versions.mkdir(parents=True, exist_ok=True)
-    generation_name = generation or uuid.uuid4().hex
+    if not generation:
+        raise ValueError("An immutable publication version requires a generation id")
+    generation_name = generation
     version_path = versions / generation_name
     # Never overwrite an existing immutable version.  UUID collisions are
     # unlikely in normal operation, but a deterministic test seed, retry, or
@@ -572,14 +609,9 @@ def _swap_directory(staging: Path, output: Path, *, generation: str | None = Non
         raise FileExistsError(f"Immutable publication version already exists: {version_path}")
     os.replace(staging, version_path)
     _fsync_directory(versions)
+    # The version is complete and immutable on disk before the pointer moves.
+    # current.json is always the last write of a publication.
     _write_pointer(output, generation=generation_name, version_path=version_path)
-    try:
-        _write_legacy_aliases(output, version_path)
-    except OSError:
-        # The canonical pointer has already committed a complete version.  A
-        # stale legacy alias is less dangerous than turning a successful
-        # canonical publication into a false failure.
-        pass
 
 
 def export_static_data(
@@ -589,8 +621,15 @@ def export_static_data(
     generated_at_utc: str | None = None,
     calibration_dir: Path | str | None = None,
     prior_snapshot: Mapping[str, Any] | None = None,
+    generation_id: str | None = None,
 ) -> dict[str, Any]:
-    """Validate and atomically export six compact static JSON contracts."""
+    """Validate and atomically publish one immutable version behind a pointer.
+
+    ``generation_id`` is the canonical generation shared with the prospective
+    archive snapshot this publication was built from.  When omitted it is
+    derived from the generation timestamp and the deterministic payload hash,
+    so a publication always has a sortable, content-linked identity.
+    """
     generated = generated_at_utc or datetime.now(timezone.utc).isoformat()
     parsed = datetime.fromisoformat(generated.replace("Z", "+00:00"))
     if parsed.tzinfo is None:
@@ -617,7 +656,14 @@ def export_static_data(
             for filename in PUBLICATION_FILES
         }
         deterministic_manifest_hash = _sha256_bytes(_canonical_bytes(deterministic_file_hashes))
-        generation = uuid.uuid4().hex
+        if generation_id is None:
+            generation = build_generation_id(
+                generated, contracts["metadata.json"]["deterministic_payload_sha256"]
+            )
+        else:
+            generation = str(generation_id)
+            if not GENERATION_ID_PATTERN.fullmatch(generation):
+                raise ValueError(f"Publication generation id is not web-safe: {generation!r}")
         manifest = {
             "schema_version": PUBLICATION_SCHEMA_VERSION,
             "publication_state": "COMPLETE",
@@ -627,6 +673,7 @@ def export_static_data(
             "deterministic_content_hashes": deterministic_file_hashes,
             "deterministic_content_sha256": deterministic_manifest_hash,
             "model_version": contracts["metadata.json"]["model"]["version"],
+            "source_repository": contracts["metadata.json"]["source_repository"],
             "source_git_commit": contracts["metadata.json"]["source_git_commit"],
             "source_worktree_clean": contracts["metadata.json"]["source_worktree_clean"],
             "deterministic_payload_sha256": contracts["metadata.json"]["deterministic_payload_sha256"],

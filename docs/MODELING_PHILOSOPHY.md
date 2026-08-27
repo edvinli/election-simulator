@@ -101,10 +101,10 @@ flowchart LR
 ```
 
 ### Empirical Evidence Summary:
-1. **Election Day Evidence ([`docs/threshold_event_evidence.md`](file:///Users/edvinli/Documents/Git/edvinli.github.io/docs/threshold_event_evidence.md))**:
+1. **Election Day Evidence ([`docs/threshold_event_evidence.md`](threshold_event_evidence.md))**:
    - Across 9 parliamentary elections (1991–2022), there were **zero** instances where a party polling below 4% in the final 14 days crossed above 4% on election day.
    - Near-threshold parties actually *underperformed* their final 14-day polling consensus by $-0.35$ percentage points on average.
-2. **SCB Behavioral Survey Evidence ([`docs/scb_behavioral_diagnostic.md`](file:///Users/edvinli/Documents/Git/edvinli.github.io/docs/scb_behavioral_diagnostic.md))**:
+2. **SCB Behavioral Survey Evidence ([`docs/scb_behavioral_diagnostic.md`](scb_behavioral_diagnostic.md))**:
    - In a two-way fixed effects regression ($R_{jpt} = \beta_{jp} + \gamma_t + \theta A_{jpt} + \delta K_4(s_{pt}) + \alpha [A_{jpt} K_4(s_{pt})] + \epsilon_{jpt}$), second-choice affinity strongly predicts baseline cross-party voting ($\theta = +0.0948$).
    - However, the threshold interaction coefficient is **negative** ($\alpha = -0.0559$, 95% CI $[-0.0851, -0.0267]$) and statistically indistinguishable from a 7.0% placebo kernel ($\alpha_{\text{placebo}} = -0.0541$, paired 95% CI $[-0.0502, +0.0436]$).
    - Voters who prefer other parties do *not* systematically state an elevated intention to vote for small parties specifically when those parties enter the 4% danger zone.
@@ -128,7 +128,7 @@ POOLED OUT-OF-SAMPLE ENERGY SCORES (Lower = Better):
   6. Arm D (50 Nearest States, Raw Direction): ES = 1.86674 | CRPS = 0.45072
 ```
 
-### Key Diagnostic Takeaways ([`docs/pop_state_dependence_evidence.md`](file:///Users/edvinli/Documents/Git/edvinli.github.io/docs/pop_state_dependence_evidence.md)):
+### Key Diagnostic Takeaways ([`docs/pop_state_dependence_evidence.md`](pop_state_dependence_evidence.md)):
 - **Monotonic Sample Advantage**: As sample size expands from $k=25 \to 50 \to 100 \to \text{All History}$, predictive accuracy improves monotonically. Restricting the transition pool artificially compresses distributional tails and impairs probabilistic calibration.
 - **State Similarity Collapses into Recency**: Audit records reveal that **69.61% of top-50 nearest neighbors are in the top-50 most recent transitions**, with a median age of just 32.0 days. Nearest-neighbor conditioning inadvertently introduces recency bias.
 - **Decision**: All-history sampling is not merely conservative—it is the empirically proven optimum for out-of-sample proper scores.

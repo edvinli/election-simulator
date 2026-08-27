@@ -196,9 +196,9 @@ These high coverage rates indicate that the panel preserves sufficient detail fo
 
 All processed files are stored under `data/processed/scb_support_voting/`:
 
-- [`vote_by_sympathy.csv`](file:///Users/edvinli/Documents/Git/edvinli.github.io/data/processed/scb_support_voting/vote_by_sympathy.csv): 3,509 rows (wave × best party × intended vote party).
-- [`second_choice_by_sympathy.csv`](file:///Users/edvinli/Documents/Git/edvinli.github.io/data/processed/scb_support_voting/second_choice_by_sympathy.csv): 3,509 rows (wave × best party × second-best party).
-- [`overall_vote_intention.csv`](file:///Users/edvinli/Documents/Git/edvinli.github.io/data/processed/scb_support_voting/overall_vote_intention.csv): 406 rows (wave × party headline *Val idag*).
-- [`overall_party_sympathy.csv`](file:///Users/edvinli/Documents/Git/edvinli.github.io/data/processed/scb_support_voting/overall_party_sympathy.csv): 290 rows (wave × party overall sympathy for total electorate).
-- [`scb_donor_recipient_panel.csv`](file:///Users/edvinli/Documents/Git/edvinli.github.io/data/processed/scb_support_voting/scb_donor_recipient_panel.csv): 1,856 rows ($8 \times 8 \times 29$ parliamentary donor-recipient panel with separate uncertainty measures).
-- [`validation_report.json`](file:///Users/edvinli/Documents/Git/edvinli.github.io/data/processed/scb_support_voting/validation_report.json): Comprehensive machine-readable report with row sums, reconciliation gaps, coverage metrics, and assertion passes.
+- [`vote_by_sympathy.csv`](../data/processed/scb_support_voting/vote_by_sympathy.csv): 3,509 rows (wave × best party × intended vote party).
+- [`second_choice_by_sympathy.csv`](../data/processed/scb_support_voting/second_choice_by_sympathy.csv): 3,509 rows (wave × best party × second-best party).
+- [`overall_vote_intention.csv`](../data/processed/scb_support_voting/overall_vote_intention.csv): 406 rows (wave × party headline *Val idag*).
+- [`overall_party_sympathy.csv`](../data/processed/scb_support_voting/overall_party_sympathy.csv): 290 rows (wave × party overall sympathy for total electorate).
+- [`scb_donor_recipient_panel.csv`](../data/processed/scb_support_voting/scb_donor_recipient_panel.csv): 1,856 rows ($8 \times 8 \times 29$ parliamentary donor-recipient panel with separate uncertainty measures).
+- [`validation_report.json`](../data/processed/scb_support_voting/validation_report.json): Comprehensive machine-readable report with row sums, reconciliation gaps, coverage metrics, and assertion passes.

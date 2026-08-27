@@ -92,7 +92,7 @@ flowchart LR
 
 ## 4. Threshold Starting State Behavior (Descriptive Analysis)
 
-Empirical transition distributions for parties starting in half-open intervals $[2.0, 3.0), \dots, [5.0, 6.0)$ across all 4,361 daily PoP observations are logged in [`threshold_starting_state_distributions.csv`](file:///Users/edvinli/Documents/Git/edvinli.github.io/data/processed/pop_state_diagnostics/threshold_starting_state_distributions.csv):
+Empirical transition distributions for parties starting in half-open intervals $[2.0, 3.0), \dots, [5.0, 6.0)$ across all 4,361 daily PoP observations are logged in [`threshold_starting_state_distributions.csv`](../data/processed/pop_state_diagnostics/threshold_starting_state_distributions.csv):
 
 | Party | Starting Support Bin | Horizon | $N_{\text{cases}}$ | Median Start Share | Median Signed Change | Mean Absolute Change | Upward Crossing Rate ($s \ge 4.0\%$) | Downward Crossing Rate ($s < 4.0\%$) |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -134,7 +134,7 @@ DECISION:
 ## 6. Processed Data Artifacts
 
 All Step 4A artifacts are stored under `data/processed/pop_state_diagnostics/`:
-- [`state_dependence_predictive_evaluation.csv`](file:///Users/edvinli/Documents/Git/edvinli.github.io/data/processed/pop_state_diagnostics/state_dependence_predictive_evaluation.csv): 3,610 case-by-case paired evaluation records across all 4 arms.
-- [`state_neighbor_diagnostics.csv`](file:///Users/edvinli/Documents/Git/edvinli.github.io/data/processed/pop_state_diagnostics/state_neighbor_diagnostics.csv): 180,500 neighbor audit records logging distance, rank, and age.
-- [`threshold_starting_state_distributions.csv`](file:///Users/edvinli/Documents/Git/edvinli.github.io/data/processed/pop_state_diagnostics/threshold_starting_state_distributions.csv): Empirical crossing rates and moments for half-open bins $[2,3) \dots [5,6)$.
-- [`state_diagnostics_validation_report.json`](file:///Users/edvinli/Documents/Git/edvinli.github.io/data/processed/pop_state_diagnostics/state_diagnostics_validation_report.json): Complete machine-readable QA report and bootstrap distributions.
+- [`state_dependence_predictive_evaluation.csv`](../data/processed/pop_state_diagnostics/state_dependence_predictive_evaluation.csv): 3,610 case-by-case paired evaluation records across all 4 arms.
+- [`state_neighbor_diagnostics.csv`](../data/processed/pop_state_diagnostics/state_neighbor_diagnostics.csv): 180,500 neighbor audit records logging distance, rank, and age.
+- [`threshold_starting_state_distributions.csv`](../data/processed/pop_state_diagnostics/threshold_starting_state_distributions.csv): Empirical crossing rates and moments for half-open bins $[2,3) \dots [5,6)$.
+- [`state_diagnostics_validation_report.json`](../data/processed/pop_state_diagnostics/state_diagnostics_validation_report.json): Complete machine-readable QA report and bootstrap distributions.

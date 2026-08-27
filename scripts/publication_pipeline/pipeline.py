@@ -265,7 +265,16 @@ def _load_prior_snapshot(archive_dir: Path | str, current_as_of: str) -> dict[st
     prior = [entry for entry in entries if str(entry.get("snapshot_date", "")) < str(current_as_of)]
     if not prior:
         return None
-    prior_entry = max(prior, key=lambda entry: str(entry["snapshot_date"]))
+    # Several snapshots may share a calendar day.  Break ties on the sortable
+    # generation id, falling back to the generation timestamp for pre-1.1
+    # entries, so the selected prior is deterministic rather than incidental.
+    prior_entry = max(
+        prior,
+        key=lambda entry: (
+            str(entry["snapshot_date"]),
+            str(entry.get("generation_id") or entry.get("generated_at_utc") or ""),
+        ),
+    )
     relative = prior_entry.get("path")
     if not relative:
         raise PipelineInputError("Archive index prior entry has no snapshot path")
@@ -350,6 +359,10 @@ def run_publication_pipeline(
             run.stages.append({"name": "source_certification", "status": "PASS"})
 
         prior_snapshot = _load_prior_snapshot(archive_dir, result.summary.as_of)
+        # One canonical generation id links the archive snapshot to the
+        # published version directory.  An export without an archive append
+        # derives its own id from the same timestamp and payload.
+        generation_id: str | None = None
 
         if append_archive:
             with tempfile.TemporaryDirectory(prefix="election-simulator-canonical-") as temp_name:
@@ -361,10 +374,12 @@ def run_publication_pipeline(
                     canonical_artifact_path=canonical,
                     canonical_payload_hash_path=sidecar,
                 )
+            generation_id = snapshot["generation_id"]
             run.snapshot = {
                 "snapshot_path": str(snapshot_path),
                 "index_path": str(index_path),
                 "snapshot_id": snapshot["snapshot_id"],
+                "generation_id": generation_id,
                 "deterministic_payload_sha256": snapshot["deterministic_payload_sha256"],
                 "prior_snapshot_id": prior_snapshot.get("snapshot_id") if prior_snapshot else None,
             }
@@ -379,6 +394,7 @@ def run_publication_pipeline(
                 generated_at_utc=generated,
                 calibration_dir=Path(processed_root),
                 prior_snapshot=prior_snapshot,
+                generation_id=generation_id,
             )
             run.publication_manifest = manifest
             run.stages.append({"name": "static_publication", "status": "PASS", "detail": manifest})

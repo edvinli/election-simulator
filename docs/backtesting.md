@@ -97,7 +97,7 @@ The framework outputs two primary files to `data/processed/backtests/`:
 
 ## 7. Model Extension Interface
 
-New forecasting models plug into the framework by implementing the `ForecastModel` protocol in [`scripts/pollofpolls/backtest_models.py`](file:///Users/edvinli/Documents/Git/edvinli.github.io/scripts/pollofpolls/backtest_models.py):
+New forecasting models plug into the framework by implementing the `ForecastModel` protocol in [`scripts/pollofpolls/backtest_models.py`](../scripts/pollofpolls/backtest_models.py):
 
 ```python
 class MyOpinionDynamicsModel:

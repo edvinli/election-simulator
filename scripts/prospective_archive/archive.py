@@ -30,10 +30,20 @@ from scripts.simulator.config import (
 )
 from scripts.simulator.engine import SimulationResult, simulate_election
 from scripts.simulator.pipeline import build_canonical_summary_dict
-from scripts.simulator.reproducibility import compute_file_sha256, compute_dict_sha256
+from scripts.simulator.reproducibility import (
+    build_generation_id,
+    compute_file_sha256,
+    compute_dict_sha256,
+    require_resolvable_source_commit,
+)
 
 
-ARCHIVE_SCHEMA_VERSION = "1.0"
+# 1.0 snapshots are keyed one-per-calendar-day at ``<snapshot_date>/``.  1.1
+# snapshots carry a sortable ``generation_id`` and live at
+# ``<generation_id>/``, which allows several immutable forecasts per day.
+# Both are readable; only 1.1 is written.
+ARCHIVE_SCHEMA_VERSION = "1.1"
+SUPPORTED_ARCHIVE_SCHEMA_VERSIONS: tuple[str, ...] = ("1.0", "1.1")
 DEFAULT_ARCHIVE_DIR = Path(__file__).resolve().parents[2] / "data" / "processed" / "prospective_forecasts"
 DEFAULT_CANONICAL_FORECAST = DEFAULT_SIMULATIONS_DIR / "simulation_summary_N100000_seed12345.json"
 DEFAULT_CANONICAL_HASH = DEFAULT_SIMULATIONS_DIR / "deterministic_payload.sha256"
@@ -198,11 +208,18 @@ def build_snapshot(
     if sidecar_value != payload_hash:
         raise ValueError("Simulation payload does not match canonical deterministic payload sidecar")
 
+    # Writing an unresolvable commit sentinel into an immutable archive entry
+    # would permanently destroy the artifact's traceability, so fail closed.
+    require_resolvable_source_commit(manifest)
+
     vote_dists, seat_dists = _party_distribution_payload(result)
     identity = _archive_identity(manifest, payload_hash)
     snapshot = {
         "schema_version": ARCHIVE_SCHEMA_VERSION,
         "snapshot_id": identity,
+        # One canonical generation id, shared verbatim with the static
+        # publication version directory built from this snapshot.
+        "generation_id": build_generation_id(generated, identity),
         "snapshot_date": str(manifest["as_of"]),
         "generated_at_utc": generated,
         "as_of": str(manifest["as_of"]),
@@ -261,7 +278,7 @@ def _load_index(path: Path) -> dict[str, Any]:
     if not path.exists():
         return {"schema_version": ARCHIVE_SCHEMA_VERSION, "archive": "ElectionSimulator prospective forecasts", "snapshots": []}
     index = _read_json(path)
-    if index.get("schema_version") != ARCHIVE_SCHEMA_VERSION:
+    if index.get("schema_version") not in SUPPORTED_ARCHIVE_SCHEMA_VERSIONS:
         raise ValueError(f"Unsupported archive index schema: {index.get('schema_version')}")
     if not isinstance(index.get("snapshots"), list):
         raise ValueError("Archive index snapshots must be a list")
@@ -269,24 +286,43 @@ def _load_index(path: Path) -> dict[str, Any]:
 
 
 def _validate_index(index: Mapping[str, Any]) -> None:
+    """Validate append-only index integrity.
+
+    Snapshot identity, deterministic payload, generation id, and stored path
+    must each be unique.  ``snapshot_date`` is deliberately *not* unique: the
+    archive supports several immutable forecasts on the same calendar day.
+    """
+
     seen_id: set[str] = set()
     seen_hash: set[str] = set()
-    seen_date: set[str] = set()
+    seen_generation: set[str] = set()
+    seen_path: set[str] = set()
     for row in index.get("snapshots", []):
         if not isinstance(row, Mapping):
             raise ValueError("Archive index entries must be objects")
         identity = str(row.get("snapshot_id", ""))
         payload_hash = str(row.get("deterministic_payload_sha256", ""))
         snapshot_date = str(row.get("snapshot_date", ""))
+        stored_path = str(row.get("path", ""))
         if not identity or identity in seen_id:
             raise ValueError("Archive index contains duplicate or missing snapshot identity")
         if not payload_hash or payload_hash in seen_hash:
             raise ValueError("Archive index contains duplicate or missing payload hash")
-        if not snapshot_date or snapshot_date in seen_date:
-            raise ValueError("Archive index contains duplicate or missing snapshot date")
+        if not snapshot_date:
+            raise ValueError("Archive index contains a missing snapshot date")
+        if not stored_path or stored_path in seen_path:
+            raise ValueError("Archive index contains duplicate or missing snapshot path")
+        # Pre-extraction 1.0 entries carry no generation id.  They remain
+        # valid and are never rewritten; only new entries are constrained.
+        generation = row.get("generation_id")
+        if generation is not None:
+            generation = str(generation)
+            if not generation or generation in seen_generation:
+                raise ValueError("Archive index contains duplicate or missing generation id")
+            seen_generation.add(generation)
         seen_id.add(identity)
         seen_hash.add(payload_hash)
-        seen_date.add(snapshot_date)
+        seen_path.add(stored_path)
 
 
 def write_snapshot(
@@ -310,18 +346,23 @@ def write_snapshot(
     _validate_index(index)
     existing_ids = {row["snapshot_id"] for row in index["snapshots"]}
     existing_hashes = {row["deterministic_payload_sha256"] for row in index["snapshots"]}
-    existing_dates = {row["snapshot_date"] for row in index["snapshots"]}
+    existing_generations = {
+        row["generation_id"] for row in index["snapshots"] if row.get("generation_id")
+    }
     if snapshot["snapshot_id"] in existing_ids:
         raise SnapshotCollisionError("A forecast with this information-set identity is already archived")
     if snapshot["deterministic_payload_sha256"] in existing_hashes:
         raise SnapshotCollisionError("A forecast with this deterministic payload is already archived")
-    if snapshot["snapshot_date"] in existing_dates:
-        raise SnapshotCollisionError("A prospective snapshot already exists for this as-of date")
+    if snapshot["generation_id"] in existing_generations:
+        raise SnapshotCollisionError("A forecast with this generation id is already archived")
+    # Several immutable forecasts may share a calendar day; the sortable
+    # generation id, not the as-of date, is what must stay unique.
 
-    snapshot_path = root / str(snapshot["snapshot_date"]) / "snapshot.json"
+    snapshot_path = root / str(snapshot["generation_id"]) / "snapshot.json"
     _atomic_write_json(snapshot_path, snapshot)
     index_entry = {
         "snapshot_id": snapshot["snapshot_id"],
+        "generation_id": snapshot["generation_id"],
         "snapshot_date": snapshot["snapshot_date"],
         "as_of": snapshot["as_of"],
         "election_date": snapshot["election_date"],
@@ -335,6 +376,10 @@ def write_snapshot(
         "path": str(snapshot_path.relative_to(root)),
     }
     index["snapshots"].append(index_entry)
+    # The index header declares the newest schema it contains.  Every existing
+    # entry is carried over byte-for-byte; only the header and the appended
+    # entry are new.
+    index["schema_version"] = ARCHIVE_SCHEMA_VERSION
     index["updated_at_utc"] = datetime.now(timezone.utc).isoformat()
     _validate_index(index)
     try:
@@ -372,7 +417,13 @@ def main(argv: list[str] | None = None) -> int:
         canonical_artifact_path=args.canonical_artifact,
         canonical_payload_hash_path=args.canonical_payload_hash,
     )
-    print(json.dumps({"snapshot": str(snapshot_path), "index": str(index_path), "snapshot_id": snapshot["snapshot_id"], "payload_sha256": snapshot["deterministic_payload_sha256"]}, indent=2))
+    print(json.dumps({
+        "snapshot": str(snapshot_path),
+        "index": str(index_path),
+        "snapshot_id": snapshot["snapshot_id"],
+        "generation_id": snapshot["generation_id"],
+        "payload_sha256": snapshot["deterministic_payload_sha256"],
+    }, indent=2))
     return 0
 
 

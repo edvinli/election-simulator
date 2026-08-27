@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0",
+  "generated_at_utc": "2026-08-27T16:00:00+00:00",
+  "publication_files": {
+    "forecast.json": "16223f73e7a3044477d74e4d61a3879bc933509993930a8d549ec657d6af3dc9",
+    "parties.json": "ebfd6debd3c488d8af3838947c95369a285829319284b5b9807594ac920a1313",
+    "seats.json": "315c4c865dfb0f6fbbd4f373320122805f2e8fd89f9fa40293ab98e6b481ae66",
+    "groups.json": "62c7a100976108bc6aa86ff112ff9eed96acdc5ae0ed414cf175ba7a60991706",
+    "calibration.json": "5ffc22b34148dfe3f19ed9327413ae8630edc0c5bae87b90d5977cc749f2ae66",
+    "metadata.json": "62e941d0ad67529927eee5d023a6447c26e9f6b649361786f3120a82294e3d30"
+  },
+  "deterministic_content_hashes": {
+    "forecast.json": "bcabd405bc2613cd1bec14efe27b7f2884549e4bd3bc60c3c97dfda06d2385cb",
+    "parties.json": "c3cf3e3cf53000ece2c7c4e360dccb9c212d6b27b1774c203cd4205ef4b1940c",
+    "seats.json": "648f52759db43947c3073e3efc117b126d8d21954a5e801eea6c82886df98365",
+    "groups.json": "949444a87080e6abdbdad14366f58364de0e9d54fb3cf79dbc9ab661d105f5ea",
+    "calibration.json": "d9aed1fab615ee2f2346152ba6596e93768b149a9fcdc85039764401061d849e",
+    "metadata.json": "8c1ea229bf044b1bee4e7eb9fde6b3d925fd34b3b4d005cbe1617a3b2236e363"
+  },
+  "deterministic_content_sha256": "c13df58bb82cc97ab1914584a9df7f5a348232950eb551982711bf1800039190",
+  "model_version": "1.0.0-rc1",
+  "source_git_commit": "fca740326a55e73e968ba2d70f64bd90a62a4cbf",
+  "source_worktree_clean": false,
+  "deterministic_payload_sha256": "967795912c05a00e364d62c84430f664290fc8f390a370369482e8c38a625473"
+}

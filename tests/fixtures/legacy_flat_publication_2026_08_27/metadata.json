@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "generated_at_utc": "2026-08-27T16:00:00+00:00",
+  "as_of": "2026-08-27",
+  "election_date": "2026-09-13",
+  "model": {
+    "name": "ElectionSimulator",
+    "version": "1.0.0-rc1",
+    "candidate": "A"
+  },
+  "source_git_commit": "fca740326a55e73e968ba2d70f64bd90a62a4cbf",
+  "source_worktree_clean": false,
+  "input_hashes": {
+    "poll_data_hash": "9c75c96d80fe4f02ccafbd7b5a2063aadabc19e08bed5839b574b28d8af0bf53",
+    "election_data_hash": "3a99ffb1b0fbef60d61712764a2136982ecf01c4879a43edc6d9a38ddb4ba0fc",
+    "mandate_data_hash": "444c457061abc8c9516f7aad6f35d6e85bb4d720f8244fb029d9b1438d3bd11e",
+    "geography_data_hash": "cb296ab2b1780425a1611649cf8ead030020bb1a7dce9b4ea7e4b136425b1743",
+    "model_config_hash": "ce4ad4b1125a5d5a4b0a9acd1416a0af8364ee88ad335fb87f299d127fc3c64d"
+  },
+  "deterministic_payload_sha256": "967795912c05a00e364d62c84430f664290fc8f390a370369482e8c38a625473",
+  "rest_semantics": "REST is aggregate vote mass for modeled-as-ineligible parties; it cannot independently qualify or receive seats.",
+  "interval_semantics": "Central empirical predictive intervals at 50%, 80%, and 90%; they are not confidence intervals.",
+  "validation_note": "Historical validation is retrospective and not independent holdout validation."
+}
