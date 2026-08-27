@@ -1,12 +1,12 @@
 {
   "individual_earliest_interview_start": "2009-01-02",
-  "individual_latest_interview_end": "2026-08-23",
-  "individual_long_rows": 14370,
-  "individual_polls": 1437,
-  "metadata_enriched_polls": 1183,
+  "individual_latest_interview_end": "2026-08-24",
+  "individual_long_rows": 14380,
+  "individual_polls": 1438,
+  "metadata_enriched_polls": 1184,
   "metadata_match_status_counts": {
     "ambiguous_span_match": 2,
-    "exact_span_match": 1165,
+    "exact_span_match": 1166,
     "exact_span_match_approximate_supplementary_period": 18,
     "no_match": 252
   },
@@ -44,10 +44,10 @@
   ],
   "supplementary_earliest_interview_start": "1973-01-29",
   "supplementary_earliest_publication": "1980-11-30",
-  "supplementary_individual_polls": 2638,
-  "supplementary_latest_interview_end": "2026-08-23",
-  "supplementary_latest_publication": "2026-08-26",
-  "supplementary_long_rows": 26380,
+  "supplementary_individual_polls": 2640,
+  "supplementary_latest_interview_end": "2026-08-26",
+  "supplementary_latest_publication": "2026-08-27",
+  "supplementary_long_rows": 26400,
   "supplementary_original_pollsters": [
     "Demoskop",
     "Demoskop valdag",
@@ -91,9 +91,9 @@
     "SD",
     "V"
   ],
-  "supplementary_polls_with_interview_span": 2297,
-  "supplementary_polls_with_publication_date": 2289,
-  "supplementary_polls_with_sample_size": 2481,
+  "supplementary_polls_with_interview_span": 2299,
+  "supplementary_polls_with_publication_date": 2291,
+  "supplementary_polls_with_sample_size": 2483,
   "supplementary_polls_with_source_references": 461,
   "supplementary_pollsters": [
     "Demoskop",
@@ -112,6 +112,6 @@
     "YouGov"
   ],
   "timeseries_earliest": "2014-09-15",
-  "timeseries_latest": "2026-08-23",
-  "timeseries_observations": 4361
+  "timeseries_latest": "2026-08-24",
+  "timeseries_observations": 4362
 }
