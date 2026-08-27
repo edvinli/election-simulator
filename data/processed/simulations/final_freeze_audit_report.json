@@ -1,0 +1,472 @@
+{
+  "audit_version": "1.2-evidence-integrity",
+  "release_candidate": {
+    "model_version": "1.0.0-rc1",
+    "release_tag": "election-simulator-v1.0-rc1",
+    "candidate": "A"
+  },
+  "scaling_audit": {
+    "h21_scale_active": false,
+    "h150_scale_active": true,
+    "h21_array_sha256": "dde4c9ef4de2b8b23e980927309107170a3f4bc6b613c218deaa3bd183ca628c",
+    "explanation": "At h=21, the old condition (21 > min(21, 112)) evaluated to False, so scale_factor=1.0 was used and draws were mathematically identical. For h > 112, the old code scaled deltas by sqrt(h/112), altering dynamics."
+  },
+  "official_valmyndigheten_fixture": {
+    "status": "LIMITED_OFFICIAL_FIXTURE_NOT_EXECUTED",
+    "fixture_id": "valmyndigheten_manual_example_5_valkoping",
+    "source": {
+      "authority": "Valmyndigheten",
+      "title": "Manual f\u00f6r mandatf\u00f6rdelning \u2013 regler och r\u00e4kneexempel f\u00f6r val till riksdagen, Europaparlamentet, region- och kommunfullm\u00e4ktige",
+      "url": "https://www.val.se/download/18.162047b519a91d05331183a9/1761747515752/manual-mandatfordelning-val-v785-05.pdf",
+      "pdf_sha256": "e3a7661a58bf97abc4c0386a1cb93a5d170e9027f3dabd819d5931dfafa7e34f",
+      "example": "Exempel 5: Komplett mandatf\u00f6rdelning i valkretsindelad kommun",
+      "pages": [
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "retrieved": "2026-08-27",
+      "transcription_note": "Values are transcribed from the published example without conversion to the 29-constituency Riksdag schema."
+    },
+    "jurisdiction": "Valk\u00f6pings kommun",
+    "constituency_count": 3,
+    "total_seats": 75,
+    "expected_phase_order": [
+      "fixed",
+      "national_entitlement",
+      "excess_retracted",
+      "returned_reallocated",
+      "adjustment"
+    ],
+    "expected_events": [
+      {
+        "sequence": 1,
+        "phase": "excess_retracted",
+        "party": "KD",
+        "constituency": "Valk\u00f6ping V",
+        "comparison_number": {
+          "numerator": 950,
+          "denominator": 3
+        },
+        "action": "retracted",
+        "reason": "KD has the lowest fixed-seat comparison number in Valk\u00f6ping V."
+      },
+      {
+        "sequence": 2,
+        "phase": "returned_reallocated",
+        "party": "L",
+        "constituency": "Valk\u00f6ping V",
+        "comparison_number": {
+          "numerator": 934,
+          "denominator": 3
+        },
+        "action": "reassigned",
+        "reason": "L has the highest next comparison number among parties below total proportionality in Valk\u00f6ping V."
+      }
+    ],
+    "expected_final_seats": {
+      "M": {
+        "Valk\u00f6ping V": 5,
+        "Valk\u00f6ping C": 8,
+        "Valk\u00f6ping \u00d6": 7
+      },
+      "C": {
+        "Valk\u00f6ping V": 1,
+        "Valk\u00f6ping C": 1,
+        "Valk\u00f6ping \u00d6": 2
+      },
+      "L": {
+        "Valk\u00f6ping V": 2,
+        "Valk\u00f6ping C": 2,
+        "Valk\u00f6ping \u00d6": 2
+      },
+      "KD": {
+        "Valk\u00f6ping V": 0,
+        "Valk\u00f6ping C": 1,
+        "Valk\u00f6ping \u00d6": 1
+      },
+      "S": {
+        "Valk\u00f6ping V": 10,
+        "Valk\u00f6ping C": 8,
+        "Valk\u00f6ping \u00d6": 10
+      },
+      "V": {
+        "Valk\u00f6ping V": 1,
+        "Valk\u00f6ping C": 1,
+        "Valk\u00f6ping \u00d6": 1
+      },
+      "MP": {
+        "Valk\u00f6ping V": 1,
+        "Valk\u00f6ping C": 2,
+        "Valk\u00f6ping \u00d6": 1
+      },
+      "SD": {
+        "Valk\u00f6ping V": 3,
+        "Valk\u00f6ping C": 2,
+        "Valk\u00f6ping \u00d6": 3
+      }
+    },
+    "limitation": "The official Example 5 fixture has 3 constituencies and 75 total seats; the production allocator accepts only the 29-constituency, 349-seat Riksdag schema. It is archived and field-checked but not executed through the Riksdag allocator."
+  },
+  "synthetic_return_regression": {
+    "status": "PASS_SYNTHETIC_REGRESSION",
+    "total_seats": 349,
+    "retracted_events": 15,
+    "reallocated_events": 15,
+    "is_349": true
+  },
+  "threshold_quantization_and_local_12": {
+    "total_draws": 100000,
+    "national_4pct_mismatches": 0,
+    "national_4pct_mismatch_examples": [],
+    "national_4pct_minimum_continuous_distance_pp": 0.0023023730151408572,
+    "national_4pct_minimum_integer_margin_votes": 3750,
+    "local_12pct_sub4_events_total": 0,
+    "local_12pct_sub4_probabilities": {
+      "M": 0.0,
+      "L": 0.0,
+      "C": 0.0,
+      "KD": 0.0,
+      "S": 0.0,
+      "V": 0.0,
+      "MP": 0.0,
+      "SD": 0.0
+    },
+    "local_12pct_quantization": {
+      "total_samples": 100000,
+      "total_party_constituency_pairs_checked": 23200000,
+      "relevant_party_constituency_pairs": 2900145,
+      "pre_ipf_local_12_events": 0,
+      "post_integer_local_12_events": 0,
+      "pre_post_local_12_mismatches": 0,
+      "mismatch_examples": [],
+      "minimum_national_4pct_continuous_distance_pp": 0.0023023730151408572,
+      "minimum_national_4pct_integer_margin_votes": 3750,
+      "minimum_local_12pct_pre_distance_pp": 4.883148567069209,
+      "minimum_local_12pct_post_margin_votes": 91925
+    }
+  },
+  "benchmark": {
+    "n_samples": 100000,
+    "cold_subprocess_runtime_sec": 223.4,
+    "cold_subprocess_rate_sims_per_sec": 447.6,
+    "warm_measurement_label": "in_process_warm",
+    "warm_runtime_sec": 224.2,
+    "warm_rate_sims_per_sec": 446.0,
+    "peak_memory_mb": 291.94,
+    "deterministic_payload_sha256": "33e818990cf10994f652ad2d9ea32f1ff762cbd1ed4669e28197a1c8dc892ffd"
+  },
+  "canonical_forecast_headlines": {
+    "source_artifact": "data/processed/simulations/simulation_summary_N100000_seed12345.json",
+    "artifact": {
+      "parties": {
+        "M": {
+          "party": "M",
+          "vote_share_mean": 18.163,
+          "vote_share_median": 18.598,
+          "vote_share_p05": 14.51,
+          "vote_share_p95": 20.23,
+          "prob_above_4pct": 1.0,
+          "prob_below_4pct": 0.0,
+          "prob_largest_vote_party": 0.0,
+          "seats_mean": 66.02,
+          "seats_median": 68,
+          "seats_p05": 53,
+          "seats_p95": 73,
+          "prob_largest_seat_party": 0.0,
+          "prob_any_seats": 1.0,
+          "prob_local_12pct_exception_sub_4pct": 0.0
+        },
+        "L": {
+          "party": "L",
+          "vote_share_mean": 2.006,
+          "vote_share_median": 1.96,
+          "vote_share_p05": 1.058,
+          "vote_share_p95": 3.29,
+          "prob_above_4pct": 0.0001,
+          "prob_below_4pct": 1.0,
+          "prob_largest_vote_party": 0.0,
+          "seats_mean": 0.0,
+          "seats_median": 0,
+          "seats_p05": 0,
+          "seats_p95": 0,
+          "prob_largest_seat_party": 0.0,
+          "prob_any_seats": 0.0001,
+          "prob_local_12pct_exception_sub_4pct": 0.0
+        },
+        "C": {
+          "party": "C",
+          "vote_share_mean": 6.901,
+          "vote_share_median": 6.845,
+          "vote_share_p05": 5.756,
+          "vote_share_p95": 8.123,
+          "prob_above_4pct": 1.0,
+          "prob_below_4pct": 0.0,
+          "prob_largest_vote_party": 0.0,
+          "seats_mean": 25.1,
+          "seats_median": 25,
+          "seats_p05": 21,
+          "seats_p95": 30,
+          "prob_largest_seat_party": 0.0,
+          "prob_any_seats": 1.0,
+          "prob_local_12pct_exception_sub_4pct": 0.0
+        },
+        "KD": {
+          "party": "KD",
+          "vote_share_mean": 6.404,
+          "vote_share_median": 6.385,
+          "vote_share_p05": 5.344,
+          "vote_share_p95": 7.534,
+          "prob_above_4pct": 0.9999,
+          "prob_below_4pct": 0.0001,
+          "prob_largest_vote_party": 0.0,
+          "seats_mean": 23.28,
+          "seats_median": 23,
+          "seats_p05": 20,
+          "seats_p95": 27,
+          "prob_largest_seat_party": 0.0,
+          "prob_any_seats": 0.9999,
+          "prob_local_12pct_exception_sub_4pct": 0.0
+        },
+        "S": {
+          "party": "S",
+          "vote_share_mean": 30.336,
+          "vote_share_median": 30.156,
+          "vote_share_p05": 28.495,
+          "vote_share_p95": 32.524,
+          "prob_above_4pct": 1.0,
+          "prob_below_4pct": 0.0,
+          "prob_largest_vote_party": 1.0,
+          "seats_mean": 110.32,
+          "seats_median": 110,
+          "seats_p05": 104,
+          "seats_p95": 119,
+          "prob_largest_seat_party": 1.0,
+          "prob_any_seats": 1.0,
+          "prob_local_12pct_exception_sub_4pct": 0.0
+        },
+        "V": {
+          "party": "V",
+          "vote_share_mean": 7.596,
+          "vote_share_median": 7.625,
+          "vote_share_p05": 6.407,
+          "vote_share_p95": 8.749,
+          "prob_above_4pct": 1.0,
+          "prob_below_4pct": 0.0,
+          "prob_largest_vote_party": 0.0,
+          "seats_mean": 27.63,
+          "seats_median": 28,
+          "seats_p05": 23,
+          "seats_p95": 32,
+          "prob_largest_seat_party": 0.0,
+          "prob_any_seats": 1.0,
+          "prob_local_12pct_exception_sub_4pct": 0.0
+        },
+        "MP": {
+          "party": "MP",
+          "vote_share_mean": 7.506,
+          "vote_share_median": 7.557,
+          "vote_share_p05": 5.991,
+          "vote_share_p95": 8.868,
+          "prob_above_4pct": 1.0,
+          "prob_below_4pct": 0.0,
+          "prob_largest_vote_party": 0.0,
+          "seats_mean": 27.3,
+          "seats_median": 27,
+          "seats_p05": 22,
+          "seats_p95": 32,
+          "prob_largest_seat_party": 0.0,
+          "prob_any_seats": 1.0,
+          "prob_local_12pct_exception_sub_4pct": 0.0
+        },
+        "SD": {
+          "party": "SD",
+          "vote_share_mean": 19.074,
+          "vote_share_median": 18.98,
+          "vote_share_p05": 16.848,
+          "vote_share_p95": 21.659,
+          "prob_above_4pct": 1.0,
+          "prob_below_4pct": 0.0,
+          "prob_largest_vote_party": 0.0,
+          "seats_mean": 69.36,
+          "seats_median": 69,
+          "seats_p05": 61,
+          "seats_p95": 78,
+          "prob_largest_seat_party": 0.0,
+          "prob_any_seats": 1.0,
+          "prob_local_12pct_exception_sub_4pct": 0.0
+        },
+        "REST": {
+          "party": "REST",
+          "vote_share_mean": 2.014,
+          "vote_share_median": 1.986,
+          "vote_share_p05": 0.489,
+          "vote_share_p95": 3.588,
+          "prob_above_4pct": 0.024,
+          "prob_below_4pct": 0.976,
+          "prob_largest_vote_party": 0.0,
+          "seats_mean": 0.0,
+          "seats_median": 0,
+          "seats_p05": 0,
+          "seats_p95": 0,
+          "prob_largest_seat_party": 0.0,
+          "prob_any_seats": 0.0,
+          "prob_local_12pct_exception_sub_4pct": 0.0
+        }
+      },
+      "blocs": {
+        "tido": {
+          "parties": [
+            "M",
+            "SD",
+            "KD",
+            "L"
+          ],
+          "mean_seats": 158.66,
+          "prob_majority": 0.0023
+        },
+        "red_green_center": {
+          "parties": [
+            "S",
+            "V",
+            "MP",
+            "C"
+          ],
+          "mean_seats": 190.34,
+          "prob_majority": 0.9977
+        }
+      }
+    }
+  },
+  "fresh_vs_canonical": {
+    "all_headline_fields_equal": true,
+    "comparisons": [
+      {
+        "section": "parties",
+        "key": "L",
+        "field": "vote_share_mean",
+        "artifact": 2.006,
+        "fresh": 2.006,
+        "equal": true
+      },
+      {
+        "section": "parties",
+        "key": "S",
+        "field": "vote_share_mean",
+        "artifact": 30.336,
+        "fresh": 30.336,
+        "equal": true
+      },
+      {
+        "section": "blocs",
+        "key": "tido",
+        "field": "prob_majority",
+        "artifact": 0.0023,
+        "fresh": 0.0023,
+        "equal": true
+      }
+    ],
+    "fresh_payload_sha256": "33e818990cf10994f652ad2d9ea32f1ff762cbd1ed4669e28197a1c8dc892ffd",
+    "artifact_payload_sha256": "33e818990cf10994f652ad2d9ea32f1ff762cbd1ed4669e28197a1c8dc892ffd",
+    "payload_equal": true
+  },
+  "forecast_discrepancy_forensics": {
+    "status": "UNREPRODUCIBLE_INVALID",
+    "reported_values": {
+      "L_vote_share_mean": 3.56,
+      "S_vote_share_mean": 31.25,
+      "tido_majority_probability": 0.318
+    },
+    "canonical_artifact_values": {
+      "L_vote_share_mean": 2.006,
+      "S_vote_share_mean": 30.336,
+      "tido_majority_probability": 0.0023
+    },
+    "repository_search_terms": [
+      "3.56",
+      "31.25",
+      "0.318",
+      "31.8%"
+    ],
+    "repository_matches": {
+      "3.56": [
+        {
+          "path": "docs/election_simulator_rc1.md",
+          "line": 24,
+          "excerpt": "The historical report claiming L 3.56%, S 31.25%, and a 31.8% Tid\u00f6 majority"
+        }
+      ],
+      "31.25": [
+        {
+          "path": "docs/election_simulator_rc1.md",
+          "line": 24,
+          "excerpt": "The historical report claiming L 3.56%, S 31.25%, and a 31.8% Tid\u00f6 majority"
+        }
+      ],
+      "0.318": [],
+      "31.8%": [
+        {
+          "path": "docs/election_simulator_rc1.md",
+          "line": 24,
+          "excerpt": "The historical report claiming L 3.56%, S 31.25%, and a 31.8% Tid\u00f6 majority"
+        }
+      ]
+    },
+    "history_matches": {
+      "3.56": [
+        "bd834a9 feat(simulator): certify rc1 archive and Botten Ada benchmark harness"
+      ],
+      "31.25": [
+        "bd834a9 feat(simulator): certify rc1 archive and Botten Ada benchmark harness"
+      ],
+      "0.318": [
+        "bd834a9 feat(simulator): certify rc1 archive and Botten Ada benchmark harness"
+      ],
+      "31.8%": [
+        "bd834a9 feat(simulator): certify rc1 archive and Botten Ada benchmark harness"
+      ]
+    },
+    "evidence_note": "The reported values are rejected and quarantined as invalid. The clean-source canonical artifact is authoritative for release headlines; no attribution is made without a source artifact or command log."
+  },
+  "provenance": {
+    "source_git_commit": "bd834a9e069881220c147d3b72d87683f57d69df",
+    "source_worktree_clean": true,
+    "input_hashes": {
+      "poll_data_hash": "9c75c96d80fe4f02ccafbd7b5a2063aadabc19e08bed5839b574b28d8af0bf53",
+      "election_data_hash": "3a99ffb1b0fbef60d61712764a2136982ecf01c4879a43edc6d9a38ddb4ba0fc",
+      "mandate_data_hash": "444c457061abc8c9516f7aad6f35d6e85bb4d720f8244fb029d9b1438d3bd11e",
+      "geography_data_hash": "cb296ab2b1780425a1611649cf8ead030020bb1a7dce9b4ea7e4b136425b1743"
+    },
+    "model_config_hash": "ce4ad4b1125a5d5a4b0a9acd1416a0af8364ee88ad335fb87f299d127fc3c64d",
+    "deterministic_payload_sha256": "33e818990cf10994f652ad2d9ea32f1ff762cbd1ed4669e28197a1c8dc892ffd",
+    "deterministic_payload_sidecar": "data/processed/simulations/deterministic_payload.sha256",
+    "deterministic_payload_sidecar_value": "33e818990cf10994f652ad2d9ea32f1ff762cbd1ed4669e28197a1c8dc892ffd",
+    "deterministic_payload_sidecar_file_sha256": "a5dcbb3077868a6465b07e3e93023ef586ed37ab2ef28fc50abc3bd21d1200ec",
+    "canonical_artifact_sha256": "84df9e7ef385f8d0c2adc5e961d071c9bba37c8683fab3fe3008ca04f90e46d8",
+    "fresh_source_git_commit": "bd834a9e069881220c147d3b72d87683f57d69df",
+    "fresh_source_worktree_clean": true
+  },
+  "adversarial_mandate_audit": {
+    "unique_cases_generated": 20000,
+    "canonical_input_config_hashes": 20000,
+    "total_cases": 20000,
+    "runtime_seconds": 528.41,
+    "fast_path_count": 1904,
+    "fast_kernel_handled_cases": 1904,
+    "reference_fallback_cases": 18096,
+    "fast_kernel_mismatch_count": 0,
+    "fast_kernel_accuracy_pct": 100.0,
+    "exact_tie_fallback_count": 2317,
+    "local_12_fallback_count": 3838,
+    "overhang_fallback_count": 11941,
+    "multi_return_count": 12126,
+    "gotland_coverage_count": 2857,
+    "historical_fixed_seat_map_count": 8000,
+    "adjustment_boundary_tie_count": 2268,
+    "dispatcher_mismatch_count": 0,
+    "production_dispatcher_accuracy_pct": 100.0
+  }
+}

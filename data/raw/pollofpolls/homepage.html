@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="sv-SE">
+<head>
+	<meta charset="UTF-8">
+	<title>Pollofpolls.se</title>
+<meta name='robots' content='max-image-preview:large' />
+	<style>img:is([sizes="auto" i], [sizes^="auto," i]) { contain-intrinsic-size: 3000px 1500px }</style>
+	<meta name="viewport" content="width=device-width, initial-scale=1"><link href='https://fonts.gstatic.com' crossorigin rel='preconnect' />
+<link href='https://fonts.googleapis.com' crossorigin rel='preconnect' />
+<link rel="alternate" type="application/rss+xml" title="Pollofpolls.se &raquo; Webbflöde" href="http://pollofpolls.se/feed/" />
+<link rel="alternate" type="application/rss+xml" title="Pollofpolls.se &raquo; Kommentarsflöde" href="http://pollofpolls.se/comments/feed/" />
+<script>
+window._wpemojiSettings = {"baseUrl":"https:\/\/s.w.org\/images\/core\/emoji\/16.0.1\/72x72\/","ext":".png","svgUrl":"https:\/\/s.w.org\/images\/core\/emoji\/16.0.1\/svg\/","svgExt":".svg","source":{"concatemoji":"http:\/\/pollofpolls.se\/wp-includes\/js\/wp-emoji-release.min.js?ver=6.8.8"}};
+/*! This file is auto-generated */
+!function(s,n){var o,i,e;function c(e){try{var t={supportTests:e,timestamp:(new Date).valueOf()};sessionStorage.setItem(o,JSON.stringify(t))}catch(e){}}function p(e,t,n){e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(t,0,0);var t=new Uint32Array(e.getImageData(0,0,e.canvas.width,e.canvas.height).data),a=(e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(n,0,0),new Uint32Array(e.getImageData(0,0,e.canvas.width,e.canvas.height).data));return t.every(function(e,t){return e===a[t]})}function u(e,t){e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(t,0,0);for(var n=e.getImageData(16,16,1,1),a=0;a<n.data.length;a++)if(0!==n.data[a])return!1;return!0}function f(e,t,n,a){switch(t){case"flag":return n(e,"\ud83c\udff3\ufe0f\u200d\u26a7\ufe0f","\ud83c\udff3\ufe0f\u200b\u26a7\ufe0f")?!1:!n(e,"\ud83c\udde8\ud83c\uddf6","\ud83c\udde8\u200b\ud83c\uddf6")&&!n(e,"\ud83c\udff4\udb40\udc67\udb40\udc62\udb40\udc65\udb40\udc6e\udb40\udc67\udb40\udc7f","\ud83c\udff4\u200b\udb40\udc67\u200b\udb40\udc62\u200b\udb40\udc65\u200b\udb40\udc6e\u200b\udb40\udc67\u200b\udb40\udc7f");case"emoji":return!a(e,"\ud83e\udedf")}return!1}function g(e,t,n,a){var r="undefined"!=typeof WorkerGlobalScope&&self instanceof WorkerGlobalScope?new OffscreenCanvas(300,150):s.createElement("canvas"),o=r.getContext("2d",{willReadFrequently:!0}),i=(o.textBaseline="top",o.font="600 32px Arial",{});return e.forEach(function(e){i[e]=t(o,e,n,a)}),i}function t(e){var t=s.createElement("script");t.src=e,t.defer=!0,s.head.appendChild(t)}"undefined"!=typeof Promise&&(o="wpEmojiSettingsSupports",i=["flag","emoji"],n.supports={everything:!0,everythingExceptFlag:!0},e=new Promise(function(e){s.addEventListener("DOMContentLoaded",e,{once:!0})}),new Promise(function(t){var n=function(){try{var e=JSON.parse(sessionStorage.getItem(o));if("object"==typeof e&&"number"==typeof e.timestamp&&(new Date).valueOf()<e.timestamp+604800&&"object"==typeof e.supportTests)return e.supportTests}catch(e){}return null}();if(!n){if("undefined"!=typeof Worker&&"undefined"!=typeof OffscreenCanvas&&"undefined"!=typeof URL&&URL.createObjectURL&&"undefined"!=typeof Blob)try{var e="postMessage("+g.toString()+"("+[JSON.stringify(i),f.toString(),p.toString(),u.toString()].join(",")+"));",a=new Blob([e],{type:"text/javascript"}),r=new Worker(URL.createObjectURL(a),{name:"wpTestEmojiSupports"});return void(r.onmessage=function(e){c(n=e.data),r.terminate(),t(n)})}catch(e){}c(n=g(i,f,p,u))}t(n)}).then(function(e){for(var t in e)n.supports[t]=e[t],n.supports.everything=n.supports.everything&&n.supports[t],"flag"!==t&&(n.supports.everythingExceptFlag=n.supports.everythingExceptFlag&&n.supports[t]);n.supports.everythingExceptFlag=n.supports.everythingExceptFlag&&!n.supports.flag,n.DOMReady=!1,n.readyCallback=function(){n.DOMReady=!0}}).then(function(){return e}).then(function(){var e;n.supports.everything||(n.readyCallback(),(e=n.source||{}).concatemoji?t(e.concatemoji):e.wpemoji&&e.twemoji&&(t(e.twemoji),t(e.wpemoji)))}))}((window,document),window._wpemojiSettings);
+</script>
+<link rel='stylesheet' id='csvtohtml-css-css' href='http://pollofpolls.se/wp-content/plugins/csv-to-html/css/wibergsweb188.css?ver=6.8.8' media='all' />
+<link rel='stylesheet' id='csvtohtml-templates-css' href='http://pollofpolls.se/wp-content/plugins/csv-to-html/css/templates5.css?ver=6.8.8' media='all' />
+<link rel='stylesheet' id='generate-fonts-css' href='//fonts.googleapis.com/css?family=Open+Sans:300,300italic,regular,italic,600,600italic,700,700italic,800,800italic' media='all' />
+<style id='wp-emoji-styles-inline-css'>
+
+	img.wp-smiley, img.emoji {
+		display: inline !important;
+		border: none !important;
+		box-shadow: none !important;
+		height: 1em !important;
+		width: 1em !important;
+		margin: 0 0.07em !important;
+		vertical-align: -0.1em !important;
+		background: none !important;
+		padding: 0 !important;
+	}
+</style>
+<link rel='stylesheet' id='wp-block-library-css' href='http://pollofpolls.se/wp-includes/css/dist/block-library/style.min.css?ver=6.8.8' media='all' />
+<style id='classic-theme-styles-inline-css'>
+/*! This file is auto-generated */
+.wp-block-button__link{color:#fff;background-color:#32373c;border-radius:9999px;box-shadow:none;text-decoration:none;padding:calc(.667em + 2px) calc(1.333em + 2px);font-size:1.125em}.wp-block-file__button{background:#32373c;color:#fff;text-decoration:none}
+</style>
+<style id='global-styles-inline-css'>
+:root{--wp--preset--aspect-ratio--square: 1;--wp--preset--aspect-ratio--4-3: 4/3;--wp--preset--aspect-ratio--3-4: 3/4;--wp--preset--aspect-ratio--3-2: 3/2;--wp--preset--aspect-ratio--2-3: 2/3;--wp--preset--aspect-ratio--16-9: 16/9;--wp--preset--aspect-ratio--9-16: 9/16;--wp--preset--color--black: #000000;--wp--preset--color--cyan-bluish-gray: #abb8c3;--wp--preset--color--white: #ffffff;--wp--preset--color--pale-pink: #f78da7;--wp--preset--color--vivid-red: #cf2e2e;--wp--preset--color--luminous-vivid-orange: #ff6900;--wp--preset--color--luminous-vivid-amber: #fcb900;--wp--preset--color--light-green-cyan: #7bdcb5;--wp--preset--color--vivid-green-cyan: #00d084;--wp--preset--color--pale-cyan-blue: #8ed1fc;--wp--preset--color--vivid-cyan-blue: #0693e3;--wp--preset--color--vivid-purple: #9b51e0;--wp--preset--color--contrast: var(--contrast);--wp--preset--color--contrast-2: var(--contrast-2);--wp--preset--color--contrast-3: var(--contrast-3);--wp--preset--color--base: var(--base);--wp--preset--color--base-2: var(--base-2);--wp--preset--color--base-3: var(--base-3);--wp--preset--color--accent: var(--accent);--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple: linear-gradient(135deg,rgba(6,147,227,1) 0%,rgb(155,81,224) 100%);--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan: linear-gradient(135deg,rgb(122,220,180) 0%,rgb(0,208,130) 100%);--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange: linear-gradient(135deg,rgba(252,185,0,1) 0%,rgba(255,105,0,1) 100%);--wp--preset--gradient--luminous-vivid-orange-to-vivid-red: linear-gradient(135deg,rgba(255,105,0,1) 0%,rgb(207,46,46) 100%);--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray: linear-gradient(135deg,rgb(238,238,238) 0%,rgb(169,184,195) 100%);--wp--preset--gradient--cool-to-warm-spectrum: linear-gradient(135deg,rgb(74,234,220) 0%,rgb(151,120,209) 20%,rgb(207,42,186) 40%,rgb(238,44,130) 60%,rgb(251,105,98) 80%,rgb(254,248,76) 100%);--wp--preset--gradient--blush-light-purple: linear-gradient(135deg,rgb(255,206,236) 0%,rgb(152,150,240) 100%);--wp--preset--gradient--blush-bordeaux: linear-gradient(135deg,rgb(254,205,165) 0%,rgb(254,45,45) 50%,rgb(107,0,62) 100%);--wp--preset--gradient--luminous-dusk: linear-gradient(135deg,rgb(255,203,112) 0%,rgb(199,81,192) 50%,rgb(65,88,208) 100%);--wp--preset--gradient--pale-ocean: linear-gradient(135deg,rgb(255,245,203) 0%,rgb(182,227,212) 50%,rgb(51,167,181) 100%);--wp--preset--gradient--electric-grass: linear-gradient(135deg,rgb(202,248,128) 0%,rgb(113,206,126) 100%);--wp--preset--gradient--midnight: linear-gradient(135deg,rgb(2,3,129) 0%,rgb(40,116,252) 100%);--wp--preset--font-size--small: 13px;--wp--preset--font-size--medium: 20px;--wp--preset--font-size--large: 36px;--wp--preset--font-size--x-large: 42px;--wp--preset--spacing--20: 0.44rem;--wp--preset--spacing--30: 0.67rem;--wp--preset--spacing--40: 1rem;--wp--preset--spacing--50: 1.5rem;--wp--preset--spacing--60: 2.25rem;--wp--preset--spacing--70: 3.38rem;--wp--preset--spacing--80: 5.06rem;--wp--preset--shadow--natural: 6px 6px 9px rgba(0, 0, 0, 0.2);--wp--preset--shadow--deep: 12px 12px 50px rgba(0, 0, 0, 0.4);--wp--preset--shadow--sharp: 6px 6px 0px rgba(0, 0, 0, 0.2);--wp--preset--shadow--outlined: 6px 6px 0px -3px rgba(255, 255, 255, 1), 6px 6px rgba(0, 0, 0, 1);--wp--preset--shadow--crisp: 6px 6px 0px rgba(0, 0, 0, 1);}:where(.is-layout-flex){gap: 0.5em;}:where(.is-layout-grid){gap: 0.5em;}body .is-layout-flex{display: flex;}.is-layout-flex{flex-wrap: wrap;align-items: center;}.is-layout-flex > :is(*, div){margin: 0;}body .is-layout-grid{display: grid;}.is-layout-grid > :is(*, div){margin: 0;}:where(.wp-block-columns.is-layout-flex){gap: 2em;}:where(.wp-block-columns.is-layout-grid){gap: 2em;}:where(.wp-block-post-template.is-layout-flex){gap: 1.25em;}:where(.wp-block-post-template.is-layout-grid){gap: 1.25em;}.has-black-color{color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-color{color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-color{color: var(--wp--preset--color--white) !important;}.has-pale-pink-color{color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-color{color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-color{color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-color{color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-color{color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-color{color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-color{color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-color{color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-color{color: var(--wp--preset--color--vivid-purple) !important;}.has-black-background-color{background-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-background-color{background-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-background-color{background-color: var(--wp--preset--color--white) !important;}.has-pale-pink-background-color{background-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-background-color{background-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-background-color{background-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-background-color{background-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-background-color{background-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-background-color{background-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-background-color{background-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-background-color{background-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-background-color{background-color: var(--wp--preset--color--vivid-purple) !important;}.has-black-border-color{border-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-border-color{border-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-border-color{border-color: var(--wp--preset--color--white) !important;}.has-pale-pink-border-color{border-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-border-color{border-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-border-color{border-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-border-color{border-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-border-color{border-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-border-color{border-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-border-color{border-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-border-color{border-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-border-color{border-color: var(--wp--preset--color--vivid-purple) !important;}.has-vivid-cyan-blue-to-vivid-purple-gradient-background{background: var(--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple) !important;}.has-light-green-cyan-to-vivid-green-cyan-gradient-background{background: var(--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan) !important;}.has-luminous-vivid-amber-to-luminous-vivid-orange-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange) !important;}.has-luminous-vivid-orange-to-vivid-red-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-orange-to-vivid-red) !important;}.has-very-light-gray-to-cyan-bluish-gray-gradient-background{background: var(--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray) !important;}.has-cool-to-warm-spectrum-gradient-background{background: var(--wp--preset--gradient--cool-to-warm-spectrum) !important;}.has-blush-light-purple-gradient-background{background: var(--wp--preset--gradient--blush-light-purple) !important;}.has-blush-bordeaux-gradient-background{background: var(--wp--preset--gradient--blush-bordeaux) !important;}.has-luminous-dusk-gradient-background{background: var(--wp--preset--gradient--luminous-dusk) !important;}.has-pale-ocean-gradient-background{background: var(--wp--preset--gradient--pale-ocean) !important;}.has-electric-grass-gradient-background{background: var(--wp--preset--gradient--electric-grass) !important;}.has-midnight-gradient-background{background: var(--wp--preset--gradient--midnight) !important;}.has-small-font-size{font-size: var(--wp--preset--font-size--small) !important;}.has-medium-font-size{font-size: var(--wp--preset--font-size--medium) !important;}.has-large-font-size{font-size: var(--wp--preset--font-size--large) !important;}.has-x-large-font-size{font-size: var(--wp--preset--font-size--x-large) !important;}
+:where(.wp-block-post-template.is-layout-flex){gap: 1.25em;}:where(.wp-block-post-template.is-layout-grid){gap: 1.25em;}
+:where(.wp-block-columns.is-layout-flex){gap: 2em;}:where(.wp-block-columns.is-layout-grid){gap: 2em;}
+:root :where(.wp-block-pullquote){font-size: 1.5em;line-height: 1.6;}
+</style>
+<link rel='stylesheet' id='generate-style-grid-css' href='http://pollofpolls.se/wp-content/themes/generatepress/assets/css/unsemantic-grid.min.css?ver=3.6.0' media='all' />
+<link rel='stylesheet' id='generate-style-css' href='http://pollofpolls.se/wp-content/themes/generatepress/assets/css/style.min.css?ver=3.6.0' media='all' />
+<style id='generate-style-inline-css'>
+body{background-color:#ffffff;color:#3a3a3a;}a{color:#1e73be;}a:hover, a:focus, a:active{color:#000000;}body .grid-container{max-width:1100px;}.wp-block-group__inner-container{max-width:1100px;margin-left:auto;margin-right:auto;}.generate-back-to-top{font-size:20px;border-radius:3px;position:fixed;bottom:30px;right:30px;line-height:40px;width:40px;text-align:center;z-index:10;transition:opacity 300ms ease-in-out;opacity:0.1;transform:translateY(1000px);}.generate-back-to-top__show{opacity:1;transform:translateY(0);}:root{--contrast:#222222;--contrast-2:#575760;--contrast-3:#b2b2be;--base:#f0f0f0;--base-2:#f7f8f9;--base-3:#ffffff;--accent:#1e73be;}:root .has-contrast-color{color:var(--contrast);}:root .has-contrast-background-color{background-color:var(--contrast);}:root .has-contrast-2-color{color:var(--contrast-2);}:root .has-contrast-2-background-color{background-color:var(--contrast-2);}:root .has-contrast-3-color{color:var(--contrast-3);}:root .has-contrast-3-background-color{background-color:var(--contrast-3);}:root .has-base-color{color:var(--base);}:root .has-base-background-color{background-color:var(--base);}:root .has-base-2-color{color:var(--base-2);}:root .has-base-2-background-color{background-color:var(--base-2);}:root .has-base-3-color{color:var(--base-3);}:root .has-base-3-background-color{background-color:var(--base-3);}:root .has-accent-color{color:var(--accent);}:root .has-accent-background-color{background-color:var(--accent);}body, button, input, select, textarea{font-family:Georgia, Times New Roman, Times, serif;font-size:14px;}body{line-height:1.5;}.entry-content > [class*="wp-block-"]:not(:last-child):not(.wp-block-heading){margin-bottom:1.5em;}.main-title{font-family:"Open Sans", sans-serif;font-size:45px;}.site-description{font-family:"Open Sans", sans-serif;}.main-navigation a, .menu-toggle{font-family:"Open Sans", sans-serif;}.main-navigation .main-nav ul ul li a{font-size:14px;}.widget-title{font-family:"Open Sans", sans-serif;}.sidebar .widget, .footer-widgets .widget{font-size:17px;}button:not(.menu-toggle),html input[type="button"],input[type="reset"],input[type="submit"],.button,.wp-block-button .wp-block-button__link{font-family:"Open Sans", sans-serif;}h1{font-family:"Open Sans", sans-serif;font-weight:300;font-size:40px;}h2{font-family:"Open Sans", sans-serif;font-weight:300;font-size:30px;}h3{font-family:"Open Sans", sans-serif;font-size:20px;}h4{font-family:"Open Sans", sans-serif;font-size:inherit;}h5{font-family:"Open Sans", sans-serif;font-size:inherit;}h6{font-family:"Open Sans", sans-serif;}.site-info{font-family:"Open Sans", sans-serif;}@media (max-width:768px){.main-title{font-size:30px;}h1{font-size:30px;}h2{font-size:25px;}}.top-bar{background-color:#636363;color:#ffffff;}.top-bar a{color:#ffffff;}.top-bar a:hover{color:#303030;}.site-header{background-color:#ffffff;color:#3a3a3a;}.site-header a{color:#3a3a3a;}.main-title a,.main-title a:hover{color:#222222;}.site-description{color:#757575;}.main-navigation,.main-navigation ul ul{background-color:#222222;}.main-navigation .main-nav ul li a, .main-navigation .menu-toggle, .main-navigation .menu-bar-items{color:#ffffff;}.main-navigation .main-nav ul li:not([class*="current-menu-"]):hover > a, .main-navigation .main-nav ul li:not([class*="current-menu-"]):focus > a, .main-navigation .main-nav ul li.sfHover:not([class*="current-menu-"]) > a, .main-navigation .menu-bar-item:hover > a, .main-navigation .menu-bar-item.sfHover > a{color:#ffffff;background-color:#3f3f3f;}button.menu-toggle:hover,button.menu-toggle:focus,.main-navigation .mobile-bar-items a,.main-navigation .mobile-bar-items a:hover,.main-navigation .mobile-bar-items a:focus{color:#ffffff;}.main-navigation .main-nav ul li[class*="current-menu-"] > a{color:#ffffff;background-color:#3f3f3f;}.navigation-search input[type="search"],.navigation-search input[type="search"]:active, .navigation-search input[type="search"]:focus, .main-navigation .main-nav ul li.search-item.active > a, .main-navigation .menu-bar-items .search-item.active > a{color:#ffffff;background-color:#3f3f3f;}.main-navigation ul ul{background-color:#3f3f3f;}.main-navigation .main-nav ul ul li a{color:#ffffff;}.main-navigation .main-nav ul ul li:not([class*="current-menu-"]):hover > a,.main-navigation .main-nav ul ul li:not([class*="current-menu-"]):focus > a, .main-navigation .main-nav ul ul li.sfHover:not([class*="current-menu-"]) > a{color:#ffffff;background-color:#4f4f4f;}.main-navigation .main-nav ul ul li[class*="current-menu-"] > a{color:#ffffff;background-color:#4f4f4f;}.separate-containers .inside-article, .separate-containers .comments-area, .separate-containers .page-header, .one-container .container, .separate-containers .paging-navigation, .inside-page-header{background-color:#ffffff;}.entry-meta{color:#595959;}.entry-meta a{color:#595959;}.entry-meta a:hover{color:#1e73be;}.sidebar .widget{background-color:#ffffff;}.sidebar .widget .widget-title{color:#000000;}.footer-widgets{background-color:#ffffff;}.footer-widgets .widget-title{color:#000000;}.site-info{color:#ffffff;background-color:#222222;}.site-info a{color:#ffffff;}.site-info a:hover{color:#606060;}.footer-bar .widget_nav_menu .current-menu-item a{color:#606060;}input[type="text"],input[type="email"],input[type="url"],input[type="password"],input[type="search"],input[type="tel"],input[type="number"],textarea,select{color:#666666;background-color:#fafafa;border-color:#cccccc;}input[type="text"]:focus,input[type="email"]:focus,input[type="url"]:focus,input[type="password"]:focus,input[type="search"]:focus,input[type="tel"]:focus,input[type="number"]:focus,textarea:focus,select:focus{color:#666666;background-color:#ffffff;border-color:#bfbfbf;}button,html input[type="button"],input[type="reset"],input[type="submit"],a.button,a.wp-block-button__link:not(.has-background){color:#ffffff;background-color:#666666;}button:hover,html input[type="button"]:hover,input[type="reset"]:hover,input[type="submit"]:hover,a.button:hover,button:focus,html input[type="button"]:focus,input[type="reset"]:focus,input[type="submit"]:focus,a.button:focus,a.wp-block-button__link:not(.has-background):active,a.wp-block-button__link:not(.has-background):focus,a.wp-block-button__link:not(.has-background):hover{color:#ffffff;background-color:#3f3f3f;}a.generate-back-to-top{background-color:rgba( 0,0,0,0.4 );color:#ffffff;}a.generate-back-to-top:hover,a.generate-back-to-top:focus{background-color:rgba( 0,0,0,0.6 );color:#ffffff;}:root{--gp-search-modal-bg-color:var(--base-3);--gp-search-modal-text-color:var(--contrast);--gp-search-modal-overlay-bg-color:rgba(0,0,0,0.2);}@media (max-width:768px){.main-navigation .menu-bar-item:hover > a, .main-navigation .menu-bar-item.sfHover > a{background:none;color:#ffffff;}}.inside-top-bar{padding:10px;}.inside-header{padding:40px;}.site-main .wp-block-group__inner-container{padding:40px;}.entry-content .alignwide, body:not(.no-sidebar) .entry-content .alignfull{margin-left:-40px;width:calc(100% + 80px);max-width:calc(100% + 80px);}.rtl .menu-item-has-children .dropdown-menu-toggle{padding-left:20px;}.rtl .main-navigation .main-nav ul li.menu-item-has-children > a{padding-right:20px;}.site-info{padding:20px;}@media (max-width:768px){.separate-containers .inside-article, .separate-containers .comments-area, .separate-containers .page-header, .separate-containers .paging-navigation, .one-container .site-content, .inside-page-header{padding:20px 5px 20px 5px;}.site-main .wp-block-group__inner-container{padding:20px 5px 20px 5px;}.site-info{padding-right:10px;padding-left:10px;}.entry-content .alignwide, body:not(.no-sidebar) .entry-content .alignfull{margin-left:-5px;width:calc(100% + 10px);max-width:calc(100% + 10px);}}.one-container .sidebar .widget{padding:0px;}@media (max-width:768px){.main-navigation .menu-toggle,.main-navigation .mobile-bar-items,.sidebar-nav-mobile:not(#sticky-placeholder){display:block;}.main-navigation ul,.gen-sidebar-nav{display:none;}[class*="nav-float-"] .site-header .inside-header > *{float:none;clear:both;}}
+.main-navigation .slideout-toggle a:before,.slide-opened .slideout-overlay .slideout-exit:before{font-family:GeneratePress;}.slideout-navigation .dropdown-menu-toggle:before{content:"\f107" !important;}.slideout-navigation .sfHover > a .dropdown-menu-toggle:before{content:"\f106" !important;}
+.main-navigation .main-nav ul li a,.menu-toggle,.main-navigation .mobile-bar-items a{transition: line-height 300ms ease}.main-navigation.toggled .main-nav > ul{background-color: #222222}
+.slideout-navigation.main-navigation .main-nav ul li a{font-weight:normal;text-transform:none;}
+</style>
+<link rel='stylesheet' id='generate-mobile-style-css' href='http://pollofpolls.se/wp-content/themes/generatepress/assets/css/mobile.min.css?ver=3.6.0' media='all' />
+<link rel='stylesheet' id='generate-font-icons-css' href='http://pollofpolls.se/wp-content/themes/generatepress/assets/css/components/font-icons.min.css?ver=3.6.0' media='all' />
+<link rel='stylesheet' id='font-awesome-css' href='http://pollofpolls.se/wp-content/themes/generatepress/assets/css/components/font-awesome.min.css?ver=4.7' media='all' />
+<link rel='stylesheet' id='generate-blog-css' href='http://pollofpolls.se/wp-content/plugins/gp-premium/blog/functions/css/style-min.css?ver=1.7.5' media='all' />
+<link rel='stylesheet' id='generate-sticky-css' href='http://pollofpolls.se/wp-content/plugins/gp-premium/menu-plus/functions/css/sticky.min.css?ver=1.7.5' media='all' />
+<script src="http://pollofpolls.se/wp-includes/js/jquery/jquery.min.js?ver=3.7.1" id="jquery-core-js"></script>
+<script src="http://pollofpolls.se/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.1" id="jquery-migrate-js"></script>
+<script id="csvtohtml-js-js-extra">
+var my_ajax_object = {"ajax_url":"http:\/\/pollofpolls.se\/wp-admin\/admin-ajax.php"};
+</script>
+<script src="http://pollofpolls.se/wp-content/plugins/csv-to-html/js/wibergsweb197.js?ver=6.8.8" id="csvtohtml-js-js"></script>
+<link rel="https://api.w.org/" href="http://pollofpolls.se/wp-json/" /><link rel="alternate" title="JSON" type="application/json" href="http://pollofpolls.se/wp-json/wp/v2/pages/20" /><link rel="EditURI" type="application/rsd+xml" title="RSD" href="http://pollofpolls.se/xmlrpc.php?rsd" />
+<meta name="generator" content="WordPress 6.8.8" />
+<link rel="canonical" href="http://pollofpolls.se/" />
+<link rel='shortlink' href='http://pollofpolls.se/' />
+<link rel="alternate" title="oEmbed (JSON)" type="application/json+oembed" href="http://pollofpolls.se/wp-json/oembed/1.0/embed?url=http%3A%2F%2Fpollofpolls.se%2F" />
+<link rel="alternate" title="oEmbed (XML)" type="text/xml+oembed" href="http://pollofpolls.se/wp-json/oembed/1.0/embed?url=http%3A%2F%2Fpollofpolls.se%2F&#038;format=xml" />
+    <style type='text/css'> #disabled_msgCM {width: 300px; border: 1px solid red; }</style>
+ <style>.post-thumbnail img[src$='.svg'] { width: 100%; height: auto; }</style><style type="text/css">.blue-message, .is-style-blue-message {
+    background-color: #3399ff;
+    color: #ffffff;
+    text-shadow: none;
+    font-size: 16px;
+    line-height: 24px;
+    padding: 10px;
+    padding-top: 10px;
+    padding-right: 10px;
+    padding-bottom: 10px;
+    padding-left: 10px;
+}.green-message, .is-style-green-message {
+    background-color: #8cc14c;
+    color: #ffffff;
+    text-shadow: none;
+    font-size: 16px;
+    line-height: 24px;
+    padding: 10px;
+    padding-top: 10px;
+    padding-right: 10px;
+    padding-bottom: 10px;
+    padding-left: 10px;
+}.orange-message, .is-style-orange-message {
+    background-color: #faa732;
+    color: #ffffff;
+    text-shadow: none;
+    font-size: 16px;
+    line-height: 24px;
+    padding: 10px;
+    padding-top: 10px;
+    padding-right: 10px;
+    padding-bottom: 10px;
+    padding-left: 10px;
+}.red-message, .is-style-red-message {
+    background-color: #da4d31;
+    color: #ffffff;
+    text-shadow: none;
+    font-size: 16px;
+    line-height: 24px;
+    padding: 10px;
+    padding-top: 10px;
+    padding-right: 10px;
+    padding-bottom: 10px;
+    padding-left: 10px;
+}.grey-message, .is-style-grey-message {
+    background-color: #53555c;
+    color: #ffffff;
+    text-shadow: none;
+    font-size: 16px;
+    line-height: 24px;
+    padding: 10px;
+    padding-top: 10px;
+    padding-right: 10px;
+    padding-bottom: 10px;
+    padding-left: 10px;
+}.left-block, .is-style-left-block {
+    background: radial-gradient(ellipse at center center, #ffffff 0%, #f2f2f2 100%);
+    color: #8b8e97;
+    padding: 10px;
+    padding-top: 10px;
+    padding-right: 10px;
+    padding-bottom: 10px;
+    padding-left: 10px;
+    margin: 10px;
+    margin-top: 10px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    margin-left: 10px;
+    float: left;
+}.right-block, .is-style-right-block {
+    background: radial-gradient(ellipse at center center, #ffffff 0%, #f2f2f2 100%);
+    color: #8b8e97;
+    padding: 10px;
+    padding-top: 10px;
+    padding-right: 10px;
+    padding-bottom: 10px;
+    padding-left: 10px;
+    margin: 10px;
+    margin-top: 10px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    margin-left: 10px;
+    float: right;
+}.blockquotes, .is-style-blockquotes {
+    background-color: none;
+    border-left: 5px solid #f1f1f1;
+    color: #8B8E97;
+    font-size: 16px;
+    font-style: italic;
+    line-height: 22px;
+    padding-left: 15px;
+    padding: 10px;
+    padding-top: 10px;
+    padding-right: 10px;
+    padding-bottom: 10px;
+    width: 60%;
+    float: left;
+}</style></head>
+
+<body class="home wp-singular page-template-default page page-id-20 wp-embed-responsive wp-theme-generatepress post-image-aligned-center sticky-menu-fade sticky-enabled both-sticky-menu no-sidebar nav-below-header separate-containers fluid-header active-footer-widgets-3 nav-aligned-left header-aligned-left dropdown-hover" itemtype="https://schema.org/WebPage" itemscope>
+	<a class="screen-reader-text skip-link" href="#content" title="Hoppa till innehåll">Hoppa till innehåll</a>		<header class="site-header" id="masthead" aria-label="Webbplats"  itemtype="https://schema.org/WPHeader" itemscope>
+			<div class="inside-header">
+							<div class="header-widget">
+				
+		<aside id="recent-posts-4" class="widget inner-padding widget_recent_entries">
+		<h2 class="widget-title">Senaste blogginlägg</h2>
+		<ul>
+											<li>
+					<a href="http://pollofpolls.se/simulering-av-valresultat-2026/">Simulering av valresultat 2026</a>
+											<span class="post-date">september 14, 2025</span>
+									</li>
+											<li>
+					<a href="http://pollofpolls.se/simulering-av-valresultat-infor-valet-2022/">Simulering av valresultat inför valet 2022</a>
+											<span class="post-date">januari 4, 2022</span>
+									</li>
+					</ul>
+
+		</aside>			</div>
+			<div class="site-branding">
+						<p class="main-title" itemprop="headline">
+					<a href="http://pollofpolls.se/" rel="home">Pollofpolls.se</a>
+				</p>
+						
+					</div>			</div>
+		</header>
+				<nav class="main-navigation sub-menu-right" id="site-navigation" aria-label="Primär"  itemtype="https://schema.org/SiteNavigationElement" itemscope>
+			<div class="inside-navigation grid-container grid-parent">
+								<button class="menu-toggle" aria-controls="primary-menu" aria-expanded="false">
+					<span class="mobile-menu">Menu</span>				</button>
+				<div id="primary-menu" class="main-nav"><ul id="menu-top-meny" class=" menu sf-menu"><li id="menu-item-101" class="menu-item menu-item-type-custom menu-item-object-custom current-menu-item current_page_item menu-item-home menu-item-101"><a href="http://pollofpolls.se/" aria-current="page">Hem</a></li>
+<li id="menu-item-1490" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-1490"><a href="http://pollofpolls.se/blogg/">Blogg</a></li>
+<li id="menu-item-113" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-113"><a href="http://pollofpolls.se/om/">Om</a></li>
+<li id="menu-item-99" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-99"><a href="http://pollofpolls.se/metod/">Metod</a></li>
+<li id="menu-item-1679" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children menu-item-1679"><a href="http://pollofpolls.se/mer-statistik/">Partistatistik<span role="presentation" class="dropdown-menu-toggle"></span></a>
+<ul class="sub-menu">
+	<li id="menu-item-1647" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-1647"><a href="http://pollofpolls.se/opinionsutveckling-for-moderaterna/">Moderaterna</a></li>
+	<li id="menu-item-1646" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-1646"><a href="http://pollofpolls.se/liberalerna/">Liberalerna</a></li>
+	<li id="menu-item-1645" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-1645"><a href="http://pollofpolls.se/centerpartiet/">Centerpartiet</a></li>
+	<li id="menu-item-1644" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-1644"><a href="http://pollofpolls.se/kristdemokraterna/">Kristdemokraterna</a></li>
+	<li id="menu-item-1643" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-1643"><a href="http://pollofpolls.se/socialdemokraterna/">Socialdemokraterna</a></li>
+	<li id="menu-item-1642" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-1642"><a href="http://pollofpolls.se/vansterpartiet/">Vänsterpartiet</a></li>
+	<li id="menu-item-1641" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-1641"><a href="http://pollofpolls.se/miljopartiet/">Miljöpartiet</a></li>
+	<li id="menu-item-1640" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-1640"><a href="http://pollofpolls.se/sverigedemokraterna/">Sverigedemokraterna</a></li>
+	<li id="menu-item-1639" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-1639"><a href="http://pollofpolls.se/feministiskt-initiativ/">Feministiskt Initiativ</a></li>
+</ul>
+</li>
+<li id="menu-item-1657" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-1657"><a href="http://pollofpolls.se/regeringsunderlag/">Block &#038; Regeringsunderlag</a></li>
+</ul></div>			</div>
+		</nav>
+		
+	<div class="site grid-container container hfeed grid-parent" id="page">
+				<div class="site-content" id="content">
+			
+	<div class="content-area grid-parent mobile-grid-100 grid-100 tablet-grid-100" id="primary">
+		<main class="site-main" id="main">
+			
+<article id="post-20" class="post-20 page type-page status-publish" itemtype="https://schema.org/CreativeWork" itemscope>
+	<div class="inside-article">
+		
+			<header class="entry-header">
+				<h1 class="entry-title" itemprop="headline">Opinionsläge per parti</h1>			</header>
+
+			
+		<div class="entry-content" itemprop="text">
+			<p style="padding-left: 2.8vw;">Opinionsläget per parti sedan första januari 2009 fram till och med senaste intervjudatum. Intervjuperioden är datumen då mätningen genomförts, sista intervjudatumet är således det datum då den senaste opinionsmätningen avslutades. Detta betyder att senaste intervjudatumet alltid är tidigare än senaste mätningens publiceringsdatum. För mer information se <a style="font-size: 1em; line-height: 1.5em;" href="http://pollofpolls.se/metod/">metod</a><span style="font-size: 1em; line-height: 1.5em;">. Mandatfördelning är uträknad enligt samma metoder som valmyndighetens <a style="font-size: 1em; line-height: 1.5em;" href="http://www.val.se/det_svenska_valsystemet/valresultat/rakna_sjalv/">valsimulator</a><span style="font-size: 1em; line-height: 1.5em;">. Partier under 4% tilldelas inga mandat.</span></span></p>
+<p><a href="http://pollofpolls.se/poll_img/pollofpolls.svg"><img decoding="async" class="alignnone size-full" src="http://pollofpolls.se/poll_img/pollofpolls.svg?[php_everywhere]" alt="" /></a></p>
+<h3 style="padding-left: 2.8vw;">Opinionsläget per parti sedan valet 2014</h3>
+<p style="padding-left: 2.8vw;">Opinionsläget per parti sedan första 14 september 2014 fram till och med senaste intervjudatum. Tabelldata för grafen återfinns <a href="http://pollofpolls.se/skattat-opinionslage-for-poll-of-polls-fran-och-med-15-september-2014/">här</a>.</p>
+<p style="padding-left: 2.8vw;"><div id="amchart1" style="width: 100%; height: 500px;"></div></p>
+<p style="padding-left: 2.8vw;"><div id="amchart2" style="width: 50%; height: 300px; float: left;"></div><div id="amchart3" style="width: 50%; height: 300px;"></div></p>
+<h3 style="text-align: left; padding-left: 3vw;">Opinionsläge per block samt mandatfördelning</h3>
+<p style="padding-left: 2.8vw;">Opinionsläge för vänster- (V + MP + S) och högerblocket (M + FP + C + KD), samt för SD. För majoritet i riksdagen krävs 175 mandat.</p>
+<p><a href="http://pollofpolls.se/poll_img/block.svg"><img decoding="async" class="alignnone size-full" src="http://pollofpolls.se/poll_img/block.svg?[php_everywhere]" alt="" /></a></p>
+<h3 style="text-align: left; padding-left: 2.8vw;">Förändring per parti sedan förra året</h3>
+<p style="padding-left: 2.8vw;">Opinionsförändring per parti ett år bakåt i tiden räknat från senaste mätdatum.</p>
+<p><a href="http://pollofpolls.se/poll_img/grid.svg"><img decoding="async" class="alignnone size-full" src="http://pollofpolls.se/poll_img/grid.svg?[php_everywhere]" alt="" /></a></p>
+<h3 style="padding-left: 2.8vw;">Opinionsläge per parti endast telefonintervjuer</h3>
+<p style="padding-left: 2.8vw;">Opinionsläge per parti sedan första januari 2009 fram till och med senaste intervjudatumet för opinionsinstitut som använder sig av telefonintervjuer det vill säga Ipsos, Novus, SCB och Sifo. Demoskop, YouGov, Inizio, United Minds och Sentio vilka endast använder sig av webbpaneler är exkluderade.</p>
+<p><a href="http://pollofpolls.se/poll_img/poll_ej_webb.svg"><img decoding="async" class="alignnone size-full" src="http://pollofpolls.se/poll_img/poll_ej_webb.svg?[php_everywhere]" alt="" /></a></p>
+<h3 style="padding-left: 2.8vw;">House effect</h3>
+<p style="padding-left: 2.8vw;">Uppskattning av den systematiska opinionsinstituteffekt,  så kallad House effect. Detta är den systematiska över- eller underskattning som institutet uppvisar jämfört med poll of polls sammanvägning. Värden nära noll betyder att institutets mätningar visar en liten systematisk avvikelse, positiva värden betyder att institutet systematiskt bedömer att partiets opinionsstöd är högre än poll of polls sammanvägning och negativa värden betyder motsatsen. I grafen ingår FI bland övriga partier, detta eftersom alla institut inte redovisar FI separat.</p>
+<p style="padding-left: 2.8vw;"><a href="http://pollofpolls.se/poll_img/house_effect.svg"><img decoding="async" class="alignnone size-full" src="http://pollofpolls.se/poll_img/house_effect.svg?[php_everywhere]" alt="" /></a></p>
+<h3 style="padding-left: 2.8vw;">Senaste opinionsmätningar</h3>
+<p style="padding-left: 2.8vw;">De tio senaste opinionsmätningarna samt deras intervjuperiod. Notera att vissa institut inte publicerar separat data för FI utan att de då ingår i kategorin övrigt.</p>
+<p style="padding-left: 2.8vw;"><table id="csvtohtml_id-6a8ea9dbcefdb" class="csvtohtml responsive-csvtohtml csvtohtml-template-outofthebox1"><thead><style>@media 
+                only screen and (max-width: 760px),
+                (min-device-width: 768px) and (max-device-width: 1024px)  {table#csvtohtml_id-6a8ea9dbcefdb.csvtohtml.responsive-csvtohtml .td:nth-child(1):before { content: "Institut"; }table#csvtohtml_id-6a8ea9dbcefdb.csvtohtml.responsive-csvtohtml .td:nth-child(2):before { content: " M"; }table#csvtohtml_id-6a8ea9dbcefdb.csvtohtml.responsive-csvtohtml .td:nth-child(3):before { content: " L"; }table#csvtohtml_id-6a8ea9dbcefdb.csvtohtml.responsive-csvtohtml .td:nth-child(4):before { content: " C"; }table#csvtohtml_id-6a8ea9dbcefdb.csvtohtml.responsive-csvtohtml .td:nth-child(5):before { content: " KD"; }table#csvtohtml_id-6a8ea9dbcefdb.csvtohtml.responsive-csvtohtml .td:nth-child(6):before { content: " S"; }table#csvtohtml_id-6a8ea9dbcefdb.csvtohtml.responsive-csvtohtml .td:nth-child(7):before { content: " V"; }table#csvtohtml_id-6a8ea9dbcefdb.csvtohtml.responsive-csvtohtml .td:nth-child(8):before { content: " MP"; }table#csvtohtml_id-6a8ea9dbcefdb.csvtohtml.responsive-csvtohtml .td:nth-child(9):before { content: " SD"; }table#csvtohtml_id-6a8ea9dbcefdb.csvtohtml.responsive-csvtohtml .td:nth-child(10):before { content: " FI"; }table#csvtohtml_id-6a8ea9dbcefdb.csvtohtml.responsive-csvtohtml .td:nth-child(11):before { content: "&Ouml;vriga"; }table#csvtohtml_id-6a8ea9dbcefdb.csvtohtml.responsive-csvtohtml .td:nth-child(12):before { content: " Intervjuperiod"; }}</style><tr data-source="" class="headers"><th data-colindex=0 class=" td colset colset-1" style=" top:0px;left:auto;">Institut</th><th data-colindex=1 class=" td colset colset-2" style=" top:0px;"> M</th><th data-colindex=2 class=" td colset colset-3" style=" top:0px;"> L</th><th data-colindex=3 class=" td colset colset-4" style=" top:0px;"> C</th><th data-colindex=4 class=" td colset colset-5" style=" top:0px;"> KD</th><th data-colindex=5 class=" td colset colset-6" style=" top:0px;"> S</th><th data-colindex=6 class=" td colset colset-7" style=" top:0px;"> V</th><th data-colindex=7 class=" td colset colset-8" style=" top:0px;"> MP</th><th data-colindex=8 class=" td colset colset-9" style=" top:0px;"> SD</th><th data-colindex=9 class=" td colset colset-10" style=" top:0px;"> FI</th><th data-colindex=10 class=" td colset colset-11" style=" top:0px;">&Ouml;vriga</th><th data-colindex=11 class=" td colset colset-12" style=" top:0px;"> Intervjuperiod</th></tr></thead><tbody><tr data-source="" class="rowset odd rowset-1"><td data-editable="no" class="td colset colset-1">Indikator</td><td data-editable="no" class="td colset colset-2"> 18.9</td><td data-editable="no" class="td colset colset-3"> 2.2</td><td data-editable="no" class="td colset colset-4"> 5.9</td><td data-editable="no" class="td colset colset-5"> 5.8</td><td data-editable="no" class="td colset colset-6"> 31.3</td><td data-editable="no" class="td colset colset-7"> 7.6</td><td data-editable="no" class="td colset colset-8"> 6.5</td><td data-editable="no" class="td colset colset-9"> 19.7</td><td data-editable="no" class="td colset colset-10"> 0.0</td><td data-editable="no" class="td colset colset-11"> 2.1</td><td data-editable="no" class="td colset colset-12"> 6/8 - 23/8</td></tr><tr data-source="" class="rowset even rowset-2"><td data-editable="no" class="td colset colset-1">Ipsos</td><td data-editable="no" class="td colset colset-2"> 17.9</td><td data-editable="no" class="td colset colset-3"> 2.3</td><td data-editable="no" class="td colset colset-4"> 6.3</td><td data-editable="no" class="td colset colset-5"> 6.1</td><td data-editable="no" class="td colset colset-6"> 30.3</td><td data-editable="no" class="td colset colset-7"> 9.0</td><td data-editable="no" class="td colset colset-8"> 6.8</td><td data-editable="no" class="td colset colset-9"> 19.3</td><td data-editable="no" class="td colset colset-10"> 0.0</td><td data-editable="no" class="td colset colset-11"> 2.0</td><td data-editable="no" class="td colset colset-12"> 11/8 - 23/8</td></tr><tr data-source="" class="rowset odd rowset-3"><td data-editable="no" class="td colset colset-1">Novus</td><td data-editable="no" class="td colset colset-2"> 18.3</td><td data-editable="no" class="td colset colset-3"> 1.9</td><td data-editable="no" class="td colset colset-4"> 7.1</td><td data-editable="no" class="td colset colset-5"> 6.3</td><td data-editable="no" class="td colset colset-6"> 30.1</td><td data-editable="no" class="td colset colset-7"> 7.4</td><td data-editable="no" class="td colset colset-8"> 7.9</td><td data-editable="no" class="td colset colset-9"> 19.1</td><td data-editable="no" class="td colset colset-10"> 0.0</td><td data-editable="no" class="td colset colset-11"> 1.9</td><td data-editable="no" class="td colset colset-12"> 3/8 - 16/8</td></tr><tr data-source="" class="rowset even rowset-4"><td data-editable="no" class="td colset colset-1">Kantar-Sifo</td><td data-editable="no" class="td colset colset-2"> 17.3</td><td data-editable="no" class="td colset colset-3"> 1.9</td><td data-editable="no" class="td colset colset-4"> 8.0</td><td data-editable="no" class="td colset colset-5"> 6.2</td><td data-editable="no" class="td colset colset-6"> 30.5</td><td data-editable="no" class="td colset colset-7"> 7.7</td><td data-editable="no" class="td colset colset-8"> 7.7</td><td data-editable="no" class="td colset colset-9"> 18.5</td><td data-editable="no" class="td colset colset-10"> 0.0</td><td data-editable="no" class="td colset colset-11"> 2.2</td><td data-editable="no" class="td colset colset-12"> 3/8 - 16/8</td></tr><tr data-source="" class="rowset odd rowset-5"><td data-editable="no" class="td colset colset-1">Demoskop</td><td data-editable="no" class="td colset colset-2"> 16.8</td><td data-editable="no" class="td colset colset-3"> 2.4</td><td data-editable="no" class="td colset colset-4"> 7.3</td><td data-editable="no" class="td colset colset-5"> 7.5</td><td data-editable="no" class="td colset colset-6"> 30.2</td><td data-editable="no" class="td colset colset-7"> 6.5</td><td data-editable="no" class="td colset colset-8"> 6.6</td><td data-editable="no" class="td colset colset-9"> 20.2</td><td data-editable="no" class="td colset colset-10"> 0.0</td><td data-editable="no" class="td colset colset-11"> 2.5</td><td data-editable="no" class="td colset colset-12"> 29/7 - 10/8</td></tr><tr data-source="" class="rowset even rowset-6"><td data-editable="no" class="td colset colset-1">Novus</td><td data-editable="no" class="td colset colset-2"> 17.3</td><td data-editable="no" class="td colset colset-3"> 1.8</td><td data-editable="no" class="td colset colset-4"> 6.6</td><td data-editable="no" class="td colset colset-5"> 6.1</td><td data-editable="no" class="td colset colset-6"> 31.8</td><td data-editable="no" class="td colset colset-7"> 7.8</td><td data-editable="no" class="td colset colset-8"> 7.2</td><td data-editable="no" class="td colset colset-9"> 20.4</td><td data-editable="no" class="td colset colset-10"> 0.0</td><td data-editable="no" class="td colset colset-11"> 1.0</td><td data-editable="no" class="td colset colset-12"> 6/7 - 19/7</td></tr><tr data-source="" class="rowset odd rowset-7"><td data-editable="no" class="td colset colset-1">Indikator</td><td data-editable="no" class="td colset colset-2"> 17.7</td><td data-editable="no" class="td colset colset-3"> 1.7</td><td data-editable="no" class="td colset colset-4"> 7.0</td><td data-editable="no" class="td colset colset-5"> 6.1</td><td data-editable="no" class="td colset colset-6"> 32.5</td><td data-editable="no" class="td colset colset-7"> 7.8</td><td data-editable="no" class="td colset colset-8"> 6.3</td><td data-editable="no" class="td colset colset-9"> 19.2</td><td data-editable="no" class="td colset colset-10"> 0.0</td><td data-editable="no" class="td colset colset-11"> 1.7</td><td data-editable="no" class="td colset colset-12"> 1/6 - 21/6</td></tr><tr data-source="" class="rowset even rowset-8"><td data-editable="no" class="td colset colset-1">Demoskop</td><td data-editable="no" class="td colset colset-2"> 16.3</td><td data-editable="no" class="td colset colset-3"> 2.9</td><td data-editable="no" class="td colset colset-4"> 6.2</td><td data-editable="no" class="td colset colset-5"> 6.5</td><td data-editable="no" class="td colset colset-6"> 31.3</td><td data-editable="no" class="td colset colset-7"> 7.6</td><td data-editable="no" class="td colset colset-8"> 7.6</td><td data-editable="no" class="td colset colset-9"> 19.4</td><td data-editable="no" class="td colset colset-10"> 0.0</td><td data-editable="no" class="td colset colset-11"> 2.2</td><td data-editable="no" class="td colset colset-12"> 5/6 - 17/6</td></tr><tr data-source="" class="rowset odd rowset-9"><td data-editable="no" class="td colset colset-1">Novus</td><td data-editable="no" class="td colset colset-2"> 16.6</td><td data-editable="no" class="td colset colset-3"> 2.2</td><td data-editable="no" class="td colset colset-4"> 6.1</td><td data-editable="no" class="td colset colset-5"> 5.6</td><td data-editable="no" class="td colset colset-6"> 32.6</td><td data-editable="no" class="td colset colset-7"> 8.9</td><td data-editable="no" class="td colset colset-8"> 6.4</td><td data-editable="no" class="td colset colset-9"> 20.0</td><td data-editable="no" class="td colset colset-10"> 0.0</td><td data-editable="no" class="td colset colset-11"> 1.6</td><td data-editable="no" class="td colset colset-12"> 1/6 - 14/6</td></tr><tr data-source="" class="rowset even rowset-10"><td data-editable="no" class="td colset colset-1">Ipsos</td><td data-editable="no" class="td colset colset-2"> 17.5</td><td data-editable="no" class="td colset colset-3"> 1.3</td><td data-editable="no" class="td colset colset-4"> 5.9</td><td data-editable="no" class="td colset colset-5"> 6.1</td><td data-editable="no" class="td colset colset-6"> 31.2</td><td data-editable="no" class="td colset colset-7"> 9.6</td><td data-editable="no" class="td colset colset-8"> 7.1</td><td data-editable="no" class="td colset colset-9"> 19.3</td><td data-editable="no" class="td colset colset-10"> 0.0</td><td data-editable="no" class="td colset colset-11"> 2.0</td><td data-editable="no" class="td colset colset-12"> 2/6 - 14/6</td></tr><tr data-source="" class="rowset odd rowset-11"><td data-editable="no" class="td colset colset-1">Kantar-Sifo</td><td data-editable="no" class="td colset colset-2"> 17.1</td><td data-editable="no" class="td colset colset-3"> 2.0</td><td data-editable="no" class="td colset colset-4"> 5.4</td><td data-editable="no" class="td colset colset-5"> 6.0</td><td data-editable="no" class="td colset colset-6"> 31.6</td><td data-editable="no" class="td colset colset-7"> 8.7</td><td data-editable="no" class="td colset colset-8"> 7.8</td><td data-editable="no" class="td colset colset-9"> 18.9</td><td data-editable="no" class="td colset colset-10"> 0.0</td><td data-editable="no" class="td colset colset-11"> 2.5</td><td data-editable="no" class="td colset colset-12"> 25/5 - 7/6</td></tr></tbody></table></p>
+		</div>
+
+			</div>
+</article>
+		</main>
+	</div>
+
+	
+	</div>
+</div>
+
+
+<div class="site-footer">
+				<div id="footer-widgets" class="site footer-widgets">
+				<div class="footer-widgets-container grid-container grid-parent">
+					<div class="inside-footer-widgets">
+							<div class="footer-widget-1 grid-parent grid-33 tablet-grid-50 mobile-grid-100">
+			</div>
+		<div class="footer-widget-2 grid-parent grid-33 tablet-grid-50 mobile-grid-100">
+		
+		<aside id="recent-posts-3" class="widget inner-padding widget_recent_entries">
+		<h2 class="widget-title">Senaste inläggen</h2>
+		<ul>
+											<li>
+					<a href="http://pollofpolls.se/simulering-av-valresultat-2026/">Simulering av valresultat 2026</a>
+									</li>
+											<li>
+					<a href="http://pollofpolls.se/simulering-av-valresultat-infor-valet-2022/">Simulering av valresultat inför valet 2022</a>
+									</li>
+											<li>
+					<a href="http://pollofpolls.se/uppdatering-av-poll-of-polls-med-avseende-pa-tracking-polls/">Uppdatering av poll of polls med avseende på tracking polls</a>
+									</li>
+											<li>
+					<a href="http://pollofpolls.se/simulering-av-valresultat-eller-valet-kommer-inte-avgoras-pa-valdagen/">Simulering av valresultat eller valet kommer inte avgöras på valdagen</a>
+									</li>
+											<li>
+					<a href="http://pollofpolls.se/ater-en-forandring-av-modellen/">Åter en förändring av modellen</a>
+									</li>
+					</ul>
+
+		</aside>	</div>
+		<div class="footer-widget-3 grid-parent grid-33 tablet-grid-50 mobile-grid-100">
+		<aside id="nav_menu-2" class="widget inner-padding widget_nav_menu"><h2 class="widget-title">Opinionsinstitut</h2><div class="menu-lankar-container"><ul id="menu-lankar" class="menu"><li id="menu-item-46" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-46"><a href="http://www.demoskop.se/aktuellt/valjarbarometer/">Demoskop</a></li>
+<li id="menu-item-47" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-47"><a href="http://ipsos.se/opinion">Ipsos</a></li>
+<li id="menu-item-51" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-51"><a href="http://novus.se/vaeljaropinionen.aspx">Novus</a></li>
+<li id="menu-item-52" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-52"><a href="http://www.scb.se/Pages/Product____12433.aspx">SCB</a></li>
+<li id="menu-item-50" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-50"><a href="http://www.tns-sifo.se/rapporter-undersokningar/valjarbarometern">TNS Sifo</a></li>
+<li id="menu-item-49" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-49"><a href="http://www.yougov.se/opinion/valjaropinion/">YouGov</a></li>
+<li id="menu-item-48" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-48"><a href="http://www.unitedminds.se/v-ljarbarometern">United Minds</a></li>
+</ul></div></aside>	</div>
+						</div>
+				</div>
+			</div>
+					<footer class="site-info" aria-label="Webbplats"  itemtype="https://schema.org/WPFooter" itemscope>
+			<div class="inside-site-info grid-container grid-parent">
+								<div class="copyright-bar">
+					<span class="copyright">&copy; 2026 Pollofpolls.se</span> &bull; Byggt med <a href="https://generatepress.com" itemprop="url">GeneratePress</a>				</div>
+			</div>
+		</footer>
+		</div>
+
+<a title="Rulla till toppen" aria-label="Rulla till toppen" rel="nofollow" href="#" class="generate-back-to-top" data-scroll-speed="400" data-start-scroll="300" role="button">
+					
+				</a><script type="speculationrules">
+{"prefetch":[{"source":"document","where":{"and":[{"href_matches":"\/*"},{"not":{"href_matches":["\/wp-*.php","\/wp-admin\/*","\/wp-content\/uploads\/*","\/wp-content\/*","\/wp-content\/plugins\/*","\/wp-content\/themes\/generatepress\/*","\/*\\?(.+)"]}},{"not":{"selector_matches":"a[rel~=\"nofollow\"]"}},{"not":{"selector_matches":".no-prefetch, .no-prefetch a"}}]},"eagerness":"conservative"}]}
+</script>
+<script id="generate-a11y">
+!function(){"use strict";if("querySelector"in document&&"addEventListener"in window){var e=document.body;e.addEventListener("pointerdown",(function(){e.classList.add("using-mouse")}),{passive:!0}),e.addEventListener("keydown",(function(){e.classList.remove("using-mouse")}),{passive:!0})}}();
+</script>
+<link rel='stylesheet' id='amcharts-external-a409a411ae928f0ed649e7039bdd5115-css' href='//www.amcharts.com/lib/3/plugins/export/export.css?ver=1.4.7' media='all' />
+<script src="http://pollofpolls.se/wp-content/plugins/gp-premium/menu-plus/functions/js/sticky.min.js?ver=1.7.5" id="generate-sticky-js"></script>
+<!--[if lte IE 11]>
+<script src="http://pollofpolls.se/wp-content/themes/generatepress/assets/js/classList.min.js?ver=3.6.0" id="generate-classlist-js"></script>
+<![endif]-->
+<script id="generate-menu-js-before">
+var generatepressMenu = {"toggleOpenedSubMenus":true,"openSubMenuLabel":"\u00d6ppna undermeny","closeSubMenuLabel":"St\u00e4ng undermeny"};
+</script>
+<script src="http://pollofpolls.se/wp-content/themes/generatepress/assets/js/menu.min.js?ver=3.6.0" id="generate-menu-js"></script>
+<script id="generate-back-to-top-js-before">
+var generatepressBackToTop = {"smooth":true};
+</script>
+<script src="http://pollofpolls.se/wp-content/themes/generatepress/assets/js/back-to-top.min.js?ver=3.6.0" id="generate-back-to-top-js"></script>
+<script src="//www.amcharts.com/lib/3/amcharts.js?ver=1.4.7" id="amcharts-external-27a1f3d0872819d4449e60fba274c3aa-js"></script>
+<script src="//www.amcharts.com/lib/3/serial.js?ver=1.4.7" id="amcharts-external-14de75ca776cb24cc4b26a0a5ce0b7ff-js"></script>
+<script src="//www.amcharts.com/lib/3/plugins/export/export.min.js?ver=1.4.7" id="amcharts-external-7338016c231e8419dfe03a3f692df9ad-js"></script>
+<script src="//www.amcharts.com/lib/3/themes/light.js?ver=1.4.7" id="amcharts-external-87bd65a27a7983930bf46639381ebb9e-js"></script>
+<script src="//www.amcharts.com/lib/3/plugins/dataloader/dataloader.min.js?ver=1.4.7" id="amcharts-external-2ff081341712ab81fe2ed8213dc7be71-js"></script>
+<script src="//www.amcharts.com/lib/3/pie.js?ver=1.4.7" id="amcharts-external-2472435f52a988fa3afed4fec6584535-js"></script>
+		<script type="text/javascript">
+			var visualizerUserInteractionEvents = [
+				"scroll",
+				"mouseover",
+				"keydown",
+				"touchmove",
+				"touchstart"
+			];
+
+			visualizerUserInteractionEvents.forEach(function(event) {
+				window.addEventListener(event, visualizerTriggerScriptLoader, { passive: true });
+			});
+
+			function visualizerTriggerScriptLoader() {
+				visualizerLoadScripts();
+				visualizerUserInteractionEvents.forEach(function(event) {
+					window.removeEventListener(event, visualizerTriggerScriptLoader, { passive: true });
+				});
+			}
+
+			function visualizerLoadScripts() {
+				document.querySelectorAll("script[data-visualizer-script]").forEach(function(elem) {
+					jQuery.getScript( elem.getAttribute("data-visualizer-script") )
+					.done( function( script, textStatus ) {
+						elem.setAttribute("src", elem.getAttribute("data-visualizer-script"));
+						elem.removeAttribute("data-visualizer-script");
+						setTimeout( function() {
+							visualizerRefreshChart();
+						} );
+					} );
+				});
+			}
+
+			function visualizerRefreshChart() {
+				jQuery( '.visualizer-front:not(.visualizer-chart-loaded)' ).resize();
+				if ( jQuery( 'div.viz-facade-loaded:not(.visualizer-lazy):empty' ).length > 0 ) {
+					visualizerUserInteractionEvents.forEach( function( event ) {
+						window.addEventListener( event, function() {
+							jQuery( '.visualizer-front:not(.visualizer-chart-loaded)' ).resize();
+						}, { passive: true } );
+					} );
+				}
+			}
+		</script>
+			    <script>
+      try {
+AmCharts.loadFile( "http://pollofpolls.se/poll_img/data_table_java.csv", {}, function( response ) {
+
+  /**
+   * Parse CSV
+   */
+  var data = AmCharts.parseCSV( response, {
+    "useColumnNames": true
+  } );
+
+  /**
+   * Create the chart
+   */
+  var amchart1 = AmCharts.makeChart( "amchart1", {
+    "type": "serial",
+	"decimalSeparator": ",",
+	"thousandsSeparator": " ",
+    /**"theme": "light", */
+    "dataProvider": data,
+	"dataDateFormat": "YYYY-MM-DD",
+	"sequencedAnimation": false,
+    "gridAboveGraphs": true,
+    "startDuration": 0,
+    "graphs": [
+						{
+							"balloonText": "M [[value]] %",
+							"fixedColumnWidth": -4,
+							"fontSize": -6,
+							"id": "AmGraph-1",
+							"lineColor": "#1B49DD",
+							"lineThickness": 1,
+							"title": "Moderaterna",
+							"valueField": "M",
+                          	"showBalloon": false
+						},
+						{
+							"balloonText": "L [[value]] %",
+							"id": "AmGraph-2",
+							"lineColor": "#6BB7EC",
+							"lineThickness": 1,
+							"title": "Liberalerna",
+							"valueField": "L",
+                          	"showBalloon": false
+						},
+						{
+							"balloonText": "C [[value]] %",
+							"fixedColumnWidth": -1,
+							"id": "AmGraph-3",
+							"lineColor": "#009933",
+							"lineThickness": 1,
+							"title": "Centerpartiet",
+							"valueField": "C",
+                          	"showBalloon": false
+						},
+						{
+							"balloonText": "KD [[value]] %",
+							"id": "AmGraph-4",
+							"lineColor": "#231977",
+							"lineThickness": 1,
+							"title": "Kristdemokraterna",
+							"valueField": "KD",
+                          	"showBalloon": false
+						},
+						{
+							"balloonText": "S [[value]] %",
+							"id": "AmGraph-5",
+							"lineColor": "#EE2020",
+							"lineThickness": 1,
+							"title": "Socialdemokraterna",
+							"valueField": "S",
+                          	"showBalloon": false
+						},
+						{
+							"balloonText": "V [[value]] %",
+							"fixedColumnWidth": -1,
+							"id": "AmGraph-6",
+							"lineColor": "#AF0000",
+							"lineThickness": 1,
+							"title": "Vänsterpartiet",
+							"valueField": "V",
+                          	"showBalloon": false
+						},
+						{
+							"balloonText": "MP [[value]] %",
+							"id": "AmGraph-7",
+							"lineColor": "#83CF39",
+							"lineThickness": 1,
+							"title": "Miljöpartiet",
+							"valueField": "MP",
+                          	"showBalloon": false
+						},
+						{
+							"balloonText": "SD [[value]] %",
+							"fixedColumnWidth": -1,
+							"id": "AmGraph-8",
+							"lineColor": "#DDDD00",
+							"lineThickness": 1,
+							"title": "Sverigedemokraterna",
+							"valueField": "SD",
+                          	"showBalloon": false
+						},
+						{
+							"balloonText": "FI [[value]] %",
+							"fixedColumnWidth": -1,
+							"id": "AmGraph-9",
+							"lineColor": "#CD1B68",
+							"lineThickness": 1,
+							"title": "Feministiskt Initiativ",
+							"valueField": "FI",
+                          	"showBalloon": false
+						},
+						{
+							"balloonText": "[[title]] [[value]] %",
+							"fontSize": -2,
+							"id": "AmGraph-10",
+							"lineColor": "#8B8B8B",
+							"lineThickness": 1,
+							"title": "Övriga",
+							"valueField": "O",
+                          	"showBalloon": false
+						}
+              ],
+ 					"guides": [
+						{
+							"balloonText": "Riksdagsspärr",
+							"dashLength": 4,
+							"date": "",
+							"fontSize": 10,
+							"id": "Guide-1",
+							"label": "Riksdagsspärr",
+							"labelRotation": 0,
+							"lineAlpha": 0.98,
+							"lineColor": "#000000",
+							"position": "left",
+							"value": 4
+						},
+						{
+                          	"balloonText": "Riksdagsvalet 2014",
+							"dashLength": 4,
+							"date": "2014-09-14",
+							"id": "Guide-2",
+							"label": "Riksdagsval",
+							"labelRotation": -45,
+							"lineAlpha": 0.98,
+							"lineColor": "#000000",
+							"position": "bottom"
+						},
+						{
+                          	"balloonText": "Riksdagsvalet 2010",
+                          	"dashLength": 4,
+							"date": "2010-09-19",
+							"id": "Guide-3",
+							"label": "Riksdagsval",
+							"labelRotation": -45,
+							"lineAlpha": 0.98,
+							"lineColor": "#000000",
+							"position": "bottom"
+						},
+						{
+                          	"balloonText": "Riksdagsvalet 2018",
+							"dashLength": 4,
+                          	"date": "2018-09-16",
+							"id": "Guide-4",
+							"label": "Riksdagsval",
+							"labelRotation": -45,
+							"lineAlpha": 0.98,
+							"lineColor": "#000000",
+							"position": "bottom"
+						}
+					],
+					"valueAxes": [
+						{
+							"id": "ValueAxis-1",
+							"unit": " %",
+							"autoRotateCount": 0,
+							"fontSize": 10,
+							"title": "",
+							"titleRotation": -90,
+                            "gridColor": "#000000",
+      						"gridAlpha": 0,
+      						"dashLength": 0,
+      						"axisColor": "#000000"
+						}
+					],
+	"valueScrollbar": {
+		"enabled": true,      
+		"dragIcon": "dragIconRectBig",
+		"dragIconHeight": 15,
+		"dragIconWidth": 20,
+		"scrollbarHeight": 10
+  	},
+    "chartCursor": {
+		"enabled": true,
+     	"zoomable": false,
+ 		"cursorColor": "#000000",
+		"valueLineEnabled": false,
+		"valueLineBalloonEnabled": false
+    },
+
+	"chartScrollbar": {
+		"enabled": true,      
+		"dragIcon": "dragIconRectBig",
+		"dragIconHeight": 15,
+		"dragIconWidth": 20,
+		"scrollbarHeight": 10
+	},
+    
+    "categoryField": "date",
+    "categoryAxis": {
+      "gridColor": "#000000",
+      "gridAlpha": 0,
+	  "parseDates": true,
+      "tickLength": 10,
+	  "boldPeriodBeginning": false,
+	  "axisColor": "#000000"
+    },
+	"titles": [
+		{
+ 			"bold": false,
+			"id": "Title-1",
+			"size": 12,
+			"text": "Poll of Polls från 2009 fram till senaste intervjudatum"
+		}
+      	],
+	"legend": {
+		"enabled": true,
+		"useGraphSettings": false,
+       	"valueAlign": "left",
+		"valueText": "[[value]] %",
+		"maxColumns": 5,
+        "periodValueText": "[[value.close]] %"
+					}
+  } );
+
+} );
+}
+catch( err ) { console.log( err ); }
+try {
+AmCharts.loadFile( "http://pollofpolls.se/poll_img/data_block_java2.csv", {}, function( response ) {
+
+  /**
+   * Parse CSV
+   */
+  var data = AmCharts.parseCSV( response, {
+    "useColumnNames": true
+  } );
+
+  /**
+   * Create the chart
+   */
+  var amchart2 = AmCharts.makeChart( "amchart2", {
+    "type": "pie",
+	"labelText": "[[title]]: [[value]] mandat",
+    "dataProvider": data,
+	"balloonText": "[[title]]:  [[value]] mandat",
+	"labelText": "[[title]]: [[value]] mandat",
+	"accessibleLabel": "[[title]]:  [[value]] mandat",
+    "titles": [
+		{
+			"bold": false,
+			"id": "Title-1",
+			"text": "Riksdagsmandat per parti"
+		}
+	],
+	"outlineAlpha": 1,
+	"colorField": "col",
+	"descriptionField": "disk",
+	"titleField": "parti",
+	"valueField": "mandat"
+} );
+  } );
+}
+catch( err ) { console.log( err ); }
+try {
+AmCharts.loadFile( "http://pollofpolls.se/poll_img/data_change_java2.csv", {}, function( response ) {
+
+  /**
+   * Parse CSV
+   */
+  var data = AmCharts.parseCSV( response, {
+    "useColumnNames": true
+  } );
+
+  /**
+   * Create the chart
+   */
+  var amchart3 = AmCharts.makeChart( "amchart3", {
+    "type": "serial",
+	"decimalSeparator": ",",
+	"thousandsSeparator": " ",
+    /**"theme": "light", */
+    "dataProvider": data,
+	"sequencedAnimation": false,
+	"columnSpacing": 20,
+	"columnWidth": 1,
+    "startDuration": 0,
+    "graphs": [
+						{
+							"balloonText": "[[title]]: [[value]] procentenheter",
+                          	"type": "column",
+							"fillAlphas": 1,
+							"id": "AmGraph-1",
+							"lineColor": "#1B49DD",
+							"lineThickness": 1,
+							"title": "Moderaterna",
+                          "labelText": "M: [[value]]",
+							"valueField": "M",
+						},
+						{
+							"balloonText": "[[title]]: [[value]] procentenheter",
+                          	"type": "column",
+							"fillAlphas": 1,
+							"id": "AmGraph-2",
+							"lineColor": "#6BB7EC",
+							"lineThickness": 1,
+							"title": "Liberalera",
+                          "labelText": "L: [[value]]",
+							"valueField": "L",
+						},
+						{
+							"balloonText": "[[title]]: [[value]] procentenheter",
+                          	"type": "column",
+							"fillAlphas": 1,
+							"id": "AmGraph-3",
+							"lineColor": "#009933",
+							"lineThickness": 1,
+							"title": "Centerpartiet",
+                          "labelText": "C: [[value]]",
+							"valueField": "C",
+						},
+						{
+							"balloonText": "[[title]]: [[value]] procentenheter",
+                          	"type": "column",
+							"fillAlphas": 1,
+							"id": "AmGraph-4",
+							"lineColor": "#231977",
+							"lineThickness": 1,
+							"title": "Kristdemokraterna",
+                          "labelText": "KD [[value]]",
+							"valueField": "KD",
+						},
+						{
+							"balloonText": "[[title]]: [[value]] procentenheter",
+                          	"type": "column",
+							"fillAlphas": 1,
+							"id": "AmGraph-5",
+							"lineColor": "#EE2020",
+							"lineThickness": 1,
+							"title": "Socialdemokraterna",
+                          "labelText": "S [[value]]",
+							"valueField": "S",
+						},
+						{
+							"balloonText": "[[title]]: [[value]] procentenheter",
+                          	"type": "column",
+							"fillAlphas": 1,
+							"id": "AmGraph-6",
+							"lineColor": "#AF0000",
+							"lineThickness": 1,
+							"title": "Vänsterpartiet",
+                          "labelText": "V [[value]]",
+							"valueField": "V",
+						},
+						{
+							"balloonText": "[[title]]: [[value]] procentenheter",
+                          	"type": "column",
+							"fillAlphas": 1,
+							"id": "AmGraph-7",
+							"lineColor": "#83CF39",
+							"lineThickness": 1,
+							"title": "Miljöpartiet",
+                          "labelText": "MP [[value]]",
+							"valueField": "MP"
+						},
+						{
+							"balloonText": "[[title]]: [[value]] procentenheter",
+                          	"type": "column",
+							"fillAlphas": 1,
+							"id": "AmGraph-8",
+							"lineColor": "#DDDD00",
+							"lineThickness": 1,
+							"title": "Sverigedemokraterna",
+                          "labelText": "SD [[value]]",
+							"valueField": "SD"
+						},
+						{
+							"balloonText": "[[title]]: [[value]] procentenheter",
+                          	"type": "column",
+							"fillAlphas": 1,
+							"id": "AmGraph-9",
+                          	"lineColor": "#CD1B68",
+							"lineThickness": 1,
+							"title": "Feministiskt Initiativ",
+                          "labelText": "FI: [[value]]",
+							"valueField": "FI"
+						}
+              ],
+
+	"valueAxes": [
+		{
+			"id": "ValueAxis-1",
+			"maximum": 10,
+			"minimum": -10,
+			"minMaxMultiplier": 1.5,
+			"precision": 0,
+			"totalTextOffset": -1,
+			"unit": "",
+			"zeroGridAlpha": -1,
+			"axisThickness": 0,
+			"tickLength": 0,
+          	"titleBold": false,
+			"title": "Förändring i procentenheter"
+		}
+	],
+    
+    "categoryField": "date",
+    "categoryAxis": {
+	  "axisColor": "#000000",
+      "labelsEnabled": false,
+		"gridThickness": 0,
+		"axisThickness": 0,
+		"tickLength": 0
+    },
+	"titles": [
+		{
+			"bold": false,
+			"id": "Title-1",
+			"size": 15,
+			"text": "Opinionsförändring"
+		},
+		{
+			"bold": false,
+			"id": "Title-2",
+            "size": 12,
+			"text": "Jämfört med valet 2022"
+		}
+	],
+	"legend": {
+		"enabled": false,
+		"useGraphSettings": false,
+       	"valueAlign": "left",
+		"valueText": "[[value]]",
+		"maxColumns": 5,
+        "periodValueText": "[[value.close]]"
+					}
+  } );
+
+} );
+}
+catch( err ) { console.log( err ); }    </script>
+    
+</body>
+</html>

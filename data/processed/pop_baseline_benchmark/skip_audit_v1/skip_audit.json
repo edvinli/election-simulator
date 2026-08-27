@@ -1,0 +1,349 @@
+{
+  "schema_version": "1.0",
+  "source_report": "data/processed/pop_baseline_benchmark/benchmark_report.json",
+  "source_report_sha256": "e2115ca5f3c2a535726b70d41a8a01421d3c81c3bcc535aad259f1a0b2b1b85e",
+  "benchmark_status": "PARTIAL",
+  "configuration": {
+    "horizons_days": [
+      7,
+      14,
+      28,
+      56,
+      84,
+      112
+    ],
+    "samples": 256,
+    "seed": 12345,
+    "origin_step_days": 7,
+    "rolling_start_date": "2014-09-15",
+    "rolling_end_date": "2026-08-23",
+    "baseline_step_windows": [
+      21,
+      28,
+      35
+    ],
+    "baseline_partial_step_policy": "linear_clr_fraction"
+  },
+  "skip_audit": {
+    "skipped_case_count": 116,
+    "by_reason": {
+      "insufficient_rc1_transitions:0<30": 43,
+      "insufficient_rc1_transitions:15<30": 6,
+      "insufficient_rc1_transitions:1<30": 6,
+      "insufficient_rc1_transitions:22<30": 6,
+      "insufficient_rc1_transitions:29<30": 6,
+      "insufficient_rc1_transitions:8<30": 6,
+      "missing_exact_origin_or_target_observation": 43
+    },
+    "by_reason_detail": {
+      "insufficient_rc1_transitions:0<30": {
+        "count": 43,
+        "class": "chronological_history_gap",
+        "explanation": "The frozen Candidate-A transition pool has fewer than its minimum historical transitions at this as-of date.",
+        "resolution": "cannot be eliminated without changing the frozen historical-data rule"
+      },
+      "insufficient_rc1_transitions:15<30": {
+        "count": 6,
+        "class": "chronological_history_gap",
+        "explanation": "The frozen Candidate-A transition pool has fewer than its minimum historical transitions at this as-of date.",
+        "resolution": "cannot be eliminated without changing the frozen historical-data rule"
+      },
+      "insufficient_rc1_transitions:1<30": {
+        "count": 6,
+        "class": "chronological_history_gap",
+        "explanation": "The frozen Candidate-A transition pool has fewer than its minimum historical transitions at this as-of date.",
+        "resolution": "cannot be eliminated without changing the frozen historical-data rule"
+      },
+      "insufficient_rc1_transitions:22<30": {
+        "count": 6,
+        "class": "chronological_history_gap",
+        "explanation": "The frozen Candidate-A transition pool has fewer than its minimum historical transitions at this as-of date.",
+        "resolution": "cannot be eliminated without changing the frozen historical-data rule"
+      },
+      "insufficient_rc1_transitions:29<30": {
+        "count": 6,
+        "class": "chronological_history_gap",
+        "explanation": "The frozen Candidate-A transition pool has fewer than its minimum historical transitions at this as-of date.",
+        "resolution": "cannot be eliminated without changing the frozen historical-data rule"
+      },
+      "insufficient_rc1_transitions:8<30": {
+        "count": 6,
+        "class": "chronological_history_gap",
+        "explanation": "The frozen Candidate-A transition pool has fewer than its minimum historical transitions at this as-of date.",
+        "resolution": "cannot be eliminated without changing the frozen historical-data rule"
+      },
+      "missing_exact_origin_or_target_observation": {
+        "count": 43,
+        "class": "input_data_gap",
+        "explanation": "The stored Poll of Polls series has no exact origin or target observation; nearby dates are not substituted.",
+        "resolution": "requires a provenance-backed exact observation or remains skipped"
+      }
+    },
+    "by_evaluation": {
+      "rolling_future_pop": 116
+    },
+    "examples_by_reason": {
+      "insufficient_rc1_transitions:0<30": [
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2014-09-15",
+          "target_date": "2014-09-22",
+          "horizon_days": 7,
+          "reason": "insufficient_rc1_transitions:0<30"
+        },
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2014-09-15",
+          "target_date": "2014-09-29",
+          "horizon_days": 14,
+          "reason": "insufficient_rc1_transitions:0<30"
+        },
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2014-09-15",
+          "target_date": "2014-10-13",
+          "horizon_days": 28,
+          "reason": "insufficient_rc1_transitions:0<30"
+        },
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2014-09-15",
+          "target_date": "2014-11-10",
+          "horizon_days": 56,
+          "reason": "insufficient_rc1_transitions:0<30"
+        },
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2014-09-15",
+          "target_date": "2014-12-08",
+          "horizon_days": 84,
+          "reason": "insufficient_rc1_transitions:0<30"
+        }
+      ],
+      "insufficient_rc1_transitions:15<30": [
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2014-10-06",
+          "target_date": "2014-10-13",
+          "horizon_days": 7,
+          "reason": "insufficient_rc1_transitions:15<30"
+        },
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2014-10-13",
+          "target_date": "2014-10-27",
+          "horizon_days": 14,
+          "reason": "insufficient_rc1_transitions:15<30"
+        },
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2014-10-27",
+          "target_date": "2014-11-24",
+          "horizon_days": 28,
+          "reason": "insufficient_rc1_transitions:15<30"
+        },
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2014-11-24",
+          "target_date": "2015-01-19",
+          "horizon_days": 56,
+          "reason": "insufficient_rc1_transitions:15<30"
+        },
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2014-12-22",
+          "target_date": "2015-03-16",
+          "horizon_days": 84,
+          "reason": "insufficient_rc1_transitions:15<30"
+        }
+      ],
+      "insufficient_rc1_transitions:1<30": [
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2014-09-22",
+          "target_date": "2014-09-29",
+          "horizon_days": 7,
+          "reason": "insufficient_rc1_transitions:1<30"
+        },
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2014-09-29",
+          "target_date": "2014-10-13",
+          "horizon_days": 14,
+          "reason": "insufficient_rc1_transitions:1<30"
+        },
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2014-10-13",
+          "target_date": "2014-11-10",
+          "horizon_days": 28,
+          "reason": "insufficient_rc1_transitions:1<30"
+        },
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2014-11-10",
+          "target_date": "2015-01-05",
+          "horizon_days": 56,
+          "reason": "insufficient_rc1_transitions:1<30"
+        },
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2014-12-08",
+          "target_date": "2015-03-02",
+          "horizon_days": 84,
+          "reason": "insufficient_rc1_transitions:1<30"
+        }
+      ],
+      "insufficient_rc1_transitions:22<30": [
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2014-10-13",
+          "target_date": "2014-10-20",
+          "horizon_days": 7,
+          "reason": "insufficient_rc1_transitions:22<30"
+        },
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2014-10-20",
+          "target_date": "2014-11-03",
+          "horizon_days": 14,
+          "reason": "insufficient_rc1_transitions:22<30"
+        },
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2014-11-03",
+          "target_date": "2014-12-01",
+          "horizon_days": 28,
+          "reason": "insufficient_rc1_transitions:22<30"
+        },
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2014-12-01",
+          "target_date": "2015-01-26",
+          "horizon_days": 56,
+          "reason": "insufficient_rc1_transitions:22<30"
+        },
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2014-12-29",
+          "target_date": "2015-03-23",
+          "horizon_days": 84,
+          "reason": "insufficient_rc1_transitions:22<30"
+        }
+      ],
+      "insufficient_rc1_transitions:29<30": [
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2014-10-20",
+          "target_date": "2014-10-27",
+          "horizon_days": 7,
+          "reason": "insufficient_rc1_transitions:29<30"
+        },
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2014-10-27",
+          "target_date": "2014-11-10",
+          "horizon_days": 14,
+          "reason": "insufficient_rc1_transitions:29<30"
+        },
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2014-11-10",
+          "target_date": "2014-12-08",
+          "horizon_days": 28,
+          "reason": "insufficient_rc1_transitions:29<30"
+        },
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2014-12-08",
+          "target_date": "2015-02-02",
+          "horizon_days": 56,
+          "reason": "insufficient_rc1_transitions:29<30"
+        },
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2015-01-05",
+          "target_date": "2015-03-30",
+          "horizon_days": 84,
+          "reason": "insufficient_rc1_transitions:29<30"
+        }
+      ],
+      "insufficient_rc1_transitions:8<30": [
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2014-09-29",
+          "target_date": "2014-10-06",
+          "horizon_days": 7,
+          "reason": "insufficient_rc1_transitions:8<30"
+        },
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2014-10-06",
+          "target_date": "2014-10-20",
+          "horizon_days": 14,
+          "reason": "insufficient_rc1_transitions:8<30"
+        },
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2014-10-20",
+          "target_date": "2014-11-17",
+          "horizon_days": 28,
+          "reason": "insufficient_rc1_transitions:8<30"
+        },
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2014-11-17",
+          "target_date": "2015-01-12",
+          "horizon_days": 56,
+          "reason": "insufficient_rc1_transitions:8<30"
+        },
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2014-12-15",
+          "target_date": "2015-03-09",
+          "horizon_days": 84,
+          "reason": "insufficient_rc1_transitions:8<30"
+        }
+      ],
+      "missing_exact_origin_or_target_observation": [
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2026-05-04",
+          "target_date": "2026-08-24",
+          "horizon_days": 112,
+          "reason": "missing_exact_origin_or_target_observation"
+        },
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2026-05-11",
+          "target_date": "2026-08-31",
+          "horizon_days": 112,
+          "reason": "missing_exact_origin_or_target_observation"
+        },
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2026-05-18",
+          "target_date": "2026-09-07",
+          "horizon_days": 112,
+          "reason": "missing_exact_origin_or_target_observation"
+        },
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2026-05-25",
+          "target_date": "2026-09-14",
+          "horizon_days": 112,
+          "reason": "missing_exact_origin_or_target_observation"
+        },
+        {
+          "evaluation": "rolling_future_pop",
+          "origin_date": "2026-06-01",
+          "target_date": "2026-08-24",
+          "horizon_days": 84,
+          "reason": "missing_exact_origin_or_target_observation"
+        }
+      ]
+    },
+    "policy": "No exact origin, target, transition pool, or variant is imputed; each skip remains available for audit."
+  },
+  "interpretation": "This is an evidence-integrity audit of recorded skips, not a repair or a re-scoring operation."
+}

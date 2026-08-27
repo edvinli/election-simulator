@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "ElectionSimulator release certification manifest",
+  "model_name": "ElectionSimulator",
+  "model_version": "1.0.0-rc1",
+  "release_tag": "election-simulator-v1.0-rc1",
+  "candidate": "A",
+  "source_code_commit": "bd834a9e069881220c147d3b72d87683f57d69df",
+  "source_worktree_clean": true,
+  "canonical_forecast": {
+    "path": "data/processed/simulations/simulation_summary_N100000_seed12345.json",
+    "file_sha256": "84df9e7ef385f8d0c2adc5e961d071c9bba37c8683fab3fe3008ca04f90e46d8",
+    "deterministic_payload_sha256": "33e818990cf10994f652ad2d9ea32f1ff762cbd1ed4669e28197a1c8dc892ffd",
+    "payload_sidecar_path": "data/processed/simulations/deterministic_payload.sha256",
+    "payload_sidecar_sha256": "a5dcbb3077868a6465b07e3e93023ef586ed37ab2ef28fc50abc3bd21d1200ec",
+    "as_of": "2026-08-23",
+    "election_date": "2026-09-13",
+    "samples": 100000,
+    "seed": 12345,
+    "headlines": {
+      "L_vote_share_mean": 2.006,
+      "S_vote_share_mean": 30.336,
+      "tido_mean_seats": 158.66,
+      "tido_majority_probability": 0.0023
+    }
+  },
+  "freeze_audit": {
+    "path": "data/processed/simulations/final_freeze_audit_report.json",
+    "file_sha256": "0515c73c5e4dcffc2f894dfc0c93f2533db763f94a8f55148ea370f0c85fd914",
+    "adversarial_report_path": "data/processed/simulations/adversarial_mandate_audit_report.json",
+    "adversarial_report_sha256": "e8736b25f3c0d1c25701f62fafa1fbaf1980d362d4be4ce50a3177e047e846c8",
+    "cold_100k_runtime_seconds": 223.4,
+    "warm_100k_runtime_seconds": 224.2,
+    "peak_memory_mb": 291.94,
+    "adversarial_cases": 20000,
+    "adversarial_dispatcher_mismatches": 0,
+    "national_threshold_mismatches": 0,
+    "invalid_historical_report_status": "UNREPRODUCIBLE_INVALID"
+  },
+  "seat_hindcast": {
+    "summary_path": "data/processed/seat_hindcasts/seat_hindcast_summary.json",
+    "summary_sha256": "e6b06e7087e57ee6293c84f19c64ca5755a101af2f7e44eab1ea3f1f5ec75b6a",
+    "party_detail_path": "data/processed/seat_hindcasts/seat_hindcast_parties_detail.csv",
+    "party_detail_sha256": "8caef92d0c320b113cee2082ea316ffa9d34e5b2f6071dddb700a93f5b992300",
+    "evaluations": 60,
+    "interpretation": "Retrospective historical evidence, not independent holdout validation"
+  },
+  "prospective_archive": {
+    "snapshot_path": "data/processed/prospective_forecasts/2026-08-23/snapshot.json",
+    "snapshot_sha256": "77dffe0c76002170b0bdee2fa9ee49d34a9ae253a38c280debcac7711bbce01a",
+    "index_path": "data/processed/prospective_forecasts/index.json",
+    "index_sha256": "91d416d4c26e4eab9acc0e8711548877e34d9f96af4f31a72838f19cfdcef21e",
+    "snapshot_id": "06e4debd7150bc845650510c344a222bd7546951c2e3575d55026a93300bdbbc",
+    "as_of": "2026-08-23",
+    "deterministic_payload_sha256": "33e818990cf10994f652ad2d9ea32f1ff762cbd1ed4669e28197a1c8dc892ffd"
+  },
+  "botten_ada_benchmark": {
+    "report_path": "data/processed/botten_ada_benchmark/benchmark_report.json",
+    "report_sha256": "27c0d72481ffaa5f670bb5e60b0d2ac671560ec91be625c44e32802562858086",
+    "status": "NOT_RUN",
+    "reason": "No independently generated Botten Ada predictive-draw bundle was supplied",
+    "source_repository": "https://github.com/MansMeg/ada_code",
+    "source_commit": "2dfe246b86c5cab517e4a0cb87fd57e5a9c62512"
+  },
+  "certification_commands": {
+    "canonical_forecast": "uv run python -m scripts.simulator.pipeline --as-of 2026-08-23 --election-date 2026-09-13 --samples 100000 --seed 12345",
+    "freeze_audit": "uv run python -m scripts.simulator.freeze_audit --run-adversarial",
+    "seat_hindcast": "uv run python -m scripts.seat_hindcasts.pipeline",
+    "prospective_snapshot": "uv run python -m scripts.prospective_archive --as-of 2026-08-23 --election-date 2026-09-13 --samples 100000 --seed 12345"
+  }
+}

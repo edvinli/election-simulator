@@ -1,0 +1,345 @@
+election_year,constituency_code,constituency_name,party,total_seats
+2018,01,Stockholms kommun,C,3
+2018,01,Stockholms kommun,KD,1
+2018,01,Stockholms kommun,L,3
+2018,01,Stockholms kommun,M,7
+2018,01,Stockholms kommun,MP,3
+2018,01,Stockholms kommun,S,8
+2018,01,Stockholms kommun,SD,3
+2018,01,Stockholms kommun,V,4
+2018,02,Stockholms län,C,3
+2018,02,Stockholms län,KD,3
+2018,02,Stockholms län,L,3
+2018,02,Stockholms län,M,11
+2018,02,Stockholms län,MP,3
+2018,02,Stockholms län,S,10
+2018,02,Stockholms län,SD,7
+2018,02,Stockholms län,V,3
+2018,03,Uppsala län,C,1
+2018,03,Uppsala län,KD,1
+2018,03,Uppsala län,L,1
+2018,03,Uppsala län,M,2
+2018,03,Uppsala län,MP,1
+2018,03,Uppsala län,S,4
+2018,03,Uppsala län,SD,2
+2018,03,Uppsala län,V,1
+2018,04,Södermanlands län,C,1
+2018,04,Södermanlands län,KD,1
+2018,04,Södermanlands län,M,2
+2018,04,Södermanlands län,S,3
+2018,04,Södermanlands län,SD,2
+2018,04,Södermanlands län,V,1
+2018,05,Östergötlands län,C,1
+2018,05,Östergötlands län,KD,1
+2018,05,Östergötlands län,L,1
+2018,05,Östergötlands län,M,3
+2018,05,Östergötlands län,MP,1
+2018,05,Östergötlands län,S,5
+2018,05,Östergötlands län,SD,3
+2018,05,Östergötlands län,V,1
+2018,06,Jönköpings län,C,1
+2018,06,Jönköpings län,KD,2
+2018,06,Jönköpings län,L,1
+2018,06,Jönköpings län,M,2
+2018,06,Jönköpings län,MP,1
+2018,06,Jönköpings län,S,3
+2018,06,Jönköpings län,SD,2
+2018,06,Jönköpings län,V,1
+2018,07,Kronobergs län,C,1
+2018,07,Kronobergs län,M,1
+2018,07,Kronobergs län,S,2
+2018,07,Kronobergs län,SD,2
+2018,08,Kalmar län,C,1
+2018,08,Kalmar län,KD,1
+2018,08,Kalmar län,M,1
+2018,08,Kalmar län,S,3
+2018,08,Kalmar län,SD,2
+2018,09,Gotlands län,C,1
+2018,09,Gotlands län,S,1
+2018,10,Blekinge län,M,1
+2018,10,Blekinge län,S,2
+2018,10,Blekinge län,SD,2
+2018,11,Malmö kommun,C,1
+2018,11,Malmö kommun,L,1
+2018,11,Malmö kommun,M,2
+2018,11,Malmö kommun,MP,1
+2018,11,Malmö kommun,S,3
+2018,11,Malmö kommun,SD,2
+2018,11,Malmö kommun,V,1
+2018,12,Skåne läns västra,C,1
+2018,12,Skåne läns västra,KD,1
+2018,12,Skåne läns västra,L,1
+2018,12,Skåne läns västra,M,2
+2018,12,Skåne läns västra,S,3
+2018,12,Skåne läns västra,SD,3
+2018,13,Skåne läns södra,C,1
+2018,13,Skåne läns södra,KD,1
+2018,13,Skåne läns södra,L,1
+2018,13,Skåne läns södra,M,3
+2018,13,Skåne läns södra,MP,1
+2018,13,Skåne läns södra,S,3
+2018,13,Skåne läns södra,SD,3
+2018,13,Skåne läns södra,V,1
+2018,14,Skåne läns norra och östra,C,1
+2018,14,Skåne läns norra och östra,KD,1
+2018,14,Skåne läns norra och östra,L,1
+2018,14,Skåne läns norra och östra,M,2
+2018,14,Skåne läns norra och östra,S,3
+2018,14,Skåne läns norra och östra,SD,3
+2018,15,Hallands län,C,1
+2018,15,Hallands län,KD,1
+2018,15,Hallands län,L,1
+2018,15,Hallands län,M,3
+2018,15,Hallands län,MP,1
+2018,15,Hallands län,S,3
+2018,15,Hallands län,SD,2
+2018,15,Hallands län,V,1
+2018,16,Göteborgs kommun,C,1
+2018,16,Göteborgs kommun,KD,1
+2018,16,Göteborgs kommun,L,2
+2018,16,Göteborgs kommun,M,4
+2018,16,Göteborgs kommun,MP,2
+2018,16,Göteborgs kommun,S,4
+2018,16,Göteborgs kommun,SD,2
+2018,16,Göteborgs kommun,V,3
+2018,17,Västra Götalands läns västra,C,1
+2018,17,Västra Götalands läns västra,KD,1
+2018,17,Västra Götalands läns västra,L,1
+2018,17,Västra Götalands läns västra,M,3
+2018,17,Västra Götalands läns västra,MP,1
+2018,17,Västra Götalands läns västra,S,3
+2018,17,Västra Götalands läns västra,SD,2
+2018,17,Västra Götalands läns västra,V,1
+2018,18,Västra Götalands läns norra,C,1
+2018,18,Västra Götalands läns norra,KD,1
+2018,18,Västra Götalands läns norra,M,2
+2018,18,Västra Götalands läns norra,S,3
+2018,18,Västra Götalands läns norra,SD,2
+2018,18,Västra Götalands läns norra,V,1
+2018,19,Västra Götalands läns södra,C,1
+2018,19,Västra Götalands läns södra,KD,1
+2018,19,Västra Götalands läns södra,M,2
+2018,19,Västra Götalands läns södra,S,2
+2018,19,Västra Götalands läns södra,SD,2
+2018,20,Västra Götalands läns östra,C,1
+2018,20,Västra Götalands läns östra,KD,1
+2018,20,Västra Götalands läns östra,M,2
+2018,20,Västra Götalands läns östra,S,3
+2018,20,Västra Götalands läns östra,SD,2
+2018,20,Västra Götalands läns östra,V,1
+2018,21,Värmlands län,C,1
+2018,21,Värmlands län,KD,1
+2018,21,Värmlands län,L,1
+2018,21,Värmlands län,M,2
+2018,21,Värmlands län,S,3
+2018,21,Värmlands län,SD,2
+2018,21,Värmlands län,V,1
+2018,22,Örebro län,C,1
+2018,22,Örebro län,KD,1
+2018,22,Örebro län,L,1
+2018,22,Örebro län,M,2
+2018,22,Örebro län,MP,1
+2018,22,Örebro län,S,3
+2018,22,Örebro län,SD,2
+2018,22,Örebro län,V,1
+2018,23,Västmanlands län,L,1
+2018,23,Västmanlands län,M,2
+2018,23,Västmanlands län,S,3
+2018,23,Västmanlands län,SD,2
+2018,23,Västmanlands län,V,1
+2018,24,Dalarnas län,C,1
+2018,24,Dalarnas län,KD,1
+2018,24,Dalarnas län,M,2
+2018,24,Dalarnas län,S,3
+2018,24,Dalarnas län,SD,2
+2018,24,Dalarnas län,V,1
+2018,25,Gävleborgs län,C,1
+2018,25,Gävleborgs län,M,2
+2018,25,Gävleborgs län,S,3
+2018,25,Gävleborgs län,SD,2
+2018,25,Gävleborgs län,V,1
+2018,26,Västernorrlands län,C,1
+2018,26,Västernorrlands län,M,1
+2018,26,Västernorrlands län,S,4
+2018,26,Västernorrlands län,SD,1
+2018,26,Västernorrlands län,V,1
+2018,27,Jämtlands län,C,1
+2018,27,Jämtlands län,M,1
+2018,27,Jämtlands län,S,2
+2018,27,Jämtlands län,SD,1
+2018,28,Västerbottens län,C,1
+2018,28,Västerbottens län,M,2
+2018,28,Västerbottens län,S,4
+2018,28,Västerbottens län,SD,1
+2018,28,Västerbottens län,V,1
+2018,29,Norrbottens län,C,1
+2018,29,Norrbottens län,M,1
+2018,29,Norrbottens län,S,4
+2018,29,Norrbottens län,SD,1
+2018,29,Norrbottens län,V,1
+2022,01,Stockholms kommun,C,3
+2022,01,Stockholms kommun,KD,1
+2022,01,Stockholms kommun,L,3
+2022,01,Stockholms kommun,M,6
+2022,01,Stockholms kommun,MP,4
+2022,01,Stockholms kommun,S,9
+2022,01,Stockholms kommun,SD,4
+2022,01,Stockholms kommun,V,4
+2022,02,Stockholms län,C,3
+2022,02,Stockholms län,KD,2
+2022,02,Stockholms län,L,3
+2022,02,Stockholms län,M,10
+2022,02,Stockholms län,MP,3
+2022,02,Stockholms län,S,11
+2022,02,Stockholms län,SD,8
+2022,02,Stockholms län,V,3
+2022,03,Uppsala län,C,1
+2022,03,Uppsala län,KD,1
+2022,03,Uppsala län,L,1
+2022,03,Uppsala län,M,2
+2022,03,Uppsala län,MP,1
+2022,03,Uppsala län,S,4
+2022,03,Uppsala län,SD,2
+2022,03,Uppsala län,V,1
+2022,04,Södermanlands län,C,1
+2022,04,Södermanlands län,M,2
+2022,04,Södermanlands län,MP,1
+2022,04,Södermanlands län,S,4
+2022,04,Södermanlands län,SD,2
+2022,04,Södermanlands län,V,1
+2022,05,Östergötlands län,C,1
+2022,05,Östergötlands län,KD,1
+2022,05,Östergötlands län,L,1
+2022,05,Östergötlands län,M,3
+2022,05,Östergötlands län,MP,1
+2022,05,Östergötlands län,S,5
+2022,05,Östergötlands län,SD,4
+2022,05,Östergötlands län,V,1
+2022,06,Jönköpings län,C,1
+2022,06,Jönköpings län,KD,1
+2022,06,Jönköpings län,L,1
+2022,06,Jönköpings län,M,2
+2022,06,Jönköpings län,S,4
+2022,06,Jönköpings län,SD,3
+2022,06,Jönköpings län,V,1
+2022,07,Kronobergs län,M,2
+2022,07,Kronobergs län,S,2
+2022,07,Kronobergs län,SD,2
+2022,08,Kalmar län,KD,1
+2022,08,Kalmar län,M,2
+2022,08,Kalmar län,S,3
+2022,08,Kalmar län,SD,2
+2022,09,Gotlands län,M,1
+2022,09,Gotlands län,S,1
+2022,10,Blekinge län,M,1
+2022,10,Blekinge län,S,2
+2022,10,Blekinge län,SD,2
+2022,11,Malmö kommun,C,1
+2022,11,Malmö kommun,L,1
+2022,11,Malmö kommun,M,2
+2022,11,Malmö kommun,MP,1
+2022,11,Malmö kommun,S,3
+2022,11,Malmö kommun,SD,2
+2022,11,Malmö kommun,V,1
+2022,12,Skåne läns västra,C,1
+2022,12,Skåne läns västra,L,1
+2022,12,Skåne läns västra,M,2
+2022,12,Skåne läns västra,S,3
+2022,12,Skåne läns västra,SD,3
+2022,13,Skåne läns södra,C,1
+2022,13,Skåne läns södra,KD,1
+2022,13,Skåne läns södra,L,1
+2022,13,Skåne läns södra,M,3
+2022,13,Skåne läns södra,MP,1
+2022,13,Skåne läns södra,S,3
+2022,13,Skåne läns södra,SD,3
+2022,13,Skåne läns södra,V,1
+2022,14,Skåne läns norra och östra,KD,1
+2022,14,Skåne läns norra och östra,M,2
+2022,14,Skåne läns norra och östra,S,3
+2022,14,Skåne läns norra och östra,SD,4
+2022,15,Hallands län,C,1
+2022,15,Hallands län,KD,1
+2022,15,Hallands län,L,1
+2022,15,Hallands län,M,2
+2022,15,Hallands län,MP,1
+2022,15,Hallands län,S,3
+2022,15,Hallands län,SD,3
+2022,16,Göteborgs kommun,C,1
+2022,16,Göteborgs kommun,KD,1
+2022,16,Göteborgs kommun,L,1
+2022,16,Göteborgs kommun,M,3
+2022,16,Göteborgs kommun,MP,2
+2022,16,Göteborgs kommun,S,5
+2022,16,Göteborgs kommun,SD,3
+2022,16,Göteborgs kommun,V,2
+2022,17,Västra Götalands läns västra,C,1
+2022,17,Västra Götalands läns västra,KD,1
+2022,17,Västra Götalands läns västra,L,1
+2022,17,Västra Götalands läns västra,M,3
+2022,17,Västra Götalands läns västra,MP,1
+2022,17,Västra Götalands läns västra,S,3
+2022,17,Västra Götalands läns västra,SD,3
+2022,17,Västra Götalands läns västra,V,1
+2022,18,Västra Götalands läns norra,KD,1
+2022,18,Västra Götalands läns norra,M,2
+2022,18,Västra Götalands läns norra,S,3
+2022,18,Västra Götalands läns norra,SD,2
+2022,19,Västra Götalands läns södra,C,1
+2022,19,Västra Götalands läns södra,KD,1
+2022,19,Västra Götalands läns södra,M,2
+2022,19,Västra Götalands läns södra,S,2
+2022,19,Västra Götalands läns södra,SD,2
+2022,20,Västra Götalands läns östra,C,1
+2022,20,Västra Götalands läns östra,KD,1
+2022,20,Västra Götalands läns östra,M,2
+2022,20,Västra Götalands läns östra,S,3
+2022,20,Västra Götalands läns östra,SD,2
+2022,21,Värmlands län,C,1
+2022,21,Värmlands län,KD,1
+2022,21,Värmlands län,M,2
+2022,21,Värmlands län,S,4
+2022,21,Värmlands län,SD,2
+2022,21,Värmlands län,V,1
+2022,22,Örebro län,C,1
+2022,22,Örebro län,KD,1
+2022,22,Örebro län,L,1
+2022,22,Örebro län,M,2
+2022,22,Örebro län,MP,1
+2022,22,Örebro län,S,3
+2022,22,Örebro län,SD,2
+2022,22,Örebro län,V,1
+2022,23,Västmanlands län,M,2
+2022,23,Västmanlands län,S,3
+2022,23,Västmanlands län,SD,2
+2022,23,Västmanlands län,V,1
+2022,24,Dalarnas län,C,1
+2022,24,Dalarnas län,KD,1
+2022,24,Dalarnas län,M,2
+2022,24,Dalarnas län,S,3
+2022,24,Dalarnas län,SD,3
+2022,24,Dalarnas län,V,1
+2022,25,Gävleborgs län,C,1
+2022,25,Gävleborgs län,KD,1
+2022,25,Gävleborgs län,M,2
+2022,25,Gävleborgs län,S,4
+2022,25,Gävleborgs län,SD,2
+2022,25,Gävleborgs län,V,1
+2022,26,Västernorrlands län,C,1
+2022,26,Västernorrlands län,M,1
+2022,26,Västernorrlands län,S,4
+2022,26,Västernorrlands län,SD,2
+2022,26,Västernorrlands län,V,1
+2022,27,Jämtlands län,M,1
+2022,27,Jämtlands län,S,2
+2022,27,Jämtlands län,SD,1
+2022,28,Västerbottens län,C,1
+2022,28,Västerbottens län,M,1
+2022,28,Västerbottens län,MP,1
+2022,28,Västerbottens län,S,4
+2022,28,Västerbottens län,SD,1
+2022,28,Västerbottens län,V,1
+2022,29,Norrbottens län,M,1
+2022,29,Norrbottens län,S,4
+2022,29,Norrbottens län,SD,2
+2022,29,Norrbottens län,V,1

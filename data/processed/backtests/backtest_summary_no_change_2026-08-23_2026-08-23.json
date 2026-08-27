@@ -1,0 +1,39 @@
+{
+  "model": "no_change",
+  "start_date": "2026-08-23",
+  "end_date": "2026-08-23",
+  "horizons": [
+    7,
+    14
+  ],
+  "origin_step_days": 7,
+  "samples": 500,
+  "base_seed": 12345,
+  "total_origins_generated": 1,
+  "skipped_origins_count": 0,
+  "evaluated_cases_count": 0,
+  "skipped_cases_count": 2,
+  "total_rows_evaluated": 0,
+  "equal_weight_annual_crps_8parties": 0.0,
+  "equal_weight_annual_crps_all9": 0.0,
+  "summary_by_horizon": [],
+  "summary_by_year": [],
+  "summary_by_year_horizon": [],
+  "skipped_cases_sample": [
+    {
+      "model": "no_change",
+      "origin_date": "2026-08-23",
+      "target_date": "2026-08-30",
+      "horizon_days": 7,
+      "reason": "missing_exact_target_observation"
+    },
+    {
+      "model": "no_change",
+      "origin_date": "2026-08-23",
+      "target_date": "2026-09-06",
+      "horizon_days": 14,
+      "reason": "missing_exact_target_observation"
+    }
+  ],
+  "skipped_origins": []
+}

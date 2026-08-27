@@ -1,0 +1,10 @@
+party,is_parliamentary,elections_count,mean_residual_pp,median_residual_pp,std_residual_pp,MAE_pp,max_outperformance_pp,max_underperformance_pp,mean_residual_clr,sign_consistency,persistent_positive,persistent_negative
+M,True,6,0.4517,0.9728,1.7709,1.4128,2.0624,-2.8833,-0.030246,5+ / 1- / 0zero,True,False
+L,True,6,-0.3512,-0.3679,0.7003,0.6324,0.8435,-1.1874,-0.112125,1+ / 5- / 0zero,False,True
+C,True,6,0.157,-0.0295,0.6596,0.4925,1.028,-0.7124,-0.020899,3+ / 3- / 0zero,False,False
+KD,True,6,-0.5004,-0.4906,0.4832,0.5829,0.2476,-1.1647,-0.120378,1+ / 5- / 0zero,False,True
+S,True,6,1.9726,1.3956,1.055,1.9726,3.4743,1.1024,0.015941,6+ / 0- / 0zero,True,False
+V,True,6,-1.0557,-1.0144,0.7169,1.0557,-0.2301,-1.8726,-0.182512,0+ / 6- / 0zero,False,True
+MP,True,6,-0.8338,-0.5615,0.6594,0.8338,-0.1156,-1.9188,-0.173013,0+ / 6- / 0zero,False,True
+SD,True,6,0.6623,0.5995,1.4022,1.1784,2.8846,-1.0516,0.867141,4+ / 2- / 0zero,False,False
+REST,False,6,-0.5025,-0.4109,0.6559,0.6031,0.3018,-1.594,-0.243908,1+ / 5- / 0zero,False,True

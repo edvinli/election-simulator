@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.0",
+  "archive": "ElectionSimulator prospective forecasts",
+  "snapshots": [
+    {
+      "snapshot_id": "06e4debd7150bc845650510c344a222bd7546951c2e3575d55026a93300bdbbc",
+      "snapshot_date": "2026-08-23",
+      "as_of": "2026-08-23",
+      "election_date": "2026-09-13",
+      "generated_at_utc": "2026-08-27T12:44:00+00:00",
+      "source_git_commit": "bd834a9e069881220c147d3b72d87683f57d69df",
+      "model_version": "1.0.0-rc1",
+      "seed": 12345,
+      "deterministic_payload_sha256": "33e818990cf10994f652ad2d9ea32f1ff762cbd1ed4669e28197a1c8dc892ffd",
+      "canonical_artifact_sha256": "84df9e7ef385f8d0c2adc5e961d071c9bba37c8683fab3fe3008ca04f90e46d8",
+      "snapshot_file_sha256": "77dffe0c76002170b0bdee2fa9ee49d34a9ae253a38c280debcac7711bbce01a",
+      "path": "2026-08-23/snapshot.json"
+    },
+    {
+      "snapshot_id": "d15529be723344b329a33f6101528b3abf9be87a0120343965c3d0f1f8b509eb",
+      "snapshot_date": "2026-08-27",
+      "as_of": "2026-08-27",
+      "election_date": "2026-09-13",
+      "generated_at_utc": "2026-08-27T16:00:00+00:00",
+      "source_git_commit": "fca740326a55e73e968ba2d70f64bd90a62a4cbf",
+      "model_version": "1.0.0-rc1",
+      "seed": 12345,
+      "deterministic_payload_sha256": "967795912c05a00e364d62c84430f664290fc8f390a370369482e8c38a625473",
+      "canonical_artifact_sha256": "16223bdd39c9751afaeae4748e499af2b2a364e4e6acb290870e19c1a024c925",
+      "snapshot_file_sha256": "ceb5a8cb4d2d9e6462a19327e2cf4fd35f1e42049c2842363da4c2111c4e4313",
+      "path": "2026-08-27/snapshot.json"
+    }
+  ],
+  "updated_at_utc": "2026-08-27T14:21:47.874653+00:00"
+}

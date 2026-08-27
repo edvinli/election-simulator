@@ -1,0 +1,204 @@
+{
+  "elections_evaluated": [
+    "2010-09-19",
+    "2014-09-14",
+    "2018-09-09",
+    "2022-09-11"
+  ],
+  "by_variant_overall": [
+    {
+      "variant": "base",
+      "overall_MAE_8parties": 0.9537,
+      "overall_mean_CRPS_8parties": 0.9537,
+      "overall_MAE_all9": 0.9232,
+      "overall_mean_CRPS_all9": 0.9232,
+      "overall_mean_lambda": 1.0
+    },
+    {
+      "variant": "pp_bias_only",
+      "overall_MAE_8parties": 0.9075,
+      "overall_mean_CRPS_8parties": 0.9075,
+      "overall_MAE_all9": 0.8815,
+      "overall_mean_CRPS_all9": 0.8815,
+      "overall_mean_lambda": 1.0
+    },
+    {
+      "variant": "pp_noise_only",
+      "overall_MAE_8parties": 0.9537,
+      "overall_mean_CRPS_8parties": 0.7195,
+      "overall_MAE_all9": 0.9232,
+      "overall_mean_CRPS_all9": 0.7035,
+      "overall_mean_lambda": 1.0
+    },
+    {
+      "variant": "pp_bias_plus_noise",
+      "overall_MAE_8parties": 0.9036,
+      "overall_mean_CRPS_8parties": 0.6705,
+      "overall_MAE_all9": 0.8761,
+      "overall_mean_CRPS_all9": 0.6535,
+      "overall_mean_lambda": 0.9888
+    }
+  ],
+  "by_variant_election": [
+    {
+      "election_year": 2010,
+      "variant": "base",
+      "training_pool_size": 2,
+      "MAE_8parties": 0.595,
+      "mean_CRPS_8parties": 0.595,
+      "MAE_all9": 0.5482,
+      "mean_CRPS_all9": 0.5482,
+      "mean_lambda": 1.0
+    },
+    {
+      "election_year": 2014,
+      "variant": "base",
+      "training_pool_size": 3,
+      "MAE_8parties": 1.2573,
+      "mean_CRPS_8parties": 1.2574,
+      "MAE_all9": 1.1896,
+      "mean_CRPS_all9": 1.1896,
+      "mean_lambda": 1.0
+    },
+    {
+      "election_year": 2018,
+      "variant": "base",
+      "training_pool_size": 4,
+      "MAE_8parties": 1.1891,
+      "mean_CRPS_8parties": 1.1891,
+      "MAE_all9": 1.2341,
+      "mean_CRPS_all9": 1.2341,
+      "mean_lambda": 1.0
+    },
+    {
+      "election_year": 2022,
+      "variant": "base",
+      "training_pool_size": 5,
+      "MAE_8parties": 0.7732,
+      "mean_CRPS_8parties": 0.7732,
+      "MAE_all9": 0.7208,
+      "mean_CRPS_all9": 0.7208,
+      "mean_lambda": 1.0
+    },
+    {
+      "election_year": 2010,
+      "variant": "pp_bias_only",
+      "training_pool_size": 2,
+      "MAE_8parties": 0.8657,
+      "mean_CRPS_8parties": 0.8657,
+      "MAE_all9": 0.8002,
+      "mean_CRPS_all9": 0.8002,
+      "mean_lambda": 1.0
+    },
+    {
+      "election_year": 2014,
+      "variant": "pp_bias_only",
+      "training_pool_size": 3,
+      "MAE_8parties": 1.0214,
+      "mean_CRPS_8parties": 1.0214,
+      "MAE_all9": 0.9401,
+      "mean_CRPS_all9": 0.9401,
+      "mean_lambda": 1.0
+    },
+    {
+      "election_year": 2018,
+      "variant": "pp_bias_only",
+      "training_pool_size": 4,
+      "MAE_8parties": 1.1092,
+      "mean_CRPS_8parties": 1.1092,
+      "MAE_all9": 1.1152,
+      "mean_CRPS_all9": 1.1152,
+      "mean_lambda": 1.0
+    },
+    {
+      "election_year": 2022,
+      "variant": "pp_bias_only",
+      "training_pool_size": 5,
+      "MAE_8parties": 0.6338,
+      "mean_CRPS_8parties": 0.6338,
+      "MAE_all9": 0.6706,
+      "mean_CRPS_all9": 0.6706,
+      "mean_lambda": 1.0
+    },
+    {
+      "election_year": 2010,
+      "variant": "pp_noise_only",
+      "training_pool_size": 2,
+      "MAE_8parties": 0.595,
+      "mean_CRPS_8parties": 0.5468,
+      "MAE_all9": 0.5482,
+      "mean_CRPS_all9": 0.5026,
+      "mean_lambda": 1.0
+    },
+    {
+      "election_year": 2014,
+      "variant": "pp_noise_only",
+      "training_pool_size": 3,
+      "MAE_8parties": 1.2573,
+      "mean_CRPS_8parties": 0.9743,
+      "MAE_all9": 1.1896,
+      "mean_CRPS_all9": 0.9233,
+      "mean_lambda": 1.0
+    },
+    {
+      "election_year": 2018,
+      "variant": "pp_noise_only",
+      "training_pool_size": 4,
+      "MAE_8parties": 1.1891,
+      "mean_CRPS_8parties": 0.8856,
+      "MAE_all9": 1.2341,
+      "mean_CRPS_all9": 0.9486,
+      "mean_lambda": 1.0
+    },
+    {
+      "election_year": 2022,
+      "variant": "pp_noise_only",
+      "training_pool_size": 5,
+      "MAE_8parties": 0.7732,
+      "mean_CRPS_8parties": 0.4713,
+      "MAE_all9": 0.7208,
+      "mean_CRPS_all9": 0.4394,
+      "mean_lambda": 1.0
+    },
+    {
+      "election_year": 2010,
+      "variant": "pp_bias_plus_noise",
+      "training_pool_size": 2,
+      "MAE_8parties": 0.8657,
+      "mean_CRPS_8parties": 0.6711,
+      "MAE_all9": 0.8002,
+      "mean_CRPS_all9": 0.6131,
+      "mean_lambda": 1.0
+    },
+    {
+      "election_year": 2014,
+      "variant": "pp_bias_plus_noise",
+      "training_pool_size": 3,
+      "MAE_8parties": 1.0214,
+      "mean_CRPS_8parties": 0.7633,
+      "MAE_all9": 0.9401,
+      "mean_CRPS_all9": 0.7035,
+      "mean_lambda": 1.0
+    },
+    {
+      "election_year": 2018,
+      "variant": "pp_bias_plus_noise",
+      "training_pool_size": 4,
+      "MAE_8parties": 1.1092,
+      "mean_CRPS_8parties": 0.8365,
+      "MAE_all9": 1.1152,
+      "mean_CRPS_all9": 0.8571,
+      "mean_lambda": 1.0
+    },
+    {
+      "election_year": 2022,
+      "variant": "pp_bias_plus_noise",
+      "training_pool_size": 5,
+      "MAE_8parties": 0.6181,
+      "mean_CRPS_8parties": 0.411,
+      "MAE_all9": 0.6487,
+      "mean_CRPS_all9": 0.4402,
+      "mean_lambda": 0.9551
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "sources": [
+    {
+      "filename": "valkretsmandat_riksdag_1988_2026.xlsx",
+      "source_url": "http://val.se/download/18.4005a7d19dee20a8ea544/1778074856144/valkretsmandat-riksdag-1988-2026.xlsx",
+      "retrieved_at_utc": "2026-08-26T16:30:51.219102+00:00",
+      "byte_count": 21065,
+      "sha256": "74d02c44f2c30722c995eee196cdb55d7dbf2371c0e4d3bec64cb44786aa5576"
+    },
+    {
+      "filename": "fasta_valkretsmandat_val_2026.xlsx",
+      "source_url": "http://val.se/download/18.4005a7d19dee20a8ea531/1778074822037/fasta-valkretsmandat-val-2026.xlsx",
+      "retrieved_at_utc": "2026-08-26T16:30:53.196631+00:00",
+      "byte_count": 36861,
+      "sha256": "caa41481ce8c1c9602d30399afe9e92fc59da60bc0fab180b08035f3e3975eb5"
+    },
+    {
+      "filename": "slutligt_valresultat_riksdagen_2018_2022.xlsx",
+      "source_url": "http://val.se/download/18.162047b519a91d05331197bd/1786611369096/slutligt-valresultat-riksdagen-jamforande-statistik-2018-2022.xlsx",
+      "retrieved_at_utc": "2026-08-26T16:30:54.112685+00:00",
+      "byte_count": 456559,
+      "sha256": "a0f1087e3331613cbf5c5327c5b369f696ff014b23b0b52adf0f8c28e12d57dc"
+    },
+    {
+      "filename": "val2018_valda.html",
+      "source_url": "https://historik.val.se/val/val2018/slutresultat/R/rike/valda.html",
+      "retrieved_at_utc": "2026-08-26T16:30:54.229249+00:00",
+      "byte_count": 24328,
+      "sha256": "1d67f6e2117bda92dcbb9a313a1909521eac0526e2871c50465b571430d8e039"
+    },
+    {
+      "filename": "val2022_RD_S.json",
+      "source_url": "https://resultat.val.se/data/resultat/val2022/RD_S.json",
+      "retrieved_at_utc": "2026-08-26T16:30:54.396141+00:00",
+      "byte_count": 193359,
+      "sha256": "b7e108ed78b247c65b62ef90fc3a7efed78eb6103476914471f5724978bccf8d"
+    }
+  ]
+}

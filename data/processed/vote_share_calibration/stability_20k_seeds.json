@@ -1,0 +1,104 @@
+{
+  "seeds": [
+    12345,
+    24680,
+    98765
+  ],
+  "samples": 20000,
+  "models_evaluated": [
+    "pp_centered_noise",
+    "pp_symmetric_noise"
+  ],
+  "by_seed_and_model": [
+    {
+      "seed": 12345,
+      "samples": 20000,
+      "model": "pp_centered_noise",
+      "CRPS_8parties_overall": 0.8028,
+      "CRPS_8parties_2018": 0.9881,
+      "CRPS_8parties_2022": 0.6175,
+      "EnergyScore_all9": 2.872174,
+      "coverage_90": 0.7685,
+      "mean_width_90": 3.5136,
+      "mean_lambda": 0.9992
+    },
+    {
+      "seed": 12345,
+      "samples": 20000,
+      "model": "pp_symmetric_noise",
+      "CRPS_8parties_overall": 0.7875,
+      "CRPS_8parties_2018": 0.9303,
+      "CRPS_8parties_2022": 0.6446,
+      "EnergyScore_all9": 2.876967,
+      "coverage_90": 0.9167,
+      "mean_width_90": 4.6387,
+      "mean_lambda": 0.9941
+    },
+    {
+      "seed": 24680,
+      "samples": 20000,
+      "model": "pp_centered_noise",
+      "CRPS_8parties_overall": 0.8021,
+      "CRPS_8parties_2018": 0.9858,
+      "CRPS_8parties_2022": 0.6183,
+      "EnergyScore_all9": 2.868416,
+      "coverage_90": 0.7685,
+      "mean_width_90": 3.5134,
+      "mean_lambda": 0.9992
+    },
+    {
+      "seed": 24680,
+      "samples": 20000,
+      "model": "pp_symmetric_noise",
+      "CRPS_8parties_overall": 0.7866,
+      "CRPS_8parties_2018": 0.9291,
+      "CRPS_8parties_2022": 0.6442,
+      "EnergyScore_all9": 2.874766,
+      "coverage_90": 0.9167,
+      "mean_width_90": 4.638,
+      "mean_lambda": 0.994
+    },
+    {
+      "seed": 98765,
+      "samples": 20000,
+      "model": "pp_centered_noise",
+      "CRPS_8parties_overall": 0.8011,
+      "CRPS_8parties_2018": 0.9861,
+      "CRPS_8parties_2022": 0.6162,
+      "EnergyScore_all9": 2.859817,
+      "coverage_90": 0.7685,
+      "mean_width_90": 3.5155,
+      "mean_lambda": 0.9992
+    },
+    {
+      "seed": 98765,
+      "samples": 20000,
+      "model": "pp_symmetric_noise",
+      "CRPS_8parties_overall": 0.7854,
+      "CRPS_8parties_2018": 0.929,
+      "CRPS_8parties_2022": 0.6418,
+      "EnergyScore_all9": 2.867402,
+      "coverage_90": 0.9167,
+      "mean_width_90": 4.6369,
+      "mean_lambda": 0.9941
+    }
+  ],
+  "model_averages_across_seeds": [
+    {
+      "model": "pp_centered_noise",
+      "mean_CRPS_8parties_across_seeds": 0.802,
+      "mean_CRPS_2018_across_seeds": 0.9867,
+      "mean_CRPS_2022_across_seeds": 0.6173,
+      "mean_EnergyScore_across_seeds": 2.866802,
+      "mean_coverage_90_across_seeds": 0.7685
+    },
+    {
+      "model": "pp_symmetric_noise",
+      "mean_CRPS_8parties_across_seeds": 0.7865,
+      "mean_CRPS_2018_across_seeds": 0.9295,
+      "mean_CRPS_2022_across_seeds": 0.6435,
+      "mean_EnergyScore_across_seeds": 2.873045,
+      "mean_coverage_90_across_seeds": 0.9167
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "model": "point_persistence",
+  "start_date": "2024-01-01",
+  "end_date": "2024-01-15",
+  "horizons": [
+    7
+  ],
+  "origin_step_days": 7,
+  "samples": 100,
+  "base_seed": 12345,
+  "total_origins_generated": 3,
+  "skipped_origins_count": 0,
+  "evaluated_cases_count": 3,
+  "skipped_cases_count": 0,
+  "total_rows_evaluated": 27,
+  "equal_weight_annual_crps_8parties": 0.0875,
+  "equal_weight_annual_crps_all9": 0.0889,
+  "summary_by_horizon": [
+    {
+      "forecast_cases": 3,
+      "N": 27,
+      "MAE": 0.0888888888888889,
+      "RMSE": 0.11863420280034791,
+      "mean_CRPS_8parties": 0.08750000000000001,
+      "mean_CRPS_all9": 0.0888888888888889,
+      "REST_CRPS": 0.10000000000000002,
+      "coverage_50": 0.37037037037037035,
+      "coverage_80": 0.37037037037037035,
+      "coverage_90": 0.37037037037037035,
+      "mean_width_50": 0.0,
+      "mean_width_80": 0.0,
+      "mean_width_90": 0.0,
+      "model": "point_persistence",
+      "horizon_days": 7
+    }
+  ],
+  "summary_by_year": [
+    {
+      "forecast_cases": 3,
+      "N": 27,
+      "MAE": 0.0888888888888889,
+      "RMSE": 0.11863420280034791,
+      "mean_CRPS_8parties": 0.08750000000000001,
+      "mean_CRPS_all9": 0.0888888888888889,
+      "REST_CRPS": 0.10000000000000002,
+      "coverage_50": 0.37037037037037035,
+      "coverage_80": 0.37037037037037035,
+      "coverage_90": 0.37037037037037035,
+      "mean_width_50": 0.0,
+      "mean_width_80": 0.0,
+      "mean_width_90": 0.0,
+      "model": "point_persistence",
+      "year_block": "2024"
+    }
+  ],
+  "summary_by_year_horizon": [
+    {
+      "forecast_cases": 3,
+      "N": 27,
+      "MAE": 0.0888888888888889,
+      "RMSE": 0.11863420280034791,
+      "mean_CRPS_8parties": 0.08750000000000001,
+      "mean_CRPS_all9": 0.0888888888888889,
+      "REST_CRPS": 0.10000000000000002,
+      "coverage_50": 0.37037037037037035,
+      "coverage_80": 0.37037037037037035,
+      "coverage_90": 0.37037037037037035,
+      "mean_width_50": 0.0,
+      "mean_width_80": 0.0,
+      "mean_width_90": 0.0,
+      "model": "point_persistence",
+      "year_block": "2024",
+      "horizon_days": 7
+    }
+  ],
+  "skipped_cases_sample": [],
+  "skipped_origins": []
+}

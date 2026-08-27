@@ -1,0 +1,26 @@
+{
+  "benchmark_1000": {
+    "samples": 1000,
+    "wall_clock_seconds": 11.2285,
+    "simulations_per_second": 89.1,
+    "peak_memory_mb": 26.27,
+    "tido_majority_prob": 0.002,
+    "red_green_majority_prob": 0.998
+  },
+  "benchmark_10000": {
+    "samples": 10000,
+    "wall_clock_seconds": 108.7098,
+    "simulations_per_second": 92.0,
+    "peak_memory_mb": 26.27,
+    "tido_majority_prob": 0.0019,
+    "red_green_majority_prob": 0.9981
+  },
+  "benchmark_100000": {
+    "samples": 100000,
+    "wall_clock_seconds": 1025.1338,
+    "simulations_per_second": 97.5,
+    "peak_memory_mb": 140.47,
+    "tido_majority_prob": 0.0023,
+    "red_green_majority_prob": 0.9977
+  }
+}

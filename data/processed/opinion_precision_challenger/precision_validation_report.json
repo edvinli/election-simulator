@@ -1,0 +1,164 @@
+{
+  "metadata": {
+    "experiment": "Experiment 2: Empirical Pollster Precision Challenger (OpinionState v1.2-candidate)",
+    "as_of_latest_date": "2026-08-23",
+    "n_evaluated_cases": 3695,
+    "n_evaluated_origins": 622,
+    "horizons": [
+      7,
+      14,
+      28,
+      56,
+      84,
+      112
+    ]
+  },
+  "experiment_0_and_1_status": {
+    "status": "ALREADY_REJECTED",
+    "audit_document": "docs/industry_bias_audit.md"
+  },
+  "reference_invariance_hard_gate": {
+    "reference_invariance_passed": true,
+    "max_q_difference_across_reference_bases": 0.0,
+    "tested_bases": [
+      "REST",
+      "S"
+    ]
+  },
+  "rolling_decision_gate": {
+    "rolling_gate_passed": false,
+    "gate_checks": {
+      "check1_material_relative_es_improvement": false,
+      "check2_no_crps_degradation": false,
+      "check3_multi_horizon_consistency": false,
+      "check4_calendar_block_ci_positive": false,
+      "check5_sensitivity_consistent": false
+    },
+    "horizons_won_on_es": "1 of 6"
+  },
+  "stage_2_election_guardrail": {
+    "status": "SKIPPED_ROLLING_GATE_FAILED",
+    "evaluation_status": "NOT_RUN",
+    "message": "Stage 2 election guardrail was not run because Stage 1 rolling gate failed.",
+    "guardrail_passed": false,
+    "evaluated_case_count": 0,
+    "expected_case_count": 12
+  },
+  "final_decision": "PRECISION_CHALLENGER_REJECTED_KEEP_RC1",
+  "decision_summary": "Empirical pollster precision weighting does not demonstrate sufficient out-of-sample predictive improvement over RC1 baseline to justify model changes. Retain RC1; this experiment does not establish that all future candidate model families are exhausted.",
+  "model_search_closed": false,
+  "search_scope": "Only the configured pollster-precision candidate and its stated controls were evaluated.",
+  "pooled_scores": {
+    "arm_a_rc1": {
+      "energy_score": 1.32117,
+      "crps": 0.34692
+    },
+    "arm_b_equal": {
+      "energy_score": 1.32103,
+      "crps": 0.34688
+    },
+    "arm_c_precision": {
+      "energy_score": 1.32132,
+      "crps": 0.34695
+    },
+    "sensitivity_c25": {
+      "energy_score": 1.32126
+    },
+    "relative_es_improvement_pct": -0.011,
+    "relative_crps_improvement_pct": -0.01
+  },
+  "calendar_block_bootstrap_6m": {
+    "relative_es_improvement": {
+      "point_estimate_pct": -0.011,
+      "ci_95_pct": [
+        -0.027,
+        0.001
+      ],
+      "prob_positive": 0.0405,
+      "n_blocks_6m": 25
+    },
+    "relative_crps_improvement": {
+      "point_estimate_pct": -0.01,
+      "ci_95_pct": [
+        -0.025,
+        0.003
+      ],
+      "prob_positive": 0.0795,
+      "n_blocks_6m": 25
+    }
+  },
+  "horizon_summaries": {
+    "h_7": {
+      "n_cases": 622,
+      "es_arm_a_rc1": 0.40824,
+      "es_arm_b_equal": 0.4078,
+      "es_arm_c_precision": 0.40847,
+      "es_sens_c25": 0.40837,
+      "relative_es_improvement_pct": -0.057,
+      "precision_beats_rc1_on_es": false,
+      "crps_arm_a_rc1": 0.10532,
+      "crps_arm_b_equal": 0.1052,
+      "crps_arm_c_precision": 0.10538
+    },
+    "h_14": {
+      "n_cases": 621,
+      "es_arm_a_rc1": 0.54928,
+      "es_arm_b_equal": 0.54896,
+      "es_arm_c_precision": 0.54955,
+      "es_sens_c25": 0.54944,
+      "relative_es_improvement_pct": -0.049,
+      "precision_beats_rc1_on_es": false,
+      "crps_arm_a_rc1": 0.14345,
+      "crps_arm_b_equal": 0.14337,
+      "crps_arm_c_precision": 0.14352
+    },
+    "h_28": {
+      "n_cases": 619,
+      "es_arm_a_rc1": 0.87801,
+      "es_arm_b_equal": 0.87792,
+      "es_arm_c_precision": 0.87825,
+      "es_sens_c25": 0.87816,
+      "relative_es_improvement_pct": -0.027,
+      "precision_beats_rc1_on_es": false,
+      "crps_arm_a_rc1": 0.23138,
+      "crps_arm_b_equal": 0.23135,
+      "crps_arm_c_precision": 0.23143
+    },
+    "h_56": {
+      "n_cases": 615,
+      "es_arm_a_rc1": 1.53483,
+      "es_arm_b_equal": 1.53485,
+      "es_arm_c_precision": 1.53497,
+      "es_sens_c25": 1.53492,
+      "relative_es_improvement_pct": -0.009,
+      "precision_beats_rc1_on_es": false,
+      "crps_arm_a_rc1": 0.40455,
+      "crps_arm_b_equal": 0.40455,
+      "crps_arm_c_precision": 0.40458
+    },
+    "h_84": {
+      "n_cases": 611,
+      "es_arm_a_rc1": 2.07945,
+      "es_arm_b_equal": 2.07945,
+      "es_arm_c_precision": 2.0795,
+      "es_sens_c25": 2.07948,
+      "relative_es_improvement_pct": -0.002,
+      "precision_beats_rc1_on_es": false,
+      "crps_arm_a_rc1": 0.54728,
+      "crps_arm_b_equal": 0.54728,
+      "crps_arm_c_precision": 0.54729
+    },
+    "h_112": {
+      "n_cases": 607,
+      "es_arm_a_rc1": 2.51853,
+      "es_arm_b_equal": 2.51852,
+      "es_arm_c_precision": 2.51851,
+      "es_sens_c25": 2.51852,
+      "relative_es_improvement_pct": 0.001,
+      "precision_beats_rc1_on_es": true,
+      "crps_arm_a_rc1": 0.6604,
+      "crps_arm_b_equal": 0.66041,
+      "crps_arm_c_precision": 0.66039
+    }
+  }
+}

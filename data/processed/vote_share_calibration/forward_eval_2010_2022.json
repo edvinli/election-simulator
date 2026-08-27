@@ -1,0 +1,57 @@
+{
+  "elections_evaluated": [
+    "2018-09-09"
+  ],
+  "by_model_overall": [
+    {
+      "model": "base",
+      "overall_MAE_8parties": 1.1891,
+      "overall_CRPS_8parties": 1.1891,
+      "overall_EnergyScore_all9": 4.693872,
+      "overall_mean_lambda": 1.0
+    },
+    {
+      "model": "pp_centered_noise",
+      "overall_MAE_8parties": 1.1891,
+      "overall_CRPS_8parties": 0.8856,
+      "overall_EnergyScore_all9": 3.380182,
+      "overall_mean_lambda": 1.0
+    },
+    {
+      "model": "pp_symmetric_noise",
+      "overall_MAE_8parties": 1.1891,
+      "overall_CRPS_8parties": 0.8299,
+      "overall_EnergyScore_all9": 3.182366,
+      "overall_mean_lambda": 1.0
+    }
+  ],
+  "by_model_election": [
+    {
+      "election_year": 2018,
+      "training_pool_size": 4,
+      "model": "base",
+      "MAE_8parties": 1.1891,
+      "CRPS_8parties": 1.1891,
+      "EnergyScore_all9": 4.693872,
+      "mean_lambda": 1.0
+    },
+    {
+      "election_year": 2018,
+      "training_pool_size": 4,
+      "model": "pp_centered_noise",
+      "MAE_8parties": 1.1891,
+      "CRPS_8parties": 0.8856,
+      "EnergyScore_all9": 3.380182,
+      "mean_lambda": 1.0
+    },
+    {
+      "election_year": 2018,
+      "training_pool_size": 4,
+      "model": "pp_symmetric_noise",
+      "MAE_8parties": 1.1891,
+      "CRPS_8parties": 0.8299,
+      "EnergyScore_all9": 3.182366,
+      "mean_lambda": 1.0
+    }
+  ]
+}

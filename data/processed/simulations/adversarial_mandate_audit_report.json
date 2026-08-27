@@ -1,0 +1,20 @@
+{
+  "unique_cases_generated": 20000,
+  "canonical_input_config_hashes": 20000,
+  "total_cases": 20000,
+  "runtime_seconds": 528.41,
+  "fast_path_count": 1904,
+  "fast_kernel_handled_cases": 1904,
+  "reference_fallback_cases": 18096,
+  "fast_kernel_mismatch_count": 0,
+  "fast_kernel_accuracy_pct": 100.0,
+  "exact_tie_fallback_count": 2317,
+  "local_12_fallback_count": 3838,
+  "overhang_fallback_count": 11941,
+  "multi_return_count": 12126,
+  "gotland_coverage_count": 2857,
+  "historical_fixed_seat_map_count": 8000,
+  "adjustment_boundary_tie_count": 2268,
+  "dispatcher_mismatch_count": 0,
+  "production_dispatcher_accuracy_pct": 100.0
+}

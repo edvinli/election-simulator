@@ -1,0 +1,79 @@
+{
+  "report_generated_utc": "2026-08-27T16:31:20.408751+00:00",
+  "substantive_conclusion": "CONCLUSION_A_NO_EVIDENCE",
+  "tactical_voting_branch": "CLOSED_NO_EVIDENCE",
+  "conclusion_summary": "There is no positive threshold activation, and the negative threshold x affinity interaction (alpha = -0.0559, 95% CI [-0.08506801559219823, -0.026735615214666844]) is essentially identical to the 7% placebo (alpha_placebo = -0.0540, paired 95% CI [-0.05024, 0.04362]). Tactical/support voting is not detectable as either a systematic final-poll->election uplift or a 4%-specific increase in SCB cross-party vote intentions. The tactical-voting research branch is closed.",
+  "assertions": {
+    "all_29_waves_accounted_for": true,
+    "linear_kernel_bounds_valid": true,
+    "placebo_kernel_bounds_valid": true,
+    "vote_flow_non_negative": true,
+    "second_choice_non_negative": true,
+    "conversion_floor_enforced": true,
+    "primary_regression_fitted": true,
+    "all_assertions_passed": true
+  },
+  "sample_summary": {
+    "total_usable_cross_party_cells": 848,
+    "total_waves": 29,
+    "total_donor_recipient_pairs": 55
+  },
+  "primary_model": {
+    "name": "Primary: Partisympati + Linear K4 (OLS)",
+    "r_squared": 0.7604,
+    "theta_affinity": 0.09483,
+    "theta_bootstrap_se": 0.01078,
+    "theta_ci_95": [
+      0.07244,
+      0.11605
+    ],
+    "delta_threshold": 0.29531,
+    "delta_bootstrap_se": 0.24504,
+    "delta_ci_95": [
+      -0.13821,
+      0.8306
+    ],
+    "alpha_interaction": -0.05593,
+    "alpha_bootstrap_se": 0.01481,
+    "alpha_ci_95": [
+      -0.08507,
+      -0.02674
+    ],
+    "prob_alpha_positive": 0.0005
+  },
+  "placebo_comparison": {
+    "name": "Placebo: Partisympati + Linear K7 (OLS)",
+    "alpha_placebo_7pct": -0.05405,
+    "alpha_placebo_bootstrap_se": 0.01921,
+    "alpha_placebo_ci_95": [
+      -0.09036,
+      -0.01606
+    ],
+    "paired_bootstrap_difference": {
+      "point_difference_alpha4_minus_alpha7": -0.00188,
+      "paired_bootstrap_se": 0.02378,
+      "paired_bootstrap_ci_95": [
+        -0.05024,
+        0.04362
+      ],
+      "prob_alpha4_greater_than_alpha7": 0.463
+    }
+  },
+  "sensitivities": {
+    "wls_alpha": -0.01135,
+    "wls_alpha_ci": [
+      -0.02531,
+      -0.00307
+    ],
+    "vid10_alpha": -0.05798,
+    "vid10_alpha_ci": [
+      -0.08601,
+      -0.03114
+    ],
+    "lagged_affinity_alpha": -0.0658,
+    "lagged_affinity_alpha_ci": [
+      -0.10227,
+      -0.0268
+    ]
+  }
+}

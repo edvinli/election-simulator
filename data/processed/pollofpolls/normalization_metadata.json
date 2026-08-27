@@ -1,0 +1,20 @@
+{
+  "party_identifier_normalization": {
+    "FP": "L",
+    "Folkpartiet": "L",
+    "Liberalerna": "L"
+  },
+  "poll_reconstruction": "Contiguous identical pollster values across party chart CSV dates are treated as one interview span; homepage rows are merged by pollster and span.",
+  "support_unit": "percentage_points",
+  "timeseries_source_party_labels": {
+    "C": "C",
+    "FI": "FI",
+    "KD": "KD",
+    "L": "L",
+    "M": "M",
+    "MP": "MP",
+    "S": "S",
+    "SD": "SD",
+    "V": "V"
+  }
+}

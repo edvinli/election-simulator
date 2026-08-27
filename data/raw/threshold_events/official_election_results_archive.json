@@ -1,0 +1,910 @@
+{
+  "1991": {
+    "S": {
+      "election_year": 1991,
+      "election_date": "1991-09-15",
+      "party": "S",
+      "party_raw": "S",
+      "votes": 2062761,
+      "valid_votes_total": 5470761,
+      "vote_share_pct": 37.7052,
+      "source_url": "https://api.scb.se/OV0104/v1/doris/sv/ssd/ME/ME0104/ME0104C/ME0104T3"
+    },
+    "M": {
+      "election_year": 1991,
+      "election_date": "1991-09-15",
+      "party": "M",
+      "party_raw": "M",
+      "votes": 1199394,
+      "valid_votes_total": 5470761,
+      "vote_share_pct": 21.9237,
+      "source_url": "https://api.scb.se/OV0104/v1/doris/sv/ssd/ME/ME0104/ME0104C/ME0104T3"
+    },
+    "L": {
+      "election_year": 1991,
+      "election_date": "1991-09-15",
+      "party": "L",
+      "party_raw": "FP",
+      "votes": 499356,
+      "valid_votes_total": 5470761,
+      "vote_share_pct": 9.1277,
+      "source_url": "https://api.scb.se/OV0104/v1/doris/sv/ssd/ME/ME0104/ME0104C/ME0104T3"
+    },
+    "C": {
+      "election_year": 1991,
+      "election_date": "1991-09-15",
+      "party": "C",
+      "party_raw": "C",
+      "votes": 465175,
+      "valid_votes_total": 5470761,
+      "vote_share_pct": 8.5029,
+      "source_url": "https://api.scb.se/OV0104/v1/doris/sv/ssd/ME/ME0104/ME0104C/ME0104T3"
+    },
+    "KD": {
+      "election_year": 1991,
+      "election_date": "1991-09-15",
+      "party": "KD",
+      "party_raw": "KDS",
+      "votes": 390351,
+      "valid_votes_total": 5470761,
+      "vote_share_pct": 7.1352,
+      "source_url": "https://api.scb.se/OV0104/v1/doris/sv/ssd/ME/ME0104/ME0104C/ME0104T3"
+    },
+    "NYD": {
+      "election_year": 1991,
+      "election_date": "1991-09-15",
+      "party": "NYD",
+      "party_raw": "NYD",
+      "votes": 368281,
+      "valid_votes_total": 5470761,
+      "vote_share_pct": 6.7318,
+      "source_url": "https://api.scb.se/OV0104/v1/doris/sv/ssd/ME/ME0104/ME0104C/ME0104T3"
+    },
+    "V": {
+      "election_year": 1991,
+      "election_date": "1991-09-15",
+      "party": "V",
+      "party_raw": "V",
+      "votes": 246905,
+      "valid_votes_total": 5470761,
+      "vote_share_pct": 4.5132,
+      "source_url": "https://api.scb.se/OV0104/v1/doris/sv/ssd/ME/ME0104/ME0104C/ME0104T3"
+    },
+    "MP": {
+      "election_year": 1991,
+      "election_date": "1991-09-15",
+      "party": "MP",
+      "party_raw": "MP",
+      "votes": 185051,
+      "valid_votes_total": 5470761,
+      "vote_share_pct": 3.3825,
+      "source_url": "https://api.scb.se/OV0104/v1/doris/sv/ssd/ME/ME0104/ME0104C/ME0104T3"
+    },
+    "SD": {
+      "election_year": 1991,
+      "election_date": "1991-09-15",
+      "party": "SD",
+      "party_raw": "SD",
+      "votes": 4968,
+      "valid_votes_total": 5470761,
+      "vote_share_pct": 0.0908,
+      "source_url": "https://api.scb.se/OV0104/v1/doris/sv/ssd/ME/ME0104/ME0104C/ME0104T3"
+    },
+    "OTHER": {
+      "election_year": 1991,
+      "election_date": "1991-09-15",
+      "party": "OTHER",
+      "party_raw": "ÖVRIGA",
+      "votes": 48519,
+      "valid_votes_total": 5470761,
+      "vote_share_pct": 0.8869,
+      "source_url": "https://api.scb.se/OV0104/v1/doris/sv/ssd/ME/ME0104/ME0104C/ME0104T3"
+    }
+  },
+  "1994": {
+    "S": {
+      "election_year": 1994,
+      "election_date": "1994-09-18",
+      "party": "S",
+      "party_raw": "S",
+      "votes": 2513905,
+      "valid_votes_total": 5555540,
+      "vote_share_pct": 45.2504,
+      "source_url": "https://api.scb.se/OV0104/v1/doris/sv/ssd/ME/ME0104/ME0104C/ME0104T3"
+    },
+    "M": {
+      "election_year": 1994,
+      "election_date": "1994-09-18",
+      "party": "M",
+      "party_raw": "M",
+      "votes": 1243253,
+      "valid_votes_total": 5555540,
+      "vote_share_pct": 22.3786,
+      "source_url": "https://api.scb.se/OV0104/v1/doris/sv/ssd/ME/ME0104/ME0104C/ME0104T3"
+    },
+    "C": {
+      "election_year": 1994,
+      "election_date": "1994-09-18",
+      "party": "C",
+      "party_raw": "C",
+      "votes": 425153,
+      "valid_votes_total": 5555540,
+      "vote_share_pct": 7.6528,
+      "source_url": "https://api.scb.se/OV0104/v1/doris/sv/ssd/ME/ME0104/ME0104C/ME0104T3"
+    },
+    "L": {
+      "election_year": 1994,
+      "election_date": "1994-09-18",
+      "party": "L",
+      "party_raw": "FP",
+      "votes": 399556,
+      "valid_votes_total": 5555540,
+      "vote_share_pct": 7.192,
+      "source_url": "https://api.scb.se/OV0104/v1/doris/sv/ssd/ME/ME0104/ME0104C/ME0104T3"
+    },
+    "V": {
+      "election_year": 1994,
+      "election_date": "1994-09-18",
+      "party": "V",
+      "party_raw": "V",
+      "votes": 342988,
+      "valid_votes_total": 5555540,
+      "vote_share_pct": 6.1738,
+      "source_url": "https://api.scb.se/OV0104/v1/doris/sv/ssd/ME/ME0104/ME0104C/ME0104T3"
+    },
+    "MP": {
+      "election_year": 1994,
+      "election_date": "1994-09-18",
+      "party": "MP",
+      "party_raw": "MP",
+      "votes": 279042,
+      "valid_votes_total": 5555540,
+      "vote_share_pct": 5.0228,
+      "source_url": "https://api.scb.se/OV0104/v1/doris/sv/ssd/ME/ME0104/ME0104C/ME0104T3"
+    },
+    "KD": {
+      "election_year": 1994,
+      "election_date": "1994-09-18",
+      "party": "KD",
+      "party_raw": "KDS",
+      "votes": 225974,
+      "valid_votes_total": 5555540,
+      "vote_share_pct": 4.0675,
+      "source_url": "https://api.scb.se/OV0104/v1/doris/sv/ssd/ME/ME0104/ME0104C/ME0104T3"
+    },
+    "NYD": {
+      "election_year": 1994,
+      "election_date": "1994-09-18",
+      "party": "NYD",
+      "party_raw": "NYD",
+      "votes": 68663,
+      "valid_votes_total": 5555540,
+      "vote_share_pct": 1.2359,
+      "source_url": "https://api.scb.se/OV0104/v1/doris/sv/ssd/ME/ME0104/ME0104C/ME0104T3"
+    },
+    "SD": {
+      "election_year": 1994,
+      "election_date": "1994-09-18",
+      "party": "SD",
+      "party_raw": "SD",
+      "votes": 13950,
+      "valid_votes_total": 5555540,
+      "vote_share_pct": 0.2511,
+      "source_url": "https://api.scb.se/OV0104/v1/doris/sv/ssd/ME/ME0104/ME0104C/ME0104T3"
+    },
+    "OTHER": {
+      "election_year": 1994,
+      "election_date": "1994-09-18",
+      "party": "OTHER",
+      "party_raw": "ÖVRIGA",
+      "votes": 43056,
+      "valid_votes_total": 5555540,
+      "vote_share_pct": 0.775,
+      "source_url": "https://api.scb.se/OV0104/v1/doris/sv/ssd/ME/ME0104/ME0104C/ME0104T3"
+    }
+  },
+  "1998": {
+    "S": {
+      "election_year": 1998,
+      "election_date": "1998-09-20",
+      "party": "S",
+      "party_raw": "S",
+      "votes": 1914426,
+      "valid_votes_total": 5260109,
+      "vote_share_pct": 36.3952,
+      "source_url": "https://api.scb.se/OV0104/v1/doris/sv/ssd/ME/ME0104/ME0104C/ME0104T3"
+    },
+    "M": {
+      "election_year": 1998,
+      "election_date": "1998-09-20",
+      "party": "M",
+      "party_raw": "M",
+      "votes": 1204926,
+      "valid_votes_total": 5260109,
+      "vote_share_pct": 22.9069,
+      "source_url": "https://api.scb.se/OV0104/v1/doris/sv/ssd/ME/ME0104/ME0104C/ME0104T3"
+    },
+    "V": {
+      "election_year": 1998,
+      "election_date": "1998-09-20",
+      "party": "V",
+      "party_raw": "V",
+      "votes": 631011,
+      "valid_votes_total": 5260109,
+      "vote_share_pct": 11.9962,
+      "source_url": "https://api.scb.se/OV0104/v1/doris/sv/ssd/ME/ME0104/ME0104C/ME0104T3"
+    },
+    "KD": {
+      "election_year": 1998,
+      "election_date": "1998-09-20",
+      "party": "KD",
+      "party_raw": "KD",
+      "votes": 618033,
+      "valid_votes_total": 5260109,
+      "vote_share_pct": 11.7494,
+      "source_url": "https://api.scb.se/OV0104/v1/doris/sv/ssd/ME/ME0104/ME0104C/ME0104T3"
+    },
+    "C": {
+      "election_year": 1998,
+      "election_date": "1998-09-20",
+      "party": "C",
+      "party_raw": "C",
+      "votes": 269762,
+      "valid_votes_total": 5260109,
+      "vote_share_pct": 5.1284,
+      "source_url": "https://api.scb.se/OV0104/v1/doris/sv/ssd/ME/ME0104/ME0104C/ME0104T3"
+    },
+    "L": {
+      "election_year": 1998,
+      "election_date": "1998-09-20",
+      "party": "L",
+      "party_raw": "FP",
+      "votes": 248076,
+      "valid_votes_total": 5260109,
+      "vote_share_pct": 4.7162,
+      "source_url": "https://api.scb.se/OV0104/v1/doris/sv/ssd/ME/ME0104/ME0104C/ME0104T3"
+    },
+    "MP": {
+      "election_year": 1998,
+      "election_date": "1998-09-20",
+      "party": "MP",
+      "party_raw": "MP",
+      "votes": 236699,
+      "valid_votes_total": 5260109,
+      "vote_share_pct": 4.4999,
+      "source_url": "https://api.scb.se/OV0104/v1/doris/sv/ssd/ME/ME0104/ME0104C/ME0104T3"
+    },
+    "SD": {
+      "election_year": 1998,
+      "election_date": "1998-09-20",
+      "party": "SD",
+      "party_raw": "SD",
+      "votes": 19624,
+      "valid_votes_total": 5260109,
+      "vote_share_pct": 0.3731,
+      "source_url": "https://api.scb.se/OV0104/v1/doris/sv/ssd/ME/ME0104/ME0104C/ME0104T3"
+    },
+    "OTHER": {
+      "election_year": 1998,
+      "election_date": "1998-09-20",
+      "party": "OTHER",
+      "party_raw": "ÖVRIGA",
+      "votes": 117552,
+      "valid_votes_total": 5260109,
+      "vote_share_pct": 2.2348,
+      "source_url": "https://api.scb.se/OV0104/v1/doris/sv/ssd/ME/ME0104/ME0104C/ME0104T3"
+    }
+  },
+  "2002": {
+    "M": {
+      "election_year": 2002,
+      "election_date": "2002-09-15",
+      "party": "M",
+      "party_raw": "Moderata Samlingspartiet",
+      "votes": 809041,
+      "valid_votes_total": 5303212,
+      "vote_share_pct": 15.2557,
+      "source_url": "https://historik.val.se/val/val_02/slutresultat/00R/00.html"
+    },
+    "L": {
+      "election_year": 2002,
+      "election_date": "2002-09-15",
+      "party": "L",
+      "party_raw": "Folkpartiet liberalerna",
+      "votes": 710312,
+      "valid_votes_total": 5303212,
+      "vote_share_pct": 13.394,
+      "source_url": "https://historik.val.se/val/val_02/slutresultat/00R/00.html"
+    },
+    "C": {
+      "election_year": 2002,
+      "election_date": "2002-09-15",
+      "party": "C",
+      "party_raw": "Centerpartiet",
+      "votes": 328428,
+      "valid_votes_total": 5303212,
+      "vote_share_pct": 6.193,
+      "source_url": "https://historik.val.se/val/val_02/slutresultat/00R/00.html"
+    },
+    "KD": {
+      "election_year": 2002,
+      "election_date": "2002-09-15",
+      "party": "KD",
+      "party_raw": "Kristdemokraterna",
+      "votes": 485235,
+      "valid_votes_total": 5303212,
+      "vote_share_pct": 9.1498,
+      "source_url": "https://historik.val.se/val/val_02/slutresultat/00R/00.html"
+    },
+    "S": {
+      "election_year": 2002,
+      "election_date": "2002-09-15",
+      "party": "S",
+      "party_raw": "Arbetarepartiet-Socialdemokraterna",
+      "votes": 2113560,
+      "valid_votes_total": 5303212,
+      "vote_share_pct": 39.8543,
+      "source_url": "https://historik.val.se/val/val_02/slutresultat/00R/00.html"
+    },
+    "V": {
+      "election_year": 2002,
+      "election_date": "2002-09-15",
+      "party": "V",
+      "party_raw": "Vänsterpartiet",
+      "votes": 444854,
+      "valid_votes_total": 5303212,
+      "vote_share_pct": 8.3884,
+      "source_url": "https://historik.val.se/val/val_02/slutresultat/00R/00.html"
+    },
+    "MP": {
+      "election_year": 2002,
+      "election_date": "2002-09-15",
+      "party": "MP",
+      "party_raw": "Miljöpartiet de gröna",
+      "votes": 246392,
+      "valid_votes_total": 5303212,
+      "vote_share_pct": 4.6461,
+      "source_url": "https://historik.val.se/val/val_02/slutresultat/00R/00.html"
+    },
+    "SD": {
+      "election_year": 2002,
+      "election_date": "2002-09-15",
+      "party": "SD",
+      "party_raw": "Sverigedemokraterna",
+      "votes": 76300,
+      "valid_votes_total": 5303212,
+      "vote_share_pct": 1.4388,
+      "source_url": "https://historik.val.se/val/val_02/slutresultat/00R/00.html"
+    },
+    "FI": {
+      "election_year": 2002,
+      "election_date": "2002-09-15",
+      "party": "FI",
+      "party_raw": "FI (ej deltagit)",
+      "votes": 0,
+      "valid_votes_total": 5303212,
+      "vote_share_pct": 0.0,
+      "source_url": "https://historik.val.se/val/val_02/slutresultat/00R/00.html"
+    },
+    "OTHER": {
+      "election_year": 2002,
+      "election_date": "2002-09-15",
+      "party": "OTHER",
+      "party_raw": "Övriga partier",
+      "votes": 89090,
+      "valid_votes_total": 5303212,
+      "vote_share_pct": 1.6799,
+      "source_url": "https://historik.val.se/val/val_02/slutresultat/00R/00.html"
+    }
+  },
+  "2006": {
+    "M": {
+      "election_year": 2006,
+      "election_date": "2006-09-17",
+      "party": "M",
+      "party_raw": "Moderata Samlingspartiet",
+      "votes": 1456014,
+      "valid_votes_total": 5551278,
+      "vote_share_pct": 26.2284,
+      "source_url": "https://historik.val.se/val/val2006/slutlig/R/rike/roster.html"
+    },
+    "L": {
+      "election_year": 2006,
+      "election_date": "2006-09-17",
+      "party": "L",
+      "party_raw": "Folkpartiet liberalerna",
+      "votes": 418395,
+      "valid_votes_total": 5551278,
+      "vote_share_pct": 7.5369,
+      "source_url": "https://historik.val.se/val/val2006/slutlig/R/rike/roster.html"
+    },
+    "C": {
+      "election_year": 2006,
+      "election_date": "2006-09-17",
+      "party": "C",
+      "party_raw": "Centerpartiet",
+      "votes": 437389,
+      "valid_votes_total": 5551278,
+      "vote_share_pct": 7.8791,
+      "source_url": "https://historik.val.se/val/val2006/slutlig/R/rike/roster.html"
+    },
+    "KD": {
+      "election_year": 2006,
+      "election_date": "2006-09-17",
+      "party": "KD",
+      "party_raw": "Kristdemokraterna",
+      "votes": 365998,
+      "valid_votes_total": 5551278,
+      "vote_share_pct": 6.593,
+      "source_url": "https://historik.val.se/val/val2006/slutlig/R/rike/roster.html"
+    },
+    "S": {
+      "election_year": 2006,
+      "election_date": "2006-09-17",
+      "party": "S",
+      "party_raw": "Arbetarepartiet-Socialdemokraterna",
+      "votes": 1942625,
+      "valid_votes_total": 5551278,
+      "vote_share_pct": 34.9942,
+      "source_url": "https://historik.val.se/val/val2006/slutlig/R/rike/roster.html"
+    },
+    "V": {
+      "election_year": 2006,
+      "election_date": "2006-09-17",
+      "party": "V",
+      "party_raw": "Vänsterpartiet",
+      "votes": 324722,
+      "valid_votes_total": 5551278,
+      "vote_share_pct": 5.8495,
+      "source_url": "https://historik.val.se/val/val2006/slutlig/R/rike/roster.html"
+    },
+    "MP": {
+      "election_year": 2006,
+      "election_date": "2006-09-17",
+      "party": "MP",
+      "party_raw": "Miljöpartiet de gröna",
+      "votes": 291121,
+      "valid_votes_total": 5551278,
+      "vote_share_pct": 5.2442,
+      "source_url": "https://historik.val.se/val/val2006/slutlig/R/rike/roster.html"
+    },
+    "SD": {
+      "election_year": 2006,
+      "election_date": "2006-09-17",
+      "party": "SD",
+      "party_raw": "Sverigedemokraterna",
+      "votes": 162463,
+      "valid_votes_total": 5551278,
+      "vote_share_pct": 2.9266,
+      "source_url": "https://historik.val.se/val/val2006/slutlig/R/rike/roster.html"
+    },
+    "FI": {
+      "election_year": 2006,
+      "election_date": "2006-09-17",
+      "party": "FI",
+      "party_raw": "Feministiskt initiativ",
+      "votes": 37954,
+      "valid_votes_total": 5551278,
+      "vote_share_pct": 0.6837,
+      "source_url": "https://historik.val.se/val/val2006/slutlig/R/rike/roster.html"
+    },
+    "OTHER": {
+      "election_year": 2006,
+      "election_date": "2006-09-17",
+      "party": "OTHER",
+      "party_raw": "Övriga partier",
+      "votes": 114597,
+      "valid_votes_total": 5551278,
+      "vote_share_pct": 2.0643,
+      "source_url": "https://historik.val.se/val/val2006/slutlig/R/rike/roster.html"
+    }
+  },
+  "2010": {
+    "M": {
+      "election_year": 2010,
+      "election_date": "2010-09-19",
+      "party": "M",
+      "party_raw": "Moderata Samlingspartiet",
+      "votes": 1791766,
+      "valid_votes_total": 5960408,
+      "vote_share_pct": 30.0611,
+      "source_url": "https://historik.val.se/val/val2010/slutresultat/R/rike/index.html"
+    },
+    "L": {
+      "election_year": 2010,
+      "election_date": "2010-09-19",
+      "party": "L",
+      "party_raw": "Folkpartiet liberalerna",
+      "votes": 420524,
+      "valid_votes_total": 5960408,
+      "vote_share_pct": 7.0553,
+      "source_url": "https://historik.val.se/val/val2010/slutresultat/R/rike/index.html"
+    },
+    "C": {
+      "election_year": 2010,
+      "election_date": "2010-09-19",
+      "party": "C",
+      "party_raw": "Centerpartiet",
+      "votes": 390804,
+      "valid_votes_total": 5960408,
+      "vote_share_pct": 6.5567,
+      "source_url": "https://historik.val.se/val/val2010/slutresultat/R/rike/index.html"
+    },
+    "KD": {
+      "election_year": 2010,
+      "election_date": "2010-09-19",
+      "party": "KD",
+      "party_raw": "Kristdemokraterna",
+      "votes": 333696,
+      "valid_votes_total": 5960408,
+      "vote_share_pct": 5.5985,
+      "source_url": "https://historik.val.se/val/val2010/slutresultat/R/rike/index.html"
+    },
+    "S": {
+      "election_year": 2010,
+      "election_date": "2010-09-19",
+      "party": "S",
+      "party_raw": "Arbetarepartiet-Socialdemokraterna",
+      "votes": 1827497,
+      "valid_votes_total": 5960408,
+      "vote_share_pct": 30.6606,
+      "source_url": "https://historik.val.se/val/val2010/slutresultat/R/rike/index.html"
+    },
+    "V": {
+      "election_year": 2010,
+      "election_date": "2010-09-19",
+      "party": "V",
+      "party_raw": "Vänsterpartiet",
+      "votes": 334053,
+      "valid_votes_total": 5960408,
+      "vote_share_pct": 5.6045,
+      "source_url": "https://historik.val.se/val/val2010/slutresultat/R/rike/index.html"
+    },
+    "MP": {
+      "election_year": 2010,
+      "election_date": "2010-09-19",
+      "party": "MP",
+      "party_raw": "Miljöpartiet de gröna",
+      "votes": 437435,
+      "valid_votes_total": 5960408,
+      "vote_share_pct": 7.339,
+      "source_url": "https://historik.val.se/val/val2010/slutresultat/R/rike/index.html"
+    },
+    "SD": {
+      "election_year": 2010,
+      "election_date": "2010-09-19",
+      "party": "SD",
+      "party_raw": "Sverigedemokraterna",
+      "votes": 339610,
+      "valid_votes_total": 5960408,
+      "vote_share_pct": 5.6978,
+      "source_url": "https://historik.val.se/val/val2010/slutresultat/R/rike/index.html"
+    },
+    "FI": {
+      "election_year": 2010,
+      "election_date": "2010-09-19",
+      "party": "FI",
+      "party_raw": "Feministiskt initiativ",
+      "votes": 24139,
+      "valid_votes_total": 5960408,
+      "vote_share_pct": 0.405,
+      "source_url": "https://historik.val.se/val/val2010/slutresultat/R/rike/index.html"
+    },
+    "OTHER": {
+      "election_year": 2010,
+      "election_date": "2010-09-19",
+      "party": "OTHER",
+      "party_raw": "Övriga partier",
+      "votes": 60884,
+      "valid_votes_total": 5960408,
+      "vote_share_pct": 1.0215,
+      "source_url": "https://historik.val.se/val/val2010/slutresultat/R/rike/index.html"
+    }
+  },
+  "2014": {
+    "M": {
+      "election_year": 2014,
+      "election_date": "2014-09-14",
+      "party": "M",
+      "party_raw": "Moderaterna",
+      "votes": 1453517,
+      "valid_votes_total": 6231573,
+      "vote_share_pct": 23.325,
+      "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rike/index.html"
+    },
+    "L": {
+      "election_year": 2014,
+      "election_date": "2014-09-14",
+      "party": "L",
+      "party_raw": "Folkpartiet liberalerna",
+      "votes": 337773,
+      "valid_votes_total": 6231573,
+      "vote_share_pct": 5.4203,
+      "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rike/index.html"
+    },
+    "C": {
+      "election_year": 2014,
+      "election_date": "2014-09-14",
+      "party": "C",
+      "party_raw": "Centerpartiet",
+      "votes": 380937,
+      "valid_votes_total": 6231573,
+      "vote_share_pct": 6.113,
+      "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rike/index.html"
+    },
+    "KD": {
+      "election_year": 2014,
+      "election_date": "2014-09-14",
+      "party": "KD",
+      "party_raw": "Kristdemokraterna",
+      "votes": 284806,
+      "valid_votes_total": 6231573,
+      "vote_share_pct": 4.5704,
+      "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rike/index.html"
+    },
+    "S": {
+      "election_year": 2014,
+      "election_date": "2014-09-14",
+      "party": "S",
+      "party_raw": "Arbetarepartiet-Socialdemokraterna",
+      "votes": 1932711,
+      "valid_votes_total": 6231573,
+      "vote_share_pct": 31.0148,
+      "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rike/index.html"
+    },
+    "V": {
+      "election_year": 2014,
+      "election_date": "2014-09-14",
+      "party": "V",
+      "party_raw": "Vänsterpartiet",
+      "votes": 356331,
+      "valid_votes_total": 6231573,
+      "vote_share_pct": 5.7182,
+      "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rike/index.html"
+    },
+    "MP": {
+      "election_year": 2014,
+      "election_date": "2014-09-14",
+      "party": "MP",
+      "party_raw": "Miljöpartiet de gröna",
+      "votes": 429275,
+      "valid_votes_total": 6231573,
+      "vote_share_pct": 6.8887,
+      "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rike/index.html"
+    },
+    "SD": {
+      "election_year": 2014,
+      "election_date": "2014-09-14",
+      "party": "SD",
+      "party_raw": "Sverigedemokraterna",
+      "votes": 801178,
+      "valid_votes_total": 6231573,
+      "vote_share_pct": 12.8568,
+      "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rike/index.html"
+    },
+    "FI": {
+      "election_year": 2014,
+      "election_date": "2014-09-14",
+      "party": "FI",
+      "party_raw": "Feministiskt initiativ",
+      "votes": 194719,
+      "valid_votes_total": 6231573,
+      "vote_share_pct": 3.1247,
+      "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rike/index.html"
+    },
+    "OTHER": {
+      "election_year": 2014,
+      "election_date": "2014-09-14",
+      "party": "OTHER",
+      "party_raw": "Övriga partier",
+      "votes": 60326,
+      "valid_votes_total": 6231573,
+      "vote_share_pct": 0.9681,
+      "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rike/index.html"
+    }
+  },
+  "2018": {
+    "M": {
+      "election_year": 2018,
+      "election_date": "2018-09-09",
+      "party": "M",
+      "party_raw": "Moderaterna",
+      "votes": 1284698,
+      "valid_votes_total": 6476725,
+      "vote_share_pct": 19.8356,
+      "source_url": "https://historik.val.se/val/val2018/slutresultat/R/rike/index.html"
+    },
+    "L": {
+      "election_year": 2018,
+      "election_date": "2018-09-09",
+      "party": "L",
+      "party_raw": "Liberalerna (tidigare Folkpartiet)",
+      "votes": 355546,
+      "valid_votes_total": 6476725,
+      "vote_share_pct": 5.4896,
+      "source_url": "https://historik.val.se/val/val2018/slutresultat/R/rike/index.html"
+    },
+    "C": {
+      "election_year": 2018,
+      "election_date": "2018-09-09",
+      "party": "C",
+      "party_raw": "Centerpartiet",
+      "votes": 557500,
+      "valid_votes_total": 6476725,
+      "vote_share_pct": 8.6077,
+      "source_url": "https://historik.val.se/val/val2018/slutresultat/R/rike/index.html"
+    },
+    "KD": {
+      "election_year": 2018,
+      "election_date": "2018-09-09",
+      "party": "KD",
+      "party_raw": "Kristdemokraterna",
+      "votes": 409478,
+      "valid_votes_total": 6476725,
+      "vote_share_pct": 6.3223,
+      "source_url": "https://historik.val.se/val/val2018/slutresultat/R/rike/index.html"
+    },
+    "S": {
+      "election_year": 2018,
+      "election_date": "2018-09-09",
+      "party": "S",
+      "party_raw": "Arbetarepartiet-Socialdemokraterna",
+      "votes": 1830386,
+      "valid_votes_total": 6476725,
+      "vote_share_pct": 28.261,
+      "source_url": "https://historik.val.se/val/val2018/slutresultat/R/rike/index.html"
+    },
+    "V": {
+      "election_year": 2018,
+      "election_date": "2018-09-09",
+      "party": "V",
+      "party_raw": "Vänsterpartiet",
+      "votes": 518454,
+      "valid_votes_total": 6476725,
+      "vote_share_pct": 8.0049,
+      "source_url": "https://historik.val.se/val/val2018/slutresultat/R/rike/index.html"
+    },
+    "MP": {
+      "election_year": 2018,
+      "election_date": "2018-09-09",
+      "party": "MP",
+      "party_raw": "Miljöpartiet de gröna",
+      "votes": 285899,
+      "valid_votes_total": 6476725,
+      "vote_share_pct": 4.4143,
+      "source_url": "https://historik.val.se/val/val2018/slutresultat/R/rike/index.html"
+    },
+    "SD": {
+      "election_year": 2018,
+      "election_date": "2018-09-09",
+      "party": "SD",
+      "party_raw": "Sverigedemokraterna",
+      "votes": 1135627,
+      "valid_votes_total": 6476725,
+      "vote_share_pct": 17.534,
+      "source_url": "https://historik.val.se/val/val2018/slutresultat/R/rike/index.html"
+    },
+    "FI": {
+      "election_year": 2018,
+      "election_date": "2018-09-09",
+      "party": "FI",
+      "party_raw": "Feministiskt initiativ",
+      "votes": 29665,
+      "valid_votes_total": 6476725,
+      "vote_share_pct": 0.458,
+      "source_url": "https://historik.val.se/val/val2018/slutresultat/R/rike/index.html"
+    },
+    "OTHER": {
+      "election_year": 2018,
+      "election_date": "2018-09-09",
+      "party": "OTHER",
+      "party_raw": "Övriga partier",
+      "votes": 69472,
+      "valid_votes_total": 6476725,
+      "vote_share_pct": 1.0726,
+      "source_url": "https://historik.val.se/val/val2018/slutresultat/R/rike/index.html"
+    }
+  },
+  "2022": {
+    "M": {
+      "election_year": 2022,
+      "election_date": "2022-09-11",
+      "party": "M",
+      "party_raw": "Moderaterna",
+      "votes": 1237428,
+      "valid_votes_total": 6477970,
+      "vote_share_pct": 19.1021,
+      "source_url": "https://resultat.val.se/data/resultat/val2022/RD_S.json"
+    },
+    "L": {
+      "election_year": 2022,
+      "election_date": "2022-09-11",
+      "party": "L",
+      "party_raw": "Liberalerna (tidigare Folkpartiet)",
+      "votes": 298542,
+      "valid_votes_total": 6477970,
+      "vote_share_pct": 4.6086,
+      "source_url": "https://resultat.val.se/data/resultat/val2022/RD_S.json"
+    },
+    "C": {
+      "election_year": 2022,
+      "election_date": "2022-09-11",
+      "party": "C",
+      "party_raw": "Centerpartiet",
+      "votes": 434945,
+      "valid_votes_total": 6477970,
+      "vote_share_pct": 6.7142,
+      "source_url": "https://resultat.val.se/data/resultat/val2022/RD_S.json"
+    },
+    "KD": {
+      "election_year": 2022,
+      "election_date": "2022-09-11",
+      "party": "KD",
+      "party_raw": "Kristdemokraterna",
+      "votes": 345712,
+      "valid_votes_total": 6477970,
+      "vote_share_pct": 5.3367,
+      "source_url": "https://resultat.val.se/data/resultat/val2022/RD_S.json"
+    },
+    "S": {
+      "election_year": 2022,
+      "election_date": "2022-09-11",
+      "party": "S",
+      "party_raw": "Arbetarepartiet-Socialdemokraterna",
+      "votes": 1964474,
+      "valid_votes_total": 6477970,
+      "vote_share_pct": 30.3255,
+      "source_url": "https://resultat.val.se/data/resultat/val2022/RD_S.json"
+    },
+    "V": {
+      "election_year": 2022,
+      "election_date": "2022-09-11",
+      "party": "V",
+      "party_raw": "Vänsterpartiet",
+      "votes": 437050,
+      "valid_votes_total": 6477970,
+      "vote_share_pct": 6.7467,
+      "source_url": "https://resultat.val.se/data/resultat/val2022/RD_S.json"
+    },
+    "MP": {
+      "election_year": 2022,
+      "election_date": "2022-09-11",
+      "party": "MP",
+      "party_raw": "Miljöpartiet de gröna",
+      "votes": 329242,
+      "valid_votes_total": 6477970,
+      "vote_share_pct": 5.0825,
+      "source_url": "https://resultat.val.se/data/resultat/val2022/RD_S.json"
+    },
+    "SD": {
+      "election_year": 2022,
+      "election_date": "2022-09-11",
+      "party": "SD",
+      "party_raw": "Sverigedemokraterna",
+      "votes": 1330325,
+      "valid_votes_total": 6477970,
+      "vote_share_pct": 20.5361,
+      "source_url": "https://resultat.val.se/data/resultat/val2022/RD_S.json"
+    },
+    "FI": {
+      "election_year": 2022,
+      "election_date": "2022-09-11",
+      "party": "FI",
+      "party_raw": "Feministiskt initiativ",
+      "votes": 3157,
+      "valid_votes_total": 6477970,
+      "vote_share_pct": 0.0487,
+      "source_url": "https://resultat.val.se/data/resultat/val2022/RD_S.json"
+    },
+    "OTHER": {
+      "election_year": 2022,
+      "election_date": "2022-09-11",
+      "party": "OTHER",
+      "party_raw": "Övriga partier",
+      "votes": 97095,
+      "valid_votes_total": 6477970,
+      "vote_share_pct": 1.4988,
+      "source_url": "https://resultat.val.se/data/resultat/val2022/RD_S.json"
+    }
+  }
+}

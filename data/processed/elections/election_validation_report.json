@@ -1,0 +1,55 @@
+{
+  "status": "PASSED",
+  "elections_checked": [
+    {
+      "year": 2002,
+      "election_date": "2002-09-15",
+      "valid_votes_total": 5303212,
+      "sum_canonical_votes": 5303212,
+      "sum_canonical_shares": 100.0,
+      "canonical_parties_count": 10
+    },
+    {
+      "year": 2006,
+      "election_date": "2006-09-17",
+      "valid_votes_total": 5551278,
+      "sum_canonical_votes": 5551278,
+      "sum_canonical_shares": 99.9999,
+      "canonical_parties_count": 10
+    },
+    {
+      "year": 2010,
+      "election_date": "2010-09-19",
+      "valid_votes_total": 5960408,
+      "sum_canonical_votes": 5960408,
+      "sum_canonical_shares": 100.0,
+      "canonical_parties_count": 10
+    },
+    {
+      "year": 2014,
+      "election_date": "2014-09-14",
+      "valid_votes_total": 6231573,
+      "sum_canonical_votes": 6231573,
+      "sum_canonical_shares": 100.0,
+      "canonical_parties_count": 10
+    },
+    {
+      "year": 2018,
+      "election_date": "2018-09-09",
+      "valid_votes_total": 6476725,
+      "sum_canonical_votes": 6476725,
+      "sum_canonical_shares": 100.0,
+      "canonical_parties_count": 10
+    },
+    {
+      "year": 2022,
+      "election_date": "2022-09-11",
+      "valid_votes_total": 6477970,
+      "sum_canonical_votes": 6477970,
+      "sum_canonical_shares": 99.9999,
+      "canonical_parties_count": 10
+    }
+  ],
+  "errors": [],
+  "warnings": []
+}

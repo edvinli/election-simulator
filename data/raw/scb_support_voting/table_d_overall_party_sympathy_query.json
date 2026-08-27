@@ -1,0 +1,81 @@
+{
+  "query": [
+    {
+      "code": "Kon",
+      "selection": {
+        "filter": "item",
+        "values": [
+          "TOT"
+        ]
+      }
+    },
+    {
+      "code": "Alder",
+      "selection": {
+        "filter": "item",
+        "values": [
+          "tot18+"
+        ]
+      }
+    },
+    {
+      "code": "Parti",
+      "selection": {
+        "filter": "all",
+        "values": [
+          "*"
+        ]
+      }
+    },
+    {
+      "code": "ContentsCode",
+      "selection": {
+        "filter": "item",
+        "values": [
+          "ME0201CM",
+          "ME0201CN"
+        ]
+      }
+    },
+    {
+      "code": "Tid",
+      "selection": {
+        "filter": "item",
+        "values": [
+          "2010M11",
+          "2011M05",
+          "2011M11",
+          "2012M05",
+          "2012M11",
+          "2013M05",
+          "2013M11",
+          "2014M05",
+          "2014M11",
+          "2015M05",
+          "2015M11",
+          "2016M05",
+          "2016M11",
+          "2017M05",
+          "2017M11",
+          "2018M05",
+          "2018M11",
+          "2019M05",
+          "2019M11",
+          "2020M05",
+          "2020M11",
+          "2021M05",
+          "2021M11",
+          "2022M05",
+          "2022M11",
+          "2023M05",
+          "2024M05",
+          "2025M05",
+          "2026M05"
+        ]
+      }
+    }
+  ],
+  "response": {
+    "format": "json"
+  }
+}

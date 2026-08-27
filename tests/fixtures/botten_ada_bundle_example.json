@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0",
+  "fixture_status": "SYNTHETIC_SCHEMA_CONTRACT_ONLY_NOT_SCIENTIFIC_OUTPUT",
+  "candidate": "B",
+  "model_name": "Botten Ada (external bundle example)",
+  "model_version": "external-version-required",
+  "party_order": ["M", "L", "C", "KD", "S", "V", "MP", "SD"],
+  "source": {
+    "repository_url": "https://github.com/MansMeg/ada_code",
+    "repository_commit": "2dfe246b86c5cab517e4a0cb87fd57e5a9c62512",
+    "note": "These values are schema-only placeholders and must not be used as Botten Ada evidence. Replace with an independently generated external bundle and record its file SHA-256."
+  },
+  "cases": [
+    {
+      "election_date": "2018-09-09",
+      "as_of": "2018-05-20",
+      "horizon_days": 112,
+      "vote_draws": [
+        [20.0, 5.0, 7.0, 6.0, 30.0, 8.0, 5.0, 19.0],
+        [20.1, 4.9, 7.1, 6.0, 29.9, 8.0, 5.0, 19.0]
+      ],
+      "seat_draws": null,
+      "actual_vote": [19.84, 5.49, 8.61, 6.32, 28.26, 8.0, 4.41, 17.53],
+      "actual_seats": null
+    }
+  ]
+}

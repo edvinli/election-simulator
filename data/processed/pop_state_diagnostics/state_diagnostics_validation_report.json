@@ -1,0 +1,198 @@
+{
+  "report_generated_utc": "2026-08-27T16:50:25.832369+00:00",
+  "step_4b_gate_decision": "REJECT_STATE_DYNAMICS_CERTIFY_RC1",
+  "gate_passed": false,
+  "decision_summary": "State-conditioned dynamics does not demonstrate sufficient out-of-sample predictive advantage over Dynamics v2 and the Recency Control to justify additional model complexity. Terminate dynamics development and certify RC1 as ElectionSimulator v1.0.",
+  "gate_checks": {
+    "check1_material_energy_improvement": false,
+    "check2_multi_horizon_consistency": false,
+    "check3_no_crps_degradation": false,
+    "check4_calendar_block_ci_excludes_zero": false,
+    "check5_beats_recency_control": true
+  },
+  "pooled_scores": {
+    "n_evaluated_cases": 3610,
+    "arm_a_v2": {
+      "energy_score": 1.26543,
+      "crps": 0.31196
+    },
+    "arm_b_recent": {
+      "energy_score": 1.44042,
+      "crps": 0.34893
+    },
+    "arm_c_50nn": {
+      "energy_score": 1.39616,
+      "crps": 0.34025
+    },
+    "arm_d_raw": {
+      "energy_score": 1.86674,
+      "crps": 0.45072
+    },
+    "sensitivity_25nn": {
+      "energy_score": 1.43079,
+      "crps": 0.3485
+    },
+    "sensitivity_100nn": {
+      "energy_score": 1.35393,
+      "crps": 0.33155
+    }
+  },
+  "paired_differences_vs_50nn": {
+    "v2_minus_50nn_es": -0.13073,
+    "recent_minus_50nn_es": 0.04425,
+    "v2_minus_50nn_crps": -0.02829,
+    "50nn_minus_raw_es (directional test)": -0.47057
+  },
+  "calendar_block_bootstrap_6m": {
+    "es_diff_v2_minus_50nn": {
+      "point_mean": -0.13073,
+      "bootstrap_se": 0.01878,
+      "ci_95": [
+        -0.16834,
+        -0.09325
+      ],
+      "prob_positive": 0.0,
+      "n_blocks": 25
+    },
+    "es_diff_recent_minus_50nn": {
+      "point_mean": 0.04425,
+      "bootstrap_se": 0.01036,
+      "ci_95": [
+        0.02549,
+        0.06572
+      ],
+      "prob_positive": 1.0,
+      "n_blocks": 25
+    },
+    "es_diff_50nn_minus_raw": {
+      "point_mean": -0.47057,
+      "bootstrap_se": 0.06371,
+      "ci_95": [
+        -0.59673,
+        -0.34423
+      ],
+      "prob_positive": 0.0,
+      "n_blocks": 25
+    },
+    "crps_diff_v2_minus_50nn": {
+      "point_mean": -0.02829,
+      "bootstrap_se": 0.00411,
+      "ci_95": [
+        -0.03624,
+        -0.02014
+      ],
+      "prob_positive": 0.0,
+      "n_blocks": 25
+    }
+  },
+  "recency_diagnostics": {
+    "top50_nn_overlap_with_top50_recent_pct": 69.61,
+    "mean_neighbor_age_days": 112.7,
+    "median_neighbor_age_days": 32.0
+  },
+  "horizon_summaries": {
+    "h_7": {
+      "n_cases": 614,
+      "es_arm_a_v2": 0.27388,
+      "es_arm_b_recent": 0.27362,
+      "es_arm_c_50nn": 0.27268,
+      "es_arm_d_raw": 0.2529,
+      "es_diff_v2_minus_50nn": 0.0012,
+      "es_diff_recent_minus_50nn": 0.00094,
+      "crps_arm_a_v2": 0.07051,
+      "crps_arm_b_recent": 0.06958,
+      "crps_arm_c_50nn": 0.06933,
+      "crps_arm_d_raw": 0.06493,
+      "crps_diff_v2_minus_50nn": 0.00117,
+      "50nn_beats_v2_on_es": true,
+      "50nn_beats_recent_on_es": true
+    },
+    "h_14": {
+      "n_cases": 612,
+      "es_arm_a_v2": 0.46746,
+      "es_arm_b_recent": 0.47655,
+      "es_arm_c_50nn": 0.47355,
+      "es_arm_d_raw": 0.46396,
+      "es_diff_v2_minus_50nn": -0.00609,
+      "es_diff_recent_minus_50nn": 0.003,
+      "crps_arm_a_v2": 0.11913,
+      "crps_arm_b_recent": 0.12091,
+      "crps_arm_c_50nn": 0.12018,
+      "crps_arm_d_raw": 0.11948,
+      "crps_diff_v2_minus_50nn": -0.00105,
+      "50nn_beats_v2_on_es": false,
+      "50nn_beats_recent_on_es": true
+    },
+    "h_28": {
+      "n_cases": 608,
+      "es_arm_a_v2": 0.83881,
+      "es_arm_b_recent": 0.90459,
+      "es_arm_c_50nn": 0.8867,
+      "es_arm_d_raw": 0.98703,
+      "es_diff_v2_minus_50nn": -0.04789,
+      "es_diff_recent_minus_50nn": 0.01789,
+      "crps_arm_a_v2": 0.21031,
+      "crps_arm_b_recent": 0.22546,
+      "crps_arm_c_50nn": 0.22102,
+      "crps_arm_d_raw": 0.24885,
+      "crps_diff_v2_minus_50nn": -0.01071,
+      "50nn_beats_v2_on_es": false,
+      "50nn_beats_recent_on_es": true
+    },
+    "h_56": {
+      "n_cases": 600,
+      "es_arm_a_v2": 1.51698,
+      "es_arm_b_recent": 1.72545,
+      "es_arm_c_50nn": 1.67709,
+      "es_arm_d_raw": 2.20157,
+      "es_diff_v2_minus_50nn": -0.16011,
+      "es_diff_recent_minus_50nn": 0.04837,
+      "crps_arm_a_v2": 0.37483,
+      "crps_arm_b_recent": 0.42201,
+      "crps_arm_c_50nn": 0.41066,
+      "crps_arm_d_raw": 0.53843,
+      "crps_diff_v2_minus_50nn": -0.03583,
+      "50nn_beats_v2_on_es": false,
+      "50nn_beats_recent_on_es": true
+    },
+    "h_84": {
+      "n_cases": 592,
+      "es_arm_a_v2": 2.07109,
+      "es_arm_b_recent": 2.41478,
+      "es_arm_c_50nn": 2.33336,
+      "es_arm_d_raw": 3.31536,
+      "es_diff_v2_minus_50nn": -0.26227,
+      "es_diff_recent_minus_50nn": 0.08142,
+      "crps_arm_a_v2": 0.50674,
+      "crps_arm_b_recent": 0.58002,
+      "crps_arm_c_50nn": 0.56383,
+      "crps_arm_d_raw": 0.79222,
+      "crps_diff_v2_minus_50nn": -0.05709,
+      "50nn_beats_v2_on_es": false,
+      "50nn_beats_recent_on_es": true
+    },
+    "h_112": {
+      "n_cases": 584,
+      "es_arm_a_v2": 2.51317,
+      "es_arm_b_recent": 2.95452,
+      "es_arm_c_50nn": 2.83596,
+      "es_arm_d_raw": 4.1369,
+      "es_diff_v2_minus_50nn": -0.32279,
+      "es_diff_recent_minus_50nn": 0.11856,
+      "crps_arm_a_v2": 0.61167,
+      "crps_arm_b_recent": 0.7008,
+      "crps_arm_c_50nn": 0.68084,
+      "crps_arm_d_raw": 0.97732,
+      "crps_diff_v2_minus_50nn": -0.06918,
+      "50nn_beats_v2_on_es": false,
+      "50nn_beats_recent_on_es": true
+    }
+  },
+  "assertions": {
+    "all_cases_evaluated": true,
+    "all_horizons_present": true,
+    "common_random_numbers_consistent": true,
+    "neighbor_diagnostics_logged": true,
+    "all_assertions_passed": true
+  }
+}

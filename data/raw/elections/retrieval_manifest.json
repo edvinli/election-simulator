@@ -1,0 +1,83 @@
+{
+  "generated_at": "2026-08-26T10:26:24.351253+00:00",
+  "elections_count": 6,
+  "documents": [
+    {
+      "source_url": "https://historik.val.se/val/val_02/slutresultat/00R/00.html",
+      "local_filename": "val2002_slutresultat.html",
+      "local_path": "/Users/edvinli/Documents/Git/edvinli.github.io/data/raw/elections/val2002_slutresultat.html",
+      "retrieved_at": "2026-08-26T10:26:23.728456+00:00",
+      "sha256": "9eeda5ef7731c32a9112fa97bfc0228c3a34baf392469f6656920d4327bf4303",
+      "byte_count": 41431,
+      "http_status": 200,
+      "election_year": 2002,
+      "document_type": "primary"
+    },
+    {
+      "source_url": "https://historik.val.se/val/val2006/slutlig/R/rike/roster.html",
+      "local_filename": "val2006_roster.html",
+      "local_path": "/Users/edvinli/Documents/Git/edvinli.github.io/data/raw/elections/val2006_roster.html",
+      "retrieved_at": "2026-08-26T10:26:23.802498+00:00",
+      "sha256": "2bc2213db0803770e1881b157431ec1224c036174dc1f3d5a8cdaad76b33c8c7",
+      "byte_count": 14947,
+      "http_status": 200,
+      "election_year": 2006,
+      "document_type": "primary"
+    },
+    {
+      "source_url": "https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html",
+      "local_filename": "val2006_ovriga.html",
+      "local_path": "/Users/edvinli/Documents/Git/edvinli.github.io/data/raw/elections/val2006_ovriga.html",
+      "retrieved_at": "2026-08-26T10:26:23.877126+00:00",
+      "sha256": "0cc7c62f7868c28d98908a62808938226422cd9150ba902fd9fe800b80458e21",
+      "byte_count": 7214,
+      "http_status": 200,
+      "election_year": 2006,
+      "document_type": "secondary"
+    },
+    {
+      "source_url": "https://historik.val.se/val/val2010/slutresultat/R/rike/index.html",
+      "local_filename": "val2010_slutresultat.html",
+      "local_path": "/Users/edvinli/Documents/Git/edvinli.github.io/data/raw/elections/val2010_slutresultat.html",
+      "retrieved_at": "2026-08-26T10:26:23.990158+00:00",
+      "sha256": "9c107b43c0af80281746f947b93856e9d3148320e599a12beba4096df2373103",
+      "byte_count": 83132,
+      "http_status": 200,
+      "election_year": 2010,
+      "document_type": "primary"
+    },
+    {
+      "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rike/index.html",
+      "local_filename": "val2014_slutresultat.html",
+      "local_path": "/Users/edvinli/Documents/Git/edvinli.github.io/data/raw/elections/val2014_slutresultat.html",
+      "retrieved_at": "2026-08-26T10:26:24.124625+00:00",
+      "sha256": "0afde894066694dfdeb583c539dd0ad2f0fd81893d893410202930632888de57",
+      "byte_count": 85898,
+      "http_status": 200,
+      "election_year": 2014,
+      "document_type": "primary"
+    },
+    {
+      "source_url": "https://historik.val.se/val/val2018/slutresultat/R/rike/index.html",
+      "local_filename": "val2018_slutresultat.html",
+      "local_path": "/Users/edvinli/Documents/Git/edvinli.github.io/data/raw/elections/val2018_slutresultat.html",
+      "retrieved_at": "2026-08-26T10:26:24.225160+00:00",
+      "sha256": "3fdc30494a1c3c0889e3fa23f32969354adb92a9d34333257ea5d3c1db45badc",
+      "byte_count": 87722,
+      "http_status": 200,
+      "election_year": 2018,
+      "document_type": "primary"
+    },
+    {
+      "source_url": "https://resultat.val.se/data/resultat/val2022/RD_S.json",
+      "local_filename": "val2022_RD_S.json",
+      "local_path": "/Users/edvinli/Documents/Git/edvinli.github.io/data/raw/elections/val2022_RD_S.json",
+      "retrieved_at": "2026-08-26T10:26:24.349826+00:00",
+      "sha256": "b7e108ed78b247c65b62ef90fc3a7efed78eb6103476914471f5724978bccf8d",
+      "byte_count": 193359,
+      "http_status": 200,
+      "election_year": 2022,
+      "document_type": "primary"
+    }
+  ]
+}

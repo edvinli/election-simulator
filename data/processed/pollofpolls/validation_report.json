@@ -1,0 +1,19 @@
+{
+  "error_count": 0,
+  "issues": [
+    {
+      "code": "timeseries_missing_values",
+      "details": {
+        "counts": {
+          "FI": 1,
+          "other": 4361
+        },
+        "known_unavailable_category": "other is not present in the downloadable source"
+      },
+      "message": "Missing values are preserved, not converted to zero",
+      "severity": "warning"
+    }
+  ],
+  "valid": true,
+  "warning_count": 1
+}

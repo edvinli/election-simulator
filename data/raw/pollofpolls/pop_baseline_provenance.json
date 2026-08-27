@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0",
+  "baseline_version": "PoPBaseline-v1.0",
+  "retrieved_at_utc": "2026-08-27T00:00:00Z",
+  "source_policy": "First-party Pollofpolls pages only; paraphrased evidence is archived below. The page content is not redistributed wholesale.",
+  "sources": [
+    {
+      "url": "https://pollofpolls.se/simulering-av-valresultat-eller-valet-kommer-inte-avgoras-pa-valdagen/",
+      "title": "Simulering av valresultat eller valet kommer inte avgöras på valdagen",
+      "published": "2018-05-11",
+      "evidence_sha256": "aa2f26d81946668482be39d8ddb689308369e41131240d7418cd9b1e52a122c6",
+      "evidence_paraphrase": "The first-party 2018 method starts at the current PoP estimate, treats future movement as a symmetric random walk, resamples historical joint composition changes, reverses each change with equal probability, and combines 21-, 28-, and 35-day windows. It gives a support-vote formula on 2 < s_sim < 5 and describes proportional transfers from same-block parties above 4%."
+    },
+    {
+      "url": "https://pollofpolls.se/simulering-av-valresultat-infor-valet-2022/",
+      "title": "Simulering av valresultat inför valet 2022",
+      "published": "2022-01-04",
+      "evidence_sha256": "700228ab6f08c96ec500c11d24d71105af8968577e3199b3a1b3c9f966debd41",
+      "evidence_paraphrase": "The first-party 2022 post describes the same simulation family and says the random-walk step was later increased to 88 days. PoPBaseline v1 deliberately retains the earlier three-window reconstruction so that it is an opponent for the stated historical method, not a reproduction of every later variant."
+    },
+    {
+      "url": "https://pollofpolls.se/simulering-av-valresultat-2026/",
+      "title": "Simulering av valresultat 2026",
+      "published": "2025-09-14",
+      "evidence_sha256": "639e613a62d19b613639b20218d82aea173ae029a5912763010b28a3e1965f09",
+      "evidence_paraphrase": "The first-party 2026 post says the older simulation method was reused, assumes symmetric future movement around the current estimate, and cautions that the result is a discussion aid rather than an exact probability model."
+    },
+    {
+      "url": "https://pollofpolls.se/metod/",
+      "title": "Metod",
+      "published": null,
+      "evidence_sha256": "6e2f802f1a7165c6a502920e91cb8bfbac1bdf4ca43cab5d485d4db79057bc47",
+      "evidence_paraphrase": "The first-party methodology page describes PoP as a weighted multi-party estimate and identifies the compositional model lineage. This implementation consumes the repository's stored PoP row and does not recompute or aggregate polls."
+    }
+  ],
+  "implementation_assumptions": [
+    "The source's composition perturbation operator is implemented as addition in CLR coordinates followed by inverse CLR, equivalent to normalized Aitchison multiplication.",
+    "For exact benchmark horizons that are shorter than or not divisible by 21, 28, or 35 days, the last historical change is linearly fractionalized in CLR space. The source pages do not specify this edge case.",
+    "The source's FI recipient cannot be represented separately because this repository's canonical nine-category space folds FI and all other non-parliamentary parties into REST; FI is therefore omitted from support-vote recipients rather than fabricated.",
+    "No current-state uncertainty, election-result residual, geographic projection, or seat allocation is included in the baseline. These are Candidate A layers and would make the opponent no longer faithful to the stated PoP simulation."
+  ]
+}

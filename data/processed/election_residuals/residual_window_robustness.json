@@ -1,0 +1,501 @@
+{
+  "windows_evaluated": [
+    7,
+    14,
+    21
+  ],
+  "elections_covered": [
+    "2002-09-15",
+    "2006-09-17",
+    "2010-09-19",
+    "2014-09-14",
+    "2018-09-09",
+    "2022-09-11"
+  ],
+  "window_overall": [
+    {
+      "window_days": 7,
+      "overall_MAE_8parties": 0.9814,
+      "overall_MAE_all9": 0.9347,
+      "S_mean_residual_pp": 1.8189,
+      "V_mean_residual_pp": -1.0162,
+      "MP_mean_residual_pp": -0.8902,
+      "near_threshold_MAE_pp": 0.6157,
+      "near_threshold_cases_count": 9
+    },
+    {
+      "window_days": 14,
+      "overall_MAE_8parties": 1.0202,
+      "overall_MAE_all9": 0.9738,
+      "S_mean_residual_pp": 1.9726,
+      "V_mean_residual_pp": -1.0557,
+      "MP_mean_residual_pp": -0.8338,
+      "near_threshold_MAE_pp": 0.6214,
+      "near_threshold_cases_count": 9
+    },
+    {
+      "window_days": 21,
+      "overall_MAE_8parties": 1.0092,
+      "overall_MAE_all9": 0.9654,
+      "S_mean_residual_pp": 1.9854,
+      "V_mean_residual_pp": -1.0388,
+      "MP_mean_residual_pp": -0.8348,
+      "near_threshold_MAE_pp": 0.614,
+      "near_threshold_cases_count": 9
+    }
+  ],
+  "by_party_and_window": [
+    {
+      "window_days": 7,
+      "party": "M",
+      "is_parliamentary": true,
+      "mean_residual_pp": 0.4545,
+      "median_residual_pp": 0.9728,
+      "MAE_pp": 1.4155,
+      "mean_residual_clr": -0.031749,
+      "sign_consistency": "5+ / 1- / 0zero"
+    },
+    {
+      "window_days": 7,
+      "party": "L",
+      "is_parliamentary": true,
+      "mean_residual_pp": -0.3827,
+      "median_residual_pp": -0.4622,
+      "MAE_pp": 0.6638,
+      "mean_residual_clr": -0.119642,
+      "sign_consistency": "1+ / 5- / 0zero"
+    },
+    {
+      "window_days": 7,
+      "party": "C",
+      "is_parliamentary": true,
+      "mean_residual_pp": 0.0467,
+      "median_residual_pp": -0.1471,
+      "MAE_pp": 0.5768,
+      "mean_residual_clr": -0.035748,
+      "sign_consistency": "2+ / 4- / 0zero"
+    },
+    {
+      "window_days": 7,
+      "party": "KD",
+      "is_parliamentary": true,
+      "mean_residual_pp": -0.5137,
+      "median_residual_pp": -0.4906,
+      "MAE_pp": 0.5217,
+      "mean_residual_clr": -0.123774,
+      "sign_consistency": "1+ / 5- / 0zero"
+    },
+    {
+      "window_days": 7,
+      "party": "S",
+      "is_parliamentary": true,
+      "mean_residual_pp": 1.8189,
+      "median_residual_pp": 1.3039,
+      "MAE_pp": 1.8189,
+      "mean_residual_clr": 0.008663,
+      "sign_consistency": "6+ / 0- / 0zero"
+    },
+    {
+      "window_days": 7,
+      "party": "V",
+      "is_parliamentary": true,
+      "mean_residual_pp": -1.0162,
+      "median_residual_pp": -0.9026,
+      "MAE_pp": 1.0162,
+      "mean_residual_clr": -0.179014,
+      "sign_consistency": "0+ / 6- / 0zero"
+    },
+    {
+      "window_days": 7,
+      "party": "MP",
+      "is_parliamentary": true,
+      "mean_residual_pp": -0.8902,
+      "median_residual_pp": -0.7306,
+      "MAE_pp": 0.8902,
+      "mean_residual_clr": -0.185268,
+      "sign_consistency": "0+ / 6- / 0zero"
+    },
+    {
+      "window_days": 7,
+      "party": "SD",
+      "is_parliamentary": true,
+      "mean_residual_pp": 0.9109,
+      "median_residual_pp": 0.5995,
+      "MAE_pp": 0.9478,
+      "mean_residual_clr": 0.878777,
+      "sign_consistency": "5+ / 1- / 0zero"
+    },
+    {
+      "window_days": 7,
+      "party": "REST",
+      "is_parliamentary": false,
+      "mean_residual_pp": -0.4281,
+      "median_residual_pp": -0.4109,
+      "MAE_pp": 0.5613,
+      "mean_residual_clr": -0.212246,
+      "sign_consistency": "1+ / 5- / 0zero"
+    },
+    {
+      "window_days": 14,
+      "party": "M",
+      "is_parliamentary": true,
+      "mean_residual_pp": 0.4517,
+      "median_residual_pp": 0.9728,
+      "MAE_pp": 1.4128,
+      "mean_residual_clr": -0.030246,
+      "sign_consistency": "5+ / 1- / 0zero"
+    },
+    {
+      "window_days": 14,
+      "party": "L",
+      "is_parliamentary": true,
+      "mean_residual_pp": -0.3512,
+      "median_residual_pp": -0.3679,
+      "MAE_pp": 0.6324,
+      "mean_residual_clr": -0.112125,
+      "sign_consistency": "1+ / 5- / 0zero"
+    },
+    {
+      "window_days": 14,
+      "party": "C",
+      "is_parliamentary": true,
+      "mean_residual_pp": 0.157,
+      "median_residual_pp": -0.0295,
+      "MAE_pp": 0.4925,
+      "mean_residual_clr": -0.020899,
+      "sign_consistency": "3+ / 3- / 0zero"
+    },
+    {
+      "window_days": 14,
+      "party": "KD",
+      "is_parliamentary": true,
+      "mean_residual_pp": -0.5004,
+      "median_residual_pp": -0.4906,
+      "MAE_pp": 0.5829,
+      "mean_residual_clr": -0.120378,
+      "sign_consistency": "1+ / 5- / 0zero"
+    },
+    {
+      "window_days": 14,
+      "party": "S",
+      "is_parliamentary": true,
+      "mean_residual_pp": 1.9726,
+      "median_residual_pp": 1.3956,
+      "MAE_pp": 1.9726,
+      "mean_residual_clr": 0.015941,
+      "sign_consistency": "6+ / 0- / 0zero"
+    },
+    {
+      "window_days": 14,
+      "party": "V",
+      "is_parliamentary": true,
+      "mean_residual_pp": -1.0557,
+      "median_residual_pp": -1.0144,
+      "MAE_pp": 1.0557,
+      "mean_residual_clr": -0.182512,
+      "sign_consistency": "0+ / 6- / 0zero"
+    },
+    {
+      "window_days": 14,
+      "party": "MP",
+      "is_parliamentary": true,
+      "mean_residual_pp": -0.8338,
+      "median_residual_pp": -0.5615,
+      "MAE_pp": 0.8338,
+      "mean_residual_clr": -0.173013,
+      "sign_consistency": "0+ / 6- / 0zero"
+    },
+    {
+      "window_days": 14,
+      "party": "SD",
+      "is_parliamentary": true,
+      "mean_residual_pp": 0.6623,
+      "median_residual_pp": 0.5995,
+      "MAE_pp": 1.1784,
+      "mean_residual_clr": 0.867141,
+      "sign_consistency": "4+ / 2- / 0zero"
+    },
+    {
+      "window_days": 14,
+      "party": "REST",
+      "is_parliamentary": false,
+      "mean_residual_pp": -0.5025,
+      "median_residual_pp": -0.4109,
+      "MAE_pp": 0.6031,
+      "mean_residual_clr": -0.243908,
+      "sign_consistency": "1+ / 5- / 0zero"
+    },
+    {
+      "window_days": 21,
+      "party": "M",
+      "is_parliamentary": true,
+      "mean_residual_pp": 0.4076,
+      "median_residual_pp": 0.8404,
+      "MAE_pp": 1.3687,
+      "mean_residual_clr": -0.03154,
+      "sign_consistency": "5+ / 1- / 0zero"
+    },
+    {
+      "window_days": 21,
+      "party": "L",
+      "is_parliamentary": true,
+      "mean_residual_pp": -0.344,
+      "median_residual_pp": -0.3679,
+      "MAE_pp": 0.6252,
+      "mean_residual_clr": -0.110924,
+      "sign_consistency": "1+ / 5- / 0zero"
+    },
+    {
+      "window_days": 21,
+      "party": "C",
+      "is_parliamentary": true,
+      "mean_residual_pp": 0.1845,
+      "median_residual_pp": 0.0529,
+      "MAE_pp": 0.4742,
+      "mean_residual_clr": -0.016546,
+      "sign_consistency": "4+ / 2- / 0zero"
+    },
+    {
+      "window_days": 21,
+      "party": "KD",
+      "is_parliamentary": true,
+      "mean_residual_pp": -0.4971,
+      "median_residual_pp": -0.4806,
+      "MAE_pp": 0.5796,
+      "mean_residual_clr": -0.11962,
+      "sign_consistency": "1+ / 5- / 0zero"
+    },
+    {
+      "window_days": 21,
+      "party": "S",
+      "is_parliamentary": true,
+      "mean_residual_pp": 1.9854,
+      "median_residual_pp": 1.4339,
+      "MAE_pp": 1.9854,
+      "mean_residual_clr": 0.016573,
+      "sign_consistency": "6+ / 0- / 0zero"
+    },
+    {
+      "window_days": 21,
+      "party": "V",
+      "is_parliamentary": true,
+      "mean_residual_pp": -1.0388,
+      "median_residual_pp": -1.0144,
+      "MAE_pp": 1.0388,
+      "mean_residual_clr": -0.17944,
+      "sign_consistency": "0+ / 6- / 0zero"
+    },
+    {
+      "window_days": 21,
+      "party": "MP",
+      "is_parliamentary": true,
+      "mean_residual_pp": -0.8348,
+      "median_residual_pp": -0.5615,
+      "MAE_pp": 0.8348,
+      "mean_residual_clr": -0.172924,
+      "sign_consistency": "0+ / 6- / 0zero"
+    },
+    {
+      "window_days": 21,
+      "party": "SD",
+      "is_parliamentary": true,
+      "mean_residual_pp": 0.6512,
+      "median_residual_pp": 0.5659,
+      "MAE_pp": 1.1673,
+      "mean_residual_clr": 0.865169,
+      "sign_consistency": "4+ / 2- / 0zero"
+    },
+    {
+      "window_days": 21,
+      "party": "REST",
+      "is_parliamentary": false,
+      "mean_residual_pp": -0.514,
+      "median_residual_pp": -0.4454,
+      "MAE_pp": 0.6146,
+      "mean_residual_clr": -0.250747,
+      "sign_consistency": "1+ / 5- / 0zero"
+    }
+  ],
+  "by_election_and_window": [
+    {
+      "window_days": 7,
+      "election_year": 2002,
+      "pollster_count": 5,
+      "MAE_8parties": 1.6025,
+      "MAE_all9": 1.5077,
+      "S_residual_pp": 3.4743,
+      "V_residual_pp": -1.8721,
+      "MP_residual_pp": -0.1156
+    },
+    {
+      "window_days": 7,
+      "election_year": 2006,
+      "pollster_count": 5,
+      "MAE_8parties": 0.7038,
+      "MAE_all9": 0.6425,
+      "S_residual_pp": 1.3029,
+      "V_residual_pp": -0.2301,
+      "MP_residual_pp": -0.5249
+    },
+    {
+      "window_days": 7,
+      "election_year": 2010,
+      "pollster_count": 7,
+      "MAE_8parties": 0.595,
+      "MAE_all9": 0.5482,
+      "S_residual_pp": 1.3049,
+      "V_residual_pp": -0.3304,
+      "MP_residual_pp": -1.3209
+    },
+    {
+      "window_days": 7,
+      "election_year": 2014,
+      "pollster_count": 9,
+      "MAE_8parties": 1.2573,
+      "MAE_all9": 1.1896,
+      "S_residual_pp": 1.1024,
+      "V_residual_pp": -1.1257,
+      "MP_residual_pp": -1.9188
+    },
+    {
+      "window_days": 7,
+      "election_year": 2018,
+      "pollster_count": 8,
+      "MAE_8parties": 1.0497,
+      "MAE_all9": 1.0715,
+      "S_residual_pp": 2.7861,
+      "V_residual_pp": -1.8592,
+      "MP_residual_pp": -0.7645
+    },
+    {
+      "window_days": 7,
+      "election_year": 2022,
+      "pollster_count": 6,
+      "MAE_8parties": 0.6798,
+      "MAE_all9": 0.6487,
+      "S_residual_pp": 0.9431,
+      "V_residual_pp": -0.6796,
+      "MP_residual_pp": -0.6966
+    },
+    {
+      "window_days": 14,
+      "election_year": 2002,
+      "pollster_count": 5,
+      "MAE_8parties": 1.6025,
+      "MAE_all9": 1.5077,
+      "S_residual_pp": 3.4743,
+      "V_residual_pp": -1.8721,
+      "MP_residual_pp": -0.1156
+    },
+    {
+      "window_days": 14,
+      "election_year": 2006,
+      "pollster_count": 5,
+      "MAE_8parties": 0.7038,
+      "MAE_all9": 0.6425,
+      "S_residual_pp": 1.3029,
+      "V_residual_pp": -0.2301,
+      "MP_residual_pp": -0.5249
+    },
+    {
+      "window_days": 14,
+      "election_year": 2010,
+      "pollster_count": 7,
+      "MAE_8parties": 0.595,
+      "MAE_all9": 0.5482,
+      "S_residual_pp": 1.3049,
+      "V_residual_pp": -0.3304,
+      "MP_residual_pp": -1.3209
+    },
+    {
+      "window_days": 14,
+      "election_year": 2014,
+      "pollster_count": 9,
+      "MAE_8parties": 1.2573,
+      "MAE_all9": 1.1896,
+      "S_residual_pp": 1.1024,
+      "V_residual_pp": -1.1257,
+      "MP_residual_pp": -1.9188
+    },
+    {
+      "window_days": 14,
+      "election_year": 2018,
+      "pollster_count": 10,
+      "MAE_8parties": 1.1891,
+      "MAE_all9": 1.2341,
+      "S_residual_pp": 3.165,
+      "V_residual_pp": -1.8726,
+      "MP_residual_pp": -0.568
+    },
+    {
+      "window_days": 14,
+      "election_year": 2022,
+      "pollster_count": 7,
+      "MAE_8parties": 0.7732,
+      "MAE_all9": 0.7208,
+      "S_residual_pp": 1.4862,
+      "V_residual_pp": -0.9031,
+      "MP_residual_pp": -0.5549
+    },
+    {
+      "window_days": 21,
+      "election_year": 2002,
+      "pollster_count": 5,
+      "MAE_8parties": 1.6025,
+      "MAE_all9": 1.5077,
+      "S_residual_pp": 3.4743,
+      "V_residual_pp": -1.8721,
+      "MP_residual_pp": -0.1156
+    },
+    {
+      "window_days": 21,
+      "election_year": 2006,
+      "pollster_count": 5,
+      "MAE_8parties": 0.7038,
+      "MAE_all9": 0.6425,
+      "S_residual_pp": 1.3029,
+      "V_residual_pp": -0.2301,
+      "MP_residual_pp": -0.5249
+    },
+    {
+      "window_days": 21,
+      "election_year": 2010,
+      "pollster_count": 8,
+      "MAE_8parties": 0.5295,
+      "MAE_all9": 0.4977,
+      "S_residual_pp": 1.3816,
+      "V_residual_pp": -0.2289,
+      "MP_residual_pp": -1.3265
+    },
+    {
+      "window_days": 21,
+      "election_year": 2014,
+      "pollster_count": 9,
+      "MAE_8parties": 1.2573,
+      "MAE_all9": 1.1896,
+      "S_residual_pp": 1.1024,
+      "V_residual_pp": -1.1257,
+      "MP_residual_pp": -1.9188
+    },
+    {
+      "window_days": 21,
+      "election_year": 2018,
+      "pollster_count": 10,
+      "MAE_8parties": 1.1891,
+      "MAE_all9": 1.2341,
+      "S_residual_pp": 3.165,
+      "V_residual_pp": -1.8726,
+      "MP_residual_pp": -0.568
+    },
+    {
+      "window_days": 21,
+      "election_year": 2022,
+      "pollster_count": 7,
+      "MAE_8parties": 0.7732,
+      "MAE_all9": 0.7208,
+      "S_residual_pp": 1.4862,
+      "V_residual_pp": -0.9031,
+      "MP_residual_pp": -0.5549
+    }
+  ]
+}

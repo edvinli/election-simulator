@@ -1,0 +1,1438 @@
+pollofpolls_poll_id,swedishpolls_poll_id,pollster,interview_start,interview_end,match_status,candidate_count,max_party_absolute_difference,party_differences_json,metadata_enriched
+pop-0007e1d0e35c38a47df1,swp-259162566a28c039a12c,SCB,2017-04-28,2017-05-28,exact_span_match,1,0.0,{},True
+pop-00135fa6a473a6d42f7c,,Demoskop,2011-04-06,2011-05-05,no_match,0,,{},False
+pop-00257cdb58a38b7c297f,swp-ac4c4a4d4d2dd7566565,Sifo,2021-04-05,2021-04-15,exact_span_match,1,0.1,"{""V"": 0.1}",True
+pop-00290f0a233ca4f8fb78,swp-d9c0866c1bb2d885d5f8,Ipsos,2025-06-03,2025-06-15,exact_span_match,1,0.0,{},True
+pop-003f50c2ad9c963f47f6,,Skop,2022-09-01,2022-09-01,no_match,0,,{},False
+pop-003fa93043fb419ec925,swp-921c7fc755b23631fbc4,Ipsos,2022-01-11,2022-01-24,exact_span_match,1,0.0,{},True
+pop-005726926053c00c2255,swp-f77bfc1b9fc12b7e40fe,Ipsos,2012-11-08,2012-11-27,exact_span_match,1,0.0,{},True
+pop-0089c538ff741d785ac3,swp-ac2ad625028de39f347d,Demoskop,2019-06-24,2019-07-01,exact_span_match,1,0.0,{},True
+pop-00c0ee43432941d8b4f9,swp-470ce5b73f16bd2ac15d,Sentio,2018-02-09,2018-02-14,exact_span_match,1,0.0,{},True
+pop-013158b5b491436e3171,swp-74eacc8e49e8835bdcfd,Sifo,2018-08-06,2018-08-09,exact_span_match,1,0.0,{},True
+pop-013fc13ec8fbfe34ef62,,Novus,2014-09-08,2014-09-09,no_match,0,,{},False
+pop-01556c8d91ed885fe98d,swp-1e825e26ce319928dcc4,Novus,2018-02-19,2018-03-18,exact_span_match,1,0.0,{},True
+pop-01b19d0bd4f57c755768,swp-05cebfc9157be8171dd4,Novus,2014-09-03,2014-09-07,exact_span_match,1,0.0,{},True
+pop-01c1ba387a91ed092aa8,swp-d732bda03d426064b8bc,YouGov,2013-02-06,2013-03-05,exact_span_match,1,0.0,{},True
+pop-01cc1479e51005d83870,swp-ca400dfa126cde6e0350,YouGov,2016-08-12,2016-08-16,exact_span_match,1,0.0,{},True
+pop-01dbeae60b27cf7d0afe,swp-e031cf00f984885910cc,Indikator,2026-06-01,2026-06-21,exact_span_match,1,0.0,{},True
+pop-022528b0ba593f2152e8,swp-c7e1991127aa0994fcc1,Sifo,2014-09-08,2014-09-09,exact_span_match,1,0.0,{},True
+pop-024d04652ea86de74051,swp-09c1136d685e09f94a6d,Novus,2017-09-04,2017-10-01,exact_span_match,1,0.0,{},True
+pop-026d10e8ef23c817064b,swp-a2c7c25e01ec5baa678f,Sifo,2011-06-07,2011-06-16,exact_span_match,1,0.0,{},True
+pop-029f98b8c1322c605bc3,swp-38a3197983d36b32fc96,Inizio,2016-03-15,2016-03-22,exact_span_match,1,0.0,{},True
+pop-02e117bd144ceb9424ec,swp-27ee2c47388b7d551282,Sifo,2024-12-30,2025-01-12,exact_span_match,1,0.0,{},True
+pop-02edd75d3f8169310cca,swp-61e583085740a873537e,Ipsos,2017-04-04,2017-04-19,exact_span_match,1,0.0,{},True
+pop-03de5011dabc5161a696,,Ipsos,2014-08-26,2014-09-01,no_match,0,,{},False
+pop-040659a89835dcf48cdf,,Ipsos,2020-09-08,2020-09-21,no_match,0,,{},False
+pop-0420a7698983f66d5838,,Novus,2010-09-16,2010-09-17,no_match,0,,{},False
+pop-043445b31d4aa50e779c,swp-579f7894996ed0f677a5,Sentio,2009-12-01,2009-12-23,exact_span_match,1,0.0,{},True
+pop-04608cbd290311a5c8a6,,Novus,2017-03-20,2017-04-17,no_match,0,,{},False
+pop-04b0ae37c716296af28b,swp-ba43dfa62773368dc500,Demoskop,2025-12-07,2025-12-16,exact_span_match,1,0.0,{},True
+pop-04b4bc6cc242d0ac4836,swp-e16fef0b7d3bb1380ee5,Sifo,2011-05-02,2011-05-12,exact_span_match,1,0.0,{},True
+pop-04dd0728edc97a05ada6,swp-8aea35e70a55599f193a,Skop,2010-02-16,2010-03-10,exact_span_match,1,0.0,{},True
+pop-04fc30d52bc74b638c30,swp-3fda8c9497da93797f2b,Novus,2010-08-03,2010-08-16,exact_span_match,1,0.0,{},True
+pop-051cff4bda872bf7de51,swp-3dd025c9e84adb18b812,Sifo,2009-08-10,2009-08-20,exact_span_match,1,0.0,{},True
+pop-05264c27e93d1fcd4de0,swp-d270aeab2ee9a629ce97,Skop,2019-06-25,2019-07-16,exact_span_match,1,0.0,{},True
+pop-054109d3257c5eda346f,swp-abee9fd763c7813aace7,YouGov,2017-08-11,2017-08-15,exact_span_match,1,0.0,{},True
+pop-05b3e6dbc1509ec6195e,swp-bb82a5941dc5cb31b96a,Novus,2025-09-08,2025-09-19,exact_span_match,1,0.0,{},True
+pop-05ee07cecdbe1881a7bd,swp-7ef35fcc3794df8d995b,Ipsos,2020-10-13,2020-10-25,exact_span_match,1,0.24752,"{""C"": 0.089109, ""KD"": 0.059406, ""L"": 0.029703, ""M"": 0.20792, ""MP"": 0.049505, ""S"": 0.24752, ""SD"": 0.19802, ""V"": 0.10891}",True
+pop-06091ebb7567ff5366d3,swp-cca9277e760fda79e451,Ipsos,2009-10-05,2009-10-26,exact_span_match,1,0.0,{},True
+pop-063765f1699d456996d6,swp-bdbe490ab33f0163cc5d,Sifo,2010-11-01,2010-11-11,exact_span_match,1,0.0,{},True
+pop-064daa1c79f8dde341d2,swp-11d1266e1bbcad2ce35e,YouGov,2015-02-05,2015-02-09,exact_span_match,1,0.0,{},True
+pop-0653ccd0e6d7f27b0cdc,swp-c93508a91315ddf36218,United Minds,2012-02-13,2012-03-11,exact_span_match,1,0.0,{},True
+pop-07e384bfa88f09a37f19,swp-f124367a827688b3d9e9,Novus,2021-08-30,2021-10-03,exact_span_match,1,0.9,"{""MP"": 0.9}",True
+pop-07e476c59d7625cf8475,swp-a2e2af7d11be478a1a15,Ipsos,2011-03-07,2011-03-23,exact_span_match,1,0.0,{},True
+pop-08b472d7491a91d6c2e9,swp-2f95e9c57d190a5269df,Ipsos,2017-03-09,2017-03-19,exact_span_match,1,0.26733,"{""C"": 0.128713, ""FI"": 0.019802, ""KD"": 0.029703, ""L"": 0.069307, ""M"": 0.16832, ""MP"": 0.049505, ""S"": 0.26733, ""SD"": 0.17822, ""V"": 0.079208}",True
+pop-092bc9a3b423f9bd311d,swp-c599978e1ab2c18619d3,Novus,2011-04-26,2011-05-16,exact_span_match,1,0.0,{},True
+pop-0949e1f8ca3e7afe2a8c,swp-8e5399bd61d8091fbd57,Novus,2017-11-27,2017-12-21,exact_span_match,1,0.0,{},True
+pop-09761b521cff97c9a93f,swp-1ae8cf8a8f40face3aef,YouGov,2014-07-02,2014-08-05,exact_span_match,1,0.0,{},True
+pop-09859f7d6c7ad63f62c1,swp-7d9cd77f600cc2789134,Novus,2016-03-21,2016-04-17,exact_span_match,1,0.0,{},True
+pop-0988bd742167865df8e0,swp-0a7530b975bd2c8ba6c1,Ipsos,2019-03-12,2019-03-25,exact_span_match,1,0.0,{},True
+pop-099a4ec3cd470b4ccebb,swp-8beb2fdbd539528eb2bd,Novus,2011-10-25,2011-11-21,exact_span_match,1,0.0,{},True
+pop-09f526a3e72c8eba096e,swp-967c7929c66d5c8982e2,YouGov,2018-08-17,2018-08-20,exact_span_match,1,0.0,{},True
+pop-09f5aa9f7066cce9a2c8,,Sentio,2018-10-05,2018-10-09,no_match,0,,{},False
+pop-0a3b8ff3cf99a81341e3,swp-c1ce5b5065ff88c2a3c8,Skop,2021-02-19,2021-02-23,exact_span_match,1,0.0,{},True
+pop-0a432e4d312e95fcff0a,swp-8b00125f0bc09b2a88f5,Skop,2019-01-03,2019-01-17,exact_span_match,1,0.0,{},True
+pop-0a4c4ce6c38df650eb4e,swp-7e6281294f645a306d11,Demoskop,2016-09-27,2016-10-05,exact_span_match,1,0.0,{},True
+pop-0a66972db253528d8c7a,swp-953dba9335bbb6c06283,Novus,2024-10-09,2024-10-20,exact_span_match,1,0.2,"{""L"": 0.2}",True
+pop-0a9ea22b9ec25c6cc2ea,swp-e90e456cea5c95db8f55,Novus,2019-08-05,2019-08-25,exact_span_match,1,0.0,{},True
+pop-0ad08c1e55c435e47a99,swp-610ae6d232bb70725815,Sifo,2026-05-25,2026-06-07,exact_span_match,1,0.0,{},True
+pop-0ad16cc29b5f9ab9114b,,Novus,2022-09-05,2022-09-05,no_match,0,,{},False
+pop-0b03d5588917124decea,,Novus,2022-08-27,2022-08-27,no_match,0,,{},False
+pop-0b0c95fdcd978d6c3246,swp-330a9c5f2b27a3325b33,Demoskop,2015-11-24,2015-12-02,exact_span_match,1,0.0,{},True
+pop-0b15695f0c7cb676cb73,swp-5b68792cf6d10233b894,SCB,2023-04-27,2023-05-25,exact_span_match,1,0.0,{},True
+pop-0b24eb228549e5dd786e,swp-faadb11af3602a853be2,Sifo,2025-04-21,2025-05-04,exact_span_match,1,0.0,{},True
+pop-0b30f2137b8f1ef5a91a,,Demoskop,2019-11-25,2019-12-04,no_match,0,,{},False
+pop-0b707f9bee0788392cd8,swp-21a93d975da2bc462f00,Sifo,2021-03-01,2021-03-11,exact_span_match,1,0.0,{},True
+pop-0b71756808a248930054,swp-58dc08ebe4b7521c608d,Indikator,2026-08-06,2026-08-23,exact_span_match,1,0.0,{},True
+pop-0b798a68dc2550ca6019,swp-7d9909ee9320f72cab09,Inizio,2018-08-10,2018-08-16,exact_span_match,1,0.0,{},True
+pop-0c1f98c24df6ab1688d6,swp-cf06f089618b11c78755,Novus,2015-01-26,2015-02-22,exact_span_match,1,0.0,{},True
+pop-0c29b173e964b41be746,swp-c32498586383f3bea30d,Demoskop,2019-08-27,2019-09-03,exact_span_match,1,0.4,"{""V"": 0.4}",True
+pop-0c620b4068d53bb47ff8,swp-4f819ba5e3211a0c8ac4,Demoskop,2019-04-29,2019-05-07,exact_span_match,1,0.0,{},True
+pop-0c6afcc3d42a629e452b,,Demoskop,2017-11-18,2017-12-05,no_match,0,,{},False
+pop-0c7c4c4856ebf5edfe30,swp-437d8fb14b361a7bbb0d,YouGov,2018-07-13,2018-07-15,exact_span_match,1,0.0,{},True
+pop-0c8d14ffefbce3ee3ae5,swp-da6c4039d324b9a5ba62,Demoskop,2012-09-25,2012-10-03,exact_span_match,1,0.0,{},True
+pop-0cd6510681e765913864,swp-d6ffa76a9d9fb3515a26,Novus,2013-02-25,2013-03-24,exact_span_match,1,0.0,{},True
+pop-0cf299603e793f9999c0,swp-450d543296698662bd91,Novus,2026-08-03,2026-08-16,exact_span_match,1,0.0,{},True
+pop-0d0c6515ebf858bcf53b,swp-d5c36e856fad5772a654,Skop,2009-06-11,2009-07-07,exact_span_match,1,0.0,{},True
+pop-0d36a55f620f32ce4069,swp-1b1011b3a4ee6ab2e36b,Sifo,2019-05-06,2019-05-16,exact_span_match,1,0.0,{},True
+pop-0d3a3d096e0017ce0419,swp-25768f33f2cddfbb5ac4,Skop,2011-02-10,2011-03-09,exact_span_match,1,0.0,{},True
+pop-0d506ba34c35367ac12b,,Inizio,2015-01-04,2015-01-10,no_match,0,,{},False
+pop-0d6a5457f111584ffc16,swp-23eb16a279e46cf430d3,Sifo,2014-06-02,2014-06-12,exact_span_match,1,0.0,{},True
+pop-0d72f2e49f383e3822d7,swp-f38c77bbd0bbffa35001,Sifo,2019-10-07,2019-10-17,exact_span_match,1,0.2,"{""L"": 0.2}",True
+pop-0d7abafc8ec130322d8f,,Skop,2022-08-20,2022-08-21,no_match,0,,{},False
+pop-0dc601986c15ac5418ae,swp-bfa2924917219dd97570,United Minds,2010-05-24,2010-06-20,exact_span_match,1,0.0,{},True
+pop-0dce219a953f0de1342e,swp-308738e05358fa055ca1,Novus,2016-05-09,2016-05-29,exact_span_match,1,0.0,{},True
+pop-0dd46f528e4e6bad48b0,swp-694eb6b36a53a12be5e4,Demoskop,2021-08-02,2021-08-05,exact_span_match,1,0.1,"{""S"": 0.1}",True
+pop-0e08076cdd0b8f863105,swp-58a2ab22936079106b45,Demoskop,2022-02-01,2022-02-08,exact_span_match,1,0.0,{},True
+pop-0e8b2ff27eff19b58213,swp-3987f424adcdce340f81,Sifo,2017-09-04,2017-09-14,exact_span_match,1,0.2,"{""M"": 0.2}",True
+pop-0e8f3a3edf77496b58dc,,Inizio,2018-08-27,2018-08-30,no_match,0,,{},False
+pop-0ed5230625da54440820,swp-c437841ff8afa1ccb36d,Skop,2010-08-22,2010-08-27,exact_span_match,1,0.0,{},True
+pop-0ee26a787c81354cf495,swp-3d638331929544e76fb6,Novus,2011-12-27,2012-01-23,exact_span_match,1,0.0,{},True
+pop-0ee713e1e4aca4b81842,swp-a29944af6a4fffdb7402,Novus,2023-02-27,2023-04-02,exact_span_match,1,0.0,{},True
+pop-0f86ae350f94cc23b2e5,swp-d2bdaf970555e1198dea,Sifo,2019-06-03,2019-06-13,exact_span_match,1,0.0,{},True
+pop-0f98ba637bdaccc293e3,swp-5a48bc70a86b44d2143b,Novus,2020-08-24,2020-09-13,exact_span_match,1,0.1,"{""V"": 0.1}",True
+pop-0fa7e0d555b011806427,swp-ed6d32f479892acb8471,Sifo,2010-10-04,2010-10-14,exact_span_match,1,0.0,{},True
+pop-0fda1c84d0a5e9b0a2f9,swp-51e670c3e8d1a5345eb1,Ipsos,2023-02-14,2023-02-26,exact_span_match,1,0.0,{},True
+pop-0fdd75999af23f6bbf9f,swp-4d2987f59d55ed31dba1,Sentio,2021-01-28,2021-01-31,exact_span_match,1,0.4,"{""SD"": 0.4}",True
+pop-1031839b88f7efd69d55,,YouGov,2011-03-08,2011-04-04,no_match,0,,{},False
+pop-1065418be711b3e013c5,,Sifo,2018-08-27,2018-08-27,no_match,0,,{},False
+pop-1075a77e27e47e2ebd1d,swp-d575992bae7f945acf52,Novus,2023-08-21,2023-09-17,exact_span_match,1,0.0,{},True
+pop-109d610eea669c748107,,Skop,2018-09-07,2018-09-07,no_match,0,,{},False
+pop-10b9dfaa961cc0d5a018,swp-fce4566c3965fbda8eb8,Novus,2010-05-25,2010-06-07,exact_span_match,1,0.0,{},True
+pop-10c60abd62700d27c5c3,,Novus,2022-08-29,2022-08-29,no_match,0,,{},False
+pop-10d19b78a808b1fd5ec4,swp-36273d379af9f085f20d,Sifo,2011-03-07,2011-03-17,exact_span_match,1,0.0,{},True
+pop-10f11cffc7a6d2ecda07,swp-ace20a9eac94a6eb0505,Sentio,2011-03-07,2011-03-27,exact_span_match,1,0.0,{},True
+pop-10f6f8ae9799cf4d88ae,swp-dc215ca852853f6f5f80,United Minds,2010-10-25,2010-11-21,exact_span_match,1,0.0,{},True
+pop-112650ec511e11640d0e,swp-c74290b7d7a4f5ff548c,Skop,2018-05-08,2018-06-18,exact_span_match,1,0.0,{},True
+pop-1134cabbf696f3db30c3,,Sifo,2022-08-27,2022-08-27,no_match,0,,{},False
+pop-1152344887688c29ef0b,swp-75f1627ceca1816ffaa8,Novus,2026-01-07,2026-01-18,exact_span_match,1,0.0,{},True
+pop-1181eaa7508d3230ea43,swp-3c166169107de4ac25a3,Inizio,2018-01-30,2018-02-05,exact_span_match,1,0.0,{},True
+pop-11986b66c3edf1e8096b,swp-06229626aee6d7162fbe,Sentio,2017-08-11,2017-08-14,exact_span_match,1,0.0,{},True
+pop-11b144ab8e8ddd150f2f,swp-86bb2ed18442b27b735b,Demoskop,2018-03-27,2018-04-04,exact_span_match,1,1.3,"{""FI"": 1.3}",True
+pop-11cc9e1ddb5b9b1b45a5,,Sentio,2024-07-03,2024-07-10,no_match,0,,{},False
+pop-11eec1fb19a22b447cf2,,YouGov,2014-01-02,2014-01-07,no_match,0,,{},False
+pop-12100cf043d242334109,,YouGov,2017-06-15,2017-06-20,no_match,0,,{},False
+pop-121f03ba79d364e9dd4a,swp-bb6d4d1edf26a73e5b48,SCB,2012-05-02,2012-05-27,exact_span_match,1,0.0,{},True
+pop-1245197ce9974a03ad22,swp-f319fcda477b6bfffa4b,YouGov,2013-11-06,2013-12-03,exact_span_match,1,0.0,{},True
+pop-1296481f0b4ac6da80db,swp-96cadbbd157060a117b1,Sentio,2014-09-02,2014-09-08,exact_span_match,1,0.0,{},True
+pop-12a7f3d83d98ca7547ab,swp-5534163f2992dc54a9e0,Sifo,2018-06-04,2018-06-14,exact_span_match,1,0.0,{},True
+pop-12ac07af5d950dc1c3e6,swp-d027cc0e39c46547db81,Ipsos,2023-04-11,2023-04-23,exact_span_match,1,0.0,{},True
+pop-12d087f39b1620647300,swp-76b839022ca9593e2b8a,Demoskop,2020-07-28,2020-08-04,exact_span_match,1,0.0,{},True
+pop-13114b96b2bcb73a8815,swp-942c4301eaa88355639e,Ipsos,2010-11-29,2010-12-15,exact_span_match,1,0.0,{},True
+pop-1318ee6e9bedd0b7cfc7,swp-d2a944fa2c11c41cbcf1,Demoskop,2014-01-02,2014-01-08,exact_span_match,1,0.0,{},True
+pop-133206ae58598e3a9072,,Novus,2010-09-14,2010-09-15,no_match,0,,{},False
+pop-134d0e05a37b70e134dd,,United Minds,2010-09-11,2010-09-11,no_match,0,,{},False
+pop-1357a944eccfd50a47cd,swp-122f40c323acba109b6f,Novus,2023-10-16,2023-11-12,exact_span_match,1,0.0,{},True
+pop-1372452ec7d05d2aebcf,swp-db9d1fb99fe3452543d8,Sifo,2022-12-05,2022-12-15,exact_span_match,1,0.0,{},True
+pop-13f319b53a685c06452c,swp-0b1916bdb6529ed10010,Skop,2009-02-26,2009-04-01,exact_span_match,1,0.0,{},True
+pop-141bc200a4b0e3114ef8,swp-fe3bd3b3e274755ec8f0,YouGov,2016-11-11,2016-11-14,exact_span_match,1,0.0,{},True
+pop-14237b4bec0ed98992f8,,United Minds,2010-09-15,2010-09-15,no_match,0,,{},False
+pop-148fa70e0c3e4a0b177d,,Demoskop,2022-09-05,2022-09-09,no_match,0,,{},False
+pop-14a5cde416e3b6157f79,swp-47a9b2c5f0db5b7d6a2e,Sifo,2012-10-01,2012-10-11,exact_span_match,1,0.0,{},True
+pop-14bf0790206547554afb,swp-677ad47a659e29c69db7,Novus,2018-11-12,2018-12-16,exact_span_match,1,0.0,{},True
+pop-14c87873f0228868d954,swp-59d06a3c9e0ac7929e2b,Demoskop,2017-05-30,2017-06-07,exact_span_match,1,1.0,"{""MP"": 1.0}",True
+pop-151f59988f6720570bbb,swp-b5468ad45009f89ed22d,Sifo,2011-10-03,2011-10-13,exact_span_match,1,0.0,{},True
+pop-151ffcaae3e9f3ee5cb1,swp-9aa128cd70be6bc55a29,Sifo,2013-08-12,2013-08-22,exact_span_match,1,0.0,{},True
+pop-1549b9daa07746e803d5,,Sifo,2014-06-24,2014-07-02,no_match,0,,{},False
+pop-158cfafd6df107d1ffc8,swp-296c314fd7c9cf7abde9,Sifo,2019-09-02,2019-09-12,exact_span_match,1,0.0,{},True
+pop-164f5a5167e117c1ac48,swp-449266e05864b462a7c2,Skop,2010-11-28,2010-12-16,exact_span_match,1,0.0,{},True
+pop-165e3845fb345ee82c18,swp-cd649c62b0764c17ccd5,Sifo,2015-10-05,2015-10-15,exact_span_match,1,0.0,{},True
+pop-167c90ef78823d019d39,swp-b9c0b642d44dcc8b79ba,SCB,2014-10-29,2014-11-25,exact_span_match,1,0.0,{},True
+pop-172eab2d46b6ed01c9ff,,Sentio,2010-04-01,2010-04-28,no_match,0,,{},False
+pop-1750013c765457d04eea,swp-665c24bc919c1e35495c,Skop,2019-05-19,2019-05-24,exact_span_match,1,0.1,"{""V"": 0.1}",True
+pop-17573c87ec2bc5c2f38b,swp-4c0ed526cf870190ff0c,YouGov,2012-07-04,2012-08-07,exact_span_match,1,0.0,{},True
+pop-1762d6ece7fe8bfb273d,,Ipsos,2010-08-26,2010-09-01,no_match,0,,{},False
+pop-1762dab9d6dd2475ae4a,swp-8f47f9c645633568f257,United Minds,2009-07-18,2009-08-12,exact_span_match,1,0.0,{},True
+pop-17631d51218aec16868d,swp-587d308a1e06c79d2bc0,United Minds,2012-06-04,2012-06-29,exact_span_match,1,0.0,{},True
+pop-1775531ab362b37a3b8e,,Sifo,2022-08-25,2022-08-25,no_match,0,,{},False
+pop-17b21c7dd0679a07be11,,United Minds,2014-09-01,2014-09-05,no_match,0,,{},False
+pop-17b3ca1b8fa4fbf96f7d,swp-b20de04c1f859808371d,Demoskop,2023-12-22,2024-01-08,exact_span_match,1,0.0,{},True
+pop-17d9d53c27b03bbd8978,swp-af866c50701be9a5e87b,Sifo,2009-05-04,2009-05-14,exact_span_match,1,0.0,{},True
+pop-1800ced12802cf58f36c,swp-5decad4690d9fb79e14f,Ipsos,2025-05-06,2025-05-18,exact_span_match,1,0.0,{},True
+pop-181b0d7b5aa02f5001f2,swp-49d7384a679b0a514043,Demoskop,2021-11-05,2021-11-11,exact_span_match,1,0.0,{},True
+pop-1881c1c20c56c52780d1,swp-b624baac375564133c6e,Sifo,2019-12-02,2019-12-12,exact_span_match,1,0.2,"{""SD"": 0.2}",True
+pop-1887663f24d073a6e114,swp-ae90d1fd8c34342e7f20,Ipsos,2019-02-07,2019-02-20,exact_span_match,1,0.0,{},True
+pop-18a3f39b850db89086d9,swp-1d248b84312fef88538c,Sifo,2025-09-22,2025-10-05,exact_span_match,1,0.0,{},True
+pop-18c0199142a1d7a0db1d,swp-5cfcd95e4f0479ee176a,Sifo,2022-10-03,2022-10-13,exact_span_match,1,0.0,{},True
+pop-193beda1d789d0b0ca15,swp-3789c535fea7034929ae,Demoskop,2020-12-29,2021-01-11,exact_span_match,1,0.0,{},True
+pop-1956b546376759b8c849,swp-b20943aa696b21ae6faf,Sifo,2024-06-03,2024-06-16,exact_span_match,1,0.2,"{""SD"": 0.2}",True
+pop-196a4a06bbd0d6f036e0,swp-02fed549ef1075b157f5,Novus,2026-06-01,2026-06-14,exact_span_match,1,0.0,{},True
+pop-1a229a5968a8665c6f7d,swp-accfeb37cfb88d7bf4bb,Ipsos,2018-08-28,2018-09-02,exact_span_match,1,0.0,{},True
+pop-1a314e6984519b0ab32f,swp-538cb958e70068256b82,Sentio,2019-06-03,2019-06-13,exact_span_match,1,0.0,{},True
+pop-1a4116971a733c5e3ad3,swp-d8be8b6178ec92ec762f,Sifo,2018-11-05,2018-11-15,exact_span_match,1,0.4,"{""S"": 0.4}",True
+pop-1a660eefb58b7f832cf7,swp-1391e97ee6f9191da065,Sifo,2014-12-08,2014-12-18,exact_span_match,1,0.0,{},True
+pop-1a6c8b047fa0f3ae81d2,swp-f5b1af85b1638707bb6c,Sifo,2011-12-05,2011-12-15,exact_span_match,1,0.0,{},True
+pop-1a8e80812d304897febf,swp-25ae98ae0d1cbeafc0f8,Sentio,2023-08-10,2023-08-15,exact_span_match,1,0.0,{},True
+pop-1aa27fe2042239de8d3e,,Skop,2022-09-07,2022-09-07,no_match,0,,{},False
+pop-1aa4c2c932c843e9721a,swp-b85595ab81fc23b6ceae,Ipsos,2025-01-14,2025-01-26,exact_span_match,1,0.0,{},True
+pop-1b161cba5fd2a8895ee9,swp-8cd67429fba0216abfb5,Ipsos,2020-02-11,2020-02-23,exact_span_match,1,1.8,"{""C"": 0.9, ""KD"": 1.8, ""L"": 0.1, ""M"": 0.9, ""MP"": 1.3, ""S"": 1.3, ""SD"": 1.0, ""V"": 0.2}",True
+pop-1b2b2a99e8d2ce97129b,,Sifo,2022-08-14,2022-08-14,no_match,0,,{},False
+pop-1b2d1944ef78a9290b0a,,Sifo,2022-09-08,2022-09-08,no_match,0,,{},False
+pop-1b9798c4f44fa142f2cf,swp-1c2ddebba737beaf0140,Ipsos,2022-08-16,2022-08-24,exact_span_match,1,0.0,{},True
+pop-1c11bcea7c946f7775a1,swp-18c3a9368598e7b1ac4b,Ipsos,2012-09-06,2012-09-25,exact_span_match,1,0.0,{},True
+pop-1c411dec848c9ec26b15,swp-212f8084e9003d688614,YouGov,2011-06-06,2011-07-03,exact_span_match,1,0.0,{},True
+pop-1c602aa66bd360559cb8,,Sifo,2018-09-24,2018-10-02,no_match,0,,{},False
+pop-1c8b11c0c9f33677901a,swp-636acce05fcfdc0e20e5,Sifo,2019-08-05,2019-08-15,exact_span_match,1,0.0,{},True
+pop-1cb171da27c437e6e811,swp-d0558067ae2e4f4d3c62,Novus,2012-03-27,2012-04-23,exact_span_match,1,0.0,{},True
+pop-1cc66150a3ef0c484118,swp-a0c43c4eff8ace9cfbf4,Sentio,2023-11-30,2023-12-04,exact_span_match,1,0.05,"{""C"": 0.01, ""KD"": 0.04, ""L"": 0.05, ""M"": 0.05, ""MP"": 0.03, ""S"": 0.05, ""SD"": 0.03, ""V"": 0.05}",True
+pop-1cea7a440b850a36d255,swp-2aeef84c97abdaa92abe,Sentio,2011-11-07,2011-11-27,exact_span_match,1,0.0,{},True
+pop-1d45a245342c77d36f86,swp-2cd6114e540c1c4bbc1c,Ipsos,2010-06-07,2010-06-22,exact_span_match,1,0.0,{},True
+pop-1d870a990073f8859401,swp-298e650d7add5797e47c,Sentio,2019-12-13,2019-12-18,exact_span_match,1,0.0,{},True
+pop-1d8cbebc20b0bba76ad0,swp-199168b3e4cf076c3118,Novus,2013-09-30,2013-10-27,exact_span_match,1,0.0,{},True
+pop-1dc49a61a536556fda9d,swp-68debedfa91ead6d0a7d,Sentio,2022-08-11,2022-08-17,exact_span_match,1,0.0,{},True
+pop-1deac4e66e7ee721da58,,Sentio,2012-09-01,2012-09-26,no_match,0,,{},False
+pop-1e238315bd3fce529b9d,,Sentio,2021-06-18,2021-06-21,no_match,0,,{},False
+pop-1e32d802f2ea8d089206,,Novus,2022-09-02,2022-09-02,no_match,0,,{},False
+pop-1e36d1c594df4658ec65,swp-91d6a3b342bcbf829c95,Sentio,2011-07-11,2011-07-31,exact_span_match,1,0.0,{},True
+pop-1e6c7cd38e5dd2dd71f7,swp-1a8fafd60c90ce3c8cc5,Ipsos,2024-10-07,2024-10-20,exact_span_match,1,0.0,{},True
+pop-1e6d7e01de50490e9d15,swp-eb8c1ef1deaf296115f3,YouGov,2015-11-13,2015-11-16,exact_span_match,1,0.0,{},True
+pop-1e884cde788595b3a1fa,swp-c0bdcdf0f17ad891e7a5,Sifo,2016-09-05,2016-09-15,exact_span_match,1,1.0,"{""SD"": 1.0}",True
+pop-1e89db68515ce8743030,,Sifo,2022-08-30,2022-08-30,no_match,0,,{},False
+pop-1ef20f2848c05b2880a1,swp-ae972312a33a498c79ba,Demoskop,2013-11-26,2013-12-04,exact_span_match,1,0.0,{},True
+pop-1f678f8cf793d64863a4,swp-216038b745fb60234b19,Sentio,2010-03-16,2010-03-28,exact_span_match,1,0.0,{},True
+pop-1f98f75178850a61ca47,swp-4bdb6797acc15c0d2830,Sentio,2011-12-05,2011-12-18,exact_span_match,1,0.0,{},True
+pop-1f9d8e49e22e39eef39a,swp-1529cad73a555efbda06,Sifo,2018-08-13,2018-08-16,exact_span_match,1,0.0,{},True
+pop-1fb41d06588185aea094,,Sentio,2018-08-24,2018-08-29,no_match,0,,{},False
+pop-1fbda58882ddd69f4a8b,swp-e95281a6abc18a6ef873,Novus,2025-03-07,2025-03-21,exact_span_match,1,0.0,{},True
+pop-208113b31cc90bae3bd4,,Demoskop,2024-02-22,2024-03-11,no_match,0,,{},False
+pop-20efee3cf0360c79ae43,swp-689b830098d12cd95a07,Novus,2018-06-07,2018-06-24,exact_span_match,1,0.0,{},True
+pop-2100e91cfa41e3757497,swp-afa4f20586671b553337,United Minds,2014-06-09,2014-06-30,exact_span_match,1,0.0,{},True
+pop-2110b415bcf6d5f4a33b,swp-245db72c2f55dcc31d6d,Ipsos,2017-05-09,2017-05-22,exact_span_match,1,1.0,"{""FI"": 1.0}",True
+pop-21226435fd523500de57,swp-7bf00d7bbc5700f627ec,Novus,2021-03-01,2021-04-04,exact_span_match,1,0.0,{},True
+pop-215e7f1a7ae609f350cf,swp-5f2182110735a44335c2,Ipsos,2012-02-06,2012-02-22,exact_span_match,1,0.0,{},True
+pop-2193fa72c39189b993a6,swp-1426cb60b510a4786ea9,Ipsos,2014-10-09,2014-10-21,exact_span_match,1,0.0,{},True
+pop-21d6c947dea83145d4c7,swp-1aa8793db1d4021c8c42,Sifo,2025-12-29,2026-01-11,exact_span_match,1,0.0,{},True
+pop-221c1dc128c225beee61,swp-7944a55718b9ad870e38,Novus,2013-04-29,2013-05-26,exact_span_match,1,0.0,{},True
+pop-221edeeb2cc603e41d56,swp-384e22589e8d84f1e91c,SCB,2009-04-28,2009-06-01,exact_span_match,1,0.0,{},True
+pop-22243103bf87371b182d,swp-2574783eb017dbf6674f,Sifo,2023-07-17,2023-07-30,exact_span_match,1,0.0,{},True
+pop-229e5d77476ee857d122,swp-9c24161fa7c9ab498adc,Novus,2019-03-04,2019-03-31,exact_span_match,1,0.0,{},True
+pop-22a5b9bf48e1bdd8eee9,swp-a1baa90c1805211df833,Demoskop,2020-10-27,2020-11-04,exact_span_match,1,0.0,{},True
+pop-22fc50e6ca21bc044473,swp-47e8b530672ad8ea34bf,Ipsos,2016-12-01,2016-12-12,exact_span_match,1,0.0,{},True
+pop-2339760febbcb034c776,,Novus,2014-01-27,2014-02-27,no_match,0,,{},False
+pop-23a7c567ed724b9df8f3,swp-aeaa9a118bea311c9210,Demoskop,2016-10-25,2016-11-02,exact_span_match,1,0.3,"{""SD"": 0.3}",True
+pop-23c141936062ae7f9707,swp-a4dcd71c782d985ec027,YouGov,2013-01-09,2013-02-05,exact_span_match,1,0.0,{},True
+pop-23cc3d1dbbbb4de5ca41,swp-c42e7a39bf7d275b824f,YouGov,2016-04-15,2016-04-19,exact_span_match,1,0.0,{},True
+pop-23e571a1b352bea979e1,,Novus,2022-09-04,2022-09-04,no_match,0,,{},False
+pop-23eb18f2bd44fc7e7255,,Sifo,2022-09-06,2022-09-06,no_match,0,,{},False
+pop-246ffb163b5be79c954b,swp-bb9c5ab78b7e551023d8,Ipsos,2024-05-07,2024-05-19,exact_span_match,1,0.0,{},True
+pop-247fcf52fc53f810b7fa,,Sifo,2026-03-23,2026-04-06,no_match,0,,{},False
+pop-2493c8989d8ee2fffa42,swp-2782355adede6f1a9db7,Ipsos,2015-04-16,2015-04-27,exact_span_match,1,0.0,{},True
+pop-2498b42d4a71f2b192ea,,Sentio,2021-12-17,2021-12-20,no_match,0,,{},False
+pop-25282225013906e86580,swp-e9c586b404d4c9f42bda,Novus,2025-04-07,2025-04-21,exact_span_match,1,0.0,{},True
+pop-2532e9a27567739067f3,swp-f98a1d213b53e2c33485,Skop,2015-06-08,2015-06-25,exact_span_match,1,0.0,{},True
+pop-254fd0f2c5045caec013,swp-c522da0e6ba8efa6e083,SCB,2015-11-02,2015-11-25,exact_span_match,1,0.0,{},True
+pop-254ff19fd79215069a4f,swp-00c8277503b7251e37a7,Inizio,2017-08-07,2017-08-14,exact_span_match,1,0.0,{},True
+pop-25ae74f33d2b3635dcd5,,Sentio,2021-09-23,2021-09-27,no_match,0,,{},False
+pop-25f7548a0ea8a3210ead,,Demoskop,2024-08-06,2024-08-16,no_match,0,,{},False
+pop-262d82cec6ec76fc7180,,Ipsos,2019-06-04,2019-06-18,no_match,0,,{},False
+pop-263d6de62a5f35d26f00,swp-dc066ed1ce8150c5eeaa,Demoskop,2009-02-25,2009-03-03,exact_span_match,1,0.0,{},True
+pop-26ae3d9e3d0c047321ad,,Sentio,2022-02-24,2022-03-02,no_match,0,,{},False
+pop-2715180c0d5e7d8ed61e,swp-fdfc34052267b2b5aa76,Inizio,2016-02-07,2016-02-17,exact_span_match,1,0.0,{},True
+pop-2722eed2913ac57d700e,swp-c37659caa38f3d284f25,Ipsos,2025-08-12,2025-08-24,exact_span_match,1,0.0,{},True
+pop-27323c80d6a8712608f2,swp-801673d2d352baa6a2af,Sentio,2024-11-14,2024-11-20,exact_span_match,1,0.0,{},True
+pop-274bb0b8b0b13932358b,swp-ed96ab5fb325fd370a3c,Demoskop,2009-10-28,2009-11-04,exact_span_match,1,0.0,{},True
+pop-274c987f720f5ae6b9e0,swp-839249852fdc769ee797,Sifo,2023-01-09,2023-01-19,exact_span_match,1,0.0,{},True
+pop-277822dd96015edb06b4,,Demoskop,2019-03-25,2019-04-03,no_match,0,,{},False
+pop-27a914a4a25816967cc9,swp-5126ff116d3a80b3a74c,Demoskop,2014-11-25,2014-12-03,exact_span_match,1,0.0,{},True
+pop-27cc226bddbced41b6f6,swp-462eec4994330ba71390,Inizio,2017-03-08,2017-03-14,exact_span_match,1,0.0,{},True
+pop-27dbb729c7b1807e90e4,swp-8955dce7f4e7b3673d73,Novus,2017-01-23,2017-02-19,exact_span_match,1,0.0,{},True
+pop-27f5a8b6f6d7c68b16e2,,United Minds,2011-03-14,2011-03-21,no_match,0,,{},False
+pop-280f4ee0247b152d47d0,swp-097daa576f73c9a30902,Ipsos,2013-04-04,2013-04-23,exact_span_match,1,0.0,{},True
+pop-283aa36975f29b1d44f1,swp-eb202a0f149fad748aa9,Ipsos,2018-04-12,2018-04-23,exact_span_match,1,0.0,{},True
+pop-283c8c341ae0121ec01b,swp-2a0e67bdda0760af634f,United Minds,2013-04-22,2013-05-19,exact_span_match,1,0.0,{},True
+pop-288b123930b0178726c2,swp-c1494f86163d0b54fc42,Ipsos,2013-06-10,2013-06-25,exact_span_match,1,0.0,{},True
+pop-289f9b66e836deba0e61,swp-13c4867a76a6097159e7,Novus,2022-04-04,2022-05-01,exact_span_match,1,0.1,"{""S"": 0.1}",True
+pop-28a169c692bb60bf684c,swp-714814fb9907642b7a9d,Novus,2022-08-01,2022-08-07,exact_span_match,1,0.0,{},True
+pop-28a4faabc6e7f713017c,swp-a7ea6e39521194d22287,Sifo,2012-09-03,2012-09-13,exact_span_match,1,0.0,{},True
+pop-28b87d6739dcf0eaf579,,Sentio,2020-11-17,2020-12-14,no_match,0,,{},False
+pop-28bb29f6e679a78b88ef,swp-af6155a5ae2fde545a2a,Demoskop,2015-06-30,2015-07-07,exact_span_match,1,0.0,{},True
+pop-28dbabb0a4c389a00e3a,swp-7085c28cf145a4b5e1de,Skop,2022-02-11,2022-02-14,exact_span_match,1,0.0,{},True
+pop-291586314f7207758b0b,swp-ea3ca0d72854c38896c7,Ipsos,2019-11-11,2019-11-24,exact_span_match,1,2.2,"{""C"": 0.1, ""KD"": 0.2, ""L"": 0.7, ""M"": 0.9, ""MP"": 0.4, ""S"": 0.7, ""SD"": 2.2, ""V"": 1.8}",True
+pop-2915905dc64d43c4acbf,swp-6f225533e261717968aa,Sifo,2015-01-07,2015-01-08,exact_span_match,1,1.1,"{""FI"": 1.1}",True
+pop-29b1fedff1247c78ea69,swp-ce18a5268a8e03296ace,Demoskop,2009-06-24,2009-07-01,exact_span_match,1,0.0,{},True
+pop-29bf66fce2c79179852f,swp-85fce21ae8488ae2c7f2,Novus,2020-03-30,2020-04-19,exact_span_match,1,0.0,{},True
+pop-29c9a8bf0d479c3b5533,swp-f7364e1f88d236e2b155,Sifo,2024-08-26,2024-09-08,exact_span_match,1,0.1,"{""MP"": 0.1}",True
+pop-29d86dddbd7c8352a96a,swp-44588e3ec64ca4b5d07a,Novus,2010-05-11,2010-05-24,exact_span_match,1,0.0,{},True
+pop-29e472ef3a6a015523f9,,Skop,2009-04-02,2009-04-18,no_match,0,,{},False
+pop-2a774ec335b007a63ad1,,Inizio,2015-12-08,2015-12-16,no_match,0,,{},False
+pop-2ad4e291982dcfe71814,swp-b19db4d9ceb35c530ced,United Minds,2009-04-28,2009-05-25,exact_span_match,1,0.0,{},True
+pop-2ae9253cb276003ea01e,swp-ea2b74197bdd882b5894,Ipsos,2014-01-09,2014-01-28,exact_span_match,1,0.0,{},True
+pop-2b15712c7607b12018e7,swp-c3cf718c55f2fa99ba67,United Minds,2014-05-12,2014-06-08,exact_span_match,1,0.0,{},True
+pop-2b25962899146da49527,,Sentio,2012-08-01,2012-08-29,no_match,0,,{},False
+pop-2b2d5c1cbfa82512b1e3,swp-c6dcaf1de45d2f4e8eeb,Sentio,2022-01-28,2022-01-30,exact_span_match_approximate_supplementary_period,1,0.0,{},True
+pop-2b2e754d7d8cda455eab,swp-09dd8f33aa5a3eab531b,Sentio,2012-12-06,2012-12-12,exact_span_match,1,0.0,{},True
+pop-2b3eb9cbb9632a0c150f,swp-70322ddb762fcb07ec6a,Demoskop,2011-09-28,2011-10-05,exact_span_match,1,0.0,{},True
+pop-2b594aac67031b48b1a6,swp-ee7ea9a6cb8d183abc61,Demoskop,2014-10-28,2014-11-05,exact_span_match,1,0.0,{},True
+pop-2b9af21e8f1b235e4ef7,swp-8f2538b042651e17cec7,Demoskop,2017-08-29,2017-09-05,exact_span_match,1,0.0,{},True
+pop-2c1ad3292fa6f5a3636b,swp-876dd4025d70f0af0b59,Sentio,2018-07-27,2018-08-01,exact_span_match,1,0.0,{},True
+pop-2c46efbaa8ae190026e3,swp-95744ccfd0cebf631ca7,Inizio,2017-11-08,2017-11-13,exact_span_match,1,0.0,{},True
+pop-2c7063938791e77a1d85,swp-f1112b0e523cfa34696f,YouGov,2016-01-15,2016-01-18,exact_span_match,1,0.0,{},True
+pop-2cad34ea2a419eb4d5d9,,Sifo,2018-09-03,2018-09-03,no_match,0,,{},False
+pop-2cc38e14495b19154f00,,Inizio,2016-01-12,2016-01-19,no_match,0,,{},False
+pop-2ccad40e47538dc926aa,swp-c2ec02c265361059359e,Sentio,2020-05-15,2020-05-18,exact_span_match_approximate_supplementary_period,1,0.0,{},True
+pop-2ccb182965cc0f64b6b8,swp-175dc95c59489c140fde,Sifo,2016-02-01,2016-02-11,exact_span_match,1,0.0,{},True
+pop-2e01366e8d9a2df81728,swp-22f06fa7bdb9c48ae682,Novus,2019-09-23,2019-10-20,exact_span_match,1,0.0,{},True
+pop-2e92b7ae34009e0a1d9c,swp-1015e9e473f7bae87698,Sentio,2013-01-10,2013-01-16,exact_span_match,1,0.0,{},True
+pop-2ec3994027f10fbafc3a,swp-d1d7be16617e8bdff9bf,United Minds,2012-10-14,2012-11-11,exact_span_match,1,0.0,{},True
+pop-2ed467844e1cde71e55c,swp-4ba4b63e94cc080a544f,Sifo,2022-11-07,2022-11-17,exact_span_match,1,0.0,{},True
+pop-2f04b2c24972a8e22a58,swp-045bf8634095797b9e2c,Ipsos,2014-12-08,2014-12-15,exact_span_match,1,0.0,{},True
+pop-2f057f754a201cae9099,swp-4d159482d2df88cca03a,Sifo,2023-08-21,2023-09-03,exact_span_match,1,0.0,{},True
+pop-2f3d9496454771aa5cd4,swp-2de09b04b70496872051,Inizio,2015-09-16,2015-09-24,exact_span_match,1,0.0,{},True
+pop-2f4b63e7de94cfe27562,swp-4ae931c4fff7668d7b62,SCB,2022-10-27,2022-11-24,exact_span_match,1,0.3,"{""V"": 0.3}",True
+pop-2f903359e6ccce93782c,swp-9b3045275e974ad38952,Novus,2022-01-31,2022-02-27,exact_span_match,1,0.0,{},True
+pop-2fc097d7d2f9ce3dc0a1,swp-1c0d09f0a9f299c19c75,Sentio,2019-05-17,2019-05-21,exact_span_match,1,0.0,{},True
+pop-2fccfc6385c4413dcebc,,Sifo,2018-09-06,2018-09-06,no_match,0,,{},False
+pop-2ff428a4024e80a66b5b,,United Minds,2014-08-11,2014-08-17,no_match,0,,{},False
+pop-300a894864800b32ab3b,swp-c7f961af5be5b19f23f8,Ipsos,2011-02-07,2011-02-23,exact_span_match,1,0.0,{},True
+pop-3018517e694f66340b7c,swp-404c3c908e579b502177,Ipsos,2013-01-10,2013-01-29,exact_span_match,1,0.0,{},True
+pop-306aaf45e0c8a2bdbc85,swp-9b253b0745d3c686e39f,Demoskop,2009-08-26,2009-09-02,exact_span_match,1,0.0,{},True
+pop-3091f2255de41ab25e3c,swp-7e2572489721ec5f2691,Ipsos,2015-10-15,2015-10-26,exact_span_match,1,0.0,{},True
+pop-30b2aaee2c9fa7cd0234,swp-ddc34b18f85c7ce84591,Ipsos,2023-10-16,2023-10-30,exact_span_match,1,1.0,"{""S"": 1.0}",True
+pop-30eec608e3b068c41829,swp-40c5dc14aac9a0028b89,Skop,2022-04-06,2022-04-14,exact_span_match,1,0.2,"{""V"": 0.2}",True
+pop-3133d34dbc0549f38d35,,United Minds,2010-09-13,2010-09-13,no_match,0,,{},False
+pop-3138a85a141626eccf70,swp-b8ab789144fdad06a36b,Demoskop,2024-03-24,2024-04-08,exact_span_match,1,0.0,{},True
+pop-314b0022cefd57a0438e,swp-30d41d21fd88a934fb08,Sifo,2017-10-02,2017-10-12,exact_span_match,1,0.0,{},True
+pop-31c32920d4173546db06,swp-34509d08d25f67f2f0a5,Demoskop,2011-08-31,2011-09-07,exact_span_match,1,0.0,{},True
+pop-31f4187a817a81ffa14b,swp-7897f70fa8cb2f468ea8,Inizio,2015-09-02,2015-09-09,exact_span_match,1,0.0,{},True
+pop-326ad94458c3d0ede21c,,Novus,2022-08-26,2022-08-26,no_match,0,,{},False
+pop-3272b4c40b399ae2b210,,United Minds,2010-09-12,2010-09-12,no_match,0,,{},False
+pop-328b6e5e67c4e135ccc9,swp-f922c6d1f570c07cd90f,Demoskop,2016-03-29,2016-04-06,exact_span_match,1,0.0,{},True
+pop-32a4b6aaa26dd24ace06,swp-01d78a194f4e8271b38e,Sifo,2026-08-03,2026-08-16,exact_span_match,1,0.0,{},True
+pop-32d02c48e139b5dd0b3b,swp-5d144d4b520a40a5f8b2,Sifo,2010-04-06,2010-04-15,exact_span_match,1,0.0,{},True
+pop-32df54bd99f98b2a678c,swp-3b3af5956c158d8125cd,Demoskop,2011-12-27,2012-01-04,exact_span_match,1,0.0,{},True
+pop-3304e3d26e088103b3a9,swp-4a27f82d40d996d5c365,Novus,2023-12-22,2024-01-21,exact_span_match,1,0.0,{},True
+pop-332dcad2a5523b431025,swp-5cf1c16083e882381bf1,Ipsos,2026-02-10,2026-02-23,exact_span_match,1,0.0,{},True
+pop-338c63f9c8dd163ccc29,swp-efa9876b98118903769b,Ipsos,2011-08-15,2011-08-24,exact_span_match,1,0.0,{},True
+pop-339e22677afaf720760c,swp-39d11463f970ac42d2ba,Skop,2015-12-07,2015-12-28,exact_span_match,1,0.0,{},True
+pop-33bcf54ddec01da769b0,swp-7a9ded278ce5f3a77ff1,United Minds,2012-09-17,2012-10-13,exact_span_match,1,0.0,{},True
+pop-33e2587a090c59b5bd16,swp-c833b3cb438e7a584e16,Inizio,2018-08-22,2018-08-26,exact_span_match,1,0.0,{},True
+pop-33e4dd193e4d149bd95e,swp-a13ade22fe2a0a64a18d,Demoskop,2026-03-10,2026-03-19,exact_span_match,1,0.0,{},True
+pop-341ca0e4cef2c5fe7cca,swp-d1582fbf145781cbc99a,Skop,2014-02-09,2014-03-04,exact_span_match,1,0.0,{},True
+pop-342c98a6235c3fa5a6fa,swp-aac15be4b84de778a88c,Sifo,2018-12-03,2018-12-13,exact_span_match,1,0.0,{},True
+pop-343d4a7133b2a43f0c08,swp-ae749edce1f386daa585,Novus,2021-11-08,2021-12-05,exact_span_match,1,0.0,{},True
+pop-343df1e44a98362ec7e2,swp-0978821accd1a99c2e78,Sifo,2022-06-06,2022-06-16,exact_span_match,1,0.0,{},True
+pop-346597964dd290aacf4f,swp-972edff485070b37e3f7,Inizio,2017-06-16,2017-06-29,exact_span_match,1,0.0,{},True
+pop-34899705991a2b852c60,swp-98b0f3f9da0f73625f3e,Demoskop,2020-11-26,2020-12-02,exact_span_match,1,0.0,{},True
+pop-34d9f7dbfb94b481261d,swp-78b544ec2261de26f794,Ipsos,2026-01-20,2026-01-29,exact_span_match,1,0.0,{},True
+pop-34e4c04da0eeecc70195,swp-a3454de7156d09095114,United Minds,2013-01-21,2013-02-16,exact_span_match,1,0.0,{},True
+pop-34ee0359296fa3cc04b1,swp-90ecba9e54c8102d2cb9,Sentio,2024-10-03,2024-10-09,exact_span_match,1,0.0,{},True
+pop-355ae1f7cd69df98b904,swp-b4d25bb3db51ccce8c55,Demoskop,2010-08-25,2010-09-01,exact_span_match,1,0.2,"{""SD"": 0.2}",True
+pop-355e1a797233f388924a,swp-42f7848921fcad4d4ef0,United Minds,2010-01-07,2010-01-31,exact_span_match,1,0.0,{},True
+pop-35816ac00997218bae62,swp-60a029f320285d86bdd0,SCB,2018-10-29,2018-11-27,exact_span_match,1,0.0,{},True
+pop-35bd0920509ed575f681,swp-9e7a421941daa963c7c6,Ipsos,2026-03-10,2026-03-22,exact_span_match,1,0.0,{},True
+pop-35cb8485602dc07cec29,swp-77ee46babddf183a0dbb,United Minds,2011-12-05,2012-01-15,exact_span_match,1,0.0,{},True
+pop-3603bb0b59f9c185a266,swp-cf7cab96cf7d62697e18,Ipsos,2017-11-09,2017-11-19,exact_span_match,1,0.0,{},True
+pop-369ded965a848d5e5e8b,swp-39800f2b13c8a7e051cd,Demoskop,2019-01-29,2019-02-05,exact_span_match,1,0.0,{},True
+pop-36daf92df055c6977c9a,swp-4932c13c36806f283433,Sifo,2018-04-02,2018-04-12,exact_span_match,1,0.0,{},True
+pop-36dc9c3d7cb1d94fe502,swp-8c66f3e402d1f9411ee1,YouGov,2018-01-12,2018-01-15,exact_span_match,1,0.0,{},True
+pop-36e6e3e9dd61c5797a55,swp-91342b6a753f12fa2d8d,Ipsos,2018-02-08,2018-02-19,exact_span_match,1,2.0,"{""FI"": 2.0}",True
+pop-379fcd597918277b63a8,swp-e2ff2dc4d0e761433824,Novus,2011-05-17,2011-06-13,exact_span_match,1,0.0,{},True
+pop-37db60cba4aa6ba5ad15,swp-2e5b0b51843050712565,Demoskop,2010-06-27,2010-07-04,exact_span_match,1,0.0,{},True
+pop-37f20075d86f932c2870,swp-525dab48a00ad4abb0f0,Demoskop,2022-08-31,2022-09-04,exact_span_match,1,0.0,{},True
+pop-37f2d2642591f40843d0,,Sifo,2018-08-31,2018-09-02,no_match,0,,{},False
+pop-387ae10b816f2d3400a7,swp-cd0772d7d9cd0696ab02,Sentio,2020-03-20,2020-03-24,exact_span_match_approximate_supplementary_period,1,1.3,"{""C"": 1.3}",True
+pop-388f5ca118edd75f2533,swp-e6f228bdc24ff8b7dc84,Novus,2022-11-28,2023-01-01,exact_span_match,1,0.0,{},True
+pop-38ad0e3b98f17db6ed22,swp-ae990074097c460df67e,Sentio,2020-01-24,2020-01-28,exact_span_match_approximate_supplementary_period,1,0.0,{},True
+pop-38be928ddf5c6b31ecbf,swp-c420f17de410e0dfb6a1,Sifo,2014-02-03,2014-02-13,exact_span_match,1,0.0,{},True
+pop-38c750b86ea7990e7568,swp-10b6aa050af4ee53a8bd,Skop,2010-09-07,2010-09-12,exact_span_match,1,0.0,{},True
+pop-38dd74ecef499623a509,swp-e1b57bc5617ab7863f9e,Ipsos,2024-09-03,2024-09-15,exact_span_match,1,0.0,{},True
+pop-38ef7ce8e47a2c41ad3c,swp-59f4c8411f3ab3713aba,Novus,2010-08-31,2010-09-06,exact_span_match,1,0.0,{},True
+pop-392dfb5d47882bfa71ea,swp-5ad45b8015b36fe5c042,Sentio,2016-09-08,2016-09-13,exact_span_match,1,0.0,{},True
+pop-3949362fad5552f902d4,swp-702890934d471246271e,Demoskop,2015-02-24,2015-03-04,exact_span_match,1,0.0,{},True
+pop-3a48eedd965727111920,swp-f0e354756bf943e0f761,Demoskop,2013-01-29,2013-02-06,exact_span_match,1,0.0,{},True
+pop-3a7451edd412067b6ec5,swp-30b87fd7e59e4c9c7c18,SCB,2014-05-02,2014-05-25,exact_span_match,1,0.0,{},True
+pop-3a7b035a49312144c120,swp-cd8f57879f0bfb5a17fc,United Minds,2013-08-16,2013-09-15,exact_span_match,1,0.0,{},True
+pop-3a961192168f00ef4462,swp-9de74479cc828694651e,SCB,2011-11-01,2011-11-27,exact_span_match,1,0.0,{},True
+pop-3aa48d185a93bccafeb0,swp-7c303217e00e3576cb50,Sentio,2017-07-14,2017-07-19,exact_span_match,1,0.0,{},True
+pop-3acc38ba8379c4bfd736,,Novus,2022-09-07,2022-09-07,no_match,0,,{},False
+pop-3b12df8c0ddffb35c9b5,swp-9f7bc59773e209d61e52,Sifo,2020-10-05,2020-10-15,exact_span_match,1,0.0,{},True
+pop-3b7b06f86127d4f912c1,swp-8448352ee36c8b3abb2f,Ipsos,2021-01-13,2021-01-25,exact_span_match,1,0.0,{},True
+pop-3b942da6a8e4f8c64fbb,swp-ee939487667082f107cc,Novus,2023-05-29,2023-06-21,exact_span_match,1,0.0,{},True
+pop-3bcd21b3962c5e03a4e6,swp-6da6ed433ac1915c4d4e,Novus,2024-11-04,2024-11-17,exact_span_match,1,0.0,{},True
+pop-3c030a45699ade284e7c,swp-84a1e379fa85d4c07c20,Demoskop,2012-11-27,2012-12-05,exact_span_match,1,0.0,{},True
+pop-3c1d738b100f7d39c767,swp-2ece5c36a0a08941e39d,Sentio,2012-11-15,2012-11-21,exact_span_match,1,0.0,{},True
+pop-3c8cf6dcbec7d7ec6e49,,Novus,2022-09-08,2022-09-08,no_match,0,,{},False
+pop-3cd84b9693d3c9441895,,Ipsos,2016-06-07,2016-06-16,no_match,0,,{},False
+pop-3d013e9a71acdb5e4d49,,Sentio,2016-04-05,2016-04-13,no_match,0,,{},False
+pop-3d2a00ec58416a5306a5,,Ipsos,2010-09-07,2010-09-08,no_match,0,,{},False
+pop-3d9169fde0056b1e4f3b,swp-9914f24a66090937df30,Novus,2021-10-04,2021-10-31,exact_span_match,1,0.0,{},True
+pop-3daf1b07e6f6e7030c68,,Ipsos,2018-11-16,2018-11-24,no_match,0,,{},False
+pop-3db20a9e3f28c5fe72a1,swp-49e064168e19e5d96b20,Skop,2010-08-09,2010-08-13,exact_span_match,1,0.0,{},True
+pop-3db3ee3ad07bbdf5bfb3,swp-b404ac7ec8b595a5ff69,Ipsos,2009-04-07,2009-04-22,exact_span_match,1,0.0,{},True
+pop-3e1977344f7fbded3b20,swp-dbeea56e7a80339d5a9c,Demoskop,2012-06-26,2012-07-04,exact_span_match,1,0.0,{},True
+pop-3e515cb3724452326c8f,swp-84d03210f198e10b1dae,Demoskop,2010-01-04,2010-01-11,exact_span_match,1,0.0,{},True
+pop-3e76671e6a4b2e4ba7f3,swp-4359fde6b7e7381923d4,Demoskop,2024-04-29,2024-05-14,exact_span_match,1,0.0,{},True
+pop-3ef0bfb6b226cdc86a8e,swp-d38d8a6795dbea31eb55,Ipsos,2009-09-02,2009-09-16,exact_span_match,1,0.0,{},True
+pop-3f0581b01ae45bdb7381,,Ipsos,2018-09-03,2018-09-05,no_match,0,,{},False
+pop-3f1f14ffe95ef957ea76,swp-44c7773df97dbd2e100d,Demoskop,2024-10-26,2024-11-11,exact_span_match,1,0.0,{},True
+pop-3f5daf423c37291131f0,,Sentio,2021-07-16,2021-07-19,no_match,0,,{},False
+pop-3f7bba1ec843be634850,swp-977b86534749c56662fe,Skop,2011-08-22,2011-09-08,exact_span_match,1,0.0,{},True
+pop-3fa180073b6b15296baf,swp-c80d2892fbe8b60d5395,Sifo,2009-10-05,2009-10-15,exact_span_match,1,0.0,{},True
+pop-4033cb30ffd5e996d8ee,swp-62d58cb623758ea568ce,Demoskop,2015-05-27,2015-06-03,exact_span_match,1,0.0,{},True
+pop-40515aadd652e473aa74,swp-8787c7ae97d2679d26ce,Sifo,2011-02-07,2011-02-17,exact_span_match,1,0.0,{},True
+pop-4079f23b069737cdd318,swp-78f9467d2a70e02932d3,Demoskop,2025-04-10,2025-04-22,exact_span_match,1,0.0,{},True
+pop-407dfdabb14c1c0e0c32,,Ipsos,2010-09-14,2010-09-16,no_match,0,,{},False
+pop-408314797a6e0eb5f2ac,swp-ee9c3d6fca6f27201ce6,Ipsos,2010-09-22,2010-09-30,exact_span_match,1,0.0,{},True
+pop-409c911c2481254c7eee,swp-c07c76083ec47b522ecb,United Minds,2010-11-23,2010-12-19,exact_span_match,1,0.0,{},True
+pop-40ed68dd8e748e2a9b3a,swp-45b14008783dc05a13d7,Sentio,2018-06-28,2018-07-03,exact_span_match,1,0.0,{},True
+pop-40f3a4547b2030ce59ab,swp-883c86f1ee4254f62cc0,Demoskop,2017-09-24,2017-10-01,exact_span_match,1,0.0,{},True
+pop-41122f7a15d7c810cfab,swp-217d28a24401c25df29f,Novus,2025-05-05,2025-05-18,exact_span_match,1,0.0,{},True
+pop-4129285d7ecb7fe69589,swp-e52142fde2b489e7a79e,Demoskop,2010-05-26,2010-06-02,exact_span_match,1,0.0,{},True
+pop-413422b0d990a05562f9,swp-98b91f3618217afdf134,Sifo,2015-04-07,2015-04-16,exact_span_match,1,0.0,{},True
+pop-41565b130a0931d641bd,swp-5468546ec8a13bc9d057,Demoskop,2013-03-26,2013-04-03,exact_span_match,1,0.0,{},True
+pop-415b24d2f4e014690e3a,,Ipsos,2024-02-13,2024-02-25,no_match,0,,{},False
+pop-4163470bb611ed7b5be4,swp-e7d6859c942f2d3286f5,Demoskop,2025-09-12,2025-09-22,exact_span_match,1,0.1,"{""MP"": 0.1}",True
+pop-41a162d045ca5ae0f3a3,,Sifo,2022-08-28,2022-08-28,no_match,0,,{},False
+pop-41eb72b201136d6da593,swp-4e5c145335803d97299b,Novus,2026-07-06,2026-07-19,exact_span_match,1,0.0,{},True
+pop-41f87cc5460356063ff1,swp-1491f73a6e7b8df81b2e,Sifo,2013-06-03,2013-06-13,exact_span_match,1,0.0,{},True
+pop-422e8eca039b1c5f4f35,,Sifo,2018-08-24,2018-08-26,no_match,0,,{},False
+pop-426f9119bc7da73345f8,swp-7751550467cf7ea092e2,Novus,2015-09-28,2015-10-25,exact_span_match,1,0.0,{},True
+pop-428b55fe64a9d6875514,,Ipsos,2010-09-09,2010-09-13,no_match,0,,{},False
+pop-428d2d71d6f6337017a5,,Novus,2014-08-04,2014-08-24,no_match,0,,{},False
+pop-42acc0de59ce65f60e2b,swp-d899ba138d2fe4ce7803,Sifo,2010-08-09,2010-08-12,exact_span_match,1,0.0,{},True
+pop-42c4401173f80c60b802,swp-0e8e5164f1b37e0abe27,YouGov,2016-03-11,2016-03-14,exact_span_match,1,0.0,{},True
+pop-42feb4577616d13305af,,Skop,2022-09-05,2022-09-05,no_match,0,,{},False
+pop-43127868f4153b716556,swp-06422b543a9994f831a4,YouGov,2012-04-04,2012-05-08,exact_span_match,1,0.0,{},True
+pop-431a8ae215ce1f2e818c,swp-eb29e27fac5679bb443d,YouGov,2012-08-08,2012-09-04,exact_span_match,1,0.0,{},True
+pop-43352beb95380969b7fb,,Sentio,2021-08-26,2021-08-29,no_match,0,,{},False
+pop-4342715a7ad9e0b3cd46,swp-6cacb55c083ed22340c3,YouGov,2011-12-05,2012-01-01,exact_span_match,1,0.0,{},True
+pop-4378494a969fe76982e6,swp-01853f51147a6ab2e0b5,Ipsos,2012-08-09,2012-08-28,exact_span_match,1,0.0,{},True
+pop-4390576bad5f30cb4bc9,,Skop,2022-08-23,2022-08-23,no_match,0,,{},False
+pop-439c984d75fcf433ef23,swp-0ae0d301dc2b4fea00b2,Sifo,2024-02-19,2024-03-03,exact_span_match,1,0.0,{},True
+pop-43e7d9c454985579105c,swp-8e0d0573cdbac2d3a09f,Ipsos,2026-04-14,2026-04-27,exact_span_match,1,0.0,{},True
+pop-4448e92e36b7d5ce5495,swp-d56870fce13dfabb98f0,Sifo,2025-08-25,2025-09-07,exact_span_match,1,0.0,{},True
+pop-44845b0a0a4b5bbfdff8,swp-cf4f6bcfde3b9bee5094,Sentio,2017-03-09,2017-03-13,exact_span_match,1,0.0,{},True
+pop-4494d5c23be809569544,swp-ca7ac429184439950016,Sifo,2015-03-02,2015-03-12,exact_span_match,1,0.0,{},True
+pop-44d5142d9460654c032d,swp-2a6a8651688a3717b70e,Ipsos,2024-01-16,2024-01-28,exact_span_match,1,0.0,{},True
+pop-4527845ab2f2b18ef6ed,,Ipsos,2010-09-02,2010-09-06,no_match,0,,{},False
+pop-45e3dce1247a1211daa6,swp-66ee2d511d14c2cee115,Skop,2020-04-30,2020-05-05,exact_span_match,1,0.0,{},True
+pop-460d12ce476619dd9d8d,,Skop,2022-08-29,2022-08-29,no_match,0,,{},False
+pop-466fc8f97b6c30385720,swp-bbc5258a34119d1800bd,Skop,2010-10-17,2010-11-08,exact_span_match,1,0.0,{},True
+pop-46dd4dc6a86fcf8582ee,swp-bb962afefe9ce43993da,Sifo,2023-05-22,2023-06-04,exact_span_match,1,0.0,{},True
+pop-46f0864836772c5c0147,swp-c5412456597a6ea122c6,United Minds,2009-06-24,2009-07-17,exact_span_match,1,0.0,{},True
+pop-47d3ec99e513153a0969,swp-b467a564fb6313453a3f,Demoskop,2021-09-29,2021-10-06,exact_span_match,1,0.0,{},True
+pop-481a968b70b3c794d9e0,swp-8cdd8cf797384d9ad3f4,Demoskop,2018-04-24,2018-05-02,exact_span_match,1,0.0,{},True
+pop-485432425a59ebfb8057,swp-66f5552bfaa3623ad350,Skop,2015-02-19,2015-03-11,exact_span_match,1,0.0,{},True
+pop-487da6b210c85114580e,swp-1d564580514f4c6c4a1e,Sifo,2019-02-04,2019-02-14,exact_span_match,1,0.0,{},True
+pop-48f50a06d9635c3c0334,swp-191ca8605892accf18c7,Sifo,2021-12-06,2021-12-16,exact_span_match,1,0.0,{},True
+pop-49849a35f7531f01e7ee,swp-51bc1dc7942a2fc2690e,Demoskop,2013-04-29,2013-05-07,exact_span_match,1,0.0,{},True
+pop-499114cace444a6758f3,swp-6833ffd36e71377537ae,Ipsos,2022-08-26,2022-08-30,exact_span_match,1,0.0,{},True
+pop-49bbb31cae2a930a6168,swp-3419a26b3494ef5c7fea,Novus,2010-04-27,2010-05-10,exact_span_match,1,0.0,{},True
+pop-49bdb8e7e4eb58ce9aae,swp-063ba807dc4902408f86,Ipsos,2023-09-12,2023-09-24,exact_span_match,1,1.0,"{""L"": 1.0}",True
+pop-4a74ded5f12b9a63a752,swp-7beb4b9b6123d10c8a78,Sifo,2023-10-16,2023-10-29,exact_span_match,1,0.0,{},True
+pop-4b1b6630b2695b3b7393,swp-cc72745c4c830ea08c4c,Sifo,2013-12-02,2013-12-12,exact_span_match,1,0.0,{},True
+pop-4b253280c7096d37c9c4,swp-f1f08af9d4339520042c,Novus,2020-01-07,2020-01-26,exact_span_match,1,0.0,{},True
+pop-4b5ccc797a2cca09a691,swp-9dbe4bec1a6ebe514f2b,Ipsos,2018-08-07,2018-08-16,exact_span_match,1,0.0,{},True
+pop-4bc09573b0292464ef5d,swp-9878ebd8b38e096da85e,Sentio,2023-06-15,2023-06-19,exact_span_match,1,0.0,{},True
+pop-4c45bb2fb612a895be6e,swp-a5dfe1cfb91b95471c49,Novus,2010-04-06,2010-04-19,exact_span_match,1,0.0,{},True
+pop-4c66d6a9d59f0537ecf1,swp-df886a2d76c8ce75304b,Inizio,2017-01-09,2017-01-17,exact_span_match,1,0.0,{},True
+pop-4c98ef8a379afab36de4,,Novus,2021-04-05,2021-05-02,no_match,0,,{},False
+pop-4cabd9c1341605d41741,swp-495f92e67b6e86f20219,Sifo,2014-10-06,2014-10-16,exact_span_match,1,0.0,{},True
+pop-4cb64df6458a2552cae4,swp-cb4ac06dca55e51a4267,Sifo,2024-03-25,2024-04-07,exact_span_match,1,0.0,{},True
+pop-4cba56df62d955ed4d5d,swp-4a739caa1dc68ef94d12,Skop,2011-09-27,2011-10-16,exact_span_match,1,0.0,{},True
+pop-4d42b665109713a4688a,,Sifo,2024-02-15,2024-02-18,no_match,0,,{},False
+pop-4d4f7fdfebe8c158e6b8,swp-ac7db28e524eed00e0e6,Sentio,2020-06-12,2020-06-15,exact_span_match_approximate_supplementary_period,1,0.0,{},True
+pop-4d5c55ea3885b1b5b93d,swp-f0a477aac0ef39a25060,Novus,2011-07-26,2011-08-22,exact_span_match,1,0.0,{},True
+pop-4d776ff53f864d7a3498,swp-1889a2e2fa8f0b3aab5e,Demoskop,2010-01-27,2010-02-03,exact_span_match,1,0.0,{},True
+pop-4d811b134b94a9ece4d9,swp-c2ecdb7a5e5870a5e579,Demoskop,2021-04-28,2021-05-05,exact_span_match,1,0.0,{},True
+pop-4e109da2261f6fe30b80,,Sifo,2022-09-01,2022-09-01,no_match,0,,{},False
+pop-4e3c526b254c17fc2ad1,swp-f1898b80e02c0d2ff10b,Sentio,2023-02-09,2023-02-15,exact_span_match,1,0.1,"{""M"": 0.1}",True
+pop-4e50cafc52d47ec2892a,swp-eaa04959cec1582247d5,Sifo,2010-08-02,2010-08-05,exact_span_match,1,0.0,{},True
+pop-4e8a906fc02999534e12,swp-97cacbc90d362f089434,Sentio,2023-07-03,2023-07-06,exact_span_match,1,0.0,{},True
+pop-4ea657c727ee47ca04e5,,Inizio,2019-03-23,2019-03-28,no_match,0,,{},False
+pop-4f4e2fb7c37889f26419,swp-ef57a37e5684f0427f01,Inizio,2015-11-09,2015-11-16,exact_span_match,1,0.3,"{""MP"": 0.3}",True
+pop-4f58799852189e08f2f6,swp-03ac390d567ea1e82b4a,Sentio,2019-10-18,2019-10-24,exact_span_match_approximate_supplementary_period,1,0.0,{},True
+pop-4f6a90cb89116b5db2a7,swp-9acf57ea26636d329624,Novus,2017-06-05,2017-06-25,exact_span_match,1,0.0,{},True
+pop-4fa6beea9ccc5419fcb1,swp-01af05fa930ba2093a3d,Sifo,2021-11-08,2021-11-18,exact_span_match,1,0.0,{},True
+pop-4fc193dba916ea8635a1,swp-304ed31d5dfc220bda08,Demoskop,2026-04-10,2026-04-24,exact_span_match,1,0.0,{},True
+pop-4fd8c36f367ecbca1989,,Novus,2014-09-01,2014-09-02,no_match,0,,{},False
+pop-504216d1477240ca2bbe,,Demoskop,2014-09-09,2014-09-12,no_match,0,,{},False
+pop-50463f2dfad55dcab480,swp-7a4fe2cfc1646dcf19ac,Sifo,2024-04-22,2024-05-05,exact_span_match,1,0.0,{},True
+pop-5053a26ec1f6cb769a2d,,United Minds,2014-09-10,2014-09-11,no_match,0,,{},False
+pop-50590bd6b3aba9ae7bed,swp-e82aede6f3dcf252468f,Sentio,2021-02-25,2021-02-28,exact_span_match_approximate_supplementary_period,1,0.0,{},True
+pop-50702c76409f54f9619f,,Inizio,2019-06-17,2019-06-24,no_match,0,,{},False
+pop-50800857e6c982b478d5,swp-2e6b52b0d71d96f1bacd,SCB,2010-04-28,2010-05-30,exact_span_match,1,0.0,{},True
+pop-5086833e55c294ee9e11,swp-5b2a87c3ec884792455a,YouGov,2012-10-03,2012-11-06,exact_span_match,1,0.0,{},True
+pop-5089075516dcd8051240,swp-f4b00320b11169d86d05,Novus,2021-08-02,2021-08-29,exact_span_match,1,0.0,{},True
+pop-508e0a5c5c3053404911,,Novus,2022-09-06,2022-09-06,no_match,0,,{},False
+pop-509b4812cf7a783c0182,swp-5b3ffc554326961342ac,Ipsos,2017-12-06,2017-12-14,exact_span_match,1,0.0,{},True
+pop-50be75e86450a3c6351c,swp-abd2c659580fd046a116,Novus,2012-09-24,2012-10-21,exact_span_match,1,0.0,{},True
+pop-5144471d4111b6a020e6,swp-8a896f71dd2352ddf196,YouGov,2018-03-16,2018-03-19,exact_span_match,1,0.0,{},True
+pop-514896b9b62a71b366cd,swp-1b3a1255af097e9cb7f4,Novus,2022-10-31,2022-11-27,exact_span_match,1,1.0,"{""SD"": 1.0}",True
+pop-51577f7cd2feb3871111,,Sentio,2011-09-01,2011-09-17,no_match,0,,{},False
+pop-516417ba3c0186b8da9f,swp-10311d73fd0784a036dd,Ipsos,2020-04-14,2020-04-26,exact_span_match,1,4.5,"{""C"": 0.2, ""KD"": 0.2, ""L"": 0.8, ""M"": 0.6, ""MP"": 0.2, ""S"": 4.5, ""SD"": 1.0, ""V"": 2.6}",True
+pop-519204fbe42bad9d9d3d,swp-4c32291437336b7cc2e8,Ipsos,2021-06-08,2021-06-20,exact_span_match,1,0.0,{},True
+pop-519c652d3e160e1335c7,,United Minds,2014-08-25,2014-08-31,no_match,0,,{},False
+pop-51b6d40b42f92e96ecd6,swp-efecf3676960fe80936c,Skop,2022-08-15,2022-08-18,exact_span_match,1,0.0,{},True
+pop-51df132c1bd403484a80,swp-b7e8bb05c31e5a9a03c8,Novus,2012-02-21,2012-03-19,exact_span_match,1,0.0,{},True
+pop-51ee9ac3f325e3349ad4,swp-e35f7fe7da89bf586d2d,Sifo,2015-01-12,2015-01-22,exact_span_match,1,0.0,{},True
+pop-51fa364edcb8add38eb6,swp-c14a6082c0d8426f477a,Ipsos,2021-11-09,2021-11-22,exact_span_match,1,0.0,{},True
+pop-51feb2ca31823cb4e92e,swp-802df63b5c7c8a374fb5,Sifo,2025-08-04,2025-08-17,exact_span_match,1,0.0,{},True
+pop-5211ad7319dcf65c2990,swp-ebb79dcc2dec5c1abb73,Novus,2020-11-09,2020-12-06,exact_span_match,1,0.0,{},True
+pop-524018a95ed17765de3f,swp-e1bf69268385e39b253c,Sifo,2010-09-15,2010-09-16,exact_span_match,1,0.0,{},True
+pop-524be1ebd18e663e2600,swp-d7007c5a5b2b742c051d,Sentio,2022-10-06,2022-10-08,exact_span_match,1,1.0,"{""M"": 1.0}",True
+pop-527a89b5c3d2691158b4,swp-8a794d0004cdc7ac42b2,Sentio,2024-02-15,2024-02-18,exact_span_match,1,0.0,{},True
+pop-5282b8b33c5dff81eeee,,Skop,2018-08-31,2018-08-31,no_match,0,,{},False
+pop-52c1196004085f42f893,swp-24d59943701e05150e05,Novus,2021-05-03,2021-06-06,exact_span_match,1,0.0,{},True
+pop-52e69db909d70eabd7d1,swp-d178aa71c8ee458da3d5,Skop,2010-08-15,2010-08-20,exact_span_match,1,0.0,{},True
+pop-5301fe01cc2fbd3e0a0a,swp-e1e019907f428c0de2d8,SCB,2021-04-28,2021-05-27,exact_span_match,1,0.0,{},True
+pop-532e9cd590952643b073,swp-001a152b9c2d7772af26,Demoskop,2024-09-22,2024-10-08,exact_span_match,1,2.1,"{""C"": 2.1, ""MP"": 2.1}",True
+pop-534c24bdd55b43b10532,swp-fa99a6833da26f74ef26,Skop,2018-06-20,2018-07-21,exact_span_match,1,0.0,{},True
+pop-5365ac57957817f6c3f8,swp-0e28d0eac88ecbe134fd,Ipsos,2020-06-02,2020-06-15,exact_span_match,1,3.1,"{""KD"": 1.2, ""L"": 1.3, ""M"": 3.1, ""MP"": 0.6, ""S"": 0.1, ""SD"": 0.3, ""V"": 0.4}",True
+pop-539491a23178db4cd37f,swp-ffd06cf9f9889a55ef65,Demoskop,2020-06-30,2020-07-07,exact_span_match,1,0.0,{},True
+pop-53bf7c58197a2e384827,swp-30eeeb91526578ac7836,YouGov,2013-04-03,2013-05-07,exact_span_match,1,0.0,{},True
+pop-5453b119b6c7749ec0a5,swp-0467e656accd7a271ccc,Novus,2013-01-02,2013-01-27,exact_span_match,1,0.0,{},True
+pop-546f62e86ebc1dd62fe7,,United Minds,2010-09-16,2010-09-16,no_match,0,,{},False
+pop-54e99f65ee3a5e848d50,swp-ec476349ddd339c3d3b7,Demoskop,2009-04-29,2009-05-06,exact_span_match,1,0.0,{},True
+pop-5561a9abcc687a59b923,swp-e43efce34d9ed918ea17,Ipsos,2022-02-08,2022-02-20,exact_span_match,1,0.0,{},True
+pop-556fe132f060cc476029,swp-7576b348a0290ae97ec4,Sifo,2010-09-06,2010-09-09,exact_span_match,1,0.0,{},True
+pop-557873088da5b05cec7e,swp-1688bef2453a69004f19,United Minds,2011-04-11,2011-05-08,exact_span_match,1,0.0,{},True
+pop-55dbd4003cf85b13295f,swp-06ee20474605076a0945,Demoskop,2020-02-25,2020-03-03,exact_span_match,1,0.0,{},True
+pop-56b94c6ff65d0335637a,,Sentio,2021-11-18,2021-11-22,no_match,0,,{},False
+pop-56bac4adc74d57b004b6,swp-9f3382dd1ed580893596,Sifo,2014-03-03,2014-03-13,exact_span_match,1,0.0,{},True
+pop-5717284e144f0fd59430,swp-197c6b636b98e2aeb18c,Ipsos,2014-02-06,2014-02-25,exact_span_match,1,0.0,{},True
+pop-571c7f3f522e4d80dd15,swp-bd25af9cf2b19ee5b11b,YouGov,2011-07-04,2011-08-01,exact_span_match,1,0.0,{},True
+pop-575962bff99131f02f99,swp-c2de840f01aee8efc057,Ipsos,2019-04-09,2019-04-22,exact_span_match,1,0.0,{},True
+pop-57a2e326a04513951864,swp-047d91d2f464a0d8ebc9,Ipsos,2010-05-10,2010-05-26,exact_span_match,1,0.0,{},True
+pop-57bf08508f8df36f046d,swp-5a45dfd9be2da84acc36,Sentio,2019-01-24,2019-01-30,exact_span_match,1,0.0,{},True
+pop-57dcea4834165fd65f34,swp-9761d2a8856f1ca527cf,Ipsos,2025-03-04,2025-03-16,exact_span_match,1,1.0,"{""S"": 1.0}",True
+pop-5867c00d28af566aa7be,swp-645611a47979ad96d787,Demoskop,2022-10-23,2022-11-01,exact_span_match,1,0.0,{},True
+pop-589c5627bd0456b7b759,swp-4ea6736489bd9974a865,Novus,2022-10-03,2022-10-30,exact_span_match,1,0.0,{},True
+pop-58a2565df88e9c53f25c,swp-3aaf373769ff4962b3e1,Novus,2025-01-13,2025-01-24,exact_span_match,1,0.0,{},True
+pop-58a74d68cb1a67492a17,swp-988ebb7819ddc0a990f8,United Minds,2011-07-03,2011-08-14,exact_span_match,1,0.0,{},True
+pop-58b340a2c0bd86216815,swp-5493cc2a7a635cc2e9e3,Sentio,2011-10-10,2011-10-23,exact_span_match,1,0.0,{},True
+pop-58c79899ac56afe1230d,swp-8456bbc5cb939579e4b7,Ipsos,2009-12-02,2009-12-16,exact_span_match,1,0.0,{},True
+pop-58d8abfbc62a958d43ac,swp-8f28ef466991711d396e,Demoskop,2012-08-28,2012-09-05,exact_span_match,1,0.0,{},True
+pop-58db2782dbd53f4fa339,swp-1e64f23f801b9681eba8,Ipsos,2017-02-08,2017-02-20,exact_span_match,1,0.0,{},True
+pop-58fd9d0b8e437adf6f07,swp-6536fa8d5967e0ee7d83,Demoskop,2014-12-30,2015-01-07,exact_span_match,1,0.0,{},True
+pop-5908671cd1fd2be0445b,swp-ef99524c27bab79687fc,Novus,2019-11-18,2019-12-15,exact_span_match,1,0.0,{},True
+pop-5908ef400df5c4628a76,swp-3fcebccf94da757e3aa5,Sifo,2011-10-31,2011-11-10,exact_span_match,1,0.0,{},True
+pop-592de67381101f4e9952,swp-908584ca9eff0566cd62,Novus,2015-08-24,2015-09-13,exact_span_match,1,0.0,{},True
+pop-593e307c50328f6373cb,swp-a43d5ef4758a810c0f11,Sifo,2017-04-18,2017-04-27,exact_span_match,1,0.0,{},True
+pop-59515f3e09dfe540281a,swp-3a9e7464b67a6ef39941,United Minds,2010-08-02,2010-08-22,exact_span_match,1,0.0,{},True
+pop-597e784d96a031124a8d,swp-2bb09168772497bfeb44,Sentio,2017-10-05,2017-10-09,exact_span_match,1,0.0,{},True
+pop-59bec1374c6e755a649a,swp-d9a5fc0400a434478d3b,Sifo,2013-09-02,2013-09-12,exact_span_match,1,0.0,{},True
+pop-59c3be189187a2a40ccf,,Sentio,2024-08-08,2024-08-13,no_match,0,,{},False
+pop-5a1abc0f57ce93764bcb,swp-642ceda7e21ce245e1d6,Ipsos,2020-03-10,2020-03-22,exact_span_match,1,2.35248,"{""C"": 0.969307, ""KD"": 1.459406, ""L"": 0.950495, ""M"": 1.01188, ""MP"": 0.839604, ""S"": 2.35248, ""SD"": 0.81782, ""V"": 0.581188}",True
+pop-5a20aa93c6b5e123ce28,swp-dded05989194729e8421,Ipsos,2025-02-04,2025-02-16,exact_span_match,1,0.0,{},True
+pop-5a4006f9a98be08d67a9,swp-cb877ca0994eb2b1a081,Sentio,2010-02-09,2010-02-28,exact_span_match,1,0.0,{},True
+pop-5a538c8c6741d9740ec2,swp-2628a4b7c37d9c1ec3de,Sentio,2013-04-10,2013-04-17,exact_span_match,1,0.0,{},True
+pop-5a72b914abe2d6034cc8,,Sifo,2022-08-31,2022-08-31,no_match,0,,{},False
+pop-5aab7ebab8b1917353df,swp-da67983daef0d7a399c5,Inizio,2016-11-07,2016-11-15,exact_span_match,1,0.1,"{""S"": 0.1}",True
+pop-5b0edc6c0250bfde0484,swp-362ade35e09609944ad2,Novus,2018-08-13,2018-08-21,exact_span_match,1,0.0,{},True
+pop-5b627066bd138c194d89,swp-522f04437bcfd7762ba3,Sifo,2010-12-06,2010-12-16,exact_span_match,1,0.0,{},True
+pop-5b7dd66672107ea3ae61,swp-3a15b5ee5a237998b7ce,Sentio,2016-01-07,2016-01-13,exact_span_match,1,0.3,"{""MP"": 0.3}",True
+pop-5be1a894b855154a0018,swp-4459205625dde0133e5c,YouGov,2012-03-07,2012-04-03,exact_span_match,1,0.0,{},True
+pop-5c7398b6cd9610a25003,swp-0c65cdadbcef99a84adf,Ipsos,2015-06-05,2015-06-15,exact_span_match,1,1.9,"{""C"": 1.4, ""FI"": 0.4, ""KD"": 0.8, ""L"": 0.4, ""MP"": 0.2, ""S"": 0.6, ""SD"": 1.9, ""V"": 0.4}",True
+pop-5ca1c27bba95740e243d,swp-e7480016ce2f51a1dbf5,Sifo,2022-02-07,2022-02-17,exact_span_match,1,0.0,{},True
+pop-5ceaf8e929a684602a5c,swp-fb059b81389612daf132,Demoskop,2025-01-10,2025-01-27,exact_span_match,1,0.0,{},True
+pop-5cecaa7660911994ce7d,,Sifo,2022-08-12,2022-08-12,no_match,0,,{},False
+pop-5d40c7683689590a7145,swp-846ffd5bd98f125320e9,Sifo,2022-03-07,2022-03-17,exact_span_match,1,0.0,{},True
+pop-5d83a6b48f7a0b5832cc,swp-9ec17699cdf49090ad46,Demoskop,2022-03-01,2022-03-09,exact_span_match,1,0.0,{},True
+pop-5da6f1a3014edabef142,swp-f82c38f287dcdfe5296f,Ipsos,2018-12-05,2018-12-16,exact_span_match,1,0.0,{},True
+pop-5dad3c17e83f62304a80,swp-6ea0e89442ea56fee26a,Demoskop,2025-03-13,2025-03-24,exact_span_match,1,0.0,{},True
+pop-5dd0625b289193444938,swp-8a778bfe08bb85bb98d1,YouGov,2012-12-05,2013-01-08,exact_span_match,1,0.0,{},True
+pop-5de9c75beda749055c5f,swp-242eb0fe268d2ebb08a1,Novus,2020-04-27,2020-05-24,exact_span_match,1,0.0,{},True
+pop-5e3ab8b1bd30a87c0c05,swp-fff886355dfcf5839231,Sentio,2016-05-12,2016-05-18,exact_span_match,1,0.0,{},True
+pop-5e3c9318c8a62973638c,swp-83860dc30693793abc4f,YouGov,2016-05-19,2016-05-23,exact_span_match,1,0.2,"{""M"": 0.2}",True
+pop-5e45bfc1f80f1ac8407b,swp-efc5e3a918e6945e4c80,Ipsos,2011-11-07,2011-11-23,exact_span_match,1,0.0,{},True
+pop-5e4b95e7f233ccc2b016,swp-48c6cfb605c0b87b6b80,Sentio,2012-06-01,2012-06-30,exact_span_match_approximate_supplementary_period,1,0.0,{},True
+pop-5e6f8c44a91d23cce30e,,Sifo,2018-08-29,2018-08-29,no_match,0,,{},False
+pop-5e79654630679b4d057d,swp-d807b06406b3117071cb,Sentio,2013-08-15,2013-08-22,exact_span_match,1,0.0,{},True
+pop-5e7bf7ab65255b4a0cbe,swp-22b4a8724bd780ecc879,Ipsos,2021-04-13,2021-04-25,exact_span_match,1,0.0,{},True
+pop-5e9f3769468a449bc496,swp-703e40f9b849188aea09,Skop,2013-03-26,2013-04-11,exact_span_match,1,0.0,{},True
+pop-5ef96c8cf2560e1c5167,swp-1ceee2815e11e058ec52,Ipsos,2023-05-09,2023-05-21,exact_span_match,1,0.0,{},True
+pop-5f24fbf010918b61c043,swp-0793437ad53761f63c06,Novus,2016-02-22,2016-03-20,exact_span_match,1,0.0,{},True
+pop-5f35c434a130882ee199,swp-122910283bccd9ac1bc0,Sentio,2010-06-01,2010-06-30,exact_span_match_approximate_supplementary_period,1,0.0,{},True
+pop-5f707756c4d6a7868f21,,Demoskop,2021-05-25,2021-06-02,no_match,0,,{},False
+pop-5f778059fe80d2bcb0d1,swp-95e1d8ceef3d5575ad1c,Demoskop,2015-03-31,2015-04-08,exact_span_match,1,0.0,{},True
+pop-5fcb93605b6eb51660f0,swp-a9a7d88de4c6a4aef1e5,Skop,2010-03-18,2010-04-10,exact_span_match,1,0.0,{},True
+pop-5fdf3367a9725284b9a6,swp-4b2f6df26152a28c00bf,Novus,2014-04-28,2014-05-25,exact_span_match,1,0.0,{},True
+pop-5ffb480114a28f696b26,swp-5e0ef472b4d8537dce34,Novus,2010-08-24,2010-08-30,exact_span_match,1,0.0,{},True
+pop-600f0af995649cf053fa,,Skop,2022-08-27,2022-08-27,no_match,0,,{},False
+pop-601010a07fa551da5bd1,swp-c9c92b8a4e605e0aa147,Sentio,2011-05-02,2011-05-22,exact_span_match,1,0.0,{},True
+pop-6020bbebb95851511656,swp-7d1e6176048bed33d01e,Novus,2018-01-22,2018-02-18,exact_span_match,1,0.0,{},True
+pop-602cf4ff55abeec8bd54,swp-6d2ba07ead358bb7239f,Novus,2009-12-01,2009-12-14,exact_span_match,1,0.0,{},True
+pop-603c27e11ac9af743541,,Sifo,2022-09-02,2022-09-02,no_match,0,,{},False
+pop-6063db2d3872221705ae,swp-de7235d0cce255238493,Ipsos,2024-03-12,2024-03-24,exact_span_match,1,0.0,{},True
+pop-606dece2ea4c2cb39164,swp-a572bdc67e057e3726c4,Novus,2020-05-25,2020-06-21,exact_span_match,1,0.0,{},True
+pop-60ca2aa81c3fbf9c2805,swp-e09247f512cd573353ad,YouGov,2015-04-17,2015-04-20,exact_span_match,1,0.0,{},True
+pop-60cb386a0ffc99082fb6,swp-79674d107f78c3a0c152,Inizio,2017-10-03,2017-10-09,exact_span_match,1,0.0,{},True
+pop-610bef7072dd03121305,swp-d7f4c504eef6d4bf4361,Novus,2011-11-22,2011-12-19,exact_span_match,1,0.0,{},True
+pop-6123dd7b4d48dde5396b,swp-0e87efaa1a0cbf86a201,Demoskop,2014-08-25,2014-09-02,exact_span_match,1,0.0,{},True
+pop-616ba9e49ab82503b8f4,swp-1848f72e5977ec3dc686,United Minds,2014-03-10,2014-04-06,exact_span_match,1,0.0,{},True
+pop-6185d4ec0df2b24394c3,swp-ca8a91313bbc20d982a3,United Minds,2010-12-20,2011-01-16,exact_span_match,1,0.0,{},True
+pop-61a4f581f1054d73b79f,swp-ddbaa3d57a3f38b11944,SCB,2021-10-28,2021-11-25,exact_span_match,1,0.0,{},True
+pop-61b7cd51eac29c74b6e1,,Sentio,2025-01-23,2025-01-27,no_match,0,,{},False
+pop-61b846f22ddd63ace9b3,swp-7d7525973752033e14f5,Sifo,2016-01-11,2016-01-21,exact_span_match,1,0.0,{},True
+pop-6262f836d5b8ddd67746,swp-fa0b11731187a74947b2,Skop,2016-02-16,2016-03-10,exact_span_match,1,0.0,{},True
+pop-63546f543a98ca8b542c,swp-4ec5ec804411c256dc12,Novus,2014-08-25,2014-08-31,exact_span_match,1,0.0,{},True
+pop-635c24ce10311bf9d888,swp-9f7698a4d4553522eab0,Demoskop,2016-02-23,2016-03-02,exact_span_match,1,0.0,{},True
+pop-6367510654e7361dd837,swp-de5ba87823258f5808a9,Skop,2009-01-25,2009-02-19,exact_span_match,1,0.0,{},True
+pop-636b171f4681e0c174a5,swp-cc22279372984fca5e03,Demoskop,2009-09-30,2009-10-07,exact_span_match,1,0.0,{},True
+pop-637beeff8d11eb86f301,,Demoskop,2022-08-22,2022-08-29,no_match,0,,{},False
+pop-638a419b9e148008dcb7,swp-787f325b2ff7d7f16ba9,Ipsos,2012-11-29,2012-12-18,exact_span_match,1,0.0,{},True
+pop-63c10dc15ac770af812d,swp-fd83bc70dc672fdbb425,Sifo,2022-04-11,2022-04-21,exact_span_match,1,0.0,{},True
+pop-63f66552c59e06793d59,swp-8ca63b72571babdd68d6,Ipsos,2010-08-09,2010-08-18,exact_span_match,1,0.0,{},True
+pop-641b6e397cc006a5826d,swp-e5cdf564e0a4d0c78a91,Sifo,2021-10-04,2021-10-14,exact_span_match,1,0.0,{},True
+pop-641cefb62875eec0277b,swp-529f5d05a9f4e23dbd66,Sifo,2020-02-03,2020-02-13,exact_span_match,1,0.0,{},True
+pop-6430827764cd3c1aa503,swp-0d4ef5bcf1c56e71e004,Novus,2023-01-02,2023-01-29,exact_span_match,1,0.0,{},True
+pop-643fa1b1216753737e60,swp-3a12a9376c3aba9cb600,Sentio,2024-01-22,2024-01-26,exact_span_match,1,0.0,{},True
+pop-644032ba4d2ad3a3aa29,swp-a29689d9f46198d070df,Skop,2011-12-16,2012-01-12,exact_span_match,1,0.0,{},True
+pop-64494b903867209ac933,swp-b7737b14de50d6b9e481,Sentio,2015-09-03,2015-09-09,exact_span_match,1,0.1,"{""SD"": 0.1}",True
+pop-648ed7a8a16012b5feaa,,Sentio,2012-03-02,2012-03-31,no_match,0,,{},False
+pop-6494bfb3d1e6bf21e0cf,,Sifo,2018-09-05,2018-09-05,no_match,0,,{},False
+pop-64c8d72fbe8fab6a33c0,swp-d330409b1f6bf89b744e,Ipsos,2021-08-10,2021-08-23,exact_span_match,1,0.0,{},True
+pop-64eff9bf1104678d9152,swp-09394b29a9b089aa7f6c,Ipsos,2015-09-09,2015-09-20,exact_span_match,1,0.0,{},True
+pop-650cb66f6271cea48e8d,swp-c8b775532c429222a620,SCB,2019-10-28,2019-11-26,exact_span_match,1,0.0,{},True
+pop-653787cd1dd66b31794d,swp-2ca4966c2dbe3d182df2,Inizio,2014-10-15,2014-10-30,exact_span_match,1,2.8,"{""FI"": 2.8, ""SD"": 0.9}",True
+pop-655efab8ab83173a4798,swp-8aa4d76e07c06e9fd26f,YouGov,2013-05-08,2013-06-04,exact_span_match,1,0.0,{},True
+pop-6593b228fe07f4a676b1,swp-ecbdc89b91f684f6d813,Inizio,2016-08-10,2016-08-18,exact_span_match,1,0.0,{},True
+pop-65a3ea7a7c19597ad086,swp-7fd5d7521492659c4066,Sentio,2016-03-03,2016-03-09,exact_span_match,1,0.0,{},True
+pop-65a8a7aceec615cf7bb3,swp-800f6755aeed09225740,Skop,2011-10-28,2011-11-20,exact_span_match,1,0.0,{},True
+pop-65bac3b26513608bd96e,swp-c6c80848d57251944047,Sifo,2013-05-06,2013-05-16,exact_span_match,1,0.0,{},True
+pop-65cdac2120ad2079a209,swp-a17675a4776ee5586a9f,YouGov,2015-03-13,2015-03-16,exact_span_match,1,0.0,{},True
+pop-65cf73353750856d64eb,swp-b358c9adb4b87815c5bc,Ipsos,2012-05-10,2012-05-29,exact_span_match,1,0.0,{},True
+pop-65d8054c6109fc9ec4e0,swp-bfa636e701d95bc97707,Demoskop,2022-12-31,2023-01-09,exact_span_match,1,0.0,{},True
+pop-65e40f8d67592ce713cb,swp-23c0f7e10d79a6ec6d7a,Sifo,2015-05-04,2015-05-12,exact_span_match,1,0.0,{},True
+pop-660701b1efc9b9dd0053,,Sifo,2018-10-08,2018-10-18,ambiguous_span_match,2,,{},False
+pop-6615563770fb8e1a8fb1,swp-de8976e7462459c0ac86,Demoskop,2013-08-27,2013-09-03,exact_span_match,1,0.0,{},True
+pop-66835833c86ec14e1917,swp-44ac21e86fcb815b9685,Sifo,2018-01-08,2018-01-18,exact_span_match,1,0.0,{},True
+pop-668f21226d138e18523d,swp-fcc85e5007e325874fd7,Ipsos,2024-08-13,2024-08-25,exact_span_match,1,0.0,{},True
+pop-66a42eb5a0632caad1a7,swp-ea9cd3d98fef10c2b34c,Sentio,2019-11-15,2019-11-19,exact_span_match,1,0.8,"{""KD"": 0.8}",True
+pop-66ce582d63f8e053bedd,swp-6ebeb75381c336666422,Inizio,2016-09-12,2016-09-22,exact_span_match,1,0.1,"{""FI"": 0.1}",True
+pop-66fca55a8ac44e86438a,swp-7cd44243c44e10bc0ab9,Ipsos,2012-04-04,2012-04-24,exact_span_match,1,0.0,{},True
+pop-674b1c322f40af14b3c4,swp-663e4e8a249802b77d83,Demoskop,2011-02-23,2011-03-02,exact_span_match,1,0.0,{},True
+pop-675936526e93aa7892fb,swp-200d9a0491003f02f847,Novus,2011-01-04,2011-01-17,exact_span_match,1,0.0,{},True
+pop-6787d904b07d9929e65a,swp-ffada1f6eb7a983eb4bc,Novus,2011-03-10,2011-03-21,exact_span_match,1,0.0,{},True
+pop-6798e8e8da3ba3497f4e,swp-5f61653424846e67a46a,Novus,2010-01-05,2010-01-18,exact_span_match,1,0.0,{},True
+pop-681867ff129211314e79,swp-a8e6458e54533d6ef17e,Ipsos,2012-06-07,2012-06-26,exact_span_match,1,0.0,{},True
+pop-68256f1bd8a8bf13dc3f,swp-043e423dd5b08c0a0cc9,Ipsos,2022-09-13,2022-09-25,exact_span_match,1,0.0,{},True
+pop-686f10c558ca74a45aa1,swp-5a499d57573df487028e,Novus,2021-12-06,2022-01-02,exact_span_match,1,0.0,{},True
+pop-68d38672812fc4c407c4,swp-dd42c948cb688fd6fd26,Sifo,2024-09-23,2024-10-06,exact_span_match,1,0.0,{},True
+pop-68e64a1b876674260413,swp-4328ee37cde72d465b1d,Demoskop,2021-01-26,2021-02-03,exact_span_match,1,0.0,{},True
+pop-693b72afc5d9feff1330,swp-377081604794f8467992,YouGov,2018-08-30,2018-09-01,exact_span_match,1,0.0,{},True
+pop-695597d982ec11332b96,,YouGov,2013-12-04,2014-01-01,no_match,0,,{},False
+pop-69b11c1b78c09ec594b9,swp-04320fe6f41548183b92,Demoskop,2015-04-28,2015-05-06,exact_span_match,1,0.0,{},True
+pop-69c02bcb45a61546ba10,swp-3eae506e26e65fdd7525,Sifo,2010-08-23,2010-08-26,exact_span_match,1,0.0,{},True
+pop-69f567222b963a566084,,Novus,2014-02-28,2014-03-23,no_match,0,,{},False
+pop-6a5eb0f7e022d3a0496c,,Novus,2022-08-30,2022-08-30,no_match,0,,{},False
+pop-6a6793c9a6e9913ea5c5,swp-4023765cd8dc46d9ec23,YouGov,2014-12-04,2014-12-05,exact_span_match,1,0.0,{},True
+pop-6a9925ab6ef7ab040ff7,swp-53e0519cf6db031fed9a,Sifo,2021-08-09,2021-08-19,exact_span_match,1,0.0,{},True
+pop-6ab9a9cf9f880a0bda4c,,SCB,2022-08-24,2022-09-10,no_match,0,,{},False
+pop-6ae96620cf3f576f8d8d,swp-5dca35f968a31fc31c8e,Demoskop,2013-01-02,2013-01-10,exact_span_match,1,0.0,{},True
+pop-6b2d28e966914d190760,swp-38735d266d9373d458b6,SCB,2022-04-28,2022-05-25,exact_span_match,1,0.0,{},True
+pop-6b67de78d165d756cddb,,Novus,2009-02-03,2009-03-16,no_match,0,,{},False
+pop-6b8397f18b0bb7c450a5,swp-8fa596d8f5c0cb4e6c54,Skop,2017-06-07,2017-07-06,exact_span_match,1,0.2,"{""SD"": 0.2}",True
+pop-6ba7697e061c6f486739,swp-fdbd1faf5c1f600192ed,Ipsos,2011-09-12,2011-09-18,exact_span_match,1,0.0,{},True
+pop-6ba9418653b44108817b,swp-94e2e34ede6255c34e60,YouGov,2011-11-07,2011-12-04,exact_span_match,1,0.0,{},True
+pop-6bfdc236fbe4efeee506,swp-bf3d7285bd4828d4878c,Novus,2009-09-01,2009-09-14,exact_span_match,1,0.0,{},True
+pop-6c71a7c345cc9edd656c,,Demoskop,2018-08-31,2018-09-04,no_match,0,,{},False
+pop-6c7dd19c7d35673cc6f0,swp-5cfe4f01a7a56e2d28fd,Novus,2023-09-18,2023-10-15,exact_span_match,1,0.0,{},True
+pop-6d37c9ea731ac8ef3c02,swp-cb4b62b1adc3ef9b8d09,Sentio,2022-08-25,2022-08-29,exact_span_match,1,0.3,"{""FI"": 0.3, ""KD"": 0.1}",True
+pop-6d5776aaf5fdb7eb8370,swp-2f63cd34853b2f8a9b43,Inizio,2017-12-06,2017-12-12,exact_span_match,1,0.2,"{""V"": 0.2}",True
+pop-6d98a9f0a6edc3a8680e,swp-e78715b1825fa35b82c7,Sifo,2012-08-13,2012-08-22,exact_span_match,1,0.0,{},True
+pop-6daf1710c9e0b7a5c5e0,swp-39064ea96fd62b6629a9,YouGov,2013-08-07,2013-09-03,exact_span_match,1,0.0,{},True
+pop-6de78ae3a327b49a0767,swp-cf7b38b853bc6a0902a8,YouGov,2013-03-06,2013-04-02,exact_span_match,1,0.0,{},True
+pop-6eb74c2a3247fa95156d,swp-6310c7be39d34a7fc0c6,Skop,2014-08-21,2014-09-04,exact_span_match,1,0.0,{},True
+pop-6ee30f3589510f4a43e9,swp-5c356f6a8312c5c779b7,Demoskop,2016-05-31,2016-06-08,exact_span_match,1,0.0,{},True
+pop-6ee8126f608486ecdad9,,United Minds,2010-09-14,2010-09-14,no_match,0,,{},False
+pop-6efa40f8d6a167658fd2,swp-a91ac34a0d6e83b32804,Sifo,2014-09-01,2014-09-04,exact_span_match,1,0.0,{},True
+pop-6efd598803ceaa850f70,swp-d356d2cc7dc1754d764c,Inizio,2015-04-22,2015-04-30,exact_span_match,1,0.0,{},True
+pop-6efeac6a9c00867db1a7,swp-a2530644b25cc3d09d66,Ipsos,2024-04-09,2024-04-21,exact_span_match,1,0.0,{},True
+pop-6f0cbb1e049e9a2d2c95,swp-4629e6ca1d6590580930,Ipsos,2017-06-07,2017-06-19,exact_span_match,1,0.0,{},True
+pop-6f36501c4049c0bb149b,,Skop,2016-12-01,2017-01-01,no_match,0,,{},False
+pop-6f5abf298bb67283c12f,swp-758e809646e2a203dd0d,YouGov,2018-04-13,2018-04-16,exact_span_match,1,0.0,{},True
+pop-6f6bb0e92d1ccee876ad,swp-084465e3f827c40f8a60,Novus,2013-08-05,2013-09-01,exact_span_match,1,0.0,{},True
+pop-6fb45dc208e19c5f854b,,Sifo,2018-08-30,2018-08-30,no_match,0,,{},False
+pop-6fc774326f5e79ee84fd,swp-b37f8fd586de3a87c9cf,Ipsos,2012-03-08,2012-03-27,exact_span_match,1,0.0,{},True
+pop-6fd2c72d838a786ed743,swp-49d4dcc9a8f6b6dd4ac7,Skop,2018-01-11,2018-02-02,exact_span_match,1,0.0,{},True
+pop-703bfcb7939b2b0d1c48,swp-9f8276b5040736226b57,Ipsos,2019-10-08,2019-10-21,exact_span_match,1,4.4,"{""C"": 0.6, ""KD"": 1.1, ""L"": 0.7, ""M"": 2.8, ""S"": 2.3, ""SD"": 4.4, ""V"": 0.9}",True
+pop-707068943ecba1ce3a9c,swp-53701fb24b77b0952811,Sifo,2014-08-11,2014-08-14,exact_span_match,1,0.0,{},True
+pop-70783a624858c4b46b4e,,United Minds,2010-09-07,2010-09-07,no_match,0,,{},False
+pop-709f6e80e7c2227a6621,swp-e471c5b1f91a3b293f3a,YouGov,2014-03-05,2014-04-08,exact_span_match,1,0.0,{},True
+pop-70c11b137dd990faef61,,Sifo,2022-09-05,2022-09-05,no_match,0,,{},False
+pop-70ef4fecfecb0e2a44df,,Sifo,2022-08-16,2022-08-16,no_match,0,,{},False
+pop-7106b1ce9faba831df86,swp-45a0c3a03db85fa49430,Demoskop,2016-08-30,2016-09-07,exact_span_match,1,0.0,{},True
+pop-712bea79fbff83578419,swp-d3873a0a31f42b194994,Skop,2024-06-04,2024-06-06,exact_span_match,1,0.0,{},True
+pop-71625b187586ee413278,swp-270a21759b488512aac0,SCB,2017-10-27,2017-11-28,exact_span_match,1,0.0,{},True
+pop-719195ec46166ec8f4b2,swp-6dcaeab22364ef417387,Sifo,2019-04-01,2019-04-11,exact_span_match,1,0.0,{},True
+pop-71c754e0033457697502,swp-88925ef3450de7865feb,Demoskop,2017-02-28,2017-03-07,exact_span_match,1,0.0,{},True
+pop-71f60ff6c39d94d13890,swp-bef1ee2dc4436a98380b,Novus,2014-12-03,2014-12-14,exact_span_match,1,0.0,{},True
+pop-7207583410b0b5b71861,swp-5e2abc7c149afd6ca07d,Sifo,2021-09-06,2021-09-16,exact_span_match,1,0.0,{},True
+pop-721daa1c79aafa044584,swp-b5091377681575757c65,Demoskop,2026-07-29,2026-08-10,exact_span_match,1,0.0,{},True
+pop-7285f129305d961b8746,swp-72303257d3bb51b0f3c0,Sifo,2023-12-25,2024-01-07,exact_span_match,1,0.0,{},True
+pop-72d790d6566a95473a86,swp-2f9f12be674e69f2c44e,Demoskop,2023-09-23,2023-10-07,exact_span_match,1,0.0,{},True
+pop-72de8b5d95f368c5d7ce,swp-2cb7b2cceafd1d79650d,Skop,2023-10-09,2023-10-22,exact_span_match,1,0.0,{},True
+pop-72e2490cbb7b99678dc7,swp-6f704ad29244bcaa920d,Novus,2016-01-04,2016-01-24,exact_span_match,1,0.0,{},True
+pop-73022330d8c19b2a4ec3,swp-d6948521d1babe2786df,Demoskop,2023-07-15,2023-08-02,exact_span_match,1,0.0,{},True
+pop-7353b4a0dee23f6368cf,swp-5e61a3ad0d76d5b03dbd,Demoskop,2012-04-25,2012-05-02,exact_span_match,1,0.0,{},True
+pop-735544e365f0935a39e2,swp-f12b3e1ce7eb76c2a5a0,Ipsos,2021-09-14,2021-09-26,exact_span_match,1,0.0,{},True
+pop-7361a03afeed19cf36bd,swp-9343cf84b4f7bc26f4ee,Novus,2024-09-09,2024-09-22,exact_span_match,1,0.0,{},True
+pop-738c7af3d8cf503c1050,swp-b1556be91e42ded9f8f2,Novus,2018-01-02,2018-01-21,exact_span_match,1,0.0,{},True
+pop-7413781548f03b5655f2,,Skop,2022-09-06,2022-09-06,no_match,0,,{},False
+pop-74666597a31d68349e6f,,Sentio,2013-03-01,2013-03-31,no_match,0,,{},False
+pop-74725c9de2448971c15c,,Novus,2022-08-28,2022-08-28,no_match,0,,{},False
+pop-74881a1e2eecb486795e,swp-cdc6d12bee0d0215898b,Skop,2010-05-31,2010-06-15,exact_span_match,1,0.0,{},True
+pop-74dc721e7ce4d85a439e,swp-8d8164f5eb1f0d77f32c,Sifo,2014-08-18,2014-08-21,exact_span_match,1,0.0,{},True
+pop-754cbc25ca48c02d44c6,swp-d3f42d4333096b7cf490,Demoskop,2015-09-29,2015-10-06,exact_span_match,1,0.0,{},True
+pop-7589a683fe7e7651ee4a,swp-bdabb3c0db3e9ed5cab0,Skop,2011-06-17,2011-07-03,exact_span_match,1,0.0,{},True
+pop-7607afba5eeb562b4589,,Novus,2022-08-22,2022-08-22,no_match,0,,{},False
+pop-761753f26959e7b0c281,swp-64c84cb392d27f169541,Ipsos,2009-05-07,2009-05-27,exact_span_match,1,0.0,{},True
+pop-762d6d0214f04ba84643,swp-a1c78bae897f0b27ad92,Sentio,2019-09-20,2019-09-24,exact_span_match,1,0.9,"{""L"": 0.9}",True
+pop-7634f67f586479d340b6,swp-1ec86fe059daa16b2d88,Sentio,2016-10-20,2016-10-26,exact_span_match,1,0.0,{},True
+pop-76544182608057b326f8,swp-5479033a2cbb0b42e4d9,Ipsos,2009-06-09,2009-06-23,exact_span_match,1,0.0,{},True
+pop-7662d77bb145c0bcefd2,swp-8ff0fdae447d409d993c,Demoskop,2025-11-15,2025-11-24,exact_span_match,1,0.0,{},True
+pop-768b4b24e896ae299186,,Sifo,2025-01-29,2025-02-09,no_match,0,,{},False
+pop-768d85eed100d5b18e1a,swp-a48c8395dfda92ff4b11,Novus,2013-05-27,2013-06-23,exact_span_match,1,0.0,{},True
+pop-7694f8c132ec751f53c3,swp-52a3cbde05c90acaf9bd,Demoskop,2015-08-25,2015-09-02,exact_span_match,1,0.2,"{""SD"": 0.2}",True
+pop-76ce2c2519ae6f48877c,swp-2eb702a13cba30600df6,Sentio,2023-09-07,2023-09-12,exact_span_match,1,0.0,{},True
+pop-76f53caef26ee3da269e,swp-18044fdb30f8ffb7b0f6,Skop,2023-12-21,2024-01-22,exact_span_match,1,0.0,{},True
+pop-77447dc4f1ba1813cafc,swp-c8e197a8b883c0f47f4a,Sentio,2020-02-21,2020-02-24,exact_span_match,1,0.0,{},True
+pop-7778dc757838b8dd77ea,swp-cf89656e27eed8d9e56a,Demoskop,2018-09-25,2018-10-02,exact_span_match,1,0.0,{},True
+pop-77a4a9650b070d8034ed,swp-73c93ef73e652ed898b4,United Minds,2010-02-21,2010-02-25,exact_span_match,1,0.0,{},True
+pop-77a681e95161e6ceeead,,Sifo,2017-02-08,2017-02-16,no_match,0,,{},False
+pop-7801022f1f3649590e61,swp-9768e91ce30461e5d508,Sifo,2014-08-04,2014-08-07,exact_span_match,1,0.0,{},True
+pop-78581a782b9ca1ea6f03,swp-8d2290977fc5603c35c6,Demoskop,2023-10-22,2023-11-05,exact_span_match,1,0.0,{},True
+pop-78c231e9346774211373,swp-ac561da1f5dc1ee28d21,Sifo,2013-04-02,2013-04-11,exact_span_match,1,0.0,{},True
+pop-78ce15a14bcf6e20249b,,Demoskop,2022-11-26,2022-12-06,no_match,0,,{},False
+pop-78e2670201c69b59b849,,Demoskop,2018-09-05,2018-09-06,no_match,0,,{},False
+pop-78ee2be63b99f934467e,,Demoskop,2024-01-27,2024-02-11,ambiguous_span_match,2,,{},False
+pop-791a431c9a4fe45ad83a,swp-476628a14b501adb1aed,Demoskop,2010-10-27,2010-11-03,exact_span_match,1,0.0,{},True
+pop-7993d8816252377a0a55,swp-dbc66d52758d41b7e264,Novus,2018-06-25,2018-07-22,exact_span_match,1,0.0,{},True
+pop-79b6b20b40e41fec54ac,,Skop,2010-09-13,2010-09-16,no_match,0,,{},False
+pop-7a37bc1b5688905711da,swp-d7107d94d17148bf1949,Novus,2026-03-14,2026-03-18,exact_span_match,1,0.0,{},True
+pop-7a6a8696039dbe92aa98,swp-13c559824344aca54a38,Sifo,2009-03-02,2009-03-12,exact_span_match,1,0.0,{},True
+pop-7a87222b0a2025d3c166,swp-ba56b73a3a5aaba602ab,Demoskop,2016-06-28,2016-07-05,exact_span_match,1,0.0,{},True
+pop-7abaaec4e9bbc7dd6fe8,,Sentio,2010-07-01,2010-07-30,no_match,0,,{},False
+pop-7ad641959670544def5e,swp-3a948ee6fd64f6b37790,Ipsos,2011-10-10,2011-10-26,exact_span_match,1,0.0,{},True
+pop-7ae6b315bfc39f37076b,swp-83379cc6cf178b9519a2,Novus,2015-03-23,2015-04-19,exact_span_match,1,0.3,"{""M"": 0.3}",True
+pop-7afc5e11ecf5a6bce415,swp-2b63f08025b0060350ac,Demoskop,2010-02-24,2010-03-03,exact_span_match,1,0.0,{},True
+pop-7b28dc80d01315d1a90d,swp-fc6d9d1857785f503e3e,Skop,2014-03-26,2014-04-24,exact_span_match,1,0.0,{},True
+pop-7b48f2095c3c534f10e4,swp-2b5817b05d9d4b07ce38,Demoskop,2018-08-08,2018-08-15,exact_span_match,1,0.0,{},True
+pop-7b96043f7f73c662e724,swp-4b0c20ea044d550bd2be,Demoskop,2010-03-31,2010-04-07,exact_span_match,1,0.0,{},True
+pop-7c18876ef34d330e84a3,,Skop,2018-09-05,2018-09-05,no_match,0,,{},False
+pop-7c25729e6962bb898854,,Sifo,2022-08-15,2022-08-15,no_match,0,,{},False
+pop-7c4830634c4ef46d8ee3,swp-f4631da68c74af347f22,YouGov,2017-05-11,2017-05-15,exact_span_match,1,0.0,{},True
+pop-7c62530f646faad930ac,swp-cab4bcb196b1ae2b2852,Demoskop,2014-09-30,2014-10-08,exact_span_match,1,0.0,{},True
+pop-7c93aefabd02e5ff7f63,swp-b3e4b1735d927de60f24,Novus,2024-06-10,2024-06-17,exact_span_match,1,0.0,{},True
+pop-7d66c2baf011b10f6581,swp-432334904b3b5c9e6581,Sentio,2009-11-03,2009-11-15,exact_span_match,1,0.0,{},True
+pop-7d82ab8b6f85c9173c85,,Novus,2014-09-10,2014-09-12,no_match,0,,{},False
+pop-7d95a0a1c20b3be883b2,swp-f163902411d44edfc3e5,Sentio,2019-08-22,2019-08-27,exact_span_match,1,0.0,{},True
+pop-7de8af5af3a0d863dfe0,swp-7d3699da25ed82178388,Ipsos,2014-09-07,2014-09-11,exact_span_match,1,0.0,{},True
+pop-7df5eba71f7636b9fd6e,swp-9a2087529db6af501fc1,Skop,2022-07-08,2022-07-11,exact_span_match,1,0.0,{},True
+pop-7e18e0acd098e4e4ac9f,swp-9dc556ce9a36f7a48d5a,Ipsos,2016-09-09,2016-09-19,exact_span_match,1,0.0,{},True
+pop-7e22d931e7e31593f33e,swp-03c9ee08ab3820cae318,Novus,2021-06-21,2021-06-27,exact_span_match,1,0.0,{},True
+pop-7e8012a082554fdefc00,swp-8faa6af0871a0a0fa82e,Inizio,2019-04-22,2019-04-29,exact_span_match,1,0.0,{},True
+pop-7eb0c963f67fcd15d08d,swp-b972f9c94eb1be86d428,Inizio,2018-10-26,2018-11-06,exact_span_match,1,0.0,{},True
+pop-7eeab54dce325aef52c6,swp-14a656fb6e0f163e5bdf,Ipsos,2020-01-14,2020-01-27,exact_span_match,1,1.8,"{""C"": 1.4, ""KD"": 1.7, ""L"": 1.0, ""M"": 0.7, ""MP"": 1.0, ""S"": 1.8, ""SD"": 0.3, ""V"": 1.2}",True
+pop-7f774e4b06b19fbc0329,swp-c4a8c5ad5509d4e3758a,Demoskop,2019-01-02,2019-01-08,exact_span_match,1,0.0,{},True
+pop-7fb4c59b43e35a78d76f,swp-c2373ce075a8d91b37fd,Demoskop,2017-10-25,2017-11-01,exact_span_match,1,0.0,{},True
+pop-7fc0664ce985fd20e9d2,swp-226d29e42950e2722221,United Minds,2013-11-11,2013-12-08,exact_span_match,1,0.0,{},True
+pop-7fc6004dd4c749ff2250,swp-977ea30297eb6f04484b,Skop,2009-12-09,2009-12-30,exact_span_match,1,0.0,{},True
+pop-7fce4c71954e6b1af59f,swp-7d7c47a356ade1319e41,Ipsos,2015-03-09,2015-03-17,exact_span_match,1,0.0,{},True
+pop-7fdbb6a35b43434043d2,swp-e99b7b391418439d65a3,Skop,2018-03-16,2018-04-13,exact_span_match,1,0.0,{},True
+pop-80265511e48a48b9d75b,swp-2e1aef73a043565e0b8e,Sifo,2012-02-06,2012-02-16,exact_span_match,1,0.0,{},True
+pop-80ba8b3c4a453c6e9ce4,swp-cd5bb191a6edde537e67,Sentio,2017-04-07,2017-04-10,exact_span_match,1,0.0,{},True
+pop-80c2b373b503ff107bad,swp-9e408da3228f3cc4905b,Novus,2024-07-29,2024-08-25,exact_span_match,1,0.0,{},True
+pop-814316c147dbdb64408f,swp-20bc4772cdbb509160c0,Demoskop,2020-04-28,2020-05-05,exact_span_match,1,0.0,{},True
+pop-82269bdfb591c5893df7,swp-4e9c55cefc876679a63c,Demoskop,2010-04-28,2010-05-05,exact_span_match,1,0.0,{},True
+pop-82875ad036e991b0d63e,swp-6837b188dcafd82e46e7,Sifo,2012-03-05,2012-03-15,exact_span_match,1,0.0,{},True
+pop-82aa8427e2c45f5b758c,swp-0c3c63d61669fdb9305f,Inizio,2018-12-04,2018-12-12,exact_span_match,1,0.0,{},True
+pop-82da0a016590d62313da,swp-7489f0d648b5bd42bcff,Novus,2024-02-19,2024-03-17,exact_span_match,1,0.0,{},True
+pop-82dd84c973f0a78bd080,swp-706217f961068573911d,Demoskop,2017-01-31,2017-02-08,exact_span_match,1,0.2,"{""KD"": 0.2}",True
+pop-82e1575e5e48a1fb9cf8,swp-b1f368d41bdfa1db2d91,Novus,2009-11-03,2009-11-16,exact_span_match,1,0.0,{},True
+pop-8322dd7712513456e576,swp-fd657cf4ad959c544259,Sifo,2017-06-05,2017-06-15,exact_span_match,1,0.0,{},True
+pop-833218334eb4a6637de3,swp-61f916b2084d2457becb,Novus,2024-01-22,2024-02-18,exact_span_match,1,0.0,{},True
+pop-833760221a041bc3c9c3,swp-387b9d6969b14d3e384c,Demoskop,2012-10-30,2012-11-07,exact_span_match,1,0.0,{},True
+pop-839b1baaa2aee270960a,,Novus,2023-08-01,2023-08-20,no_match,0,,{},False
+pop-8418f5b698f802fa6669,swp-07b4c3ccca14c3a504dc,YouGov,2017-04-12,2017-04-18,exact_span_match,1,0.0,{},True
+pop-841f3c47f5297c106c3e,swp-09689d3e9e5f7ce04874,United Minds,2012-11-12,2012-12-16,exact_span_match,1,0.0,{},True
+pop-844319d3d1b22eb31659,,Sentio,2018-03-09,2018-03-13,no_match,0,,{},False
+pop-844ff04b7e559fabc07d,,Skop,2009-11-04,2009-11-30,no_match,0,,{},False
+pop-846651f422fd15f0ea94,,Skop,2018-08-29,2018-08-29,no_match,0,,{},False
+pop-846d8973e4c4368a14bd,swp-570c7bf36593177ad0d2,Sifo,2020-03-02,2020-03-12,exact_span_match,1,0.0,{},True
+pop-84930706bce9ceab61cd,,United Minds,2010-08-31,2010-09-06,no_match,0,,{},False
+pop-85035b36d18649b361a2,swp-adea8eccd349b83565a9,Novus,2019-01-14,2019-02-03,exact_span_match,1,0.0,{},True
+pop-8527b14b73df9b1ed55c,swp-60f5eeae354c36ff33d1,Novus,2022-05-09,2022-06-05,exact_span_match,1,0.0,{},True
+pop-856bcc61279fb11a99d8,swp-1660c0c3804b96738409,Inizio,2017-09-01,2017-09-06,exact_span_match,1,0.0,{},True
+pop-85826c8ec609e0f893f5,swp-f243e01fd7389ed2ba88,Sentio,2015-08-13,2015-08-19,exact_span_match,1,0.0,{},True
+pop-8587600bebe2e1f63382,swp-be5c0e08d280a0412170,Demoskop,2013-06-25,2013-07-03,exact_span_match,1,0.0,{},True
+pop-8623bdcfd65ee11f7d02,swp-e60ddf76aad219a424d3,Novus,2022-06-06,2022-06-26,exact_span_match,1,0.0,{},True
+pop-8691885edc8daee08e08,,Skop,2021-07-19,2021-07-23,no_match,0,,{},False
+pop-86b02c2c8d923729fbc1,swp-6510fcf49c1a42a6fcd4,Demoskop,2014-01-28,2014-02-05,exact_span_match,1,0.0,{},True
+pop-874e60bdb6d6bf43d2a2,swp-45d96a2eadd89d76dbcb,Novus,2013-07-08,2013-08-04,exact_span_match,1,0.0,{},True
+pop-876c2b3736e6d6712d2e,swp-cadcac7e4c4ae0fcec80,United Minds,2010-03-29,2010-04-25,exact_span_match,1,0.0,{},True
+pop-87cc1629ff1b1aefc357,swp-35189a2ced9f36188e67,YouGov,2016-10-14,2016-10-18,exact_span_match,1,0.1,"{""C"": 0.1, ""SD"": 0.1}",True
+pop-87db94963e3fd9187b42,swp-e88a8ffcae8444b6a357,Sifo,2009-02-02,2009-02-12,exact_span_match,1,0.0,{},True
+pop-88188dbd7c164e42761f,swp-2533827218a7142cdbf3,United Minds,2010-04-26,2010-05-23,exact_span_match,1,0.0,{},True
+pop-881a1c271d311ecc6310,swp-a4acf578a87955f2546f,Sifo,2017-08-07,2017-08-17,exact_span_match,1,0.0,{},True
+pop-8844fd51fa6a07f45022,swp-255db3bb852e0281c091,Novus,2012-01-24,2012-02-20,exact_span_match,1,0.0,{},True
+pop-88adb96dfb82fc6b358e,swp-ec2664a298a98c2b6b4b,Inizio,2016-04-07,2016-04-17,exact_span_match,1,0.0,{},True
+pop-88b33f2108403647ae78,,Skop,2014-01-02,2014-01-07,no_match,0,,{},False
+pop-88e2d620c12d9e266374,,Sentio,2012-05-01,2012-05-23,no_match,0,,{},False
+pop-88f16ce603dbefee65fe,swp-6af03f15bcad59cd7571,Demoskop,2014-05-27,2014-06-04,exact_span_match,1,0.0,{},True
+pop-88f4491c297f95aac1cf,,Inizio,2016-06-06,2016-06-16,no_match,0,,{},False
+pop-891d64edec88947e93f3,swp-65e74b74ff3c6a6dfc50,Demoskop,2022-05-31,2022-06-09,exact_span_match,1,0.1,"{""L"": 0.1}",True
+pop-891d708ea94270dbe089,swp-07376b215f238b428803,Ipsos,2012-10-03,2012-10-23,exact_span_match,1,0.0,{},True
+pop-895da919f9caba32dd5d,swp-3e7c754122bf019d37bb,Sifo,2025-05-26,2025-06-08,exact_span_match,1,0.0,{},True
+pop-897151754ab38b7ee1cf,swp-bf57fc8adf8098c94ef2,Ipsos,2015-08-14,2015-08-24,exact_span_match,1,0.0,{},True
+pop-89a1341ace7681674d4e,swp-41665a01f6217dd743ca,Demoskop,2019-11-04,2019-11-13,exact_span_match,1,0.0,{},True
+pop-89a5b6109c568e0f3c5d,swp-b85bedaccbcbdcc8a3d7,Novus,2025-06-02,2025-06-13,exact_span_match,1,0.0,{},True
+pop-89de7707a9a754aa4e7e,swp-3bc8ae60f78ec1deaec1,Ipsos,2025-10-07,2025-10-19,exact_span_match,1,0.0,{},True
+pop-8a2793d91cdb0b75dcbc,swp-b943b6f15bcb43eb9fa2,United Minds,2009-11-28,2009-12-21,exact_span_match,1,0.0,{},True
+pop-8a2abc012e58cc88a273,swp-c271e99e4bbc3ed8d2a5,Demoskop,2023-01-27,2023-02-06,exact_span_match,1,0.0,{},True
+pop-8a33d89e113aa4ade863,swp-47fcdd38f80eaffc02c2,Sifo,2016-04-04,2016-04-14,exact_span_match,1,0.0,{},True
+pop-8a9cf6521e608e148ccd,,YouGov,2012-02-02,2012-03-06,no_match,0,,{},False
+pop-8aac732da489f38403f1,swp-6d0f9103b9fdc57828be,Sifo,2018-05-07,2018-05-17,exact_span_match,1,0.0,{},True
+pop-8af84950177725523f80,swp-29dcc624f7cbbd00ff9c,Ipsos,2014-06-02,2014-06-22,exact_span_match,1,0.0,{},True
+pop-8b086e971de805fff53c,swp-bcfaf762facca03c61ed,YouGov,2015-10-08,2015-10-12,exact_span_match,1,0.0,{},True
+pop-8b352e10fe5febfcddb0,,United Minds,2010-09-08,2010-09-08,no_match,0,,{},False
+pop-8b39a6f93868d6f6be02,swp-c6f209ce6cb03570514d,YouGov,2017-03-17,2017-03-20,exact_span_match,1,0.0,{},True
+pop-8b3eb5679d9b2c7f3568,swp-3af044328e6cd482811e,Sentio,2022-05-19,2022-05-23,exact_span_match,1,0.2,"{""MP"": 0.2}",True
+pop-8baf917893109984a276,swp-1df812798ee5d8b9d87c,Inizio,2018-12-19,2018-12-26,exact_span_match,1,0.0,{},True
+pop-8c27b5f9c828bb584055,swp-312f440b886692ab05e2,Sifo,2023-05-01,2023-05-11,exact_span_match,1,0.0,{},True
+pop-8c6730e8d536522ace69,swp-e6b5f59a1e52412a229e,Novus,2012-07-30,2012-08-26,exact_span_match,1,0.0,{},True
+pop-8ce6f209e9319fdacb06,swp-7c15b640ba06a97924e9,Demoskop,2012-03-28,2012-04-04,exact_span_match,1,0.0,{},True
+pop-8d37c0e9505b6610874e,swp-4b421033b5b1f0cae643,Skop,2020-01-14,2020-01-24,exact_span_match,1,0.0,{},True
+pop-8d484d9d7ce91afdca57,swp-8be9ae2f373f4411f1dd,YouGov,2018-02-16,2018-02-19,exact_span_match,1,0.0,{},True
+pop-8dd5fc29ea451e6058f2,swp-aefed73d467a6bef65cb,Sifo,2017-04-03,2017-04-12,exact_span_match,1,0.0,{},True
+pop-8e0914c0c869b00cb87e,swp-edc8d4eeeb5eb196c93d,YouGov,2012-05-09,2012-06-05,exact_span_match,1,0.0,{},True
+pop-8e1e418ea4c460fce6e6,swp-70109cda9328df73e99e,Sifo,2010-01-11,2010-01-21,exact_span_match,1,0.0,{},True
+pop-8e2dcd04cd7c15d50fde,swp-1e5599c322d3f395bcc7,Ipsos,2011-06-07,2011-06-21,exact_span_match,1,0.0,{},True
+pop-8e811ad430600ee62a4d,swp-495526344e17bfc4da0a,Sifo,2018-08-20,2018-08-23,exact_span_match,1,1.1,"{""FI"": 1.1}",True
+pop-8ec38c10124a7d885b34,swp-68fae17dd9bdd7fb2420,Novus,2019-08-26,2019-09-22,exact_span_match,1,0.0,{},True
+pop-8ed020cf35164fa8dc6a,swp-287fdaaa3129a8f7e3e6,Inizio,2015-02-02,2015-02-11,exact_span_match,1,1.5,"{""FI"": 1.5}",True
+pop-8f4a8e1b4cb5fb0417b5,swp-62191d8045fdc919a2e0,Skop,2019-03-07,2019-03-27,exact_span_match,1,0.0,{},True
+pop-8f63e834770864e6fa79,swp-d0e0886922915e8707ea,Demoskop,2011-03-29,2011-04-05,exact_span_match,1,0.0,{},True
+pop-8f97a3088c5c3a39a87c,swp-f73817bd2b859d4f2b35,Novus,2015-02-23,2015-03-22,exact_span_match,1,0.0,{},True
+pop-8fb82c49a266246f473b,swp-5debc7c069181b67a448,Sentio,2022-03-24,2022-03-29,exact_span_match_approximate_supplementary_period,1,0.0,{},True
+pop-8fe9c5d6a4098ea78d45,swp-7b2e76b4266208041a9d,Sifo,2011-08-08,2011-08-18,exact_span_match,1,0.0,{},True
+pop-9005da43ee490d87c395,swp-ed409166a65a280f3c6c,Ipsos,2020-11-10,2020-11-22,exact_span_match,1,0.0,{},True
+pop-9022ec9b61131c5f1e34,,Novus,2017-04-18,2017-05-07,no_match,0,,{},False
+pop-90364be9e7f7c5300844,swp-dd03b58ebfbd0c5e72ef,YouGov,2015-08-14,2015-08-17,exact_span_match,1,0.0,{},True
+pop-90948448837c53550b21,swp-d3bc6695f8e13b6a3338,United Minds,2009-09-08,2009-10-05,exact_span_match,1,0.0,{},True
+pop-91691a929012a53864a6,,Skop,2022-08-26,2022-08-26,no_match,0,,{},False
+pop-916d6cce20bc87a959df,,Demoskop,2018-10-30,2018-11-08,no_match,0,,{},False
+pop-91c1ec7b22c8a949e6a0,swp-84865185b2de468bc843,Demoskop,2013-10-29,2013-11-06,exact_span_match,1,0.0,{},True
+pop-920b3d6f6da09a8b4a68,swp-b9d1cb4d03bc91374b65,Novus,2014-12-22,2015-01-18,exact_span_match,1,0.6,"{""C"": 0.6, ""KD"": 0.2, ""L"": 0.2}",True
+pop-920f4fc19fd6ac6ea502,,Sifo,2026-04-24,2026-05-10,no_match,0,,{},False
+pop-924f2e1fa341a1f5bff4,swp-6be632b9541b00ba7e37,Demoskop,2020-08-25,2020-09-01,exact_span_match,1,0.0,{},True
+pop-9255100078cb8bb8df59,swp-3ff8d334e80fb066720e,Demoskop,2018-02-27,2018-03-07,exact_span_match,1,1.8,"{""FI"": 1.8}",True
+pop-92765991122e17cd7ccb,swp-974eeadbf572842afad7,United Minds,2013-09-16,2013-10-13,exact_span_match,1,0.0,{},True
+pop-9289c0a5380c88cdb198,,Novus,2012-11-22,2012-11-25,no_match,0,,{},False
+pop-9298aa44db42246cdb42,,Skop,2022-09-08,2022-09-08,no_match,0,,{},False
+pop-92c13829e4a5049d6794,swp-5f1118fe40a46a69bcae,SCB,2025-04-29,2025-05-28,exact_span_match,1,0.0,{},True
+pop-92c31d9c4fff84feb32c,,Skop,2018-08-28,2018-08-28,no_match,0,,{},False
+pop-92d42cad84ef5b174cfc,,United Minds,2010-09-10,2010-09-10,no_match,0,,{},False
+pop-932832a546842e7c1c40,swp-7810a4946ecb0ce1807c,Novus,2012-04-24,2012-05-21,exact_span_match,1,0.0,{},True
+pop-93c1325ee34767ffa1e6,swp-9dcf7c50d06f294b2e73,Novus,2010-09-07,2010-09-13,exact_span_match,1,0.0,{},True
+pop-93cf858aad2db8f4ac3a,swp-e9bfba3aa7032cb05b8b,Ipsos,2022-10-11,2022-10-23,exact_span_match,1,0.0,{},True
+pop-93d84090bbd85bee3e64,,Skop,2022-08-30,2022-08-30,no_match,0,,{},False
+pop-940e419485e09d34d1b1,swp-affa60e0707de747b257,Novus,2016-04-18,2016-05-08,exact_span_match,1,0.0,{},True
+pop-943b45eaf9577910adc6,swp-2caeda64470039cacd15,Ipsos,2019-05-06,2019-05-21,exact_span_match,1,0.0,{},True
+pop-943cae822793e87b864c,swp-04304e90e218e36f92e4,Demoskop,2026-06-05,2026-06-17,exact_span_match,1,0.0,{},True
+pop-945424eefc5f380ad4ab,,Sentio,2011-02-14,2011-02-27,no_match,0,,{},False
+pop-9462f79c5628e0430418,swp-060b58b3c27150951aef,Demoskop,2009-01-28,2009-02-04,exact_span_match,1,0.0,{},True
+pop-946ec10f2121e683e3a2,,Skop,2022-09-04,2022-09-04,no_match,0,,{},False
+pop-94ff42eb9fb44bc7ec29,swp-0bdf8e251d60494f4de6,Demoskop,2011-01-03,2011-01-11,exact_span_match,1,0.0,{},True
+pop-955e8363ab9e8b100566,swp-1c953cc9355ae52f305e,Ipsos,2009-01-13,2009-01-28,exact_span_match,1,0.0,{},True
+pop-958e623fd1c2eb474803,swp-b9013a4b5419212338d2,Sifo,2014-01-13,2014-01-23,exact_span_match,1,0.2,"{""KD"": 0.2}",True
+pop-95b4ff093b5939a923bb,swp-59e08eaecb5f5f5834a4,Ipsos,2011-12-01,2011-12-14,exact_span_match,1,0.0,{},True
+pop-9618bb4435cd7d5d9491,swp-33261e07447e8803f0b4,Sifo,2024-01-22,2024-02-04,exact_span_match,1,0.0,{},True
+pop-96694d9e05cd28301579,,Demoskop,2022-08-17,2022-08-21,no_match,0,,{},False
+pop-96b06f2bce00a5e6164b,swp-ebcd2fdee368ca6c4278,Demoskop,2025-02-09,2025-02-24,exact_span_match,1,0.0,{},True
+pop-96d247420673a21c470e,,Ipsos,2016-10-14,2016-10-24,no_match,0,,{},False
+pop-96e50c38a0c327c07908,swp-9bd2e102cd240b968e84,Novus,2019-01-02,2019-01-13,exact_span_match,1,0.0,{},True
+pop-96f183d09c2cd4896816,swp-2e102a70c13712f0f710,Ipsos,2021-02-09,2021-02-21,exact_span_match,1,0.0,{},True
+pop-96f3e36e181eea4fdd97,swp-72224abeec8baa618ade,Novus,2009-10-06,2009-10-19,exact_span_match,1,0.0,{},True
+pop-9743a90db505be5240da,swp-69a5869382629d14c366,Sentio,2011-04-04,2011-04-24,exact_span_match,1,0.0,{},True
+pop-97461504c5d71332e029,,Sifo,2022-01-11,2022-01-20,no_match,0,,{},False
+pop-979085a9258206623505,swp-5105850e135119ff83bc,Demoskop,2020-03-25,2020-04-01,exact_span_match,1,0.0,{},True
+pop-979ce0c166f44a4d79dc,,Demoskop,2009-11-27,2009-12-02,no_match,0,,{},False
+pop-97ba5f5c3889e3c41f85,swp-4db75f2a6bef9cdbd5a7,YouGov,2015-05-13,2015-05-18,exact_span_match,1,0.0,{},True
+pop-97cbf961b832a2c75832,swp-6ededc45218b89df7aa2,SCB,2019-04-29,2019-05-28,exact_span_match,1,0.0,{},True
+pop-97f20f3aa23cb731f7c5,swp-6d6e807223b88c071f69,Demoskop,2009-01-02,2009-01-08,exact_span_match,1,0.0,{},True
+pop-980f23d43f9f2d2be132,swp-16fe1002f3c93c6d8cb5,Sifo,2016-08-08,2016-08-18,exact_span_match,1,0.0,{},True
+pop-985ee3fe5feb9e4a0adc,,Sifo,2022-09-03,2022-09-03,no_match,0,,{},False
+pop-9895ab7426fb75a0f88f,swp-8ccf1955c5233ec338fe,Demoskop,2019-12-30,2020-01-07,exact_span_match,1,1.0,"{""MP"": 1.0}",True
+pop-9895ad15cc0b6c729800,swp-497bd38d3974922a1e63,Sentio,2023-11-03,2023-11-07,exact_span_match,1,0.0,{},True
+pop-98c4521a57153550ae39,swp-d0f535222647a63fe3f8,Ipsos,2025-11-04,2025-11-17,exact_span_match,1,0.0,{},True
+pop-992bb4cc5e3df0afce4e,,Skop,2022-09-02,2022-09-02,no_match,0,,{},False
+pop-992cac022782b3ba0699,swp-f8c9d3a9c0dd8cf62018,Inizio,2017-06-06,2017-06-13,exact_span_match,1,0.0,{},True
+pop-995c2cfbcd8bfe949080,swp-2cb192139697177b2f3d,Inizio,2018-11-14,2018-11-19,exact_span_match,1,0.0,{},True
+pop-995e4d4c5f26bab5af87,,Skop,2014-09-05,2014-09-12,no_match,0,,{},False
+pop-99d0e0c47dff9a288f99,,Skop,2022-09-09,2022-09-09,no_match,0,,{},False
+pop-99e03e74a626ee48daac,swp-81c2a67b86dd7d322db6,United Minds,2010-07-12,2010-08-01,exact_span_match,1,0.0,{},True
+pop-99f6f2c4b103a75227d1,swp-217d695fc5991aba57ac,Skop,2012-10-30,2012-11-21,exact_span_match,1,0.0,{},True
+pop-9a1cbc4a2060fd67530e,swp-56232420ee72c16c184f,Inizio,2018-03-01,2018-03-05,exact_span_match,1,0.0,{},True
+pop-9a568242b0a5d113bfaf,swp-ca15b5e51c39413882ab,Ipsos,2017-01-12,2017-01-22,exact_span_match,1,0.0,{},True
+pop-9a60a78dd50bb0656e75,,Sentio,2012-01-01,2012-01-31,no_match,0,,{},False
+pop-9a6bfa8ff4a23682ef05,,Ipsos,2023-11-13,2023-11-26,no_match,0,,{},False
+pop-9ab622e1548285f965e1,,Skop,2018-08-23,2018-08-27,no_match,0,,{},False
+pop-9ac71e50ff5bfe885b1d,swp-aacbf93b3f234d8fefc9,Ipsos,2013-09-05,2013-09-24,exact_span_match,1,0.0,{},True
+pop-9af247798ce7a2302bbf,swp-9ee45bf3af38878fcb0f,Demoskop,2013-05-28,2013-06-05,exact_span_match,1,0.0,{},True
+pop-9b08c1b84ef76f963e57,swp-a5d5f9c5336b60ab99b5,YouGov,2011-10-03,2011-11-06,exact_span_match,1,0.0,{},True
+pop-9b22cfb05e29c053b8a1,swp-e985c9af6042c2b3c16d,Novus,2013-09-02,2013-09-29,exact_span_match,1,0.0,{},True
+pop-9b8ef229da8058dcbb57,swp-2b1459fa738feefd3f75,Ipsos,2025-12-02,2025-12-14,exact_span_match,1,0.0,{},True
+pop-9ba0a0d7e9630d9ad5b3,swp-298cf965d76245171d09,Novus,2025-10-06,2025-10-19,exact_span_match,1,0.0,{},True
+pop-9bbd148d135a5d2c66a7,swp-a6bfd88bba45c8b81f64,Demoskop,2026-02-10,2026-02-24,exact_span_match,1,0.0,{},True
+pop-9bc2be30f031f826708c,swp-a2fe6c684a6f6792985c,Sifo,2012-12-03,2012-12-13,exact_span_match,1,0.0,{},True
+pop-9c1101def9ca6eb5a11a,swp-eee4f044109ca713d4c8,Sifo,2009-11-30,2009-12-10,exact_span_match,1,0.0,{},True
+pop-9c93bc9829cc6fc6efd4,swp-0e5972bd69f14af9893d,YouGov,2016-02-12,2016-02-15,exact_span_match,1,0.0,{},True
+pop-9ccb4be2e80143f75c15,swp-a73587dd7e36a3b2192a,Ipsos,2009-02-10,2009-02-25,exact_span_match,1,0.0,{},True
+pop-9ceffb213f22c3d4274c,swp-261e4fa960b0b083c21b,Sifo,2014-09-10,2014-09-11,exact_span_match,1,0.0,{},True
+pop-9d2e6ed6ac14f3fd4d63,swp-1f539db502e71bc387cf,Sifo,2025-11-24,2025-12-07,exact_span_match,1,0.0,{},True
+pop-9d36b519c30c1703dd0b,,Ipsos,2022-09-07,2022-09-09,no_match,0,,{},False
+pop-9d3ce0adcf284e5c18bf,swp-e5e2528906443f76eb4d,Novus,2016-08-01,2016-08-28,exact_span_match,1,0.0,{},True
+pop-9d4914eab5804fb3731f,swp-342b83c93b7ee89c53eb,Sifo,2013-03-04,2013-03-14,exact_span_match,1,0.0,{},True
+pop-9d4b02d9297ee8bcea91,swp-973e8210d5023b8ecc6a,Novus,2018-05-14,2018-06-06,exact_span_match,1,0.0,{},True
+pop-9d5ecc043bccafd481ec,,Sifo,2022-08-24,2022-08-24,no_match,0,,{},False
+pop-9d6fee5f8e26dcb7609f,swp-29d2362406e3eaec1336,Novus,2022-08-19,2022-08-21,exact_span_match,1,0.0,{},True
+pop-9dc49d9f3ffcca99bba3,swp-00a38ba4390680573adf,Novus,2019-06-03,2019-06-23,exact_span_match,1,0.0,{},True
+pop-9de07389f7c1bc67453e,swp-4a06bd9147b68c8378d3,Novus,2010-11-02,2010-11-15,exact_span_match,1,0.0,{},True
+pop-9df5c5f32221700c7306,swp-78aa4be5af24fbc54bb4,Novus,2019-02-04,2019-03-03,exact_span_match,1,0.0,{},True
+pop-9e0349f9bfe308c31b09,swp-7afcef5cc9d405bb08f7,Ipsos,2023-01-17,2023-01-29,exact_span_match,1,0.0,{},True
+pop-9e1ce17449761456b3fa,swp-00067aa4ca8bd5f8416a,Ipsos,2010-01-11,2010-01-27,exact_span_match,1,0.0,{},True
+pop-9e36524f08cf056a74ad,swp-d7348d3e119878ba7548,Ipsos,2014-04-07,2014-04-27,exact_span_match,1,1.0,"{""M"": 1.0}",True
+pop-9e9e3fb67e8325f8c6c3,swp-fd52e0e27d08f35b4323,Demoskop,2017-01-03,2017-01-10,exact_span_match,1,0.0,{},True
+pop-9ec524ddeece559b0974,swp-6d712fcc313b28f1519d,Inizio,2019-09-20,2019-09-25,exact_span_match,1,0.1,"{""SD"": 0.1}",True
+pop-9ecdc91b7739f8830ae5,swp-0beb03b114815b6b9d2b,Sifo,2012-06-04,2012-06-14,exact_span_match,1,0.0,{},True
+pop-9f297015676f5aaec1d5,,United Minds,2013-12-09,2014-01-01,no_match,0,,{},False
+pop-9f679b6f942c676af17d,,Sifo,2022-09-07,2022-09-07,no_match,0,,{},False
+pop-9f966a969581b47b8db7,swp-54fa88cfc28fd0c7baf1,Demoskop,2020-05-26,2020-06-03,exact_span_match,1,0.0,{},True
+pop-9fab770bc79ca3cc9e61,swp-51e3884caa5ed6e63341,Sifo,2009-08-31,2009-09-10,exact_span_match,1,0.0,{},True
+pop-a01b64b13150322702f5,swp-e95627846793db193ae7,Ipsos,2017-08-10,2017-08-21,exact_span_match,1,0.28713,"{""C"": 0.108911, ""FI"": 0.019802, ""KD"": 0.029703, ""L"": 0.059406, ""M"": 0.16832, ""MP"": 0.049505, ""S"": 0.28713, ""SD"": 0.18812, ""V"": 0.079208}",True
+pop-a0aaeac995559b2ceac7,swp-01d1dd95aafca518d67c,YouGov,2017-10-20,2017-10-23,exact_span_match,1,0.0,{},True
+pop-a0af9e7a96cdfd47dc58,swp-da2a14eff6a5b4bf5549,Inizio,2015-08-11,2015-08-19,exact_span_match,1,4.1,"{""L"": 0.2, ""M"": 2.9, ""S"": 4.1}",True
+pop-a19eb83e5a8ffdf4a2f3,,Ipsos,2014-08-07,2014-08-18,no_match,0,,{},False
+pop-a1a9d379b8978f48d9ad,,Ipsos,2010-08-19,2010-08-25,no_match,0,,{},False
+pop-a1b6f835496e5b05b635,,Novus,2022-08-23,2022-08-23,no_match,0,,{},False
+pop-a1fe446b2a0f4fc78caf,swp-126dee09d0963f9cecbc,Ipsos,2022-05-10,2022-05-22,exact_span_match,1,0.0,{},True
+pop-a213720bea23d3536d7d,swp-ff6a325a8c85497cb3d7,Inizio,2018-01-03,2018-01-08,exact_span_match,1,0.0,{},True
+pop-a21d459e753cdf46be2c,swp-116355bc0c8a326cc03b,Novus,2023-11-13,2023-12-10,exact_span_match,1,0.0,{},True
+pop-a232748f6f3075f03177,,Novus,2023-06-22,2023-07-16,no_match,0,,{},False
+pop-a29a5134724c5046c50c,swp-5aa81c4990d8c2eb953e,SCB,2010-10-31,2010-11-25,exact_span_match,1,0.0,{},True
+pop-a29e07cdde84002889a9,swp-f74724cf18b259133bf2,Sifo,2024-10-28,2024-11-10,exact_span_match,1,0.1,"{""KD"": 0.1}",True
+pop-a2b647ba3b3f1df7d80e,swp-ec7ab78194245cc8f037,Demoskop,2021-12-28,2022-01-05,exact_span_match,1,0.0,{},True
+pop-a2f930b3750264c6b0a6,swp-38334eb8ca0858be32c4,Sifo,2009-06-01,2009-06-11,exact_span_match,1,0.0,{},True
+pop-a386251b54b168427c61,,Novus,2022-09-03,2022-09-03,no_match,0,,{},False
+pop-a38bbd14331a32795c24,swp-5721009196ff238fb843,Demoskop,2025-08-14,2025-08-25,exact_span_match,1,0.0,{},True
+pop-a3adf77afaa9bd1754f7,,Skop,2018-09-03,2018-09-03,no_match,0,,{},False
+pop-a40f6e744d340376b44e,swp-7f3391cae0557ca24226,Demoskop,2011-11-30,2011-12-07,exact_span_match,1,0.0,{},True
+pop-a468a6b0aa4b058e850c,swp-38d8384ca76b602524eb,Sentio,2021-04-23,2021-04-26,exact_span_match_approximate_supplementary_period,1,0.0,{},True
+pop-a48c8f1b51ebbd4cf989,swp-0f6e986533c06116ff79,Ipsos,2018-01-10,2018-01-21,exact_span_match,1,2.0,"{""FI"": 2.0}",True
+pop-a4ab5f3d43677467944e,,Sifo,2019-11-07,2019-11-14,no_match,0,,{},False
+pop-a50d1ac398d5aae7869a,swp-e72d6a1a5453b59b73cf,Ipsos,2013-11-28,2013-12-17,exact_span_match,1,0.9,"{""M"": 0.2, ""V"": 0.9}",True
+pop-a555bc145bdee7810530,swp-b1583fce714923995ff9,Ipsos,2021-05-11,2021-05-23,exact_span_match,1,0.0,{},True
+pop-a58ffcfb1a87e1502681,swp-dc479144335d2a61db41,Sifo,2021-05-03,2021-05-13,exact_span_match,1,0.0,{},True
+pop-a5ad2ea1ef8df7236f52,swp-17e94de541fcbf26ed41,Ipsos,2010-03-08,2010-03-24,exact_span_match,1,0.0,{},True
+pop-a5ecb717ffb41e304f26,swp-b06fdc0de2fa1b5f6a1b,Ipsos,2009-03-10,2009-03-25,exact_span_match,1,0.0,{},True
+pop-a5f77aeca1bf6190c346,swp-10dda157e00f27b13564,Sentio,2021-05-21,2021-05-24,exact_span_match_approximate_supplementary_period,1,0.0,{},True
+pop-a60a5afa91c493a1418b,swp-b0efe4aa67219917dd09,Demoskop,2018-01-02,2018-01-09,exact_span_match,1,0.0,{},True
+pop-a621a453e79b644842c8,swp-0cdbb81886e04531e87e,Sentio,2019-02-22,2019-02-25,exact_span_match_approximate_supplementary_period,1,0.0,{},True
+pop-a6331eda9301237dcce1,swp-3f3e9ae81dba26e6e973,Ipsos,2016-01-14,2016-01-25,exact_span_match,1,0.6,"{""FI"": 0.6}",True
+pop-a64f5228ff704987d77e,swp-0dcb86d179c6c02d5f5f,Demoskop,2021-06-23,2021-06-28,exact_span_match,1,0.0,{},True
+pop-a669c6db6ca66ba773b6,,Sentio,2012-07-01,2012-07-29,no_match,0,,{},False
+pop-a66e42841caef4cec6de,swp-e788bfab50da83d6f2e3,Skop,2013-04-29,2013-05-16,exact_span_match,1,0.0,{},True
+pop-a6d27a986e9ac97290ee,swp-ebfa2b055efa2b472c4f,Sifo,2011-01-10,2011-01-20,exact_span_match,1,0.0,{},True
+pop-a6d38d4363d2bda11a5c,swp-4e07b792dfea0e6fc019,Sentio,2011-06-06,2011-06-19,exact_span_match,1,0.0,{},True
+pop-a6f13c34caf76bf4b951,swp-4afabc5fc5675df6f4d4,SCB,2013-11-03,2013-11-27,exact_span_match,1,0.0,{},True
+pop-a716519f6b2f9699bb05,swp-87789d404756bb492fae,Demoskop,2014-09-17,2014-09-21,exact_span_match,1,0.0,{},True
+pop-a7376c42f7745a8ce899,swp-04a469e61616b39ba7ec,Novus,2025-11-03,2025-11-16,exact_span_match,1,1.5,"{""C"": 0.1, ""MP"": 1.0, ""S"": 0.6, ""SD"": 1.5, ""V"": 0.6}",True
+pop-a7491db01f8bc08860cc,swp-4987c4e6124f699a5a03,Novus,2020-09-14,2020-10-11,exact_span_match,1,0.0,{},True
+pop-a74c3ab03ce8c2f7e91f,swp-033daeef6575fc49c629,SCB,2016-10-28,2016-11-27,exact_span_match,1,0.0,{},True
+pop-a77068250397cf5c8394,swp-a38d1a36310a463ed471,Sentio,2022-04-21,2022-04-25,exact_span_match,1,0.0,{},True
+pop-a7cc0c5ed4df02ab202a,swp-1697c44c1572cdb873fe,Novus,2023-04-03,2023-04-30,exact_span_match,1,0.0,{},True
+pop-a7cee0b90a0639431a78,swp-16c8a27532ec857afba1,Sifo,2020-01-06,2020-01-16,exact_span_match,1,0.0,{},True
+pop-a8367e5e775abcc61cfa,swp-a3ace34a8067353cb177,Novus,2026-05-04,2026-05-17,exact_span_match,1,0.8,"{""KD"": 0.8}",True
+pop-a84bc73e79f247e705a7,swp-bfeda5911c797c847758,Skop,2009-05-04,2009-05-19,exact_span_match,1,0.0,{},True
+pop-a868a05c5e0606478553,swp-e9120a5395fabc6d8cf7,Inizio,2015-04-07,2015-04-15,exact_span_match,1,0.0,{},True
+pop-a8728b183a77311fe47d,swp-2b313b45137486f5061e,Skop,2011-05-16,2011-05-30,exact_span_match,1,0.0,{},True
+pop-a875b894027165fd89e2,swp-66311ede39bdb128ea44,Ipsos,2014-05-08,2014-05-25,exact_span_match,1,0.0,{},True
+pop-a8a7d7bc38725b349292,swp-4d2850be30a9e41f1147,Sentio,2013-07-04,2013-07-11,exact_span_match,1,0.0,{},True
+pop-a90cece65ab3dac6a40b,swp-d4447ebb1aac7b492018,Novus,2024-03-25,2024-04-21,exact_span_match,1,0.0,{},True
+pop-a950ff6073011fe08441,swp-53ae243cdf905d1c1ff5,Novus,2025-02-10,2025-02-21,exact_span_match,1,0.0,{},True
+pop-a95df19622d18a361aad,swp-11fa0b7ee788cc6f758c,Ipsos,2012-01-09,2012-01-25,exact_span_match,1,0.0,{},True
+pop-a973d3a21436292b35a6,,Skop,2022-08-25,2022-08-25,no_match,0,,{},False
+pop-a975243032de4466f729,swp-7713f2caef814ab9bfb0,Novus,2009-04-14,2009-04-27,exact_span_match,1,0.0,{},True
+pop-a9bf63d5d6c085b574a5,,Sifo,2022-08-18,2022-08-18,no_match,0,,{},False
+pop-aa960f71d32008669073,,Ipsos,2020-05-12,2020-05-24,no_match,0,,{},False
+pop-aa9864604f1889a5f014,swp-6aaba22fc5c302b87e3f,Sifo,2012-01-09,2012-01-19,exact_span_match,1,0.0,{},True
+pop-aab19662a8bd42d6ac2b,swp-5891474a94ee6d39703c,Sentio,2018-04-05,2018-04-10,exact_span_match,1,0.0,{},True
+pop-ab756aa7975af40ce2f0,swp-5a4fcd21d772675e162b,SCB,2020-11-02,2020-11-26,exact_span_match,1,0.0,{},True
+pop-ab76903759f2411bc8ba,swp-5d531b0f0e0601ccb44d,Skop,2018-08-16,2018-08-22,exact_span_match,1,0.0,{},True
+pop-aba1066e31e2258b75c3,swp-6661446516c43bbaa128,SCB,2011-05-01,2011-05-26,exact_span_match,1,0.0,{},True
+pop-abd99d396cd7c6771532,swp-0867a0b8f70167659930,United Minds,2012-03-12,2012-04-09,exact_span_match,1,0.0,{},True
+pop-abdee8311bbc6d46fa98,swp-0fa7b43b67d25b0190f8,United Minds,2011-06-06,2011-07-02,exact_span_match,1,0.0,{},True
+pop-abe5d83378e25ba9e62f,,Demoskop,2019-05-27,2019-06-03,no_match,0,,{},False
+pop-abff377154f71658b265,,Demoskop,2017-04-24,2017-05-03,no_match,0,,{},False
+pop-ac3085168b28dd86de81,swp-3b78059cdbcdeaf55dcf,Sentio,2017-01-12,2017-01-18,exact_span_match,1,0.0,{},True
+pop-ac874128a6a3fcaf10cc,swp-0c72e327a7e7a608a4d9,Demoskop,2010-09-07,2010-09-10,exact_span_match,1,0.8,"{""C"": 0.8, ""KD"": 0.8}",True
+pop-aca4de4d9b8e1d6ea984,swp-867f5d538480084f151e,YouGov,2013-07-03,2013-08-06,exact_span_match,1,0.0,{},True
+pop-acb8496048f3a490c4c1,swp-ad3242dca6f1db7bf941,Demoskop,2025-05-12,2025-05-26,exact_span_match,1,0.0,{},True
+pop-acd8a420ec3da053a1ac,swp-6127e47985415a8cba8a,United Minds,2013-03-18,2013-04-21,exact_span_match,1,0.0,{},True
+pop-acf0ccf40c2dedb148af,swp-45555809c061577b6129,Inizio,2015-05-10,2015-05-25,exact_span_match,1,0.0,{},True
+pop-ad2a8d9079a0bfc4eb1b,,Novus,2014-07-08,2014-08-03,no_match,0,,{},False
+pop-ad36e8779a06f6ec6296,swp-790c83182e5498898087,Skop,2012-05-14,2012-06-05,exact_span_match,1,0.0,{},True
+pop-ad4b5bc841217cf90239,swp-dedcfaa36716daa57b32,Ipsos,2016-02-11,2016-02-21,exact_span_match,1,0.0,{},True
+pop-ad6ce636d5ce2dbc8b22,swp-87906a91d66144fce8c9,Sifo,2013-11-04,2013-11-14,exact_span_match,1,0.0,{},True
+pop-adb972ec030420efa050,swp-e965cea1f950e6237ab5,Novus,2009-01-06,2009-01-19,exact_span_match,1,0.0,{},True
+pop-ade947bc7086263cd62b,swp-fb97837fa65f2dff9d21,YouGov,2017-01-12,2017-01-16,exact_span_match,1,0.0,{},True
+pop-adeb860f08d9f7841202,swp-003c8a7b1f45751dc060,SCB,2018-04-27,2018-05-29,exact_span_match,1,0.0,{},True
+pop-adfe4853e349123e03c8,swp-c0fe5e2f6fa3efd1d0ba,Novus,2015-10-26,2015-11-22,exact_span_match,1,0.0,{},True
+pop-ae0a6188c5e8271c60fb,swp-d5a49412ccdbb6e29dc7,Skop,2010-04-28,2010-05-19,exact_span_match,1,0.0,{},True
+pop-ae276c5546b0c619708a,swp-14be9931c7582f914c37,Demoskop,2014-08-15,2014-08-21,exact_span_match,1,0.0,{},True
+pop-ae5d690099399d27a9be,swp-3715c1d3fec0bcb5cb99,Novus,2020-01-27,2020-02-16,exact_span_match,1,0.0,{},True
+pop-ae816c5390831a8d7345,swp-5a48c2b598b50e3d27f0,Sentio,2010-05-01,2010-05-31,exact_span_match_approximate_supplementary_period,1,0.0,{},True
+pop-aea9ca3adc44ab3fa4b9,,Inizio,2015-03-02,2015-03-12,no_match,0,,{},False
+pop-aeb6b73451ae8c11e40f,swp-695b113a7e181e572721,United Minds,2013-05-20,2013-06-16,exact_span_match,1,0.0,{},True
+pop-aec2fc44747fb368c4b0,swp-5ed8ae7a1939005aa6f7,Ipsos,2022-11-15,2022-11-28,exact_span_match,1,2.0,"{""C"": 1.0, ""L"": 1.0, ""M"": 2.0}",True
+pop-aed63ba52583a7345bb9,swp-138f4043653597ecbf54,Novus,2011-08-23,2011-09-20,exact_span_match,1,0.0,{},True
+pop-aedc50f97912f6593ab7,swp-3aa055aed0c47bf53130,Sentio,2016-02-03,2016-02-09,exact_span_match,1,0.0,{},True
+pop-aeee48d5e6a2446f01c1,swp-205877793ae29b20588d,Inizio,2019-08-22,2019-08-28,exact_span_match,1,0.0,{},True
+pop-af4f5248de75b6977207,swp-cd2e4e9c2f64b55e5db1,Inizio,2019-02-11,2019-02-18,exact_span_match,1,0.0,{},True
+pop-af6b3f18834681e7dcd7,,Sifo,2017-01-22,2017-02-07,no_match,0,,{},False
+pop-af9b79fde98b24ab587e,swp-1939e19a0da45059cdfc,YouGov,2018-05-11,2018-05-14,exact_span_match,1,0.0,{},True
+pop-afa17fcbca04ce948ba9,swp-a443cc8af3ce77c1d591,Novus,2009-05-05,2009-05-18,exact_span_match,1,0.0,{},True
+pop-afc5028439a113724e72,swp-44b3aa91012056cff00d,YouGov,2011-09-05,2011-10-02,exact_span_match,1,0.0,{},True
+pop-afdd310b2f9e53e54c30,swp-b8c8b98e6a180d1777f7,Novus,2010-03-02,2010-03-15,exact_span_match,1,0.0,{},True
+pop-afe4ac4b5194d095dbdd,swp-e747451022e90d57c37c,Novus,2024-12-02,2024-12-15,exact_span_match,1,0.0,{},True
+pop-b045a24a1683dda5381b,,Demoskop,2024-07-01,2024-07-15,no_match,0,,{},False
+pop-b04e12b59c7839d7aa52,swp-db58867ecc62c825445e,Novus,2015-05-18,2015-06-14,exact_span_match,1,0.0,{},True
+pop-b0e4fca19b0f7bc05841,swp-79b6bacef9d37146fe34,Novus,2024-04-22,2024-05-19,exact_span_match,1,0.0,{},True
+pop-b0efbffc59a658c7a679,swp-2cd409c99a285ff0dd22,Demoskop,2011-05-25,2011-06-01,exact_span_match,1,0.0,{},True
+pop-b0f97dadc583edfba8f0,swp-786220695acaa3ae2a22,Sentio,2015-10-01,2015-10-08,exact_span_match,1,0.0,{},True
+pop-b100b36d2da250a0a4c9,swp-b0fa20be2f272ce60d07,Novus,2017-08-07,2017-09-03,exact_span_match,1,0.0,{},True
+pop-b156abb6ec6710438e26,swp-e607a13bd7136e1c63fa,Demoskop,2024-11-23,2024-12-09,exact_span_match,1,0.2,"{""C"": 0.2}",True
+pop-b15a38960b231b50a83b,swp-f487c5b0df6f1a24f37f,Demoskop,2023-06-13,2023-06-25,exact_span_match,1,0.0,{},True
+pop-b184d6508ff30cf433e3,swp-9503d2276a092c0885c6,Ipsos,2010-04-12,2010-04-28,exact_span_match,1,0.0,{},True
+pop-b19df1ea299c7bac5f3b,swp-46839d6c35c2b0483cb2,Inizio,2016-10-13,2016-10-19,exact_span_match,1,0.0,{},True
+pop-b1e6ce05a6f67eb8765a,swp-d5d94716eacbee4ec842,Novus,2014-10-13,2014-11-09,exact_span_match,1,0.0,{},True
+pop-b1ef54402ba14de4abef,swp-31cccc035fb72b0287ea,Ipsos,2010-02-08,2010-02-24,exact_span_match,1,0.0,{},True
+pop-b21ffbf6aea51ed4eef3,,Demoskop,2017-06-26,2017-07-04,no_match,0,,{},False
+pop-b22e574f1b7ca84414ee,swp-d2f7f1256bb4268e38a1,Skop,2009-09-10,2009-10-09,exact_span_match,1,0.0,{},True
+pop-b22fbf53408a523247b9,swp-547e585cf9d1bd82ad30,Skop,2012-09-03,2012-09-24,exact_span_match,1,0.0,{},True
+pop-b24c831414940f92f4d0,swp-9a31fc8001ab2eeb7bc5,Sifo,2020-11-02,2020-11-12,exact_span_match,1,0.0,{},True
+pop-b2c43f1965b7b5a0ef2d,swp-eba8481df7356a2828f7,United Minds,2013-02-17,2013-03-17,exact_span_match,1,0.0,{},True
+pop-b2ce85c03e641ed5534b,swp-4fb3af371af3444bfe6f,Demoskop,2021-11-30,2021-12-08,exact_span_match,1,0.0,{},True
+pop-b2f24ae2d5e5d92099d1,swp-05a2af504486710cfe1e,Skop,2012-12-01,2012-12-18,exact_span_match,1,0.0,{},True
+pop-b30bd62b6509a0cc5c91,swp-c5a43cbbfcfe79a5f95c,Ipsos,2026-06-02,2026-06-14,exact_span_match,1,0.0,{},True
+pop-b346464fe44c358dc526,swp-298cf065f0c5bf948561,Sifo,2016-11-07,2016-11-17,exact_span_match,1,0.0,{},True
+pop-b35acdb713198773a57c,swp-a822020681d00f4e5349,Ipsos,2011-01-10,2011-01-26,exact_span_match,1,0.0,{},True
+pop-b37da43a102295147fcf,,Sifo,2022-08-20,2022-08-20,no_match,0,,{},False
+pop-b38ab1032275af940217,swp-03f5146e0510b55a0dc5,Novus,2021-02-01,2021-02-28,exact_span_match,1,0.2,"{""C"": 0.2}",True
+pop-b3dbc2f8d8e9fc9a070e,swp-0323f8d1ef2190bfbd52,Inizio,2016-05-09,2016-05-19,exact_span_match,1,0.0,{},True
+pop-b3fddc23c21382d1a046,swp-4bac94a1046b50a92479,Sifo,2011-04-04,2011-04-14,exact_span_match,1,0.0,{},True
+pop-b400e1831cebe6112c75,,Skop,2018-09-01,2018-09-02,no_match,0,,{},False
+pop-b483ca835726489f6d55,swp-a545d2b54b89cd542736,Ipsos,2018-10-16,2018-10-24,exact_span_match,1,0.4,"{""C"": 0.2, ""KD"": 0.1, ""M"": 0.1, ""MP"": 0.2, ""S"": 0.4, ""SD"": 0.2, ""V"": 0.1}",True
+pop-b4a47f21ec11721d93ad,swp-6a98a181f5a6cf81c81f,Novus,2026-02-02,2026-02-15,exact_span_match,1,0.0,{},True
+pop-b4c09dd189f46286632e,,Sifo,2022-08-21,2022-08-21,no_match,0,,{},False
+pop-b4cf9f53e83eca4def4c,swp-946e2b4ad0a50e8dbe5c,Sifo,2010-08-16,2010-08-19,exact_span_match,1,0.0,{},True
+pop-b4fa7f745157d2d9d367,,Novus,2018-10-01,2018-10-14,no_match,0,,{},False
+pop-b54d04b78297c154e0f2,swp-eea4f936788a4d87b6ae,Sifo,2018-02-05,2018-02-15,exact_span_match,1,1.4,"{""FI"": 1.4}",True
+pop-b562e8608aca13211a0e,swp-5612e778aed2730bf3c6,Demoskop,2023-08-21,2023-09-05,exact_span_match,1,0.0,{},True
+pop-b58f95211344517200f8,swp-05f96633c88597b13af6,Sifo,2010-05-03,2010-05-11,exact_span_match,1,0.0,{},True
+pop-b5c25a7ccead83d763c8,,Ipsos,2014-08-19,2014-08-25,no_match,0,,{},False
+pop-b5cd2f5e1e376ee0c26d,swp-d1f8f7bb5a489d217cfa,Sifo,2022-05-02,2022-05-12,exact_span_match,1,0.0,{},True
+pop-b5e886633c8486166005,swp-c3174feba7dea4e6d5c8,Novus,2013-11-25,2013-12-15,exact_span_match,1,0.0,{},True
+pop-b5f5666fa9a53ea4214e,swp-8e81857afa36d965f012,Inizio,2017-04-10,2017-04-17,exact_span_match,1,0.0,{},True
+pop-b5fc4d1255af557c65cf,swp-cbb47bb17fde569fd151,YouGov,2012-09-05,2012-10-02,exact_span_match,1,0.0,{},True
+pop-b6263593e163d8e6d930,,Novus,2022-08-31,2022-08-31,no_match,0,,{},False
+pop-b6386ea204a3af8ee63b,swp-ca900ae6b386025f380d,YouGov,2014-02-05,2014-03-04,exact_span_match,1,0.0,{},True
+pop-b66c7e220870d2503ec9,swp-812b50cd375c48677071,Sentio,2017-09-08,2017-09-11,exact_span_match,1,0.0,{},True
+pop-b696c6e809033ed2fa24,swp-4c6cf386fce7e448f63d,United Minds,2010-09-25,2010-10-24,exact_span_match,1,0.0,{},True
+pop-b6e4d1dc87ddcb45bbdf,swp-b4a2262a5dc5b7e56e98,Novus,2020-02-24,2020-03-22,exact_span_match,1,0.0,{},True
+pop-b72d7b18b01ffeb0691c,swp-10477363c6e4faad3023,Novus,2016-11-21,2016-12-18,exact_span_match,1,0.0,{},True
+pop-b75c0539a74100a949c8,swp-a294aaf6d1ca91622720,Ipsos,2015-11-13,2015-11-23,exact_span_match,1,1.8,"{""V"": 1.8}",True
+pop-b7a497ab4c12122b33fd,,Skop,2022-08-24,2022-08-24,no_match,0,,{},False
+pop-b7b9f332d354da7566b7,swp-25ca17e966dd0be71e3f,SCB,2026-04-28,2026-05-28,exact_span_match,1,0.0,{},True
+pop-b7c5ca954e4e6ac04247,swp-555ff1ab9e447dd08f72,Ipsos,2023-08-15,2023-08-27,exact_span_match,1,0.0,{},True
+pop-b7e6afb0314a9a9a92be,swp-64ff7c07e96acd0d9536,Novus,2023-01-30,2023-02-26,exact_span_match,1,0.0,{},True
+pop-b7f9aee2839b8e2e0afa,swp-19db2fa3b486b56c8baf,Novus,2021-01-11,2021-01-31,exact_span_match,1,0.0,{},True
+pop-b836db15c82c0efabdf0,swp-8971fbef0e8899d7d9e5,Demoskop,2017-08-01,2017-08-08,exact_span_match,1,0.0,{},True
+pop-b879fdd9ff2e1d09370c,swp-d04503ce01c4c5d25be8,Skop,2010-06-30,2010-07-15,exact_span_match,1,0.0,{},True
+pop-b90dab5936a33590dc8c,swp-5819571c958d3bdb2532,Sentio,2019-04-04,2019-04-10,exact_span_match,1,0.0,{},True
+pop-b91e633ab95a21f0ec7d,swp-8ae6f1d1246742a33770,Novus,2011-04-05,2011-04-18,exact_span_match,1,0.0,{},True
+pop-b937b1b56d6163140954,swp-24de7a046bec70e3c68c,Ipsos,2016-05-16,2016-05-25,exact_span_match,1,0.0,{},True
+pop-b942c157b755b8ffdaeb,swp-b4a0fa7a52d7a0a867e5,Demoskop,2022-04-26,2022-05-04,exact_span_match,1,0.0,{},True
+pop-b9abb7b016ab659ec761,,Skop,2018-09-04,2018-09-04,no_match,0,,{},False
+pop-b9d6d808145c5b12157e,swp-9a6ba600037bee60acf2,Demoskop,2015-01-27,2015-02-04,exact_span_match,1,0.0,{},True
+pop-ba3c8ff60d30303bb709,swp-c351846dd84cd93ac48f,Ipsos,2019-01-10,2019-01-20,exact_span_match,1,0.0,{},True
+pop-ba6f79eeb5213ecab590,,YouGov,2014-06-08,2014-07-01,no_match,0,,{},False
+pop-ba7444080e89da1e4c0d,swp-ee517cb071edc6ffda1d,Inizio,2019-10-08,2019-10-14,exact_span_match,1,0.0,{},True
+pop-ba9839be4fcab42bf1e9,swp-c970fa7e98dc3a91ef02,Ipsos,2013-02-07,2013-02-26,exact_span_match,1,0.0,{},True
+pop-baba6b0f712486cff9be,swp-e5a8068664d403c08aff,Sifo,2020-03-30,2020-04-08,exact_span_match,1,0.0,{},True
+pop-bac4ea3ffdce52d38884,swp-d3edc872ccd4dac5ecb7,Sifo,2010-03-01,2010-03-11,exact_span_match,1,0.0,{},True
+pop-bad09d75397327150a14,swp-5a9e84a83ccffcd5bc33,Novus,2022-09-12,2022-10-02,exact_span_match,1,0.0,{},True
+pop-bb855bf34bd7a73c46c9,swp-61e648b8b4b233511820,Ipsos,2022-09-01,2022-09-06,exact_span_match,1,0.0,{},True
+pop-bba1af93d0e653eb2259,,Sifo,2022-09-04,2022-09-04,no_match,0,,{},False
+pop-bbb00943d861d0d01630,swp-5212b14f8dd49dbb1e6a,YouGov,2015-09-10,2015-09-14,exact_span_match,1,0.0,{},True
+pop-bbf8c46e22cd434361ce,swp-f38a733badea314684cf,Demoskop,2019-02-26,2019-03-05,exact_span_match,1,0.0,{},True
+pop-bc3ba13045f291c2175d,swp-a8213c5623397de69139,Sifo,2017-10-30,2017-11-09,exact_span_match,1,0.0,{},True
+pop-bc87ac9284de62d1348d,swp-a635a8098b2936f7fe9a,Demoskop,2019-09-24,2019-10-01,exact_span_match,1,0.1,"{""SD"": 0.1}",True
+pop-bc8cb399763325d26ebe,,YouGov,2011-04-05,2011-05-01,no_match,0,,{},False
+pop-bd12d0ecebc600ee6fb9,swp-33c6477452b18967fabe,Ipsos,2025-09-09,2025-09-21,exact_span_match,1,0.0,{},True
+pop-bd570ba16856179013bc,swp-bbcbbb28945c4783eee8,Sifo,2024-07-29,2024-08-11,exact_span_match,1,0.1,"{""MP"": 0.1}",True
+pop-be0b80121d1ee0df626d,swp-2a9c2f1f001e8ad4954e,Sifo,2022-08-09,2022-08-11,exact_span_match,1,0.0,{},True
+pop-be3236635c36730ffdc3,swp-ff04ee43f27bfb1c8cf2,United Minds,2011-05-09,2011-06-05,exact_span_match,1,0.0,{},True
+pop-be904b34caa3b7796dba,,Inizio,2018-09-04,2018-09-07,no_match,0,,{},False
+pop-beed3c6cf08d1959dea6,swp-b1bbd4c2184af04b9020,Novus,2010-11-30,2010-12-13,exact_span_match,1,0.0,{},True
+pop-bef4e245c0a28aaacce2,swp-87380dc520be04207405,United Minds,2011-03-22,2011-04-10,exact_span_match,1,0.0,{},True
+pop-bf0b627eb40d98d3bff5,,Sifo,2016-05-04,2016-05-12,no_match,0,,{},False
+pop-bf5e47869a0ab9ef7b50,,Skop,2022-08-28,2022-08-28,no_match,0,,{},False
+pop-bfded8e8715bc278faeb,swp-300f34675565f6f8e027,Novus,2025-12-01,2025-12-14,exact_span_match,1,0.0,{},True
+pop-bfe8dba079cf3c8beced,swp-cc8758e4ea906840a563,United Minds,2012-04-10,2012-05-06,exact_span_match,1,0.0,{},True
+pop-bff056a71774df2eeedc,swp-62d6f96a6679c72e38a7,Sentio,2017-06-01,2017-06-05,exact_span_match,1,0.0,{},True
+pop-bff1bc1c41d3f720ff62,swp-4d39936337250aee4468,Sentio,2016-11-17,2016-11-22,exact_span_match,1,0.0,{},True
+pop-bffa5d7849ca85b14fe1,swp-6c0b1d23909dced7ad63,Skop,2012-02-19,2012-03-06,exact_span_match,1,0.0,{},True
+pop-c02af1d3b52c534d2fb9,swp-a2aa6d3f13909f4a513c,Sifo,2026-01-26,2026-02-08,exact_span_match,1,0.0,{},True
+pop-c11c718ee2ea9a78ad35,swp-bbfeefac8dbb06c07b3e,Sifo,2017-12-04,2017-12-14,exact_span_match,1,1.9,"{""FI"": 1.9}",True
+pop-c1d3cb323536a60869ae,swp-dd3e044636d346bab751,Demoskop,2022-07-24,2022-08-02,exact_span_match,1,0.0,{},True
+pop-c1da172767a834baa02b,swp-ba22d23ad1c37919668c,YouGov,2011-08-02,2011-09-04,exact_span_match,1,0.0,{},True
+pop-c2a55d380ebce320425b,swp-953601e5129034b0c401,United Minds,2014-01-13,2014-02-09,exact_span_match,1,0.0,{},True
+pop-c3847f0f0a66bc628d00,,Novus,2023-05-26,2023-05-28,no_match,0,,{},False
+pop-c3ae807957ffefdc2873,swp-6dbc779d7eb285d17a0d,Skop,2012-06-20,2012-07-09,exact_span_match,1,0.0,{},True
+pop-c3b107e62eb4be22e889,swp-f28f1b1830f2c59d41f0,Skop,2009-10-11,2009-11-03,exact_span_match,1,0.0,{},True
+pop-c3bbb30ad4b8a3ecb0ba,swp-cc3628fd981908aa2378,YouGov,2013-09-04,2013-10-08,exact_span_match,1,0.0,{},True
+pop-c3e163921126c66aef13,,Sentio,2010-08-01,2010-08-24,no_match,0,,{},False
+pop-c3ecad3f3b12134f2cfb,swp-3247bbb469ea89dd5234,United Minds,2014-02-10,2014-03-09,exact_span_match,1,0.0,{},True
+pop-c3f8c1e6586f2318b2d8,,Inizio,2018-08-31,2018-09-03,no_match,0,,{},False
+pop-c498a974b0da973a9b17,swp-3007efb38d0548614587,Demoskop,2021-08-31,2021-09-08,exact_span_match,1,0.0,{},True
+pop-c4993823ee3658beab85,,Skop,2022-08-22,2022-08-22,no_match,0,,{},False
+pop-c4a04d294a4761e34435,swp-c46ac2eed8a2cfd7ec08,Ipsos,2024-11-05,2024-11-18,exact_span_match,1,0.0,{},True
+pop-c4a3dd8bac3640dcc5d7,swp-ca842b0c9e221de9c7e0,Sentio,2020-11-12,2020-11-16,exact_span_match,1,0.0,{},True
+pop-c4f6ce5b249b5d9fdefc,swp-8241a70c820f5792e730,Skop,2010-08-29,2010-09-03,exact_span_match,1,0.0,{},True
+pop-c52891cf2ddd6ae26f18,swp-05195dfa8adca64de656,Sentio,2020-07-10,2020-07-12,exact_span_match_approximate_supplementary_period,1,0.0,{},True
+pop-c52932c7e769a8882a84,swp-138d0b08021e1ebf0f30,Ipsos,2021-10-12,2021-10-25,exact_span_match,1,0.0,{},True
+pop-c542ecc24916ad56f8b3,swp-ac444869e23d58a071ec,Skop,2015-10-04,2015-10-21,exact_span_match,1,1.0,"{""SD"": 1.0}",True
+pop-c570cfe7293c8b940624,swp-1f31138e2bea15852bed,Sifo,2015-08-10,2015-08-20,exact_span_match,1,0.0,{},True
+pop-c601b118dc710cb9e784,swp-3cdbc3f05409cb48f5b6,Ipsos,2023-03-14,2023-03-26,exact_span_match,1,0.0,{},True
+pop-c604394aca59f2e8922a,swp-2d020d392ea13f1d06d4,Sifo,2010-08-30,2010-09-02,exact_span_match,1,0.0,{},True
+pop-c605bb963b454ff758c8,swp-f1be34c027bb4d7c97d9,Novus,2016-08-29,2016-09-25,exact_span_match,1,0.0,{},True
+pop-c63808f8f7fad966a3fd,swp-15d16c1e8f52dccc5a4b,Sentio,2015-11-05,2015-11-10,exact_span_match,1,1.0,"{""MP"": 1.0, ""V"": 1.0}",True
+pop-c651b367495096b6734c,swp-9303e25d69daf72ec04b,Sifo,2017-03-06,2017-03-16,exact_span_match,1,0.0,{},True
+pop-c66c08feaec94e53dbd7,swp-9755a6ddaaa6f4ec2a40,United Minds,2012-01-27,2012-02-12,exact_span_match,1,0.0,{},True
+pop-c67d1614d974d41f3ca2,swp-81dc1217f6fe20355cee,Sentio,2012-04-01,2012-04-30,exact_span_match_approximate_supplementary_period,1,0.0,{},True
+pop-c685e4f370fb60ab38c5,swp-35d699fb71b4993697cf,Ipsos,2011-04-11,2011-04-27,exact_span_match,1,0.0,{},True
+pop-c70408d97bf63ac80844,,Sifo,2018-08-28,2018-08-28,no_match,0,,{},False
+pop-c7245ef3bfdaa082ddbc,swp-a9f2f6562a010bd37613,Sifo,2012-04-02,2012-04-12,exact_span_match,1,0.0,{},True
+pop-c737a85cb3a298bb6dca,swp-512b9ff495d50ab561b9,Inizio,2017-04-24,2017-05-01,exact_span_match,1,0.0,{},True
+pop-c77b5e40b3cd8d06373d,swp-c54968e600da361f2ab5,Novus,2017-10-02,2017-10-29,exact_span_match,1,0.0,{},True
+pop-c7a44488b354c6fbaebb,swp-2881c79fb23e7063480b,Novus,2018-03-19,2018-04-15,exact_span_match,1,0.0,{},True
+pop-c7ae4c1b482ec856b3bc,swp-3c38b678c9098b716874,Novus,2009-08-11,2009-08-24,exact_span_match,1,0.0,{},True
+pop-c7d6588ccfc950a17a23,,Ipsos,2025-04-09,2025-04-21,no_match,0,,{},False
+pop-c7eb269bbc833ad61641,swp-b83ddb2b123576b6f053,Ipsos,2022-03-15,2022-03-27,exact_span_match,1,0.0,{},True
+pop-c7f342a60c40134eab6f,swp-7cc9825b20c956367f2e,Ipsos,2013-10-10,2013-10-29,exact_span_match,1,0.0,{},True
+pop-c8319db999d7729e6c79,swp-c185d4bdab4423366cc3,Sentio,2022-06-16,2022-06-21,exact_span_match,1,0.6,"{""FI"": 0.4, ""L"": 0.1, ""S"": 0.6}",True
+pop-c882f2f32289d1c17a42,swp-5be27f706fd122926b65,Inizio,2019-05-21,2019-05-28,exact_span_match,1,0.0,{},True
+pop-c8b21cc349d2977e20d6,swp-35f13040ab22e8fdb58a,Ipsos,2015-12-03,2015-12-14,exact_span_match,1,0.0,{},True
+pop-c8e3d6c9f12c8ac8860c,swp-fb4d201918ca498dbc4f,Novus,2018-04-16,2018-05-13,exact_span_match,1,0.0,{},True
+pop-c9579a40f85f5d6d1b59,swp-7d55cbffc0a2bc559f22,Sentio,2018-11-29,2018-12-03,exact_span_match,1,0.0,{},True
+pop-c95d27db144edcbf213c,swp-73bbd100e3b4906d96c1,Novus,2018-10-15,2018-11-11,exact_span_match,1,0.0,{},True
+pop-c96091c41505e8c03b40,swp-90a5b8b019915134a4f5,Demoskop,2025-06-01,2025-06-15,exact_span_match,1,0.0,{},True
+pop-c9dff983fd75514be6c6,swp-2e38b4536755180b5db0,Ipsos,2014-11-13,2014-11-24,exact_span_match,1,0.0,{},True
+pop-c9ec5d7714bb0e5a7c8e,swp-8b494368092ee835c3f8,Demoskop,2016-01-26,2016-02-02,exact_span_match,1,0.0,{},True
+pop-ca67418eaf4b970b5489,swp-c53616af546dadf2c821,Novus,2017-02-20,2017-03-19,exact_span_match,1,1.0,"{""MP"": 1.0}",True
+pop-ca9375a95a86f067f552,swp-0505e2be8978f9d170d9,SCB,2012-11-01,2012-11-25,exact_span_match,1,0.0,{},True
+pop-caa2a7ef9549d3617b4e,swp-bc389343cd19dff683da,Ipsos,2021-03-09,2021-03-21,exact_span_match,1,0.26733,"{""C"": 0.089109, ""KD"": 0.039604, ""L"": 0.029703, ""M"": 0.21782, ""MP"": 0.039604, ""S"": 0.26733, ""SD"": 0.19802, ""V"": 0.10891}",True
+pop-cb0026346bdb47f90765,swp-7b850de0c8bc4975935f,Ipsos,2018-05-10,2018-05-21,exact_span_match,1,2.0,"{""FI"": 2.0}",True
+pop-cb15417a71137952b600,,Demoskop,2014-09-03,2014-09-08,no_match,0,,{},False
+pop-cb33f80f591c324f10f7,swp-4c2ed83dd9ea18370bc8,Sifo,2013-02-04,2013-02-14,exact_span_match,1,0.0,{},True
+pop-cba62489e7ccad6a91d4,swp-61986f493b8614b531b2,Sifo,2013-09-30,2013-10-10,exact_span_match,1,0.0,{},True
+pop-cbbdcc739fcc10e67de2,swp-3ef633d809fe4554c67a,Demoskop,2014-04-29,2014-05-07,exact_span_match,1,0.0,{},True
+pop-cbc425c8084c8dd9bf64,swp-ee5815fcacf7e57874c0,Novus,2010-08-17,2010-08-23,exact_span_match,1,0.0,{},True
+pop-cbd6ef5fe006f3b4bc2e,swp-d0257f67de6dcf2f675d,Novus,2015-11-23,2015-12-13,exact_span_match,1,0.0,{},True
+pop-cc6fe8fc7549f80c5483,swp-073ab942dc7d330992f3,Novus,2018-07-23,2018-08-12,exact_span_match,1,0.0,{},True
+pop-cc76eafaf1267433d063,swp-c0d553c8a5eedc0a9307,Novus,2010-02-02,2010-02-15,exact_span_match,1,0.0,{},True
+pop-cc8ec1fb9b943ccb52d7,,Skop,2013-12-09,2014-01-01,no_match,0,,{},False
+pop-cc8fb04c0cbc5f73c365,swp-2d06a7e02e141860feff,Sentio,2023-04-06,2023-04-12,exact_span_match,1,0.4,"{""SD"": 0.4}",True
+pop-cce317fd6e2176466d3b,swp-33f1477a8ba7ada501cc,Demoskop,2013-02-26,2013-03-06,exact_span_match,1,0.0,{},True
+pop-ccf8e7e6d4848cbfe4a6,,Novus,2022-09-01,2022-09-01,no_match,0,,{},False
+pop-cd86167dabb391854aa3,swp-5e99a8e9c1698b496812,YouGov,2015-06-12,2015-06-15,exact_span_match,1,0.0,{},True
+pop-cd879fee1ba9dbf40868,swp-af3805f996dc20eada5a,United Minds,2011-09-12,2011-10-10,exact_span_match,1,0.0,{},True
+pop-cd9658054f7ad1714406,swp-27a952c143342ac88dbd,Demoskop,2023-05-25,2023-06-07,exact_span_match,1,0.0,{},True
+pop-cdf262ed8c01a138f59a,swp-c96891c20915328f8f1f,Sifo,2014-08-25,2014-08-28,exact_span_match,1,0.0,{},True
+pop-ce57c96a13659c0238f3,swp-595b817758856aa60952,Inizio,2014-12-04,2014-12-10,exact_span_match,1,1.3,"{""FI"": 1.3}",True
+pop-ceaa12b1d710de9cbd88,swp-94982cd75a7018a87e70,Ipsos,2026-05-12,2026-05-25,exact_span_match,1,0.0,{},True
+pop-cec3409feaf04c26a654,swp-7153e5b6f48e1e35e561,Demoskop,2021-02-26,2021-03-03,exact_span_match,1,0.0,{},True
+pop-cf04e97a62eeafcac123,swp-9bd921a1c8a612616e3c,Novus,2014-03-24,2014-04-20,exact_span_match,1,0.0,{},True
+pop-cf08ef5f0c92521a916c,swp-cbaa7acc425d646e53c2,Ipsos,2018-03-09,2018-03-19,exact_span_match,1,0.0,{},True
+pop-cf1fd23a418e43ac5c04,swp-d76b0b8b8b48ed05044b,Demoskop,2012-02-29,2012-03-07,exact_span_match,1,0.0,{},True
+pop-cf373a84032cf392bb32,swp-17864ff0217ccf549011,Sifo,2016-10-03,2016-10-13,exact_span_match,1,0.0,{},True
+pop-cf6b385e02eff6870f32,,Sentio,2021-07-02,2021-07-05,no_match,0,,{},False
+pop-cf82114a031bf4302195,swp-3b7e0b837f9132800af7,Sentio,2013-06-13,2013-06-20,exact_span_match,1,0.0,{},True
+pop-cfccd034beea2c5ad19a,swp-e61a79e24a0739bdb601,Demoskop,2023-04-14,2023-04-24,exact_span_match,1,0.0,{},True
+pop-cff1141262237d6fe36d,swp-e01ba7fcc965edfd13c3,Novus,2022-01-03,2022-01-30,exact_span_match,1,0.0,{},True
+pop-d00e01395e31ec37511b,,Sentio,2023-10-03,2023-10-10,no_match,0,,{},False
+pop-d01cc3da6566b5979c57,swp-30295e3b296f92c8b6cb,Novus,2025-08-11,2025-08-24,exact_span_match,1,0.0,{},True
+pop-d04aed419f8c76e57ae4,swp-9285128d2f721b00d77b,United Minds,2011-10-11,2011-11-06,exact_span_match,1,0.0,{},True
+pop-d0513f7e161ce57ff852,swp-1adc6b849c6a1cc41727,Sifo,2024-11-25,2024-12-08,exact_span_match,1,0.0,{},True
+pop-d09df6cb6906083258d2,swp-ef4b9cbf785eb466f7c1,Ipsos,2013-08-08,2013-08-27,exact_span_match,1,0.0,{},True
+pop-d0a2294ddc2ccdef6f89,swp-2542d3113d90508c1f65,United Minds,2011-02-14,2011-03-13,exact_span_match,1,0.0,{},True
+pop-d0b93d3164f528ca1373,swp-a4e49d24311b470fe0dd,Ipsos,2020-08-11,2020-08-23,exact_span_match,1,1.0,"{""KD"": 1.0, ""L"": 1.0}",True
+pop-d0c8f06c06f4d74ec004,,United Minds,2014-01-02,2014-01-12,no_match,0,,{},False
+pop-d0da3aa562bfab79c037,swp-7b7615351608eaf61d73,Sifo,2016-02-29,2016-03-10,exact_span_match,1,0.0,{},True
+pop-d1693aeec24be320ee99,swp-3d339b948692a1085cff,Skop,2012-01-19,2012-02-03,exact_span_match,1,0.0,{},True
+pop-d1a449b7f0b151f185e1,swp-1a7dcd1d8bbe8d51d154,United Minds,2012-12-17,2013-01-20,exact_span_match,1,0.0,{},True
+pop-d2238faeeb71f334d307,swp-88e097328ef1dc48b4e9,Inizio,2018-05-21,2018-05-30,exact_span_match,1,0.0,{},True
+pop-d2672d56b05ea2d7f551,,Sifo,2022-08-26,2022-08-26,no_match,0,,{},False
+pop-d2a04968331b1d3c7317,swp-4b048c454c713a790950,Sifo,2013-01-07,2013-01-17,exact_span_match,1,0.0,{},True
+pop-d2dba0b630551d3e57aa,,Ipsos,2019-09-10,2019-09-23,no_match,0,,{},False
+pop-d2fde392bda1004e6a20,,Skop,2018-08-30,2018-08-30,no_match,0,,{},False
+pop-d34e62538d64330e5629,swp-77c47978c84491d2608b,Demoskop,2018-11-27,2018-12-04,exact_span_match,1,0.0,{},True
+pop-d34fe9cb4d2434ad0893,swp-c56d1270fd95a0b1644a,Skop,2010-01-24,2010-02-04,exact_span_match,1,0.0,{},True
+pop-d3949249f62316346e98,swp-b3e1903643c3cdd53e78,Ipsos,2013-11-07,2013-11-26,exact_span_match,1,0.0,{},True
+pop-d399f8f3789fce977bae,swp-4c866bbb39938c872255,Novus,2015-04-20,2015-05-17,exact_span_match,1,0.0,{},True
+pop-d4674fb203d254ad8590,swp-165f28a69bb956805b96,United Minds,2009-06-08,2009-06-22,exact_span_match,1,0.0,{},True
+pop-d47d9a283a256802fe17,swp-483270c942766793af94,YouGov,2011-05-05,2011-06-05,exact_span_match,1,0.0,{},True
+pop-d4897ec3de296f6242af,swp-96974ae6990b42714eff,Sifo,2020-09-07,2020-09-17,exact_span_match,1,0.0,{},True
+pop-d49e6278dfb7e7512885,swp-5d7c22646037b251fc4b,United Minds,2011-08-15,2011-09-11,exact_span_match,1,0.0,{},True
+pop-d4b83ffcd3f5f808924b,swp-e57cf9fe964f80bc8906,United Minds,2012-08-20,2012-09-16,exact_span_match,1,0.0,{},True
+pop-d4f634e7511a6a815823,swp-08d49c1b0cca47370d42,Skop,2011-04-13,2011-05-05,exact_span_match,1,0.0,{},True
+pop-d51e9a4c3620168bf348,swp-46aa2766f9dd3462013e,Sifo,2023-09-18,2023-10-01,exact_span_match,1,0.0,{},True
+pop-d5381fd5b786c4e4b565,swp-13dcb87158dd49a2bac8,Demoskop,2014-02-25,2014-03-05,exact_span_match,1,0.0,{},True
+pop-d563a5bddc5f640b60ae,swp-228b12a76585f6c9c8ab,Demoskop,2018-08-23,2018-08-30,exact_span_match,1,0.1,"{""V"": 0.1}",True
+pop-d58634a1d415f7214ab5,swp-219fa4a252e3c357409e,Sentio,2018-05-04,2018-05-07,exact_span_match,1,0.0,{},True
+pop-d5cea1c4bab703dfc876,swp-a7e053cef086692181af,United Minds,2010-08-23,2010-08-30,exact_span_match,1,0.0,{},True
+pop-d639b963c6e24a95f789,swp-9be02364120bef89ad17,Ipsos,2015-01-12,2015-01-26,exact_span_match,1,0.1,"{""S"": 0.1}",True
+pop-d6471cfa158352001ee1,,United Minds,2014-09-06,2014-09-09,no_match,0,,{},False
+pop-d674a9ac23759d8044cc,swp-e96df2dcb6987172de80,Sifo,2016-04-25,2016-05-03,exact_span_match,1,0.0,{},True
+pop-d6c18647fbf29bd00f41,swp-575041f168b69f60fe09,Skop,2020-07-23,2020-07-28,exact_span_match,1,0.0,{},True
+pop-d6db43e0f88e7f790668,swp-b10c77e0835a902de619,Demoskop,2023-11-18,2023-12-04,exact_span_match,1,0.0,{},True
+pop-d74e3d0a0887277bf8c0,swp-f4073947e89831f43266,Sifo,2023-03-06,2023-03-16,exact_span_match,1,0.0,{},True
+pop-d772aa3938f017a19040,swp-35d7be9769b635b1a333,Ipsos,2014-03-06,2014-03-25,exact_span_match,1,0.0,{},True
+pop-d786fde2acb2aa09981e,swp-6a9fa88a2b67a0a99aeb,Sifo,2012-05-02,2012-05-10,exact_span_match,1,0.0,{},True
+pop-d794c4248e4da72af49b,swp-a5f70d64e7fde0e53d6f,Skop,2021-09-03,2021-09-11,exact_span_match,1,0.0,{},True
+pop-d8029ca8e7b8dd89a92b,swp-08957163bbf64f717ed6,Skop,2021-10-15,2021-10-17,exact_span_match,1,0.0,{},True
+pop-d818a0525b5ff60bf0d3,swp-db99e52ce69c84b20089,United Minds,2012-07-23,2012-08-19,exact_span_match,1,0.0,{},True
+pop-d81b2ca9f5f71cb2f656,,Skop,2009-01-02,2009-01-07,no_match,0,,{},False
+pop-d836c1c6489eff25bb67,swp-5bb611d469ee60f1a0aa,Sentio,2013-05-02,2013-05-09,exact_span_match,1,0.0,{},True
+pop-d84b718eefa28260f87a,swp-0987571455354cee5a4d,YouGov,2014-04-09,2014-05-06,exact_span_match,1,0.0,{},True
+pop-d860c09f0da29be14e28,swp-4bc7662e042504a350e2,United Minds,2013-07-22,2013-08-15,exact_span_match,1,0.0,{},True
+pop-d877eb59a2500e3138ad,,Sifo,2022-08-29,2022-08-29,no_match,0,,{},False
+pop-d8a6044c939e18c7408f,swp-c7010442901e5b19171b,Sifo,2020-08-10,2020-08-20,exact_span_match,1,0.0,{},True
+pop-d95550271516631aad14,swp-f35cf862dd84250a8d09,Sentio,2017-02-16,2017-02-20,exact_span_match,1,0.0,{},True
+pop-d96e9d3e976b36d8b745,,Sifo,2022-08-23,2022-08-23,no_match,0,,{},False
+pop-d98b41f7ce805f23149e,swp-1a4952b54a7e6977f8db,Ipsos,2014-09-17,2014-09-24,exact_span_match,1,0.0,{},True
+pop-d9a148fed51576dc306a,swp-f3a17b20e176632b590e,SCB,2020-04-29,2020-05-27,exact_span_match,1,0.0,{},True
+pop-d9abdd7ca5d2aaf2d5a9,,Sifo,2022-08-13,2022-08-13,no_match,0,,{},False
+pop-d9d4cd77ac44114914bf,swp-649a26e21e5ec4e874ec,Sentio,2016-12-08,2016-12-14,exact_span_match,1,0.1,"{""M"": 0.1}",True
+pop-d9f4e034a1e5832cfcdd,swp-589448067efddafaae91,United Minds,2013-10-14,2013-11-10,exact_span_match,1,0.0,{},True
+pop-d9f91a11f097a4a28160,swp-2f906e8c6655add9a1eb,Sifo,2012-11-05,2012-11-15,exact_span_match,1,0.0,{},True
+pop-da4016d8cc725a5a992c,swp-1cbc276efdeca52ddcd9,Sentio,2017-12-01,2017-12-06,exact_span_match,1,0.0,{},True
+pop-da4bb3865f72e0a554ad,swp-8b6bc6363a7cb05f90e7,Novus,2016-05-30,2016-06-26,exact_span_match,1,0.0,{},True
+pop-dae7b09ebe233e15214f,swp-1d6ed0e16eeb4cf4d663,Sifo,2018-03-05,2018-03-15,exact_span_match,1,0.0,{},True
+pop-db001e2d1e23b0a17bf9,swp-4fb98425284cab17f775,Novus,2017-07-31,2017-08-06,exact_span_match,1,0.0,{},True
+pop-db0920971e835f4fc835,swp-4f02b3005cd6a5573c19,Sentio,2013-02-05,2013-02-12,exact_span_match,1,0.0,{},True
+pop-db5f81a34ba3ca994210,,United Minds,2010-09-17,2010-09-17,no_match,0,,{},False
+pop-db883e6a4fe4d1636daa,swp-8df4d2528734bf1830b8,Sentio,2017-11-16,2017-11-21,exact_span_match,1,0.0,{},True
+pop-db951a16c80bf72cb8c2,swp-6707beaea9bc4a28f445,Sifo,2021-06-07,2021-06-17,exact_span_match,1,0.0,{},True
+pop-dba761f9fd5921a85bcb,swp-82236099b34f5ce56eab,Skop,2009-08-12,2009-09-04,exact_span_match,1,0.0,{},True
+pop-dc226f595a1149965875,swp-641e876b1fdf8f1d8e59,SCB,2024-05-02,2024-05-30,exact_span_match,1,0.0,{},True
+pop-dc2776e1c7df6db0b54e,swp-83db92130ad29bb08fd8,Demoskop,2016-04-26,2016-05-03,exact_span_match,1,0.0,{},True
+pop-dc46fca69db21f0716ac,swp-9cb26266f84abb44a9e5,Ipsos,2020-12-01,2020-12-13,exact_span_match,1,0.25743,"{""C"": 0.069307, ""KD"": 0.049505, ""L"": 0.029703, ""M"": 0.22772, ""MP"": 0.049505, ""S"": 0.25743, ""SD"": 0.19802, ""V"": 0.10891}",True
+pop-dc49e966200100989b14,swp-d56a02ea5e1a14cb9eb1,Ipsos,2017-10-12,2017-10-22,exact_span_match,1,0.0,{},True
+pop-dc6d1ec1a0b4ad747ac0,swp-b48619e63c55187d2283,Ipsos,2017-09-07,2017-09-18,exact_span_match,1,0.0,{},True
+pop-dc976d69b71f94ffd488,swp-85f19b454bef01f5107b,Demoskop,2025-10-18,2025-10-27,exact_span_match,1,0.0,{},True
+pop-dcc5cb4f588610641e4c,swp-8055a90bc1053a49ec79,Inizio,2018-10-01,2018-10-08,exact_span_match,1,0.4,"{""M"": 0.4}",True
+pop-dcf202d298ba0bb15963,swp-5cc1a0e1ecc42387f0a6,Sifo,2015-11-09,2015-11-19,exact_span_match,1,0.8,"{""C"": 0.8}",True
+pop-dd0cc524bb6bede61ac5,,YouGov,2013-06-05,2013-07-02,no_match,0,,{},False
+pop-dd103d1bfc1729839937,swp-4509c500bc471f8abcc2,Sifo,2015-09-07,2015-09-17,exact_span_match,1,0.0,{},True
+pop-dd4c44304ff3d240c5dd,swp-5145abd128fa17daba8f,Inizio,2018-06-20,2018-06-26,exact_span_match,1,0.0,{},True
+pop-dd68933c5ceca003d677,swp-dfed8c0a1a4ce08d281c,Novus,2012-05-28,2012-06-29,exact_span_match,1,0.0,{},True
+pop-dd6d7a0cca0d8be3be97,swp-1dc0e09ee7b593399ddd,Skop,2014-05-29,2014-06-15,exact_span_match,1,0.0,{},True
+pop-dd99455d5775055872b5,swp-608a6b32d8f744264f5c,Sifo,2015-02-02,2015-02-12,exact_span_match,1,0.0,{},True
+pop-dda25f4ee77332180358,swp-167ae76d7a3a931680b9,Sifo,2020-06-01,2020-06-11,exact_span_match,1,0.0,{},True
+pop-de0b5f0550a5d6aed098,,Demoskop,2022-08-06,2022-08-16,no_match,0,,{},False
+pop-de7568f94bbc4512d5de,swp-fdc84251b71328718faa,Sifo,2016-12-05,2016-12-15,exact_span_match,1,0.0,{},True
+pop-de899f7b0fcb4476fd3f,swp-ac36dd6aa5743a46b1e3,Novus,2020-12-07,2021-01-10,exact_span_match,1,0.0,{},True
+pop-def1fcd9150dd4d80bc6,swp-29f81da2b5409cbc8cc9,Inizio,2015-10-12,2015-10-20,exact_span_match,1,0.0,{},True
+pop-df040df32d000e85ebcf,,Sifo,2022-08-17,2022-08-17,no_match,0,,{},False
+pop-df3f433148c8c735ff8e,swp-d463c2ad792e11b3378d,Sentio,2016-08-16,2016-08-21,exact_span_match,1,0.0,{},True
+pop-df4c0aee341e19cc0bd2,swp-6946916658c0715b9194,Novus,2014-01-06,2014-01-26,exact_span_match,1,0.0,{},True
+pop-df57bf880cc2b6e715b5,swp-ffe167de15efc40e6397,United Minds,2010-03-01,2010-03-28,exact_span_match,1,0.0,{},True
+pop-dfa73d5913d7e322bbbc,swp-f46e3bdbc75bf85ad4c1,Novus,2010-06-08,2010-06-21,exact_span_match,1,0.0,{},True
+pop-dfc693660e8eb0629c3e,,YouGov,2014-05-07,2014-06-07,no_match,0,,{},False
+pop-e00d0703a51922210246,,Sentio,2018-11-01,2018-11-07,no_match,0,,{},False
+pop-e028586b2506ed46010d,swp-8371a300d8cc61b645ac,Ipsos,2011-05-09,2011-05-25,exact_span_match,1,0.0,{},True
+pop-e04471970d0a6f4a47b5,swp-773dcfe876deec9fc570,Sifo,2025-02-24,2025-03-09,exact_span_match,1,0.0,{},True
+pop-e052d7addf98fee84eb5,swp-b49226d6be04ed062769,Inizio,2017-02-05,2017-02-14,exact_span_match,1,0.0,{},True
+pop-e06ff8faff6ebb692de9,swp-ecb2467e36a78c86460d,Novus,2011-02-08,2011-02-21,exact_span_match,1,0.0,{},True
+pop-e0bab83fdb1696aaab7a,swp-3824e1279ec33cd9543d,Ipsos,2022-04-12,2022-04-26,exact_span_match,1,0.0,{},True
+pop-e0d31d2eea7650eed739,swp-890ebb9b215049d5a471,Sentio,2012-02-23,2012-03-01,exact_span_match,1,0.0,{},True
+pop-e0d57be163f6ee608611,swp-2e07baf44b189598b3a7,Sifo,2014-11-10,2014-11-20,exact_span_match,1,0.0,{},True
+pop-e12e66de0047c68eada8,swp-171403b269cd75ef399f,Novus,2016-10-24,2016-11-20,exact_span_match,1,0.0,{},True
+pop-e152e422091606110f36,,Skop,2018-09-06,2018-09-06,no_match,0,,{},False
+pop-e16018d6388e8f6c1003,swp-de3cc3ee869b4908155b,YouGov,2015-12-10,2015-12-14,exact_span_match,1,0.0,{},True
+pop-e18ff5c6471848760e92,swp-150baa70834cdd7f0879,United Minds,2014-04-07,2014-05-11,exact_span_match,1,0.0,{},True
+pop-e1939ab4cb178b0606b8,swp-6a3131f4501eaf3ebfbf,YouGov,2016-09-16,2016-09-19,exact_span_match,1,0.0,{},True
+pop-e194ab0bee03c7d376e7,,Demoskop,2010-09-11,2010-09-15,no_match,0,,{},False
+pop-e1986e62082a92e5e839,swp-de1cbd36196c509c4929,Novus,2020-08-03,2020-08-23,exact_span_match,1,0.0,{},True
+pop-e1c19169f8ab57e56688,swp-8fb322f0fc332d12ac76,Demoskop,2022-09-26,2022-10-04,exact_span_match,1,0.0,{},True
+pop-e1cd054f7cc6755ace53,swp-bd43bdcad94ed9efb24a,Sifo,2009-04-06,2009-04-16,exact_span_match,1,0.0,{},True
+pop-e1ef7abe9bebb6c7c990,swp-9a5abd674d0e4773d530,Novus,2009-06-09,2009-06-22,exact_span_match,1,0.0,{},True
+pop-e1f322ee3a7edadcd503,swp-8914b36638ff81f83e2c,Sifo,2025-03-24,2025-04-06,exact_span_match,1,0.1,"{""S"": 0.1}",True
+pop-e201b49b1c91717f87b2,swp-a61550e7cbe4ce3a8c92,Ipsos,2016-11-10,2016-11-21,exact_span_match,1,0.0,{},True
+pop-e216ee58a271dd8efc41,swp-37f7027e5b214b1efdfc,Ipsos,2015-05-12,2015-05-25,exact_span_match,1,1.4,"{""C"": 1.4, ""L"": 1.4}",True
+pop-e24158fd921152917f9f,swp-718ea28256d11732fbc0,Sifo,2009-11-02,2009-11-12,exact_span_match,1,0.0,{},True
+pop-e263d4e4bbda49eed7b8,swp-5ef6baf04ec38e115317,Novus,2019-10-21,2019-11-17,exact_span_match,1,0.0,{},True
+pop-e2b24807f2ffed069360,swp-07601d4464179cd84969,YouGov,2013-10-10,2013-11-05,exact_span_match,1,0.0,{},True
+pop-e2bb7eb5e91865b8185d,swp-ef1339321cfe6d9fabb5,Sentio,2023-03-09,2023-03-15,exact_span_match,1,0.1,"{""V"": 0.1}",True
+pop-e3138591506ef873841e,swp-25f6e4f152af2b262ab6,Demoskop,2021-06-29,2021-07-07,exact_span_match,1,0.0,{},True
+pop-e3a8a49039f80bba5787,swp-2ddd8f887eeb3c08157b,Demoskop,2024-06-02,2024-06-11,exact_span_match,1,0.1,"{""KD"": 0.1}",True
+pop-e3e14a20a889edcc54fe,swp-02b9ff9ffe98dd0c7f76,Ipsos,2016-03-10,2016-03-20,exact_span_match,1,0.0,{},True
+pop-e407d4ba1b29d9d76644,swp-bba7cbcf7f465fb79cb8,Ipsos,2013-03-07,2013-03-26,exact_span_match,1,0.0,{},True
+pop-e419937423eceef979ef,swp-04d8f2b6aa28de9c15c7,Novus,2013-10-28,2013-11-24,exact_span_match,1,0.0,{},True
+pop-e422e03403a17e7d6342,swp-1c129ee35d7109a65813,Sifo,2019-01-14,2019-01-17,exact_span_match,1,0.0,{},True
+pop-e4ed9f14afea44fad939,swp-0141427de8cf093ee3f9,Ipsos,2010-11-08,2010-11-24,exact_span_match,1,0.0,{},True
+pop-e505b74b9503d0137d98,swp-2230862527d9f0d291d0,Sifo,2026-02-23,2026-03-08,exact_span_match,1,0.0,{},True
+pop-e506325078c133686312,swp-017f491d99a23ce6f6e7,Novus,2011-09-21,2011-10-17,exact_span_match,1,0.0,{},True
+pop-e50b4ea18ea4f7b26de2,swp-6c1d4a714dd89ce2f2d0,Novus,2022-03-07,2022-04-03,exact_span_match,1,1.0,"{""KD"": 1.0}",True
+pop-e585155a68c75a1975e0,swp-27fdf489a2ed92f4169b,United Minds,2011-01-17,2011-02-13,exact_span_match,1,0.0,{},True
+pop-e61c74b57bc8f60a2421,swp-5482cbe6078d7d5dfc7e,Ipsos,2013-05-13,2013-05-28,exact_span_match,1,0.0,{},True
+pop-e61e0072c95c3e265445,swp-9aaea17c5c4338d8621c,Sentio,2020-04-17,2020-04-21,exact_span_match,1,0.0,{},True
+pop-e6447b8f47db1ce930c8,swp-843155fcaf4b50e9625a,YouGov,2014-01-08,2014-02-04,exact_span_match,1,0.0,{},True
+pop-e649e51da458d5ba55eb,swp-24bac3e7ea17f71bf41d,Novus,2017-10-30,2017-11-26,exact_span_match,1,0.0,{},True
+pop-e6bfc3071d8c442dd433,swp-674b5ab960c4802da2aa,SCB,2016-04-28,2016-05-26,exact_span_match,1,0.0,{},True
+pop-e6db29010f20febb2426,swp-fc7f4963da9175e897da,YouGov,2016-12-16,2016-12-20,exact_span_match,1,0.0,{},True
+pop-e6e67aaf40e103cbac95,,Sentio,2012-10-01,2012-10-14,no_match,0,,{},False
+pop-e6ea4440ca537f075140,swp-f69f633ae7e11d6db807,Skop,2009-07-27,2009-08-11,exact_span_match,1,0.0,{},True
+pop-e727541004c2f46c17bc,swp-4774130d93687e3b2725,Sifo,2016-06-07,2016-06-16,exact_span_match,1,0.0,{},True
+pop-e74401f8891252ea632f,swp-672bf7083eab2976a69c,Novus,2012-11-26,2012-12-16,exact_span_match,1,0.0,{},True
+pop-e7977088b4946d4bdbc1,swp-46268662ec5078599a12,YouGov,2017-09-14,2017-09-18,exact_span_match_approximate_supplementary_period,1,0.0,{},True
+pop-e7ab8bf60b0ba85b41c2,swp-0aa8fe2b1b5458a5d3ed,YouGov,2017-12-15,2017-12-18,exact_span_match,1,0.0,{},True
+pop-e7fa0f4a25014bacd437,swp-803956048a51935a1a1b,Demoskop,2026-01-16,2026-01-26,exact_span_match,1,0.0,{},True
+pop-e881a86b57b5fd948740,,United Minds,2010-09-09,2010-09-09,no_match,0,,{},False
+pop-e8c273dd7d539f9e6b13,swp-68f7959a17562fa34135,Novus,2022-08-08,2022-08-14,exact_span_match,1,0.0,{},True
+pop-e8d904ad8bdfb9e3faf9,swp-b2ab608109d81004203c,Demoskop,2026-05-17,2026-05-24,exact_span_match,1,0.0,{},True
+pop-e92d976dce90fa0bfef9,swp-d49b47f0833076a28dfb,Skop,2012-03-27,2012-04-19,exact_span_match,1,0.0,{},True
+pop-e939680d81cc0292ecf4,swp-59e2ba2babc6fb77d90f,Sifo,2010-02-01,2010-02-11,exact_span_match,1,0.0,{},True
+pop-e9937875a2a9a71f3ff9,swp-60c79f3178461af35b74,YouGov,2014-09-08,2014-09-10,exact_span_match,1,0.0,{},True
+pop-e9a1d075b51186b4e128,swp-677678f0bfbb40fa6d12,Demoskop,2011-06-29,2011-07-06,exact_span_match,1,0.2,"{""SD"": 0.2}",True
+pop-ea0f4f872c3d7af58d0c,swp-3168ce5c179bfdb71e9c,Demoskop,2017-03-28,2017-04-06,exact_span_match,1,0.0,{},True
+pop-ea527a0d8c8e45bb02a1,swp-143d7749e82eca33b70a,Sentio,2016-06-02,2016-06-06,exact_span_match,1,0.0,{},True
+pop-ea6f05e69a1e4c31c8e6,swp-7f2f95db2682c669851d,Ipsos,2018-06-07,2018-06-18,exact_span_match,1,0.5,"{""C"": 0.1, ""FI"": 0.1, ""KD"": 0.3, ""L"": 0.2, ""M"": 0.1, ""MP"": 0.2, ""S"": 0.1, ""SD"": 0.5, ""V"": 0.5}",True
+pop-eaf2514d51e290812bc2,,United Minds,2009-10-06,2009-10-25,no_match,0,,{},False
+pop-eb095f8661b539df58f3,swp-d8e2f25ccfe3f0fb64b7,Novus,2010-10-05,2010-10-18,exact_span_match,1,0.0,{},True
+pop-eb10a17db45729af21e6,,Skop,2010-12-17,2011-01-12,no_match,0,,{},False
+pop-eb85d278c11aafea87d2,swp-c16f8ee7d7034f9f6d69,Inizio,2017-05-10,2017-05-17,exact_span_match,1,0.0,{},True
+pop-eb93c9cc7f08ec84aa05,swp-87a9e8f98d214e587bae,YouGov,2018-06-15,2018-06-18,exact_span_match,1,0.0,{},True
+pop-ebc753c4cbb8912fc152,swp-cb3a0931c99a2d341c9b,YouGov,2011-02-07,2011-03-07,exact_span_match,1,0.0,{},True
+pop-ec3f5dc77182c130d7b9,swp-4c2c5eb59b4b4a907eae,Demoskop,2018-01-30,2018-02-06,exact_span_match,1,0.0,{},True
+pop-ec4ed827f77aaf43cfec,swp-205aea53069d2cb17279,Demoskop,2021-03-30,2021-04-07,exact_span_match,1,0.0,{},True
+pop-ec5898775a58392289be,swp-e9803342f8c09e7901b2,Sifo,2025-10-27,2025-11-09,exact_span_match,1,0.0,{},True
+pop-ecbc7c26d4b2f93310cc,swp-379d84fbea4330ee3fe1,Sifo,2021-01-11,2021-01-21,exact_span_match,1,0.0,{},True
+pop-ecc14fcf261d2568a7b8,swp-8566e916aaa58bdf7daf,Ipsos,2023-06-05,2023-06-18,exact_span_match,1,0.0,{},True
+pop-eccdcd9be1852c658a2b,,Sifo,2022-08-22,2022-08-22,no_match,0,,{},False
+pop-ed2c8e22b6ccddace8ff,swp-3e7588e07f84ed0cef77,Inizio,2019-08-01,2019-08-08,exact_span_match,1,0.0,{},True
+pop-ed534e38e6c473c92e5b,,Skop,2022-09-03,2022-09-03,no_match,0,,{},False
+pop-ed8729e8b4b463eed5df,,Sifo,2019-03-03,2019-03-14,no_match,0,,{},False
+pop-edacd0227714ea02cde6,,Inizio,2016-12-05,2016-12-14,no_match,0,,{},False
+pop-edd6bbbce2fae2349eef,swp-3ef5abc81501fcde4b5e,Skop,2020-10-23,2020-10-26,exact_span_match,1,0.0,{},True
+pop-edda0d0de3e430a106fd,swp-e0dd097ae5f428e236c2,Sentio,2017-05-05,2017-05-08,exact_span_match,1,0.0,{},True
+pop-edfaa24f15f9a63e8927,swp-a268e16784eede189bcf,Novus,2012-08-27,2012-09-23,exact_span_match,1,0.0,{},True
+pop-ee2c7967a64b47c4a893,swp-f9866f40b8f6856a0c59,Sifo,2023-04-03,2023-04-13,exact_span_match,1,0.0,{},True
+pop-ee353cea73e49c583289,swp-359f1253cbaa42900f8f,YouGov,2012-06-06,2012-07-03,exact_span_match,1,0.0,{},True
+pop-ee67dfcccaf919745825,swp-b59960f4213aa18e84a0,Sifo,2017-01-09,2017-01-19,exact_span_match,1,0.0,{},True
+pop-eeef36c4799cc6afe7f6,swp-560f1989b64f78316e24,Demoskop,2023-02-24,2023-03-06,exact_span_match,1,0.0,{},True
+pop-ef1dbc742c6538c63bd1,swp-3d718541d40e041a0515,Ipsos,2024-06-04,2024-06-16,exact_span_match,1,0.0,{},True
+pop-ef3efc53d8a5fb3f511b,swp-63e76911b9a5e0e3c0c8,Sentio,2023-05-04,2023-05-10,exact_span_match,1,0.2,"{""MP"": 0.2}",True
+pop-ef87d87c1110251df11e,swp-a256fe45e9a9172e7d47,Novus,2016-01-25,2016-02-21,exact_span_match,1,0.0,{},True
+pop-efb090b9f84a76753676,swp-213bfddb2db376b007fa,Sentio,2019-03-22,2019-03-27,exact_span_match,1,0.0,{},True
+pop-f00a7a8460c7b4ae054a,swp-4b346a35f6f7555fc6eb,Demoskop,2012-05-30,2012-06-06,exact_span_match,1,0.0,{},True
+pop-f08cfdffa1656780d395,swp-41e1e90d732d5cc96a88,SCB,2013-05-02,2013-05-27,exact_span_match,1,0.0,{},True
+pop-f0a9dca97260c6f8e4c5,swp-3d968727c812b47dfd5c,United Minds,2014-08-03,2014-08-10,exact_span_match,1,0.0,{},True
+pop-f0b4551b211195f50b4e,swp-2b531da71608cdc3153f,Demoskop,2014-03-25,2014-04-03,exact_span_match,1,0.0,{},True
+pop-f0b632201a32b1363c03,swp-578a196355790cdce65c,Sifo,2021-02-01,2021-02-11,exact_span_match,1,0.3,"{""S"": 0.3}",True
+pop-f0f4557e0097db58363e,swp-ea738a00fd3685b3fdd5,Novus,2021-07-19,2021-07-26,exact_span_match,1,0.0,{},True
+pop-f110df95550ccc78c978,swp-80461b4a5c4d30a81b43,Ipsos,2009-11-11,2009-11-25,exact_span_match,1,0.0,{},True
+pop-f147f2ccacb1ce93713d,swp-1ddd3a378abe4378170d,Ipsos,2022-06-07,2022-06-19,exact_span_match,1,0.5,"{""C"": 0.3, ""KD"": 0.5, ""L"": 0.1, ""M"": 0.4, ""MP"": 0.1, ""S"": 0.3, ""SD"": 0.3, ""V"": 0.4}",True
+pop-f14edfc0534ada7396e5,,Ipsos,2018-08-17,2018-08-24,no_match,0,,{},False
+pop-f15bda72f7f5c1ef5e23,swp-cd77c9d9d6723cbe6a90,Novus,2016-09-26,2016-10-23,exact_span_match,1,0.0,{},True
+pop-f1800b29a0655ab12e90,swp-29df684fb7e73765def2,Sentio,2010-01-05,2010-01-27,exact_span_match,1,0.0,{},True
+pop-f191c072075f3af991c1,swp-983515e2f9e5e14456c5,Novus,2020-10-12,2020-11-08,exact_span_match,1,0.0,{},True
+pop-f1c2f9185b73f7e8b9f8,swp-3af8a2af43989ee2ec71,Demoskop,2009-03-25,2009-04-02,exact_span_match,1,0.0,{},True
+pop-f1f906ac4a3675b0a6c5,swp-c6be02471658b4b331ee,Inizio,2018-07-25,2018-08-02,exact_span_match,1,0.0,{},True
+pop-f238e02871a7c07e627f,,Sifo,2022-08-19,2022-08-19,no_match,0,,{},False
+pop-f2a6e266e5c03993a40c,swp-5b6a255038f3498b5221,Demoskop,2020-01-25,2020-02-05,exact_span_match,1,0.0,{},True
+pop-f2b2405fd77a192ee4cd,swp-05210e0f66f44a316e92,Demoskop,2023-03-24,2023-04-03,exact_span_match,1,0.0,{},True
+pop-f2dafb1066da7b2b4fbf,,Demoskop,2018-06-07,2018-07-03,no_match,0,,{},False
+pop-f35c5a8d885a381e7cdf,swp-a5f413b5728db0f09c9f,SCB,2015-04-27,2015-05-27,exact_span_match,1,0.0,{},True
+pop-f3b607e95ff1fe047ed1,swp-31bbf9a2f1b3795b725a,Demoskop,2015-10-27,2015-11-04,exact_span_match,1,0.02,"{""KD"": 0.02}",True
+pop-f3c937e00f9b906a8481,swp-e1658033cd1747c149cd,Ipsos,2023-12-05,2023-12-17,exact_span_match,1,0.0,{},True
+pop-f3cfe9d0fc564e6d543d,swp-9d782499e3b63795d359,YouGov,2017-11-17,2017-11-20,exact_span_match,1,0.1,"{""FI"": 0.1}",True
+pop-f3ec5ad38574a57ffca9,,Sentio,2018-08-14,2018-08-14,no_match,0,,{},False
+pop-f3f17272327e47f9dd2c,,Sifo,2018-09-04,2018-09-04,no_match,0,,{},False
+pop-f4264a90f1c3008b8e2d,swp-6ef483a7f8716c7bcfc3,Novus,2018-08-22,2018-08-28,exact_span_match,1,0.0,{},True
+pop-f4608f1e14a1aee19109,swp-69f40147ed30fa42b59e,Demoskop,2012-01-25,2012-02-02,exact_span_match,1,0.0,{},True
+pop-f4ada34ff59dee8aac70,swp-cddb4dcb7499e2e706c8,Sifo,2020-05-04,2020-05-14,exact_span_match,1,0.0,{},True
+pop-f506f207b82e2c3a8cac,swp-34c345c5075fefd8cd1b,Demoskop,2022-03-29,2022-04-05,exact_span_match,1,0.0,{},True
+pop-f511a8f329b821c9a26f,swp-fd67b4eca7fc27b8c588,Sentio,2018-06-01,2018-06-05,exact_span_match,1,0.0,{},True
+pop-f512c2b24c741462c4bd,swp-61f64aa4245b31440b76,Ipsos,2010-10-11,2010-10-27,exact_span_match,1,0.0,{},True
+pop-f58e9afd1fa13e06fefd,,YouGov,2016-06-17,2016-06-21,no_match,0,,{},False
+pop-f5a4ded8adc9eee5cd76,,Novus,2022-08-25,2022-08-25,no_match,0,,{},False
+pop-f5c114032aad4dd23a4a,swp-d331385d28fcf1c95f6e,Skop,2011-03-10,2011-04-05,exact_span_match,1,0.0,{},True
+pop-f6156c00d7ee8c778ede,swp-622cf02500aa6c823e8b,United Minds,2012-05-07,2012-06-03,exact_span_match,1,0.0,{},True
+pop-f62a612c73ff34737061,swp-ea75d3e31b45e15eaecf,Sentio,2021-10-21,2021-10-25,exact_span_match,1,1.0,"{""S"": 1.0}",True
+pop-f6693fe67dc77a53a293,,Novus,2022-08-24,2022-08-24,no_match,0,,{},False
+pop-f6707037adba0d2ce19c,swp-387392e7b2e56eb0fbb4,Sifo,2010-05-31,2010-06-10,exact_span_match,1,0.0,{},True
+pop-f676a9585d55eb68a467,swp-2f60709bc29315ab01d7,YouGov,2012-01-02,2012-02-01,exact_span_match,1,0.0,{},True
+pop-f6905bea9439ee7605c6,swp-afaef077f706fcba9ec2,Ipsos,2019-08-13,2019-08-25,exact_span_match,1,1.4,"{""C"": 1.4, ""KD"": 1.0, ""L"": 0.4, ""M"": 0.3, ""MP"": 0.9, ""S"": 0.6, ""V"": 0.4}",True
+pop-f6915e3226b520501dc3,swp-80d99a1ac0c6a4949d87,Novus,2017-01-02,2017-01-22,exact_span_match,1,0.0,{},True
+pop-f694230826c8c941d668,swp-49b55a804e896fd63ac6,Sifo,2014-05-05,2014-05-15,exact_span_match,1,0.0,{},True
+pop-f6b80e85d88709932912,swp-78a85a580f2b3a8cc48d,Sifo,2014-03-31,2014-04-10,exact_span_match,1,0.0,{},True
+pop-f6c25061029182af9bf0,swp-13ad1a395d107198cd99,Sifo,2017-05-02,2017-05-11,exact_span_match,1,0.0,{},True
+pop-f6ce95360f2ea6706abb,swp-3730c66e7ceb2a5e14eb,Sifo,2015-12-07,2015-12-17,exact_span_match,1,0.0,{},True
+pop-f7279564d3ecea454f5f,swp-0a93c1ecc5cf2f7cd496,Sentio,2018-01-12,2018-01-16,exact_span_match,1,0.2,"{""L"": 0.2}",True
+pop-f7805b0ff3205f205ec1,,Sifo,2020-11-30,2020-12-10,no_match,0,,{},False
+pop-f78438e96e73ed6871eb,swp-50373ae3e12caadb7706,Skop,2017-10-10,2017-10-31,exact_span_match,1,0.0,{},True
+pop-f79887fbbe69642c3025,swp-6e3f5a39e4cebb173e21,Sentio,2024-09-05,2024-09-09,exact_span_match,1,0.0,{},True
+pop-f79a61fcd8d88f0caa0c,swp-c66c82a2e72b648dc6ed,Demoskop,2011-01-26,2011-02-02,exact_span_match,1,0.0,{},True
+pop-f7a216326762e61c808c,swp-a829cc4256da6db9ce83,Ipsos,2016-04-14,2016-04-25,exact_span_match,1,0.0,{},True
+pop-f7ac0f7658cabb9a8ccc,swp-80664661c460ff391f41,Novus,2014-09-15,2014-10-12,exact_span_match,1,0.0,{},True
+pop-f7b19250ec2cef65838d,swp-27653fa686d8cdaab364,Novus,2013-03-25,2013-04-21,exact_span_match,1,0.0,{},True
+pop-f7c0bab7ad5515f379ba,swp-6fc0d2b171696d61f71e,Sentio,2021-03-26,2021-03-29,exact_span_match_approximate_supplementary_period,1,0.1,"{""L"": 0.1}",True
+pop-f7cc498c5d248d8f55bf,swp-edb728570772d6d7d631,Sentio,2009-01-06,2009-01-18,exact_span_match,1,0.0,{},True
+pop-f7db433b28c5547d03fd,swp-e20f6dcc9d4ccc496034,United Minds,2011-11-07,2011-12-04,exact_span_match,1,0.0,{},True
+pop-f80e57a24393f922b0a3,swp-53510bffa07e9017285a,Demoskop,2011-10-26,2011-11-02,exact_span_match,1,0.0,{},True
+pop-f81018cfeb5b903e1e2b,swp-b4ac1afbf6381002982d,YouGov,2012-11-07,2012-12-04,exact_span_match,1,0.0,{},True
+pop-f8124a8cfd3fd4b73f15,swp-fd0679117e7cb67ca4cb,Novus,2015-08-03,2015-08-23,exact_span_match,1,0.0,{},True
+pop-f84a02e9aba108da463a,swp-9383c3d82abd369d4e99,Sifo,2011-09-05,2011-09-15,exact_span_match,1,0.0,{},True
+pop-f88d0a34ae54adce1e0d,swp-d79a54ed6d16ceffad41,Ipsos,2026-08-11,2026-08-23,exact_span_match,1,0.0,{},True
+pop-f8c3aedbaecca0a7535f,swp-ddef5f1f8791189bd02c,Inizio,2019-01-16,2019-01-23,exact_span_match,1,1.0,"{""MP"": 1.0}",True
+pop-f8fb2a6d82138e1686cd,swp-b2a19e491752d56597fe,Novus,2019-04-08,2019-05-05,exact_span_match,1,0.0,{},True
+pop-f901bb926cd1dd450ae9,swp-3bdc39bac4782c52f8da,Inizio,2018-04-03,2018-04-09,exact_span_match,1,0.0,{},True
+pop-f9093982084abce7b6b0,,Skop,2022-08-31,2022-08-31,no_match,0,,{},False
+pop-f91b8635e7012920b680,swp-34f97888c51d8c00af1f,Demoskop,2018-05-29,2018-06-06,exact_span_match,1,0.5,"{""C"": 0.5}",True
+pop-f99d0879f570ded52811,swp-b95e4005231cf4fbf732,United Minds,2009-10-26,2009-11-23,exact_span_match,1,0.0,{},True
+pop-f9b4f8b357cfa47df713,swp-356fe9275f1c6c753fa2,Novus,2018-09-04,2018-09-06,exact_span_match,1,0.0,{},True
+pop-f9b83779de2e1c2f5886,swp-24bb0011ce749842fa0c,Ipsos,2015-02-12,2015-02-23,exact_span_match,1,0.0,{},True
+pop-fa2cc0a009f52159332a,swp-6fb7c636cd140eb27374,Demoskop,2016-11-29,2016-12-06,exact_span_match,1,0.0,{},True
+pop-fa35c9b2b651961608cd,swp-1af01335a87b5a366f9c,Sifo,2023-02-06,2023-02-16,exact_span_match,1,0.0,{},True
+pop-fa5620d197d90b7636cb,swp-89e52cef1acfdd11bf7a,Ipsos,2021-12-07,2021-12-20,exact_span_match,1,0.0,{},True
+pop-fa7a094dd4b5d7188f51,swp-f1ced44d6e81e427787c,Demoskop,2013-09-24,2013-10-02,exact_span_match,1,0.0,{},True
+pop-fa9447064ff853b59dc5,swp-bc64d1291711b3254986,Novus,2013-01-28,2013-02-24,exact_span_match,1,0.0,{},True
+pop-fa9e52d29422a82bb19c,swp-c155a306b59c3fdb1d52,Ipsos,2024-12-02,2024-12-16,exact_span_match,1,0.0,{},True
+pop-fb0e19cc990ab33117e1,swp-de42a3e7dd126991d620,Sifo,2015-06-01,2015-06-11,exact_span_match,1,0.0,{},True
+pop-fb40b6d14b8b4213d74c,swp-118dc5f2f7165721b1bb,Ipsos,2019-12-03,2019-12-15,exact_span_match,1,0.0,{},True
+pop-fbbf72b0ac5c9cc86624,,United Minds,2014-08-18,2014-08-24,no_match,0,,{},False
+pop-fbd6a233f3dfd799c6f9,swp-595af22ac2ef6fbbf0ee,Sifo,2023-11-27,2023-12-10,exact_span_match,1,0.0,{},True
+pop-fc3659080dd89504bd9b,swp-ea69d328eb4cb95e85d3,Demoskop,2022-06-22,2022-06-30,exact_span_match,1,0.0,{},True
+pop-fc5df8c0c832f28dec73,swp-164ee8859d5acce8825d,SCB,2009-10-28,2009-11-25,exact_span_match,1,0.0,{},True
+pop-fcaa62ce48a3a5778b89,swp-9afa0d0cd4b0d89b9969,Sifo,2009-01-12,2009-01-22,exact_span_match,1,0.0,{},True
+pop-fce40a8c79db11979bb8,swp-e8114d4d97927a74f957,Ipsos,2009-08-17,2009-08-26,exact_span_match,1,0.0,{},True
+pop-fcea043c0b6c786215a9,swp-9de3563955d9d743928e,Novus,2014-05-26,2014-06-22,exact_span_match,1,0.0,{},True
+pop-fcf178293764cc6b032f,swp-d70e557197cbcb51fa6f,Inizio,2018-05-01,2018-05-07,exact_span_match,1,0.0,{},True
+pop-fd05dbfc208fb50bdaca,swp-56bb45bf742dd228c219,Ipsos,2016-08-14,2016-08-22,exact_span_match,1,0.0,{},True
+pop-fd0e1d8e57c46dd42eb6,swp-79355d9d4bbb0c9b2a3f,Demoskop,2024-08-24,2024-09-09,exact_span_match,1,0.0,{},True
+pop-fd2d314800475bd048b5,swp-43dcf3c6e36495e24a19,Skop,2013-02-19,2013-03-06,exact_span_match,1,0.0,{},True
+pop-fd5bcb77a046ea98a91d,swp-c8fa7d48dc33c640317a,Demoskop,2020-10-01,2020-10-07,exact_span_match,1,0.0,{},True
+pop-fdcb20df52b737530592,swp-fc485b98881952b33a18,YouGov,2017-02-17,2017-02-20,exact_span_match,1,0.0,{},True
+pop-fe1abc4df401dd9a8580,swp-6ab7229523d71670b15c,Novus,2017-05-08,2017-06-04,exact_span_match,1,0.0,{},True
+pop-fe29c703daf2b80247d9,,United Minds,2009-08-13,2009-09-06,no_match,0,,{},False
+pop-fe8e4b4fd08c760953f9,swp-ceb69c3e649b288efa3f,Novus,2026-04-06,2026-04-19,exact_span_match,1,0.0,{},True
+pop-ff00946a9ae7b589ba11,,Skop,2022-08-19,2022-08-19,no_match,0,,{},False
+pop-ff10e9f0454b58de5f25,swp-f5f3fc1e16872ba652fa,Skop,2014-11-04,2014-11-24,exact_span_match,1,0.0,{},True
+pop-ff5036a3dd8c8c0390ea,swp-a71eab3dddb1fca409dd,Novus,2019-05-06,2019-06-02,exact_span_match,1,0.0,{},True
+pop-ffbc0fca8b8dd2241ffc,swp-31024c08819a651722e1,Demoskop,2016-01-05,2016-01-12,exact_span_match,1,0.0,{},True

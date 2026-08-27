@@ -1,0 +1,524 @@
+{
+  "01": {
+    "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rvalkrets/01/index.html",
+    "party_votes": {
+      "M": 160166,
+      "C": 28201,
+      "FP": 45365,
+      "KD": 24691,
+      "S": 124792,
+      "V": 44656,
+      "MP": 64392,
+      "SD": 38356,
+      "FI": 41488,
+      "&Ouml;VR": 5458
+    },
+    "eligible_voters": 677144,
+    "valid_votes": 577565,
+    "total_votes_cast": 581065
+  },
+  "02": {
+    "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rvalkrets/02/index.html",
+    "party_votes": {
+      "M": 249616,
+      "C": 38898,
+      "FP": 53766,
+      "KD": 40492,
+      "S": 183738,
+      "V": 35722,
+      "MP": 59586,
+      "SD": 74136,
+      "FI": 20573,
+      "&Ouml;VR": 7668
+    },
+    "eligible_voters": 900574,
+    "valid_votes": 764195,
+    "total_votes_cast": 770186
+  },
+  "03": {
+    "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rvalkrets/03/index.html",
+    "party_votes": {
+      "M": 52071,
+      "C": 15827,
+      "FP": 14141,
+      "KD": 10776,
+      "S": 65926,
+      "V": 14363,
+      "MP": 19080,
+      "SD": 24091,
+      "FI": 9317,
+      "&Ouml;VR": 2759
+    },
+    "eligible_voters": 263680,
+    "valid_votes": 228351,
+    "total_votes_cast": 230440
+  },
+  "04": {
+    "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rvalkrets/04/index.html",
+    "party_votes": {
+      "M": 39991,
+      "C": 9774,
+      "FP": 7776,
+      "KD": 6888,
+      "S": 61834,
+      "V": 9084,
+      "MP": 11165,
+      "SD": 26887,
+      "FI": 3789,
+      "&Ouml;VR": 1444
+    },
+    "eligible_voters": 210085,
+    "valid_votes": 178632,
+    "total_votes_cast": 180605
+  },
+  "05": {
+    "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rvalkrets/05/index.html",
+    "party_votes": {
+      "M": 64877,
+      "C": 17443,
+      "FP": 14860,
+      "KD": 14752,
+      "S": 94909,
+      "V": 14011,
+      "MP": 19218,
+      "SD": 41953,
+      "FI": 6545,
+      "&Ouml;VR": 2916
+    },
+    "eligible_voters": 338664,
+    "valid_votes": 291484,
+    "total_votes_cast": 294583
+  },
+  "06": {
+    "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rvalkrets/06/index.html",
+    "party_votes": {
+      "M": 45594,
+      "C": 17800,
+      "FP": 8090,
+      "KD": 23322,
+      "S": 71487,
+      "V": 8685,
+      "MP": 12095,
+      "SD": 32815,
+      "FI": 3154,
+      "&Ouml;VR": 1554
+    },
+    "eligible_voters": 260633,
+    "valid_votes": 224596,
+    "total_votes_cast": 226805
+  },
+  "07": {
+    "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rvalkrets/07/index.html",
+    "party_votes": {
+      "M": 26453,
+      "C": 10988,
+      "FP": 4109,
+      "KD": 5983,
+      "S": 39179,
+      "V": 5459,
+      "MP": 6559,
+      "SD": 18820,
+      "FI": 2227,
+      "&Ouml;VR": 998
+    },
+    "eligible_voters": 140723,
+    "valid_votes": 120775,
+    "total_votes_cast": 121978
+  },
+  "08": {
+    "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rvalkrets/08/index.html",
+    "party_votes": {
+      "M": 32313,
+      "C": 13867,
+      "FP": 5611,
+      "KD": 7448,
+      "S": 56370,
+      "V": 7235,
+      "MP": 7435,
+      "SD": 24260,
+      "FI": 2954,
+      "&Ouml;VR": 1329
+    },
+    "eligible_voters": 185052,
+    "valid_votes": 158822,
+    "total_votes_cast": 160466
+  },
+  "09": {
+    "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rvalkrets/09/index.html",
+    "party_votes": {
+      "M": 8450,
+      "C": 5317,
+      "FP": 1494,
+      "KD": 1095,
+      "S": 12774,
+      "V": 2308,
+      "MP": 2859,
+      "SD": 3259,
+      "FI": 1764,
+      "&Ouml;VR": 335
+    },
+    "eligible_voters": 46466,
+    "valid_votes": 39655,
+    "total_votes_cast": 40175
+  },
+  "10": {
+    "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rvalkrets/10/index.html",
+    "party_votes": {
+      "M": 19824,
+      "C": 5792,
+      "FP": 3984,
+      "KD": 3483,
+      "S": 37981,
+      "V": 4746,
+      "MP": 4969,
+      "SD": 18960,
+      "FI": 1701,
+      "&Ouml;VR": 785
+    },
+    "eligible_voters": 118864,
+    "valid_votes": 102225,
+    "total_votes_cast": 103220
+  },
+  "11": {
+    "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rvalkrets/11/index.html",
+    "party_votes": {
+      "M": 41510,
+      "C": 4850,
+      "FP": 10000,
+      "KD": 4620,
+      "S": 52460,
+      "V": 13598,
+      "MP": 15367,
+      "SD": 24171,
+      "FI": 9999,
+      "&Ouml;VR": 2528
+    },
+    "eligible_voters": 226651,
+    "valid_votes": 179103,
+    "total_votes_cast": 180707
+  },
+  "12": {
+    "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rvalkrets/12/index.html",
+    "party_votes": {
+      "M": 44558,
+      "C": 8380,
+      "FP": 9470,
+      "KD": 5860,
+      "S": 55185,
+      "V": 6962,
+      "MP": 11032,
+      "SD": 35180,
+      "FI": 3537,
+      "&Ouml;VR": 1845
+    },
+    "eligible_voters": 220254,
+    "valid_votes": 182009,
+    "total_votes_cast": 183928
+  },
+  "13": {
+    "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rvalkrets/13/index.html",
+    "party_votes": {
+      "M": 67671,
+      "C": 12795,
+      "FP": 16819,
+      "KD": 8379,
+      "S": 59020,
+      "V": 8578,
+      "MP": 17391,
+      "SD": 39734,
+      "FI": 7049,
+      "&Ouml;VR": 2409
+    },
+    "eligible_voters": 275515,
+    "valid_votes": 239845,
+    "total_votes_cast": 242088
+  },
+  "14": {
+    "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rvalkrets/14/index.html",
+    "party_votes": {
+      "M": 43518,
+      "C": 11815,
+      "FP": 8887,
+      "KD": 8131,
+      "S": 58940,
+      "V": 6083,
+      "MP": 10809,
+      "SD": 43582,
+      "FI": 3328,
+      "&Ouml;VR": 1607
+    },
+    "eligible_voters": 235147,
+    "valid_votes": 196700,
+    "total_votes_cast": 198964
+  },
+  "15": {
+    "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rvalkrets/15/index.html",
+    "party_votes": {
+      "M": 57261,
+      "C": 17367,
+      "FP": 11807,
+      "KD": 8988,
+      "S": 58562,
+      "V": 7785,
+      "MP": 12184,
+      "SD": 26555,
+      "FI": 3766,
+      "&Ouml;VR": 2284
+    },
+    "eligible_voters": 238402,
+    "valid_votes": 206559,
+    "total_votes_cast": 208658
+  },
+  "16": {
+    "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rvalkrets/16/index.html",
+    "party_votes": {
+      "M": 79768,
+      "C": 12696,
+      "FP": 24136,
+      "KD": 15389,
+      "S": 79167,
+      "V": 31272,
+      "MP": 32868,
+      "SD": 32240,
+      "FI": 21661,
+      "&Ouml;VR": 5097
+    },
+    "eligible_voters": 406851,
+    "valid_votes": 334294,
+    "total_votes_cast": 336956
+  },
+  "17": {
+    "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rvalkrets/17/index.html",
+    "party_votes": {
+      "M": 60129,
+      "C": 14091,
+      "FP": 16134,
+      "KD": 13486,
+      "S": 63552,
+      "V": 12132,
+      "MP": 15971,
+      "SD": 31401,
+      "FI": 5978,
+      "&Ouml;VR": 2071
+    },
+    "eligible_voters": 272370,
+    "valid_votes": 234945,
+    "total_votes_cast": 237444
+  },
+  "18": {
+    "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rvalkrets/18/index.html",
+    "party_votes": {
+      "M": 35979,
+      "C": 12335,
+      "FP": 9472,
+      "KD": 9099,
+      "S": 58289,
+      "V": 9895,
+      "MP": 11219,
+      "SD": 27027,
+      "FI": 4205,
+      "&Ouml;VR": 1533
+    },
+    "eligible_voters": 209467,
+    "valid_votes": 179053,
+    "total_votes_cast": 180959
+  },
+  "19": {
+    "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rvalkrets/19/index.html",
+    "party_votes": {
+      "M": 27795,
+      "C": 9423,
+      "FP": 6145,
+      "KD": 6376,
+      "S": 38791,
+      "V": 6520,
+      "MP": 7534,
+      "SD": 18773,
+      "FI": 2484,
+      "&Ouml;VR": 1051
+    },
+    "eligible_voters": 147255,
+    "valid_votes": 124892,
+    "total_votes_cast": 126238
+  },
+  "20": {
+    "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rvalkrets/20/index.html",
+    "party_votes": {
+      "M": 36579,
+      "C": 14295,
+      "FP": 7392,
+      "KD": 8919,
+      "S": 60424,
+      "V": 7858,
+      "MP": 8707,
+      "SD": 25765,
+      "FI": 3035,
+      "&Ouml;VR": 1471
+    },
+    "eligible_voters": 202294,
+    "valid_votes": 174445,
+    "total_votes_cast": 176332
+  },
+  "21": {
+    "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rvalkrets/21/index.html",
+    "party_votes": {
+      "M": 35687,
+      "C": 13521,
+      "FP": 7531,
+      "KD": 7263,
+      "S": 71173,
+      "V": 9517,
+      "MP": 9398,
+      "SD": 22978,
+      "FI": 3697,
+      "&Ouml;VR": 1312
+    },
+    "eligible_voters": 213761,
+    "valid_votes": 182077,
+    "total_votes_cast": 183887
+  },
+  "22": {
+    "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rvalkrets/22/index.html",
+    "party_votes": {
+      "M": 35070,
+      "C": 10546,
+      "FP": 8053,
+      "KD": 9771,
+      "S": 69604,
+      "V": 10183,
+      "MP": 12013,
+      "SD": 27126,
+      "FI": 4567,
+      "&Ouml;VR": 1771
+    },
+    "eligible_voters": 219922,
+    "valid_votes": 188704,
+    "total_votes_cast": 190645
+  },
+  "23": {
+    "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rvalkrets/23/index.html",
+    "party_votes": {
+      "M": 35697,
+      "C": 8719,
+      "FP": 8756,
+      "KD": 6496,
+      "S": 59936,
+      "V": 9051,
+      "MP": 8549,
+      "SD": 24728,
+      "FI": 3398,
+      "&Ouml;VR": 1609
+    },
+    "eligible_voters": 198080,
+    "valid_votes": 166939,
+    "total_votes_cast": 168704
+  },
+  "24": {
+    "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rvalkrets/24/index.html",
+    "party_votes": {
+      "M": 35087,
+      "C": 14371,
+      "FP": 6350,
+      "KD": 6427,
+      "S": 65543,
+      "V": 10672,
+      "MP": 9352,
+      "SD": 31043,
+      "FI": 4176,
+      "&Ouml;VR": 1890
+    },
+    "eligible_voters": 217293,
+    "valid_votes": 184911,
+    "total_votes_cast": 187256
+  },
+  "25": {
+    "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rvalkrets/25/index.html",
+    "party_votes": {
+      "M": 31911,
+      "C": 12244,
+      "FP": 6840,
+      "KD": 5931,
+      "S": 70150,
+      "V": 12054,
+      "MP": 9238,
+      "SD": 29329,
+      "FI": 4053,
+      "&Ouml;VR": 1765
+    },
+    "eligible_voters": 216949,
+    "valid_votes": 183515,
+    "total_votes_cast": 185273
+  },
+  "26": {
+    "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rvalkrets/26/index.html",
+    "party_votes": {
+      "M": 25833,
+      "C": 10922,
+      "FP": 5440,
+      "KD": 6097,
+      "S": 74977,
+      "V": 9211,
+      "MP": 7073,
+      "SD": 17569,
+      "FI": 3575,
+      "&Ouml;VR": 1415
+    },
+    "eligible_voters": 189842,
+    "valid_votes": 162112,
+    "total_votes_cast": 163454
+  },
+  "27": {
+    "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rvalkrets/27/index.html",
+    "party_votes": {
+      "M": 14513,
+      "C": 9487,
+      "FP": 2370,
+      "KD": 2119,
+      "S": 33303,
+      "V": 5252,
+      "MP": 4760,
+      "SD": 9224,
+      "FI": 2035,
+      "&Ouml;VR": 651
+    },
+    "eligible_voters": 99192,
+    "valid_votes": 83714,
+    "total_votes_cast": 84626
+  },
+  "28": {
+    "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rvalkrets/28/index.html",
+    "party_votes": {
+      "M": 24158,
+      "C": 11660,
+      "FP": 7606,
+      "KD": 7477,
+      "S": 73661,
+      "V": 19214,
+      "MP": 10341,
+      "SD": 12979,
+      "FI": 6720,
+      "&Ouml;VR": 1463
+    },
+    "eligible_voters": 203654,
+    "valid_votes": 175279,
+    "total_votes_cast": 176928
+  },
+  "29": {
+    "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rvalkrets/29/index.html",
+    "party_votes": {
+      "M": 21438,
+      "C": 7513,
+      "FP": 5369,
+      "KD": 5048,
+      "S": 80984,
+      "V": 14225,
+      "MP": 8111,
+      "SD": 18237,
+      "FI": 3944,
+      "&Ouml;VR": 1308
+    },
+    "eligible_voters": 195648,
+    "valid_votes": 166177,
+    "total_votes_cast": 167446
+  }
+}

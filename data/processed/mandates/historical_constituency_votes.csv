@@ -1,0 +1,523 @@
+election_year,constituency_code,constituency_name,party,party_source_name,votes,constituency_valid_votes
+2018,01,Stockholms kommun,C,Centerpartiet,55428,611206
+2018,01,Stockholms kommun,KD,Kristdemokraterna,29776,611206
+2018,01,Stockholms kommun,L,Liberalerna (tidigare Folkpartiet),47988,611206
+2018,01,Stockholms kommun,M,Moderaterna,133731,611206
+2018,01,Stockholms kommun,MP,Miljöpartiet de gröna,47044,611206
+2018,01,Stockholms kommun,OTHER,Övriga anmälda partier,11642,611206
+2018,01,Stockholms kommun,S,Arbetarepartiet-Socialdemokraterna,145245,611206
+2018,01,Stockholms kommun,SD,Sverigedemokraterna,60135,611206
+2018,01,Stockholms kommun,V,Vänsterpartiet,80217,611206
+2018,02,Stockholms län,C,Centerpartiet,69786,815031
+2018,02,Stockholms län,KD,Kristdemokraterna,56884,815031
+2018,02,Stockholms län,L,Liberalerna (tidigare Folkpartiet),56525,815031
+2018,02,Stockholms län,M,Moderaterna,212009,815031
+2018,02,Stockholms län,MP,Miljöpartiet de gröna,39042,815031
+2018,02,Stockholms län,OTHER,Övriga anmälda partier,12169,815031
+2018,02,Stockholms län,S,Arbetarepartiet-Socialdemokraterna,187924,815031
+2018,02,Stockholms län,SD,Sverigedemokraterna,124226,815031
+2018,02,Stockholms län,V,Vänsterpartiet,56466,815031
+2018,03,Uppsala län,C,Centerpartiet,22246,241489
+2018,03,Uppsala län,KD,Kristdemokraterna,16661,241489
+2018,03,Uppsala län,L,Liberalerna (tidigare Folkpartiet),15071,241489
+2018,03,Uppsala län,M,Moderaterna,45790,241489
+2018,03,Uppsala län,MP,Miljöpartiet de gröna,13404,241489
+2018,03,Uppsala län,OTHER,Övriga anmälda partier,4750,241489
+2018,03,Uppsala län,S,Arbetarepartiet-Socialdemokraterna,65168,241489
+2018,03,Uppsala län,SD,Sverigedemokraterna,37297,241489
+2018,03,Uppsala län,V,Vänsterpartiet,21102,241489
+2018,04,Södermanlands län,C,Centerpartiet,13577,183449
+2018,04,Södermanlands län,KD,Kristdemokraterna,10089,183449
+2018,04,Södermanlands län,L,Liberalerna (tidigare Folkpartiet),7958,183449
+2018,04,Södermanlands län,M,Moderaterna,37401,183449
+2018,04,Södermanlands län,MP,Miljöpartiet de gröna,6773,183449
+2018,04,Södermanlands län,OTHER,Övriga anmälda partier,2427,183449
+2018,04,Södermanlands län,S,Arbetarepartiet-Socialdemokraterna,57612,183449
+2018,04,Södermanlands län,SD,Sverigedemokraterna,35450,183449
+2018,04,Södermanlands län,V,Vänsterpartiet,12162,183449
+2018,05,Östergötlands län,C,Centerpartiet,25162,300778
+2018,05,Östergötlands län,KD,Kristdemokraterna,20065,300778
+2018,05,Östergötlands län,L,Liberalerna (tidigare Folkpartiet),16082,300778
+2018,05,Östergötlands län,M,Moderaterna,61354,300778
+2018,05,Östergötlands län,MP,Miljöpartiet de gröna,12595,300778
+2018,05,Östergötlands län,OTHER,Övriga anmälda partier,4701,300778
+2018,05,Östergötlands län,S,Arbetarepartiet-Socialdemokraterna,87450,300778
+2018,05,Östergötlands län,SD,Sverigedemokraterna,53017,300778
+2018,05,Östergötlands län,V,Vänsterpartiet,20352,300778
+2018,06,Jönköpings län,C,Centerpartiet,23084,229580
+2018,06,Jönköpings län,KD,Kristdemokraterna,27437,229580
+2018,06,Jönköpings län,L,Liberalerna (tidigare Folkpartiet),9096,229580
+2018,06,Jönköpings län,M,Moderaterna,40542,229580
+2018,06,Jönköpings län,MP,Miljöpartiet de gröna,7401,229580
+2018,06,Jönköpings län,OTHER,Övriga anmälda partier,2739,229580
+2018,06,Jönköpings län,S,Arbetarepartiet-Socialdemokraterna,63782,229580
+2018,06,Jönköpings län,SD,Sverigedemokraterna,44216,229580
+2018,06,Jönköpings län,V,Vänsterpartiet,11283,229580
+2018,07,Kronobergs län,C,Centerpartiet,11712,124570
+2018,07,Kronobergs län,KD,Kristdemokraterna,9418,124570
+2018,07,Kronobergs län,L,Liberalerna (tidigare Folkpartiet),4383,124570
+2018,07,Kronobergs län,M,Moderaterna,23893,124570
+2018,07,Kronobergs län,MP,Miljöpartiet de gröna,4020,124570
+2018,07,Kronobergs län,OTHER,Övriga anmälda partier,1538,124570
+2018,07,Kronobergs län,S,Arbetarepartiet-Socialdemokraterna,36817,124570
+2018,07,Kronobergs län,SD,Sverigedemokraterna,25258,124570
+2018,07,Kronobergs län,V,Vänsterpartiet,7531,124570
+2018,08,Kalmar län,C,Centerpartiet,15774,160864
+2018,08,Kalmar län,KD,Kristdemokraterna,11583,160864
+2018,08,Kalmar län,L,Liberalerna (tidigare Folkpartiet),6038,160864
+2018,08,Kalmar län,M,Moderaterna,27733,160864
+2018,08,Kalmar län,MP,Miljöpartiet de gröna,4645,160864
+2018,08,Kalmar län,OTHER,Övriga anmälda partier,1987,160864
+2018,08,Kalmar län,S,Arbetarepartiet-Socialdemokraterna,50178,160864
+2018,08,Kalmar län,SD,Sverigedemokraterna,33075,160864
+2018,08,Kalmar län,V,Vänsterpartiet,9851,160864
+2018,09,Gotlands län,C,Centerpartiet,7075,41129
+2018,09,Gotlands län,KD,Kristdemokraterna,1699,41129
+2018,09,Gotlands län,L,Liberalerna (tidigare Folkpartiet),1539,41129
+2018,09,Gotlands län,M,Moderaterna,6822,41129
+2018,09,Gotlands län,MP,Miljöpartiet de gröna,2037,41129
+2018,09,Gotlands län,OTHER,Övriga anmälda partier,773,41129
+2018,09,Gotlands län,S,Arbetarepartiet-Socialdemokraterna,12254,41129
+2018,09,Gotlands län,SD,Sverigedemokraterna,5226,41129
+2018,09,Gotlands län,V,Vänsterpartiet,3704,41129
+2018,10,Blekinge län,C,Centerpartiet,7094,104514
+2018,10,Blekinge län,KD,Kristdemokraterna,5954,104514
+2018,10,Blekinge län,L,Liberalerna (tidigare Folkpartiet),4197,104514
+2018,10,Blekinge län,M,Moderaterna,18038,104514
+2018,10,Blekinge län,MP,Miljöpartiet de gröna,3025,104514
+2018,10,Blekinge län,OTHER,Övriga anmälda partier,1341,104514
+2018,10,Blekinge län,S,Arbetarepartiet-Socialdemokraterna,32824,104514
+2018,10,Blekinge län,SD,Sverigedemokraterna,26342,104514
+2018,10,Blekinge län,V,Vänsterpartiet,5699,104514
+2018,11,Malmö kommun,C,Centerpartiet,11003,193298
+2018,11,Malmö kommun,KD,Kristdemokraterna,7426,193298
+2018,11,Malmö kommun,L,Liberalerna (tidigare Folkpartiet),10812,193298
+2018,11,Malmö kommun,M,Moderaterna,37645,193298
+2018,11,Malmö kommun,MP,Miljöpartiet de gröna,10783,193298
+2018,11,Malmö kommun,OTHER,Övriga anmälda partier,3880,193298
+2018,11,Malmö kommun,S,Arbetarepartiet-Socialdemokraterna,56248,193298
+2018,11,Malmö kommun,SD,Sverigedemokraterna,32480,193298
+2018,11,Malmö kommun,V,Vänsterpartiet,23021,193298
+2018,12,Skåne läns västra,C,Centerpartiet,12298,191506
+2018,12,Skåne läns västra,KD,Kristdemokraterna,10257,191506
+2018,12,Skåne läns västra,L,Liberalerna (tidigare Folkpartiet),9930,191506
+2018,12,Skåne läns västra,M,Moderaterna,40284,191506
+2018,12,Skåne läns västra,MP,Miljöpartiet de gröna,6788,191506
+2018,12,Skåne läns västra,OTHER,Övriga anmälda partier,2765,191506
+2018,12,Skåne läns västra,S,Arbetarepartiet-Socialdemokraterna,50041,191506
+2018,12,Skåne läns västra,SD,Sverigedemokraterna,50069,191506
+2018,12,Skåne läns västra,V,Vänsterpartiet,9074,191506
+2018,13,Skåne läns södra,C,Centerpartiet,19994,252804
+2018,13,Skåne läns södra,KD,Kristdemokraterna,13527,252804
+2018,13,Skåne läns södra,L,Liberalerna (tidigare Folkpartiet),17768,252804
+2018,13,Skåne läns södra,M,Moderaterna,60619,252804
+2018,13,Skåne läns södra,MP,Miljöpartiet de gröna,12435,252804
+2018,13,Skåne läns södra,OTHER,Övriga anmälda partier,3947,252804
+2018,13,Skåne läns södra,S,Arbetarepartiet-Socialdemokraterna,55185,252804
+2018,13,Skåne läns södra,SD,Sverigedemokraterna,55903,252804
+2018,13,Skåne läns södra,V,Vänsterpartiet,13426,252804
+2018,14,Skåne läns norra och östra,C,Centerpartiet,13855,202502
+2018,14,Skåne läns norra och östra,KD,Kristdemokraterna,13150,202502
+2018,14,Skåne läns norra och östra,L,Liberalerna (tidigare Folkpartiet),8984,202502
+2018,14,Skåne läns norra och östra,M,Moderaterna,40881,202502
+2018,14,Skåne läns norra och östra,MP,Miljöpartiet de gröna,5816,202502
+2018,14,Skåne läns norra och östra,OTHER,Övriga anmälda partier,2571,202502
+2018,14,Skåne läns norra och östra,S,Arbetarepartiet-Socialdemokraterna,50610,202502
+2018,14,Skåne läns norra och östra,SD,Sverigedemokraterna,58360,202502
+2018,14,Skåne läns norra och östra,V,Vänsterpartiet,8275,202502
+2018,15,Hallands län,C,Centerpartiet,21960,216982
+2018,15,Hallands län,KD,Kristdemokraterna,15415,216982
+2018,15,Hallands län,L,Liberalerna (tidigare Folkpartiet),12444,216982
+2018,15,Hallands län,M,Moderaterna,49630,216982
+2018,15,Hallands län,MP,Miljöpartiet de gröna,7690,216982
+2018,15,Hallands län,OTHER,Övriga anmälda partier,2932,216982
+2018,15,Hallands län,S,Arbetarepartiet-Socialdemokraterna,56021,216982
+2018,15,Hallands län,SD,Sverigedemokraterna,40392,216982
+2018,15,Hallands län,V,Vänsterpartiet,10498,216982
+2018,16,Göteborgs kommun,C,Centerpartiet,24893,349645
+2018,16,Göteborgs kommun,KD,Kristdemokraterna,19283,349645
+2018,16,Göteborgs kommun,L,Liberalerna (tidigare Folkpartiet),25337,349645
+2018,16,Göteborgs kommun,M,Moderaterna,69432,349645
+2018,16,Göteborgs kommun,MP,Miljöpartiet de gröna,24286,349645
+2018,16,Göteborgs kommun,OTHER,Övriga anmälda partier,7331,349645
+2018,16,Göteborgs kommun,S,Arbetarepartiet-Socialdemokraterna,83097,349645
+2018,16,Göteborgs kommun,SD,Sverigedemokraterna,47040,349645
+2018,16,Göteborgs kommun,V,Vänsterpartiet,48946,349645
+2018,17,Västra Götalands läns västra,C,Centerpartiet,19932,243278
+2018,17,Västra Götalands läns västra,KD,Kristdemokraterna,18724,243278
+2018,17,Västra Götalands läns västra,L,Liberalerna (tidigare Folkpartiet),16757,243278
+2018,17,Västra Götalands läns västra,M,Moderaterna,52958,243278
+2018,17,Västra Götalands läns västra,MP,Miljöpartiet de gröna,12166,243278
+2018,17,Västra Götalands läns västra,OTHER,Övriga anmälda partier,3320,243278
+2018,17,Västra Götalands läns västra,S,Arbetarepartiet-Socialdemokraterna,58966,243278
+2018,17,Västra Götalands läns västra,SD,Sverigedemokraterna,43848,243278
+2018,17,Västra Götalands läns västra,V,Vänsterpartiet,16607,243278
+2018,18,Västra Götalands läns norra,C,Centerpartiet,13809,174573
+2018,18,Västra Götalands läns norra,KD,Kristdemokraterna,11347,174573
+2018,18,Västra Götalands läns norra,L,Liberalerna (tidigare Folkpartiet),8124,174573
+2018,18,Västra Götalands läns norra,M,Moderaterna,30794,174573
+2018,18,Västra Götalands läns norra,MP,Miljöpartiet de gröna,6349,174573
+2018,18,Västra Götalands läns norra,OTHER,Övriga anmälda partier,2402,174573
+2018,18,Västra Götalands läns norra,S,Arbetarepartiet-Socialdemokraterna,53328,174573
+2018,18,Västra Götalands läns norra,SD,Sverigedemokraterna,37391,174573
+2018,18,Västra Götalands läns norra,V,Vänsterpartiet,11029,174573
+2018,19,Västra Götalands läns södra,C,Centerpartiet,13760,143505
+2018,19,Västra Götalands läns södra,KD,Kristdemokraterna,10445,143505
+2018,19,Västra Götalands läns södra,L,Liberalerna (tidigare Folkpartiet),7624,143505
+2018,19,Västra Götalands läns södra,M,Moderaterna,27197,143505
+2018,19,Västra Götalands läns södra,MP,Miljöpartiet de gröna,4891,143505
+2018,19,Västra Götalands läns södra,OTHER,Övriga anmälda partier,1920,143505
+2018,19,Västra Götalands läns södra,S,Arbetarepartiet-Socialdemokraterna,40234,143505
+2018,19,Västra Götalands läns södra,SD,Sverigedemokraterna,28221,143505
+2018,19,Västra Götalands läns södra,V,Vänsterpartiet,9213,143505
+2018,20,Västra Götalands läns östra,C,Centerpartiet,16533,177001
+2018,20,Västra Götalands läns östra,KD,Kristdemokraterna,13837,177001
+2018,20,Västra Götalands läns östra,L,Liberalerna (tidigare Folkpartiet),7662,177001
+2018,20,Västra Götalands läns östra,M,Moderaterna,32569,177001
+2018,20,Västra Götalands läns östra,MP,Miljöpartiet de gröna,5425,177001
+2018,20,Västra Götalands läns östra,OTHER,Övriga anmälda partier,2480,177001
+2018,20,Västra Götalands läns östra,S,Arbetarepartiet-Socialdemokraterna,53888,177001
+2018,20,Västra Götalands läns östra,SD,Sverigedemokraterna,34501,177001
+2018,20,Västra Götalands läns östra,V,Vänsterpartiet,10106,177001
+2018,21,Värmlands län,C,Centerpartiet,17071,183966
+2018,21,Värmlands län,KD,Kristdemokraterna,11657,183966
+2018,21,Värmlands län,L,Liberalerna (tidigare Folkpartiet),8168,183966
+2018,21,Värmlands län,M,Moderaterna,30219,183966
+2018,21,Värmlands län,MP,Miljöpartiet de gröna,6133,183966
+2018,21,Värmlands län,OTHER,Övriga anmälda partier,2452,183966
+2018,21,Värmlands län,S,Arbetarepartiet-Socialdemokraterna,62369,183966
+2018,21,Värmlands län,SD,Sverigedemokraterna,33118,183966
+2018,21,Värmlands län,V,Vänsterpartiet,12779,183966
+2018,22,Örebro län,C,Centerpartiet,15254,195157
+2018,22,Örebro län,KD,Kristdemokraterna,13520,195157
+2018,22,Örebro län,L,Liberalerna (tidigare Folkpartiet),8888,195157
+2018,22,Örebro län,M,Moderaterna,32470,195157
+2018,22,Örebro län,MP,Miljöpartiet de gröna,7189,195157
+2018,22,Örebro län,OTHER,Övriga anmälda partier,2916,195157
+2018,22,Örebro län,S,Arbetarepartiet-Socialdemokraterna,64646,195157
+2018,22,Örebro län,SD,Sverigedemokraterna,35499,195157
+2018,22,Örebro län,V,Vänsterpartiet,14775,195157
+2018,23,Västmanlands län,C,Centerpartiet,11539,172719
+2018,23,Västmanlands län,KD,Kristdemokraterna,9969,172719
+2018,23,Västmanlands län,L,Liberalerna (tidigare Folkpartiet),9448,172719
+2018,23,Västmanlands län,M,Moderaterna,33122,172719
+2018,23,Västmanlands län,MP,Miljöpartiet de gröna,5108,172719
+2018,23,Västmanlands län,OTHER,Övriga anmälda partier,2325,172719
+2018,23,Västmanlands län,S,Arbetarepartiet-Socialdemokraterna,54287,172719
+2018,23,Västmanlands län,SD,Sverigedemokraterna,34740,172719
+2018,23,Västmanlands län,V,Vänsterpartiet,12181,172719
+2018,24,Dalarnas län,C,Centerpartiet,18813,188027
+2018,24,Dalarnas län,KD,Kristdemokraterna,11522,188027
+2018,24,Dalarnas län,L,Liberalerna (tidigare Folkpartiet),6848,188027
+2018,24,Dalarnas län,M,Moderaterna,31320,188027
+2018,24,Dalarnas län,MP,Miljöpartiet de gröna,6249,188027
+2018,24,Dalarnas län,OTHER,Övriga anmälda partier,2816,188027
+2018,24,Dalarnas län,S,Arbetarepartiet-Socialdemokraterna,57776,188027
+2018,24,Dalarnas län,SD,Sverigedemokraterna,39029,188027
+2018,24,Dalarnas län,V,Vänsterpartiet,13654,188027
+2018,25,Gävleborgs län,C,Centerpartiet,16825,185413
+2018,25,Gävleborgs län,KD,Kristdemokraterna,9782,185413
+2018,25,Gävleborgs län,L,Liberalerna (tidigare Folkpartiet),7441,185413
+2018,25,Gävleborgs län,M,Moderaterna,28334,185413
+2018,25,Gävleborgs län,MP,Miljöpartiet de gröna,5661,185413
+2018,25,Gävleborgs län,OTHER,Övriga anmälda partier,2325,185413
+2018,25,Gävleborgs län,S,Arbetarepartiet-Socialdemokraterna,63232,185413
+2018,25,Gävleborgs län,SD,Sverigedemokraterna,36330,185413
+2018,25,Gävleborgs län,V,Vänsterpartiet,15483,185413
+2018,26,Västernorrlands län,C,Centerpartiet,16108,163001
+2018,26,Västernorrlands län,KD,Kristdemokraterna,8816,163001
+2018,26,Västernorrlands län,L,Liberalerna (tidigare Folkpartiet),5601,163001
+2018,26,Västernorrlands län,M,Moderaterna,22255,163001
+2018,26,Västernorrlands län,MP,Miljöpartiet de gröna,4366,163001
+2018,26,Västernorrlands län,OTHER,Övriga anmälda partier,2278,163001
+2018,26,Västernorrlands län,S,Arbetarepartiet-Socialdemokraterna,64882,163001
+2018,26,Västernorrlands län,SD,Sverigedemokraterna,25360,163001
+2018,26,Västernorrlands län,V,Vänsterpartiet,13335,163001
+2018,27,Jämtlands län,C,Centerpartiet,13086,85223
+2018,27,Jämtlands län,KD,Kristdemokraterna,4118,85223
+2018,27,Jämtlands län,L,Liberalerna (tidigare Folkpartiet),2439,85223
+2018,27,Jämtlands län,M,Moderaterna,12218,85223
+2018,27,Jämtlands län,MP,Miljöpartiet de gröna,3049,85223
+2018,27,Jämtlands län,OTHER,Övriga anmälda partier,1245,85223
+2018,27,Jämtlands län,S,Arbetarepartiet-Socialdemokraterna,28632,85223
+2018,27,Jämtlands län,SD,Sverigedemokraterna,13257,85223
+2018,27,Jämtlands län,V,Vänsterpartiet,7179,85223
+2018,28,Västerbottens län,C,Centerpartiet,18078,178837
+2018,28,Västerbottens län,KD,Kristdemokraterna,9376,178837
+2018,28,Västerbottens län,L,Liberalerna (tidigare Folkpartiet),7038,178837
+2018,28,Västerbottens län,M,Moderaterna,24139,178837
+2018,28,Västerbottens län,MP,Miljöpartiet de gröna,6925,178837
+2018,28,Västerbottens län,OTHER,Övriga anmälda partier,2817,178837
+2018,28,Västerbottens län,S,Arbetarepartiet-Socialdemokraterna,68197,178837
+2018,28,Västerbottens län,SD,Sverigedemokraterna,19571,178837
+2018,28,Västerbottens län,V,Vänsterpartiet,22696,178837
+2018,29,Norrbottens län,C,Centerpartiet,11751,166678
+2018,29,Norrbottens län,KD,Kristdemokraterna,7741,166678
+2018,29,Norrbottens län,L,Liberalerna (tidigare Folkpartiet),5356,166678
+2018,29,Norrbottens län,M,Moderaterna,21299,166678
+2018,29,Norrbottens län,MP,Miljöpartiet de gröna,4604,166678
+2018,29,Norrbottens län,OTHER,Övriga anmälda partier,2348,166678
+2018,29,Norrbottens län,S,Arbetarepartiet-Socialdemokraterna,69493,166678
+2018,29,Norrbottens län,SD,Sverigedemokraterna,26276,166678
+2018,29,Norrbottens län,V,Vänsterpartiet,17810,166678
+2022,01,Stockholms kommun,C,Centerpartiet,51437,606754
+2022,01,Stockholms kommun,KD,Kristdemokraterna,19227,606754
+2022,01,Stockholms kommun,L,Liberalerna (tidigare Folkpartiet),41663,606754
+2022,01,Stockholms kommun,M,Moderaterna,115706,606754
+2022,01,Stockholms kommun,MP,Miljöpartiet de gröna,60791,606754
+2022,01,Stockholms kommun,OTHER,Övriga anmälda partier,11721,606754
+2022,01,Stockholms kommun,S,Arbetarepartiet-Socialdemokraterna,170308,606754
+2022,01,Stockholms kommun,SD,Sverigedemokraterna,64730,606754
+2022,01,Stockholms kommun,V,Vänsterpartiet,71171,606754
+2022,02,Stockholms län,C,Centerpartiet,60776,822512
+2022,02,Stockholms län,KD,Kristdemokraterna,40207,822512
+2022,02,Stockholms län,L,Liberalerna (tidigare Folkpartiet),48949,822512
+2022,02,Stockholms län,M,Moderaterna,197466,822512
+2022,02,Stockholms län,MP,Miljöpartiet de gröna,42284,822512
+2022,02,Stockholms län,OTHER,Övriga anmälda partier,13836,822512
+2022,02,Stockholms län,S,Arbetarepartiet-Socialdemokraterna,223056,822512
+2022,02,Stockholms län,SD,Sverigedemokraterna,144315,822512
+2022,02,Stockholms län,V,Vänsterpartiet,51623,822512
+2022,03,Uppsala län,C,Centerpartiet,18040,248891
+2022,03,Uppsala län,KD,Kristdemokraterna,14766,248891
+2022,03,Uppsala län,L,Liberalerna (tidigare Folkpartiet),12465,248891
+2022,03,Uppsala län,M,Moderaterna,45457,248891
+2022,03,Uppsala län,MP,Miljöpartiet de gröna,16750,248891
+2022,03,Uppsala län,OTHER,Övriga anmälda partier,4134,248891
+2022,03,Uppsala län,S,Arbetarepartiet-Socialdemokraterna,72499,248891
+2022,03,Uppsala län,SD,Sverigedemokraterna,45237,248891
+2022,03,Uppsala län,V,Vänsterpartiet,19543,248891
+2022,04,Södermanlands län,C,Centerpartiet,10989,184883
+2022,04,Södermanlands län,KD,Kristdemokraterna,8772,184883
+2022,04,Södermanlands län,L,Liberalerna (tidigare Folkpartiet),6643,184883
+2022,04,Södermanlands län,M,Moderaterna,35513,184883
+2022,04,Södermanlands län,MP,Miljöpartiet de gröna,7409,184883
+2022,04,Södermanlands län,OTHER,Övriga anmälda partier,2514,184883
+2022,04,Södermanlands län,S,Arbetarepartiet-Socialdemokraterna,60891,184883
+2022,04,Södermanlands län,SD,Sverigedemokraterna,42547,184883
+2022,04,Södermanlands län,V,Vänsterpartiet,9605,184883
+2022,05,Östergötlands län,C,Centerpartiet,19479,300600
+2022,05,Östergötlands län,KD,Kristdemokraterna,17943,300600
+2022,05,Östergötlands län,L,Liberalerna (tidigare Folkpartiet),13271,300600
+2022,05,Östergötlands län,M,Moderaterna,59623,300600
+2022,05,Östergötlands län,MP,Miljöpartiet de gröna,13917,300600
+2022,05,Östergötlands län,OTHER,Övriga anmälda partier,3913,300600
+2022,05,Östergötlands län,S,Arbetarepartiet-Socialdemokraterna,91837,300600
+2022,05,Östergötlands län,SD,Sverigedemokraterna,63733,300600
+2022,05,Östergötlands län,V,Vänsterpartiet,16884,300600
+2022,06,Jönköpings län,C,Centerpartiet,17078,229125
+2022,06,Jönköpings län,KD,Kristdemokraterna,21326,229125
+2022,06,Jönköpings län,L,Liberalerna (tidigare Folkpartiet),8480,229125
+2022,06,Jönköpings län,M,Moderaterna,42913,229125
+2022,06,Jönköpings län,MP,Miljöpartiet de gröna,7377,229125
+2022,06,Jönköpings län,OTHER,Övriga anmälda partier,2976,229125
+2022,06,Jönköpings län,S,Arbetarepartiet-Socialdemokraterna,66568,229125
+2022,06,Jönköpings län,SD,Sverigedemokraterna,53338,229125
+2022,06,Jönköpings län,V,Vänsterpartiet,9069,229125
+2022,07,Kronobergs län,C,Centerpartiet,7559,124992
+2022,07,Kronobergs län,KD,Kristdemokraterna,8451,124992
+2022,07,Kronobergs län,L,Liberalerna (tidigare Folkpartiet),3897,124992
+2022,07,Kronobergs län,M,Moderaterna,24390,124992
+2022,07,Kronobergs län,MP,Miljöpartiet de gröna,4338,124992
+2022,07,Kronobergs län,OTHER,Övriga anmälda partier,1848,124992
+2022,07,Kronobergs län,S,Arbetarepartiet-Socialdemokraterna,38712,124992
+2022,07,Kronobergs län,SD,Sverigedemokraterna,29516,124992
+2022,07,Kronobergs län,V,Vänsterpartiet,6281,124992
+2022,08,Kalmar län,C,Centerpartiet,10523,161267
+2022,08,Kalmar län,KD,Kristdemokraterna,11226,161267
+2022,08,Kalmar län,L,Liberalerna (tidigare Folkpartiet),5126,161267
+2022,08,Kalmar län,M,Moderaterna,28672,161267
+2022,08,Kalmar län,MP,Miljöpartiet de gröna,5427,161267
+2022,08,Kalmar län,OTHER,Övriga anmälda partier,2114,161267
+2022,08,Kalmar län,S,Arbetarepartiet-Socialdemokraterna,51179,161267
+2022,08,Kalmar län,SD,Sverigedemokraterna,39516,161267
+2022,08,Kalmar län,V,Vänsterpartiet,7484,161267
+2022,09,Gotlands län,C,Centerpartiet,4858,41459
+2022,09,Gotlands län,KD,Kristdemokraterna,1645,41459
+2022,09,Gotlands län,L,Liberalerna (tidigare Folkpartiet),1169,41459
+2022,09,Gotlands län,M,Moderaterna,6969,41459
+2022,09,Gotlands län,MP,Miljöpartiet de gröna,2683,41459
+2022,09,Gotlands län,OTHER,Övriga anmälda partier,628,41459
+2022,09,Gotlands län,S,Arbetarepartiet-Socialdemokraterna,14361,41459
+2022,09,Gotlands län,SD,Sverigedemokraterna,6504,41459
+2022,09,Gotlands län,V,Vänsterpartiet,2642,41459
+2022,10,Blekinge län,C,Centerpartiet,5014,103580
+2022,10,Blekinge län,KD,Kristdemokraterna,5735,103580
+2022,10,Blekinge län,L,Liberalerna (tidigare Folkpartiet),3637,103580
+2022,10,Blekinge län,M,Moderaterna,18500,103580
+2022,10,Blekinge län,MP,Miljöpartiet de gröna,3015,103580
+2022,10,Blekinge län,OTHER,Övriga anmälda partier,1268,103580
+2022,10,Blekinge län,S,Arbetarepartiet-Socialdemokraterna,32255,103580
+2022,10,Blekinge län,SD,Sverigedemokraterna,29556,103580
+2022,10,Blekinge län,V,Vänsterpartiet,4600,103580
+2022,11,Malmö kommun,C,Centerpartiet,10546,192045
+2022,11,Malmö kommun,KD,Kristdemokraterna,5753,192045
+2022,11,Malmö kommun,L,Liberalerna (tidigare Folkpartiet),8706,192045
+2022,11,Malmö kommun,M,Moderaterna,34313,192045
+2022,11,Malmö kommun,MP,Miljöpartiet de gröna,14386,192045
+2022,11,Malmö kommun,OTHER,Övriga anmälda partier,6133,192045
+2022,11,Malmö kommun,S,Arbetarepartiet-Socialdemokraterna,56789,192045
+2022,11,Malmö kommun,SD,Sverigedemokraterna,31433,192045
+2022,11,Malmö kommun,V,Vänsterpartiet,23986,192045
+2022,12,Skåne läns västra,C,Centerpartiet,9524,191683
+2022,12,Skåne läns västra,KD,Kristdemokraterna,9055,191683
+2022,12,Skåne läns västra,L,Liberalerna (tidigare Folkpartiet),8592,191683
+2022,12,Skåne läns västra,M,Moderaterna,37982,191683
+2022,12,Skåne läns västra,MP,Miljöpartiet de gröna,6779,191683
+2022,12,Skåne läns västra,OTHER,Övriga anmälda partier,3413,191683
+2022,12,Skåne läns västra,S,Arbetarepartiet-Socialdemokraterna,52402,191683
+2022,12,Skåne läns västra,SD,Sverigedemokraterna,55104,191683
+2022,12,Skåne läns västra,V,Vänsterpartiet,8832,191683
+2022,13,Skåne läns södra,C,Centerpartiet,17171,259372
+2022,13,Skåne läns södra,KD,Kristdemokraterna,12341,259372
+2022,13,Skåne läns södra,L,Liberalerna (tidigare Folkpartiet),15949,259372
+2022,13,Skåne läns södra,M,Moderaterna,57216,259372
+2022,13,Skåne läns södra,MP,Miljöpartiet de gröna,14386,259372
+2022,13,Skåne läns södra,OTHER,Övriga anmälda partier,3132,259372
+2022,13,Skåne läns södra,S,Arbetarepartiet-Socialdemokraterna,65747,259372
+2022,13,Skåne läns södra,SD,Sverigedemokraterna,60573,259372
+2022,13,Skåne läns södra,V,Vänsterpartiet,12857,259372
+2022,14,Skåne läns norra och östra,C,Centerpartiet,10040,202971
+2022,14,Skåne läns norra och östra,KD,Kristdemokraterna,12480,202971
+2022,14,Skåne läns norra och östra,L,Liberalerna (tidigare Folkpartiet),7625,202971
+2022,14,Skåne läns norra och östra,M,Moderaterna,39595,202971
+2022,14,Skåne läns norra och östra,MP,Miljöpartiet de gröna,6006,202971
+2022,14,Skåne läns norra och östra,OTHER,Övriga anmälda partier,2739,202971
+2022,14,Skåne läns norra och östra,S,Arbetarepartiet-Socialdemokraterna,51154,202971
+2022,14,Skåne läns norra och östra,SD,Sverigedemokraterna,65345,202971
+2022,14,Skåne läns norra och östra,V,Vänsterpartiet,7987,202971
+2022,15,Hallands län,C,Centerpartiet,15590,221675
+2022,15,Hallands län,KD,Kristdemokraterna,13328,221675
+2022,15,Hallands län,L,Liberalerna (tidigare Folkpartiet),10739,221675
+2022,15,Hallands län,M,Moderaterna,49810,221675
+2022,15,Hallands län,MP,Miljöpartiet de gröna,7963,221675
+2022,15,Hallands län,OTHER,Övriga anmälda partier,2570,221675
+2022,15,Hallands län,S,Arbetarepartiet-Socialdemokraterna,62666,221675
+2022,15,Hallands län,SD,Sverigedemokraterna,50046,221675
+2022,15,Hallands län,V,Vänsterpartiet,8963,221675
+2022,16,Göteborgs kommun,C,Centerpartiet,20343,347103
+2022,16,Göteborgs kommun,KD,Kristdemokraterna,15170,347103
+2022,16,Göteborgs kommun,L,Liberalerna (tidigare Folkpartiet),20317,347103
+2022,16,Göteborgs kommun,M,Moderaterna,64157,347103
+2022,16,Göteborgs kommun,MP,Miljöpartiet de gröna,27485,347103
+2022,16,Göteborgs kommun,OTHER,Övriga anmälda partier,8160,347103
+2022,16,Göteborgs kommun,S,Arbetarepartiet-Socialdemokraterna,95980,347103
+2022,16,Göteborgs kommun,SD,Sverigedemokraterna,50889,347103
+2022,16,Göteborgs kommun,V,Vänsterpartiet,44602,347103
+2022,17,Västra Götalands läns västra,C,Centerpartiet,15881,247863
+2022,17,Västra Götalands läns västra,KD,Kristdemokraterna,15571,247863
+2022,17,Västra Götalands läns västra,L,Liberalerna (tidigare Folkpartiet),13467,247863
+2022,17,Västra Götalands läns västra,M,Moderaterna,50707,247863
+2022,17,Västra Götalands läns västra,MP,Miljöpartiet de gröna,12846,247863
+2022,17,Västra Götalands läns västra,OTHER,Övriga anmälda partier,3276,247863
+2022,17,Västra Götalands läns västra,S,Arbetarepartiet-Socialdemokraterna,69468,247863
+2022,17,Västra Götalands läns västra,SD,Sverigedemokraterna,52558,247863
+2022,17,Västra Götalands läns västra,V,Vänsterpartiet,14089,247863
+2022,18,Västra Götalands läns norra,C,Centerpartiet,9938,173655
+2022,18,Västra Götalands läns norra,KD,Kristdemokraterna,10711,173655
+2022,18,Västra Götalands läns norra,L,Liberalerna (tidigare Folkpartiet),6311,173655
+2022,18,Västra Götalands läns norra,M,Moderaterna,30443,173655
+2022,18,Västra Götalands läns norra,MP,Miljöpartiet de gröna,6318,173655
+2022,18,Västra Götalands läns norra,OTHER,Övriga anmälda partier,2505,173655
+2022,18,Västra Götalands läns norra,S,Arbetarepartiet-Socialdemokraterna,54311,173655
+2022,18,Västra Götalands läns norra,SD,Sverigedemokraterna,44165,173655
+2022,18,Västra Götalands läns norra,V,Vänsterpartiet,8953,173655
+2022,19,Västra Götalands läns södra,C,Centerpartiet,10063,141906
+2022,19,Västra Götalands läns södra,KD,Kristdemokraterna,9871,141906
+2022,19,Västra Götalands läns södra,L,Liberalerna (tidigare Folkpartiet),5445,141906
+2022,19,Västra Götalands läns södra,M,Moderaterna,26846,141906
+2022,19,Västra Götalands läns södra,MP,Miljöpartiet de gröna,5053,141906
+2022,19,Västra Götalands läns södra,OTHER,Övriga anmälda partier,2218,141906
+2022,19,Västra Götalands läns södra,S,Arbetarepartiet-Socialdemokraterna,41350,141906
+2022,19,Västra Götalands läns södra,SD,Sverigedemokraterna,33477,141906
+2022,19,Västra Götalands läns södra,V,Vänsterpartiet,7583,141906
+2022,20,Västra Götalands läns östra,C,Centerpartiet,11667,176526
+2022,20,Västra Götalands läns östra,KD,Kristdemokraterna,12289,176526
+2022,20,Västra Götalands läns östra,L,Liberalerna (tidigare Folkpartiet),5919,176526
+2022,20,Västra Götalands läns östra,M,Moderaterna,32790,176526
+2022,20,Västra Götalands läns östra,MP,Miljöpartiet de gröna,5748,176526
+2022,20,Västra Götalands läns östra,OTHER,Övriga anmälda partier,2264,176526
+2022,20,Västra Götalands läns östra,S,Arbetarepartiet-Socialdemokraterna,55421,176526
+2022,20,Västra Götalands läns östra,SD,Sverigedemokraterna,42572,176526
+2022,20,Västra Götalands läns östra,V,Vänsterpartiet,7856,176526
+2022,21,Värmlands län,C,Centerpartiet,11557,182237
+2022,21,Värmlands län,KD,Kristdemokraterna,10590,182237
+2022,21,Värmlands län,L,Liberalerna (tidigare Folkpartiet),6766,182237
+2022,21,Värmlands län,M,Moderaterna,31068,182237
+2022,21,Värmlands län,MP,Miljöpartiet de gröna,6635,182237
+2022,21,Värmlands län,OTHER,Övriga anmälda partier,1906,182237
+2022,21,Värmlands län,S,Arbetarepartiet-Socialdemokraterna,63034,182237
+2022,21,Värmlands län,SD,Sverigedemokraterna,41555,182237
+2022,21,Värmlands län,V,Vänsterpartiet,9126,182237
+2022,22,Örebro län,C,Centerpartiet,12159,194190
+2022,22,Örebro län,KD,Kristdemokraterna,10368,194190
+2022,22,Örebro län,L,Liberalerna (tidigare Folkpartiet),8828,194190
+2022,22,Örebro län,M,Moderaterna,32508,194190
+2022,22,Örebro län,MP,Miljöpartiet de gröna,7866,194190
+2022,22,Örebro län,OTHER,Övriga anmälda partier,3119,194190
+2022,22,Örebro län,S,Arbetarepartiet-Socialdemokraterna,64565,194190
+2022,22,Örebro län,SD,Sverigedemokraterna,42904,194190
+2022,22,Örebro län,V,Vänsterpartiet,11873,194190
+2022,23,Västmanlands län,C,Centerpartiet,9224,170749
+2022,23,Västmanlands län,KD,Kristdemokraterna,8554,170749
+2022,23,Västmanlands län,L,Liberalerna (tidigare Folkpartiet),7100,170749
+2022,23,Västmanlands län,M,Moderaterna,32671,170749
+2022,23,Västmanlands län,MP,Miljöpartiet de gröna,5465,170749
+2022,23,Västmanlands län,OTHER,Övriga anmälda partier,2200,170749
+2022,23,Västmanlands län,S,Arbetarepartiet-Socialdemokraterna,54645,170749
+2022,23,Västmanlands län,SD,Sverigedemokraterna,40415,170749
+2022,23,Västmanlands län,V,Vänsterpartiet,10475,170749
+2022,24,Dalarnas län,C,Centerpartiet,12131,186599
+2022,24,Dalarnas län,KD,Kristdemokraterna,11231,186599
+2022,24,Dalarnas län,L,Liberalerna (tidigare Folkpartiet),5786,186599
+2022,24,Dalarnas län,M,Moderaterna,30664,186599
+2022,24,Dalarnas län,MP,Miljöpartiet de gröna,7087,186599
+2022,24,Dalarnas län,OTHER,Övriga anmälda partier,2752,186599
+2022,24,Dalarnas län,S,Arbetarepartiet-Socialdemokraterna,59080,186599
+2022,24,Dalarnas län,SD,Sverigedemokraterna,47931,186599
+2022,24,Dalarnas län,V,Vänsterpartiet,9937,186599
+2022,25,Gävleborgs län,C,Centerpartiet,11405,182587
+2022,25,Gävleborgs län,KD,Kristdemokraterna,9303,182587
+2022,25,Gävleborgs län,L,Liberalerna (tidigare Folkpartiet),5462,182587
+2022,25,Gävleborgs län,M,Moderaterna,29661,182587
+2022,25,Gävleborgs län,MP,Miljöpartiet de gröna,6308,182587
+2022,25,Gävleborgs län,OTHER,Övriga anmälda partier,2256,182587
+2022,25,Gävleborgs län,S,Arbetarepartiet-Socialdemokraterna,63415,182587
+2022,25,Gävleborgs län,SD,Sverigedemokraterna,43994,182587
+2022,25,Gävleborgs län,V,Vänsterpartiet,10783,182587
+2022,26,Västernorrlands län,C,Centerpartiet,11822,158723
+2022,26,Västernorrlands län,KD,Kristdemokraterna,8591,158723
+2022,26,Västernorrlands län,L,Liberalerna (tidigare Folkpartiet),4348,158723
+2022,26,Västernorrlands län,M,Moderaterna,22176,158723
+2022,26,Västernorrlands län,MP,Miljöpartiet de gröna,5437,158723
+2022,26,Västernorrlands län,OTHER,Övriga anmälda partier,1835,158723
+2022,26,Västernorrlands län,S,Arbetarepartiet-Socialdemokraterna,62562,158723
+2022,26,Västernorrlands län,SD,Sverigedemokraterna,32829,158723
+2022,26,Västernorrlands län,V,Vänsterpartiet,9123,158723
+2022,27,Jämtlands län,C,Centerpartiet,7771,85024
+2022,27,Jämtlands län,KD,Kristdemokraterna,4574,85024
+2022,27,Jämtlands län,L,Liberalerna (tidigare Folkpartiet),2244,85024
+2022,27,Jämtlands län,M,Moderaterna,12574,85024
+2022,27,Jämtlands län,MP,Miljöpartiet de gröna,4269,85024
+2022,27,Jämtlands län,OTHER,Övriga anmälda partier,1080,85024
+2022,27,Jämtlands län,S,Arbetarepartiet-Socialdemokraterna,30666,85024
+2022,27,Jämtlands län,SD,Sverigedemokraterna,17097,85024
+2022,27,Jämtlands län,V,Vänsterpartiet,4749,85024
+2022,28,Västerbottens län,C,Centerpartiet,13827,177543
+2022,28,Västerbottens län,KD,Kristdemokraterna,8368,177543
+2022,28,Västerbottens län,L,Liberalerna (tidigare Folkpartiet),5544,177543
+2022,28,Västerbottens län,M,Moderaterna,25121,177543
+2022,28,Västerbottens län,MP,Miljöpartiet de gröna,9653,177543
+2022,28,Västerbottens län,OTHER,Övriga anmälda partier,1949,177543
+2022,28,Västerbottens län,S,Arbetarepartiet-Socialdemokraterna,72318,177543
+2022,28,Västerbottens län,SD,Sverigedemokraterna,25666,177543
+2022,28,Västerbottens län,V,Vänsterpartiet,15097,177543
+2022,29,Norrbottens län,C,Centerpartiet,8533,161456
+2022,29,Norrbottens län,KD,Kristdemokraterna,8266,161456
+2022,29,Norrbottens län,L,Liberalerna (tidigare Folkpartiet),4094,161456
+2022,29,Norrbottens län,M,Moderaterna,21917,161456
+2022,29,Norrbottens län,MP,Miljöpartiet de gröna,5561,161456
+2022,29,Norrbottens län,OTHER,Övriga anmälda partier,1793,161456
+2022,29,Norrbottens län,S,Arbetarepartiet-Socialdemokraterna,67235,161456
+2022,29,Norrbottens län,SD,Sverigedemokraterna,32780,161456
+2022,29,Norrbottens län,V,Vänsterpartiet,11277,161456

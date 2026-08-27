@@ -1,0 +1,144 @@
+{
+  "title": "Väljarkåren (svarsfördelning PSU) efter partisympati, partival nu, tabellinnehåll och mätmånad",
+  "variables": [
+    {
+      "code": "Psymp",
+      "text": "partisympati",
+      "values": [
+        "m",
+        "c",
+        "l",
+        "kd",
+        "mp",
+        "s",
+        "v",
+        "SD",
+        "övr",
+        "ingen sympati/vet ej",
+        "hela väljarkåren"
+      ],
+      "valueTexts": [
+        "M",
+        "C",
+        "L",
+        "KD",
+        "MP",
+        "S",
+        "V",
+        "SD",
+        "övriga",
+        "ingen sympati/vet ej",
+        "hela väljarkåren"
+      ]
+    },
+    {
+      "code": "Pvalnu",
+      "text": "partival nu",
+      "values": [
+        "m",
+        "c",
+        "l",
+        "kd",
+        "mp",
+        "s",
+        "v",
+        "SD",
+        "övr",
+        "blankt",
+        "vet ej"
+      ],
+      "valueTexts": [
+        "M",
+        "C",
+        "L",
+        "KD",
+        "MP",
+        "S",
+        "V",
+        "SD",
+        "övriga",
+        "blankt",
+        "vet ej/uppgift saknas"
+      ]
+    },
+    {
+      "code": "ContentsCode",
+      "text": "tabellinnehåll",
+      "values": [
+        "000001IS",
+        "000001IR"
+      ],
+      "valueTexts": [
+        "Procentskattning",
+        "Felmarginal, ±"
+      ]
+    },
+    {
+      "code": "Tid",
+      "text": "mätmånad",
+      "values": [
+        "2010M11",
+        "2011M05",
+        "2011M11",
+        "2012M05",
+        "2012M11",
+        "2013M05",
+        "2013M11",
+        "2014M05",
+        "2014M11",
+        "2015M05",
+        "2015M11",
+        "2016M05",
+        "2016M11",
+        "2017M05",
+        "2017M11",
+        "2018M05",
+        "2018M11",
+        "2019M05",
+        "2019M11",
+        "2020M05",
+        "2020M11",
+        "2021M05",
+        "2021M11",
+        "2022M05",
+        "2022M11",
+        "2023M05",
+        "2024M05",
+        "2025M05",
+        "2026M05"
+      ],
+      "valueTexts": [
+        "2010M11",
+        "2011M05",
+        "2011M11",
+        "2012M05",
+        "2012M11",
+        "2013M05",
+        "2013M11",
+        "2014M05",
+        "2014M11",
+        "2015M05",
+        "2015M11",
+        "2016M05",
+        "2016M11",
+        "2017M05",
+        "2017M11",
+        "2018M05",
+        "2018M11",
+        "2019M05",
+        "2019M11",
+        "2020M05",
+        "2020M11",
+        "2021M05",
+        "2021M11",
+        "2022M05",
+        "2022M11",
+        "2023M05",
+        "2024M05",
+        "2025M05",
+        "2026M05"
+      ],
+      "time": true
+    }
+  ]
+}

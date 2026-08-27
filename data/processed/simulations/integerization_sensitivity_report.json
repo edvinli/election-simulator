@@ -1,0 +1,17 @@
+{
+  "total_samples": 5000,
+  "samples_with_any_seat_diff": 0,
+  "fraction_with_seat_diff": 0.0,
+  "agreement_rate": 1.0,
+  "max_party_seat_diff": 0,
+  "party_diff_counts": {
+    "M": 0,
+    "L": 0,
+    "C": 0,
+    "KD": 0,
+    "S": 0,
+    "V": 0,
+    "MP": 0,
+    "SD": 0
+  }
+}

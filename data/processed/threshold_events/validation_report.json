@@ -1,0 +1,1185 @@
+{
+  "report_generated_utc": "2026-08-27T17:33:51.685979+00:00",
+  "total_episodes_in_table": 77,
+  "quality_breakdown": {
+    "HIGH": 40,
+    "MEDIUM": 9,
+    "LOW": 9,
+    "EXCLUDE": 19
+  },
+  "assertions": {
+    "no_duplicate_episodes": true,
+    "percentage_bounds_valid": true,
+    "passed_4pct_exact_match": true,
+    "no_leakage_post_election": true,
+    "all_target_elections_accounted_for": true,
+    "all_assertions_passed": true
+  },
+  "band_summaries": {
+    "primary_high_medium_episodes": {
+      "<2": {
+        "episode_count": 1,
+        "mean_residual_pp": -0.5572,
+        "median_residual_pp": -0.5572,
+        "std_residual_pp": null,
+        "min_residual_pp": -0.5572,
+        "max_residual_pp": -0.5572,
+        "passed_4pct_count": 0,
+        "failed_4pct_count": 1,
+        "episodes": [
+          "FI (2018): poll=1.02%, act=0.46%, res=-0.56pp, Q=MEDIUM"
+        ]
+      },
+      "2–3": {
+        "episode_count": 1,
+        "mean_residual_pp": 0.8873,
+        "median_residual_pp": 0.8873,
+        "std_residual_pp": null,
+        "min_residual_pp": 0.8873,
+        "max_residual_pp": 0.8873,
+        "passed_4pct_count": 0,
+        "failed_4pct_count": 1,
+        "episodes": [
+          "SD (2006): poll=2.04%, act=2.93%, res=+0.89pp, Q=MEDIUM"
+        ]
+      },
+      "3–3.5": {
+        "episode_count": 0,
+        "mean_residual_pp": null,
+        "median_residual_pp": null,
+        "std_residual_pp": null,
+        "min_residual_pp": null,
+        "max_residual_pp": null,
+        "passed_4pct_count": 0,
+        "failed_4pct_count": 0,
+        "episodes": []
+      },
+      "3.5–4": {
+        "episode_count": 1,
+        "mean_residual_pp": -0.5948,
+        "median_residual_pp": -0.5948,
+        "std_residual_pp": null,
+        "min_residual_pp": -0.5948,
+        "max_residual_pp": -0.5948,
+        "passed_4pct_count": 0,
+        "failed_4pct_count": 1,
+        "episodes": [
+          "FI (2014): poll=3.72%, act=3.12%, res=-0.59pp, Q=HIGH"
+        ]
+      },
+      "4–4.5": {
+        "episode_count": 0,
+        "mean_residual_pp": null,
+        "median_residual_pp": null,
+        "std_residual_pp": null,
+        "min_residual_pp": null,
+        "max_residual_pp": null,
+        "passed_4pct_count": 0,
+        "failed_4pct_count": 0,
+        "episodes": []
+      },
+      "4.5–5": {
+        "episode_count": 3,
+        "mean_residual_pp": -0.3094,
+        "median_residual_pp": -0.2709,
+        "std_residual_pp": 0.2417,
+        "min_residual_pp": -0.568,
+        "max_residual_pp": -0.0893,
+        "passed_4pct_count": 3,
+        "failed_4pct_count": 0,
+        "episodes": [
+          "MP (2002): poll=4.74%, act=4.65%, res=-0.09pp, Q=MEDIUM",
+          "MP (2018): poll=4.98%, act=4.41%, res=-0.57pp, Q=HIGH",
+          "L (2022): poll=4.88%, act=4.61%, res=-0.27pp, Q=HIGH"
+        ]
+      },
+      "5–6": {
+        "episode_count": 10,
+        "mean_residual_pp": -0.186,
+        "median_residual_pp": -0.3387,
+        "std_residual_pp": 0.477,
+        "min_residual_pp": -0.635,
+        "max_residual_pp": 0.7574,
+        "passed_4pct_count": 10,
+        "failed_4pct_count": 0,
+        "episodes": [
+          "C (2002): poll=5.44%, act=6.19%, res=+0.76pp, Q=MEDIUM",
+          "MP (2006): poll=5.78%, act=5.24%, res=-0.53pp, Q=HIGH",
+          "V (2006): poll=5.93%, act=5.85%, res=-0.08pp, Q=HIGH",
+          "KD (2010): poll=5.94%, act=5.60%, res=-0.35pp, Q=HIGH",
+          "SD (2010): poll=5.11%, act=5.70%, res=+0.58pp, Q=HIGH",
+          "V (2010): poll=5.93%, act=5.60%, res=-0.33pp, Q=HIGH",
+          "KD (2014): poll=5.21%, act=4.57%, res=-0.64pp, Q=HIGH",
+          "L (2018): poll=5.96%, act=5.49%, res=-0.47pp, Q=HIGH",
+          "KD (2022): poll=5.67%, act=5.34%, res=-0.33pp, Q=HIGH",
+          "MP (2022): poll=5.56%, act=5.08%, res=-0.48pp, Q=HIGH"
+        ]
+      },
+      ">=6": {
+        "episode_count": 33,
+        "mean_residual_pp": 0.123,
+        "median_residual_pp": -0.1568,
+        "std_residual_pp": 1.4224,
+        "min_residual_pp": -2.1176,
+        "max_residual_pp": 3.165,
+        "passed_4pct_count": 33,
+        "failed_4pct_count": 0,
+        "episodes": [
+          "KD (2002): poll=10.03%, act=9.15%, res=-0.88pp, Q=MEDIUM",
+          "L (2002): poll=12.96%, act=13.39%, res=+0.43pp, Q=MEDIUM",
+          "M (2002): poll=17.37%, act=15.26%, res=-2.12pp, Q=MEDIUM",
+          "S (2002): poll=36.89%, act=39.85%, res=+2.97pp, Q=MEDIUM",
+          "V (2002): poll=9.95%, act=8.39%, res=-1.56pp, Q=MEDIUM",
+          "C (2006): poll=7.29%, act=7.88%, res=+0.59pp, Q=HIGH",
+          "KD (2006): poll=6.98%, act=6.59%, res=-0.39pp, Q=HIGH",
+          "L (2006): poll=8.50%, act=7.54%, res=-0.96pp, Q=HIGH",
+          "M (2006): poll=26.42%, act=26.23%, res=-0.19pp, Q=HIGH",
+          "S (2006): poll=33.83%, act=34.99%, res=+1.16pp, Q=HIGH",
+          "C (2010): poll=6.69%, act=6.56%, res=-0.14pp, Q=HIGH",
+          "L (2010): poll=7.21%, act=7.06%, res=-0.16pp, Q=HIGH",
+          "M (2010): poll=29.48%, act=30.06%, res=+0.58pp, Q=HIGH",
+          "MP (2010): poll=8.66%, act=7.34%, res=-1.32pp, Q=HIGH",
+          "S (2010): poll=29.36%, act=30.66%, res=+1.30pp, Q=HIGH",
+          "C (2014): poll=6.27%, act=6.11%, res=-0.16pp, Q=HIGH",
+          "L (2014): poll=6.29%, act=5.42%, res=-0.87pp, Q=HIGH",
+          "M (2014): poll=21.96%, act=23.32%, res=+1.37pp, Q=HIGH",
+          "MP (2014): poll=8.81%, act=6.89%, res=-1.92pp, Q=HIGH",
+          "S (2014): poll=29.91%, act=31.01%, res=+1.10pp, Q=HIGH",
+          "SD (2014): poll=9.97%, act=12.86%, res=+2.88pp, Q=HIGH",
+          "V (2014): poll=6.84%, act=5.72%, res=-1.13pp, Q=HIGH",
+          "C (2018): poll=8.53%, act=8.61%, res=+0.08pp, Q=HIGH",
+          "KD (2018): poll=6.07%, act=6.32%, res=+0.25pp, Q=HIGH",
+          "M (2018): poll=17.77%, act=19.84%, res=+2.06pp, Q=HIGH",
+          "S (2018): poll=25.10%, act=28.26%, res=+3.17pp, Q=HIGH",
+          "SD (2018): poll=18.59%, act=17.53%, res=-1.05pp, Q=HIGH",
+          "V (2018): poll=9.88%, act=8.00%, res=-1.87pp, Q=HIGH",
+          "C (2022): poll=7.43%, act=6.71%, res=-0.72pp, Q=HIGH",
+          "M (2022): poll=17.68%, act=19.10%, res=+1.42pp, Q=HIGH",
+          "S (2022): poll=28.83%, act=30.33%, res=+1.50pp, Q=HIGH",
+          "SD (2022): poll=20.99%, act=20.54%, res=-0.46pp, Q=HIGH",
+          "V (2022): poll=7.66%, act=6.75%, res=-0.92pp, Q=HIGH"
+        ]
+      }
+    },
+    "all_valid_episodes_including_low": {
+      "<2": {
+        "episode_count": 3,
+        "mean_residual_pp": -0.3749,
+        "median_residual_pp": -0.3163,
+        "std_residual_pp": 0.1612,
+        "min_residual_pp": -0.5572,
+        "max_residual_pp": -0.2513,
+        "passed_4pct_count": 0,
+        "failed_4pct_count": 3,
+        "episodes": [
+          "FI (2006): poll=1.00%, act=0.68%, res=-0.32pp, Q=LOW",
+          "FI (2018): poll=1.02%, act=0.46%, res=-0.56pp, Q=MEDIUM",
+          "FI (2022): poll=0.30%, act=0.05%, res=-0.25pp, Q=LOW"
+        ]
+      },
+      "2–3": {
+        "episode_count": 1,
+        "mean_residual_pp": 0.8873,
+        "median_residual_pp": 0.8873,
+        "std_residual_pp": null,
+        "min_residual_pp": 0.8873,
+        "max_residual_pp": 0.8873,
+        "passed_4pct_count": 0,
+        "failed_4pct_count": 1,
+        "episodes": [
+          "SD (2006): poll=2.04%, act=2.93%, res=+0.89pp, Q=MEDIUM"
+        ]
+      },
+      "3–3.5": {
+        "episode_count": 0,
+        "mean_residual_pp": null,
+        "median_residual_pp": null,
+        "std_residual_pp": null,
+        "min_residual_pp": null,
+        "max_residual_pp": null,
+        "passed_4pct_count": 0,
+        "failed_4pct_count": 0,
+        "episodes": []
+      },
+      "3.5–4": {
+        "episode_count": 1,
+        "mean_residual_pp": -0.5948,
+        "median_residual_pp": -0.5948,
+        "std_residual_pp": null,
+        "min_residual_pp": -0.5948,
+        "max_residual_pp": -0.5948,
+        "passed_4pct_count": 0,
+        "failed_4pct_count": 1,
+        "episodes": [
+          "FI (2014): poll=3.72%, act=3.12%, res=-0.59pp, Q=HIGH"
+        ]
+      },
+      "4–4.5": {
+        "episode_count": 0,
+        "mean_residual_pp": null,
+        "median_residual_pp": null,
+        "std_residual_pp": null,
+        "min_residual_pp": null,
+        "max_residual_pp": null,
+        "passed_4pct_count": 0,
+        "failed_4pct_count": 0,
+        "episodes": []
+      },
+      "4.5–5": {
+        "episode_count": 4,
+        "mean_residual_pp": -0.3402,
+        "median_residual_pp": -0.3517,
+        "std_residual_pp": 0.2067,
+        "min_residual_pp": -0.568,
+        "max_residual_pp": -0.0893,
+        "passed_4pct_count": 4,
+        "failed_4pct_count": 0,
+        "episodes": [
+          "KD (1994): poll=4.50%, act=4.07%, res=-0.43pp, Q=LOW",
+          "MP (2002): poll=4.74%, act=4.65%, res=-0.09pp, Q=MEDIUM",
+          "MP (2018): poll=4.98%, act=4.41%, res=-0.57pp, Q=HIGH",
+          "L (2022): poll=4.88%, act=4.61%, res=-0.27pp, Q=HIGH"
+        ]
+      },
+      "5–6": {
+        "episode_count": 10,
+        "mean_residual_pp": -0.186,
+        "median_residual_pp": -0.3387,
+        "std_residual_pp": 0.477,
+        "min_residual_pp": -0.635,
+        "max_residual_pp": 0.7574,
+        "passed_4pct_count": 10,
+        "failed_4pct_count": 0,
+        "episodes": [
+          "C (2002): poll=5.44%, act=6.19%, res=+0.76pp, Q=MEDIUM",
+          "MP (2006): poll=5.78%, act=5.24%, res=-0.53pp, Q=HIGH",
+          "V (2006): poll=5.93%, act=5.85%, res=-0.08pp, Q=HIGH",
+          "KD (2010): poll=5.94%, act=5.60%, res=-0.35pp, Q=HIGH",
+          "SD (2010): poll=5.11%, act=5.70%, res=+0.58pp, Q=HIGH",
+          "V (2010): poll=5.93%, act=5.60%, res=-0.33pp, Q=HIGH",
+          "KD (2014): poll=5.21%, act=4.57%, res=-0.64pp, Q=HIGH",
+          "L (2018): poll=5.96%, act=5.49%, res=-0.47pp, Q=HIGH",
+          "KD (2022): poll=5.67%, act=5.34%, res=-0.33pp, Q=HIGH",
+          "MP (2022): poll=5.56%, act=5.08%, res=-0.48pp, Q=HIGH"
+        ]
+      },
+      ">=6": {
+        "episode_count": 39,
+        "mean_residual_pp": 0.0956,
+        "median_residual_pp": -0.1373,
+        "std_residual_pp": 1.3592,
+        "min_residual_pp": -2.1176,
+        "max_residual_pp": 3.165,
+        "passed_4pct_count": 39,
+        "failed_4pct_count": 0,
+        "episodes": [
+          "C (1994): poll=7.00%, act=7.65%, res=+0.65pp, Q=LOW",
+          "L (1994): poll=7.00%, act=7.19%, res=+0.19pp, Q=LOW",
+          "M (1994): poll=21.50%, act=22.38%, res=+0.88pp, Q=LOW",
+          "MP (1994): poll=7.00%, act=5.02%, res=-1.98pp, Q=LOW",
+          "S (1994): poll=45.00%, act=45.25%, res=+0.25pp, Q=LOW",
+          "V (1994): poll=6.50%, act=6.17%, res=-0.33pp, Q=LOW",
+          "KD (2002): poll=10.03%, act=9.15%, res=-0.88pp, Q=MEDIUM",
+          "L (2002): poll=12.96%, act=13.39%, res=+0.43pp, Q=MEDIUM",
+          "M (2002): poll=17.37%, act=15.26%, res=-2.12pp, Q=MEDIUM",
+          "S (2002): poll=36.89%, act=39.85%, res=+2.97pp, Q=MEDIUM",
+          "V (2002): poll=9.95%, act=8.39%, res=-1.56pp, Q=MEDIUM",
+          "C (2006): poll=7.29%, act=7.88%, res=+0.59pp, Q=HIGH",
+          "KD (2006): poll=6.98%, act=6.59%, res=-0.39pp, Q=HIGH",
+          "L (2006): poll=8.50%, act=7.54%, res=-0.96pp, Q=HIGH",
+          "M (2006): poll=26.42%, act=26.23%, res=-0.19pp, Q=HIGH",
+          "S (2006): poll=33.83%, act=34.99%, res=+1.16pp, Q=HIGH",
+          "C (2010): poll=6.69%, act=6.56%, res=-0.14pp, Q=HIGH",
+          "L (2010): poll=7.21%, act=7.06%, res=-0.16pp, Q=HIGH",
+          "M (2010): poll=29.48%, act=30.06%, res=+0.58pp, Q=HIGH",
+          "MP (2010): poll=8.66%, act=7.34%, res=-1.32pp, Q=HIGH",
+          "S (2010): poll=29.36%, act=30.66%, res=+1.30pp, Q=HIGH",
+          "C (2014): poll=6.27%, act=6.11%, res=-0.16pp, Q=HIGH",
+          "L (2014): poll=6.29%, act=5.42%, res=-0.87pp, Q=HIGH",
+          "M (2014): poll=21.96%, act=23.32%, res=+1.37pp, Q=HIGH",
+          "MP (2014): poll=8.81%, act=6.89%, res=-1.92pp, Q=HIGH",
+          "S (2014): poll=29.91%, act=31.01%, res=+1.10pp, Q=HIGH",
+          "SD (2014): poll=9.97%, act=12.86%, res=+2.88pp, Q=HIGH",
+          "V (2014): poll=6.84%, act=5.72%, res=-1.13pp, Q=HIGH",
+          "C (2018): poll=8.53%, act=8.61%, res=+0.08pp, Q=HIGH",
+          "KD (2018): poll=6.07%, act=6.32%, res=+0.25pp, Q=HIGH",
+          "M (2018): poll=17.77%, act=19.84%, res=+2.06pp, Q=HIGH",
+          "S (2018): poll=25.10%, act=28.26%, res=+3.17pp, Q=HIGH",
+          "SD (2018): poll=18.59%, act=17.53%, res=-1.05pp, Q=HIGH",
+          "V (2018): poll=9.88%, act=8.00%, res=-1.87pp, Q=HIGH",
+          "C (2022): poll=7.43%, act=6.71%, res=-0.72pp, Q=HIGH",
+          "M (2022): poll=17.68%, act=19.10%, res=+1.42pp, Q=HIGH",
+          "S (2022): poll=28.83%, act=30.33%, res=+1.50pp, Q=HIGH",
+          "SD (2022): poll=20.99%, act=20.54%, res=-0.46pp, Q=HIGH",
+          "V (2022): poll=7.66%, act=6.75%, res=-0.92pp, Q=HIGH"
+        ]
+      }
+    }
+  },
+  "quadrant_diagnostics": {
+    "below_to_below": {
+      "description": "Polled < 4.0% and failed the exact legal threshold test",
+      "count": 5,
+      "episodes": [
+        {
+          "election_year": 2006,
+          "party": "FI",
+          "final_poll_consensus_pct": 1.0,
+          "actual_result_pct": 0.6837,
+          "residual_pp": -0.3163,
+          "threshold_band": "<2",
+          "episode_quality": "LOW",
+          "threshold_crossing_distance_pp": 0.3163
+        },
+        {
+          "election_year": 2006,
+          "party": "SD",
+          "final_poll_consensus_pct": 2.0393,
+          "actual_result_pct": 2.9266,
+          "residual_pp": 0.8873,
+          "threshold_band": "2–3",
+          "episode_quality": "MEDIUM",
+          "threshold_crossing_distance_pp": -0.8873
+        },
+        {
+          "election_year": 2014,
+          "party": "FI",
+          "final_poll_consensus_pct": 3.7195,
+          "actual_result_pct": 3.1247,
+          "residual_pp": -0.5948,
+          "threshold_band": "3.5–4",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": 0.5948
+        },
+        {
+          "election_year": 2018,
+          "party": "FI",
+          "final_poll_consensus_pct": 1.0152,
+          "actual_result_pct": 0.458,
+          "residual_pp": -0.5572,
+          "threshold_band": "<2",
+          "episode_quality": "MEDIUM",
+          "threshold_crossing_distance_pp": 0.5572
+        },
+        {
+          "election_year": 2022,
+          "party": "FI",
+          "final_poll_consensus_pct": 0.3,
+          "actual_result_pct": 0.0487,
+          "residual_pp": -0.2513,
+          "threshold_band": "<2",
+          "episode_quality": "LOW",
+          "threshold_crossing_distance_pp": 0.2513
+        }
+      ]
+    },
+    "below_to_above": {
+      "description": "Polled < 4.0% and passed the exact legal threshold test",
+      "count": 0,
+      "episodes": []
+    },
+    "above_to_below": {
+      "description": "Polled >= 4.0% and failed the exact legal threshold test",
+      "count": 0,
+      "episodes": []
+    },
+    "above_to_above": {
+      "description": "Polled >= 4.0% and passed the exact legal threshold test",
+      "count": 53,
+      "episodes": [
+        {
+          "election_year": 1994,
+          "party": "C",
+          "final_poll_consensus_pct": 7.0,
+          "actual_result_pct": 7.6528,
+          "residual_pp": 0.6528,
+          "threshold_band": ">=6",
+          "episode_quality": "LOW",
+          "threshold_crossing_distance_pp": 0.6528
+        },
+        {
+          "election_year": 1994,
+          "party": "KD",
+          "final_poll_consensus_pct": 4.5,
+          "actual_result_pct": 4.0675,
+          "residual_pp": -0.4325,
+          "threshold_band": "4.5–5",
+          "episode_quality": "LOW",
+          "threshold_crossing_distance_pp": -0.4325
+        },
+        {
+          "election_year": 1994,
+          "party": "L",
+          "final_poll_consensus_pct": 7.0,
+          "actual_result_pct": 7.192,
+          "residual_pp": 0.192,
+          "threshold_band": ">=6",
+          "episode_quality": "LOW",
+          "threshold_crossing_distance_pp": 0.192
+        },
+        {
+          "election_year": 1994,
+          "party": "M",
+          "final_poll_consensus_pct": 21.5,
+          "actual_result_pct": 22.3786,
+          "residual_pp": 0.8786,
+          "threshold_band": ">=6",
+          "episode_quality": "LOW",
+          "threshold_crossing_distance_pp": 0.8786
+        },
+        {
+          "election_year": 1994,
+          "party": "MP",
+          "final_poll_consensus_pct": 7.0,
+          "actual_result_pct": 5.0228,
+          "residual_pp": -1.9772,
+          "threshold_band": ">=6",
+          "episode_quality": "LOW",
+          "threshold_crossing_distance_pp": -1.9772
+        },
+        {
+          "election_year": 1994,
+          "party": "S",
+          "final_poll_consensus_pct": 45.0,
+          "actual_result_pct": 45.2504,
+          "residual_pp": 0.2504,
+          "threshold_band": ">=6",
+          "episode_quality": "LOW",
+          "threshold_crossing_distance_pp": 0.2504
+        },
+        {
+          "election_year": 1994,
+          "party": "V",
+          "final_poll_consensus_pct": 6.5,
+          "actual_result_pct": 6.1738,
+          "residual_pp": -0.3262,
+          "threshold_band": ">=6",
+          "episode_quality": "LOW",
+          "threshold_crossing_distance_pp": -0.3262
+        },
+        {
+          "election_year": 2002,
+          "party": "C",
+          "final_poll_consensus_pct": 5.4356,
+          "actual_result_pct": 6.193,
+          "residual_pp": 0.7574,
+          "threshold_band": "5–6",
+          "episode_quality": "MEDIUM",
+          "threshold_crossing_distance_pp": 0.7574
+        },
+        {
+          "election_year": 2002,
+          "party": "KD",
+          "final_poll_consensus_pct": 10.0254,
+          "actual_result_pct": 9.1498,
+          "residual_pp": -0.8756,
+          "threshold_band": ">=6",
+          "episode_quality": "MEDIUM",
+          "threshold_crossing_distance_pp": -0.8756
+        },
+        {
+          "election_year": 2002,
+          "party": "L",
+          "final_poll_consensus_pct": 12.9611,
+          "actual_result_pct": 13.394,
+          "residual_pp": 0.4329,
+          "threshold_band": ">=6",
+          "episode_quality": "MEDIUM",
+          "threshold_crossing_distance_pp": 0.4329
+        },
+        {
+          "election_year": 2002,
+          "party": "M",
+          "final_poll_consensus_pct": 17.3733,
+          "actual_result_pct": 15.2557,
+          "residual_pp": -2.1176,
+          "threshold_band": ">=6",
+          "episode_quality": "MEDIUM",
+          "threshold_crossing_distance_pp": -2.1176
+        },
+        {
+          "election_year": 2002,
+          "party": "MP",
+          "final_poll_consensus_pct": 4.7354,
+          "actual_result_pct": 4.6461,
+          "residual_pp": -0.0893,
+          "threshold_band": "4.5–5",
+          "episode_quality": "MEDIUM",
+          "threshold_crossing_distance_pp": -0.0893
+        },
+        {
+          "election_year": 2002,
+          "party": "S",
+          "final_poll_consensus_pct": 36.8884,
+          "actual_result_pct": 39.8543,
+          "residual_pp": 2.9659,
+          "threshold_band": ">=6",
+          "episode_quality": "MEDIUM",
+          "threshold_crossing_distance_pp": 2.9659
+        },
+        {
+          "election_year": 2002,
+          "party": "V",
+          "final_poll_consensus_pct": 9.952,
+          "actual_result_pct": 8.3884,
+          "residual_pp": -1.5636,
+          "threshold_band": ">=6",
+          "episode_quality": "MEDIUM",
+          "threshold_crossing_distance_pp": -1.5636
+        },
+        {
+          "election_year": 2006,
+          "party": "C",
+          "final_poll_consensus_pct": 7.2934,
+          "actual_result_pct": 7.8791,
+          "residual_pp": 0.5857,
+          "threshold_band": ">=6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": 0.5857
+        },
+        {
+          "election_year": 2006,
+          "party": "KD",
+          "final_poll_consensus_pct": 6.9827,
+          "actual_result_pct": 6.593,
+          "residual_pp": -0.3897,
+          "threshold_band": ">=6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": -0.3897
+        },
+        {
+          "election_year": 2006,
+          "party": "L",
+          "final_poll_consensus_pct": 8.5001,
+          "actual_result_pct": 7.5369,
+          "residual_pp": -0.9632,
+          "threshold_band": ">=6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": -0.9632
+        },
+        {
+          "election_year": 2006,
+          "party": "M",
+          "final_poll_consensus_pct": 26.4172,
+          "actual_result_pct": 26.2284,
+          "residual_pp": -0.1888,
+          "threshold_band": ">=6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": -0.1888
+        },
+        {
+          "election_year": 2006,
+          "party": "MP",
+          "final_poll_consensus_pct": 5.779,
+          "actual_result_pct": 5.2442,
+          "residual_pp": -0.5348,
+          "threshold_band": "5–6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": -0.5348
+        },
+        {
+          "election_year": 2006,
+          "party": "S",
+          "final_poll_consensus_pct": 33.8293,
+          "actual_result_pct": 34.9942,
+          "residual_pp": 1.1649,
+          "threshold_band": ">=6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": 1.1649
+        },
+        {
+          "election_year": 2006,
+          "party": "V",
+          "final_poll_consensus_pct": 5.9277,
+          "actual_result_pct": 5.8495,
+          "residual_pp": -0.0782,
+          "threshold_band": "5–6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": -0.0782
+        },
+        {
+          "election_year": 2010,
+          "party": "C",
+          "final_poll_consensus_pct": 6.694,
+          "actual_result_pct": 6.5567,
+          "residual_pp": -0.1373,
+          "threshold_band": ">=6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": -0.1373
+        },
+        {
+          "election_year": 2010,
+          "party": "KD",
+          "final_poll_consensus_pct": 5.9446,
+          "actual_result_pct": 5.5985,
+          "residual_pp": -0.3461,
+          "threshold_band": "5–6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": -0.3461
+        },
+        {
+          "election_year": 2010,
+          "party": "L",
+          "final_poll_consensus_pct": 7.2139,
+          "actual_result_pct": 7.0553,
+          "residual_pp": -0.1586,
+          "threshold_band": ">=6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": -0.1586
+        },
+        {
+          "election_year": 2010,
+          "party": "M",
+          "final_poll_consensus_pct": 29.482,
+          "actual_result_pct": 30.0611,
+          "residual_pp": 0.5791,
+          "threshold_band": ">=6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": 0.5791
+        },
+        {
+          "election_year": 2010,
+          "party": "MP",
+          "final_poll_consensus_pct": 8.6599,
+          "actual_result_pct": 7.339,
+          "residual_pp": -1.3209,
+          "threshold_band": ">=6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": -1.3209
+        },
+        {
+          "election_year": 2010,
+          "party": "S",
+          "final_poll_consensus_pct": 29.3557,
+          "actual_result_pct": 30.6606,
+          "residual_pp": 1.3049,
+          "threshold_band": ">=6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": 1.3049
+        },
+        {
+          "election_year": 2010,
+          "party": "SD",
+          "final_poll_consensus_pct": 5.1147,
+          "actual_result_pct": 5.6978,
+          "residual_pp": 0.5831,
+          "threshold_band": "5–6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": 0.5831
+        },
+        {
+          "election_year": 2010,
+          "party": "V",
+          "final_poll_consensus_pct": 5.9349,
+          "actual_result_pct": 5.6045,
+          "residual_pp": -0.3304,
+          "threshold_band": "5–6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": -0.3304
+        },
+        {
+          "election_year": 2014,
+          "party": "C",
+          "final_poll_consensus_pct": 6.2698,
+          "actual_result_pct": 6.113,
+          "residual_pp": -0.1568,
+          "threshold_band": ">=6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": -0.1568
+        },
+        {
+          "election_year": 2014,
+          "party": "KD",
+          "final_poll_consensus_pct": 5.2054,
+          "actual_result_pct": 4.5704,
+          "residual_pp": -0.635,
+          "threshold_band": "5–6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": -0.635
+        },
+        {
+          "election_year": 2014,
+          "party": "L",
+          "final_poll_consensus_pct": 6.2894,
+          "actual_result_pct": 5.4203,
+          "residual_pp": -0.8691,
+          "threshold_band": ">=6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": -0.8691
+        },
+        {
+          "election_year": 2014,
+          "party": "M",
+          "final_poll_consensus_pct": 21.9586,
+          "actual_result_pct": 23.325,
+          "residual_pp": 1.3664,
+          "threshold_band": ">=6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": 1.3664
+        },
+        {
+          "election_year": 2014,
+          "party": "MP",
+          "final_poll_consensus_pct": 8.8075,
+          "actual_result_pct": 6.8887,
+          "residual_pp": -1.9188,
+          "threshold_band": ">=6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": -1.9188
+        },
+        {
+          "election_year": 2014,
+          "party": "S",
+          "final_poll_consensus_pct": 29.9124,
+          "actual_result_pct": 31.0148,
+          "residual_pp": 1.1024,
+          "threshold_band": ">=6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": 1.1024
+        },
+        {
+          "election_year": 2014,
+          "party": "SD",
+          "final_poll_consensus_pct": 9.9722,
+          "actual_result_pct": 12.8568,
+          "residual_pp": 2.8846,
+          "threshold_band": ">=6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": 2.8846
+        },
+        {
+          "election_year": 2014,
+          "party": "V",
+          "final_poll_consensus_pct": 6.8439,
+          "actual_result_pct": 5.7182,
+          "residual_pp": -1.1257,
+          "threshold_band": ">=6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": -1.1257
+        },
+        {
+          "election_year": 2018,
+          "party": "C",
+          "final_poll_consensus_pct": 8.5294,
+          "actual_result_pct": 8.6077,
+          "residual_pp": 0.0783,
+          "threshold_band": ">=6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": 0.0783
+        },
+        {
+          "election_year": 2018,
+          "party": "KD",
+          "final_poll_consensus_pct": 6.0747,
+          "actual_result_pct": 6.3223,
+          "residual_pp": 0.2476,
+          "threshold_band": ">=6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": 0.2476
+        },
+        {
+          "election_year": 2018,
+          "party": "L",
+          "final_poll_consensus_pct": 5.9566,
+          "actual_result_pct": 5.4896,
+          "residual_pp": -0.467,
+          "threshold_band": "5–6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": -0.467
+        },
+        {
+          "election_year": 2018,
+          "party": "M",
+          "final_poll_consensus_pct": 17.7732,
+          "actual_result_pct": 19.8356,
+          "residual_pp": 2.0624,
+          "threshold_band": ">=6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": 2.0624
+        },
+        {
+          "election_year": 2018,
+          "party": "MP",
+          "final_poll_consensus_pct": 4.9823,
+          "actual_result_pct": 4.4143,
+          "residual_pp": -0.568,
+          "threshold_band": "4.5–5",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": -0.568
+        },
+        {
+          "election_year": 2018,
+          "party": "S",
+          "final_poll_consensus_pct": 25.096,
+          "actual_result_pct": 28.261,
+          "residual_pp": 3.165,
+          "threshold_band": ">=6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": 3.165
+        },
+        {
+          "election_year": 2018,
+          "party": "SD",
+          "final_poll_consensus_pct": 18.5856,
+          "actual_result_pct": 17.534,
+          "residual_pp": -1.0516,
+          "threshold_band": ">=6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": -1.0516
+        },
+        {
+          "election_year": 2018,
+          "party": "V",
+          "final_poll_consensus_pct": 9.8775,
+          "actual_result_pct": 8.0049,
+          "residual_pp": -1.8726,
+          "threshold_band": ">=6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": -1.8726
+        },
+        {
+          "election_year": 2022,
+          "party": "C",
+          "final_poll_consensus_pct": 7.4334,
+          "actual_result_pct": 6.7142,
+          "residual_pp": -0.7192,
+          "threshold_band": ">=6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": -0.7192
+        },
+        {
+          "election_year": 2022,
+          "party": "KD",
+          "final_poll_consensus_pct": 5.6681,
+          "actual_result_pct": 5.3367,
+          "residual_pp": -0.3314,
+          "threshold_band": "5–6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": -0.3314
+        },
+        {
+          "election_year": 2022,
+          "party": "L",
+          "final_poll_consensus_pct": 4.8795,
+          "actual_result_pct": 4.6086,
+          "residual_pp": -0.2709,
+          "threshold_band": "4.5–5",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": -0.2709
+        },
+        {
+          "election_year": 2022,
+          "party": "M",
+          "final_poll_consensus_pct": 17.6791,
+          "actual_result_pct": 19.1021,
+          "residual_pp": 1.423,
+          "threshold_band": ">=6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": 1.423
+        },
+        {
+          "election_year": 2022,
+          "party": "MP",
+          "final_poll_consensus_pct": 5.5599,
+          "actual_result_pct": 5.0825,
+          "residual_pp": -0.4774,
+          "threshold_band": "5–6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": -0.4774
+        },
+        {
+          "election_year": 2022,
+          "party": "S",
+          "final_poll_consensus_pct": 28.8264,
+          "actual_result_pct": 30.3255,
+          "residual_pp": 1.4991,
+          "threshold_band": ">=6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": 1.4991
+        },
+        {
+          "election_year": 2022,
+          "party": "SD",
+          "final_poll_consensus_pct": 20.9928,
+          "actual_result_pct": 20.5361,
+          "residual_pp": -0.4567,
+          "threshold_band": ">=6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": -0.4567
+        },
+        {
+          "election_year": 2022,
+          "party": "V",
+          "final_poll_consensus_pct": 7.6637,
+          "actual_result_pct": 6.7467,
+          "residual_pp": -0.917,
+          "threshold_band": ">=6",
+          "episode_quality": "HIGH",
+          "threshold_crossing_distance_pp": -0.917
+        }
+      ]
+    }
+  },
+  "party_level_summary": {
+    "C": {
+      "episode_count": 7,
+      "mean_residual_pp": 0.1516,
+      "median_residual_pp": 0.0783,
+      "min_residual_pp": -0.7192,
+      "max_residual_pp": 0.7574,
+      "mean_abs_residual_pp": 0.4411
+    },
+    "FI": {
+      "episode_count": 4,
+      "mean_residual_pp": -0.4299,
+      "median_residual_pp": -0.4368,
+      "min_residual_pp": -0.5948,
+      "max_residual_pp": -0.2513,
+      "mean_abs_residual_pp": 0.4299
+    },
+    "KD": {
+      "episode_count": 7,
+      "mean_residual_pp": -0.3947,
+      "median_residual_pp": -0.3897,
+      "min_residual_pp": -0.8756,
+      "max_residual_pp": 0.2476,
+      "mean_abs_residual_pp": 0.4654
+    },
+    "L": {
+      "episode_count": 7,
+      "mean_residual_pp": -0.3006,
+      "median_residual_pp": -0.2709,
+      "min_residual_pp": -0.9632,
+      "max_residual_pp": 0.4329,
+      "mean_abs_residual_pp": 0.4791
+    },
+    "M": {
+      "episode_count": 7,
+      "mean_residual_pp": 0.5719,
+      "median_residual_pp": 0.8786,
+      "min_residual_pp": -2.1176,
+      "max_residual_pp": 2.0624,
+      "mean_abs_residual_pp": 1.2308
+    },
+    "MP": {
+      "episode_count": 7,
+      "mean_residual_pp": -0.9838,
+      "median_residual_pp": -0.568,
+      "min_residual_pp": -1.9772,
+      "max_residual_pp": -0.0893,
+      "mean_abs_residual_pp": 0.9838
+    },
+    "S": {
+      "episode_count": 7,
+      "mean_residual_pp": 1.6361,
+      "median_residual_pp": 1.3049,
+      "min_residual_pp": 0.2504,
+      "max_residual_pp": 3.165,
+      "mean_abs_residual_pp": 1.6361
+    },
+    "SD": {
+      "episode_count": 5,
+      "mean_residual_pp": 0.5693,
+      "median_residual_pp": 0.5831,
+      "min_residual_pp": -1.0516,
+      "max_residual_pp": 2.8846,
+      "mean_abs_residual_pp": 1.1727
+    },
+    "V": {
+      "episode_count": 7,
+      "mean_residual_pp": -0.8877,
+      "median_residual_pp": -0.917,
+      "min_residual_pp": -1.8726,
+      "max_residual_pp": -0.0782,
+      "mean_abs_residual_pp": 0.8877
+    }
+  },
+  "election_level_summary": {
+    "1994": {
+      "party_count": 7,
+      "election_poll_count": 1,
+      "election_pollster_count": 1,
+      "mean_residual_pp": -0.1089,
+      "mean_abs_residual_pp": 0.6728,
+      "rmse_pp": 0.8864
+    },
+    "2002": {
+      "party_count": 7,
+      "election_poll_count": 44,
+      "election_pollster_count": 7,
+      "mean_residual_pp": -0.07,
+      "mean_abs_residual_pp": 1.2575,
+      "rmse_pp": 1.5703
+    },
+    "2006": {
+      "party_count": 9,
+      "election_poll_count": 25,
+      "election_pollster_count": 5,
+      "mean_residual_pp": 0.0185,
+      "mean_abs_residual_pp": 0.5677,
+      "rmse_pp": 0.6662
+    },
+    "2010": {
+      "party_count": 8,
+      "election_poll_count": 27,
+      "election_pollster_count": 7,
+      "mean_residual_pp": 0.0217,
+      "mean_abs_residual_pp": 0.595,
+      "rmse_pp": 0.7413
+    },
+    "2014": {
+      "party_count": 9,
+      "election_poll_count": 23,
+      "election_pollster_count": 9,
+      "mean_residual_pp": 0.0059,
+      "mean_abs_residual_pp": 1.1837,
+      "rmse_pp": 1.4099
+    },
+    "2018": {
+      "party_count": 9,
+      "election_poll_count": 35,
+      "election_pollster_count": 10,
+      "mean_residual_pp": 0.1152,
+      "mean_abs_residual_pp": 1.1189,
+      "rmse_pp": 1.4833
+    },
+    "2022": {
+      "party_count": 9,
+      "election_poll_count": 47,
+      "election_pollster_count": 8,
+      "mean_residual_pp": -0.0558,
+      "mean_abs_residual_pp": 0.7051,
+      "rmse_pp": 0.8375
+    }
+  },
+  "window_sensitivity_summary": {
+    "7d_window": {
+      "total_episodes": 57,
+      "near_threshold_3_to_5_pct_count": 4,
+      "near_threshold_mean_residual_pp": -0.3695,
+      "near_threshold_median_residual_pp": -0.397,
+      "overall_mean_absolute_error_pp": 0.8507
+    },
+    "14d_window": {
+      "total_episodes": 58,
+      "near_threshold_3_to_5_pct_count": 5,
+      "near_threshold_mean_residual_pp": -0.3911,
+      "near_threshold_median_residual_pp": -0.4325,
+      "overall_mean_absolute_error_pp": 0.8698
+    },
+    "21d_window": {
+      "total_episodes": 72,
+      "near_threshold_3_to_5_pct_count": 9,
+      "near_threshold_mean_residual_pp": -0.2254,
+      "near_threshold_median_residual_pp": -0.2838,
+      "overall_mean_absolute_error_pp": 0.9544
+    }
+  },
+  "leave_one_out_summary": {
+    "exclude_1994": {
+      "retained_elections": [
+        2002,
+        2006,
+        2010,
+        2014,
+        2018,
+        2022
+      ],
+      "total_episodes": 51,
+      "near_4_pct_mean_residual_pp": -0.3807,
+      "band_35_to_4_mean_res": -0.5948,
+      "band_4_to_45_mean_res": null,
+      "band_45_to_5_mean_res": -0.3094
+    },
+    "exclude_2002": {
+      "retained_elections": [
+        1994,
+        2006,
+        2010,
+        2014,
+        2018,
+        2022
+      ],
+      "total_episodes": 51,
+      "near_4_pct_mean_residual_pp": -0.4665,
+      "band_35_to_4_mean_res": -0.5948,
+      "band_4_to_45_mean_res": null,
+      "band_45_to_5_mean_res": -0.4238
+    },
+    "exclude_2006": {
+      "retained_elections": [
+        1994,
+        2002,
+        2010,
+        2014,
+        2018,
+        2022
+      ],
+      "total_episodes": 49,
+      "near_4_pct_mean_residual_pp": -0.3911,
+      "band_35_to_4_mean_res": -0.5948,
+      "band_4_to_45_mean_res": null,
+      "band_45_to_5_mean_res": -0.3402
+    },
+    "exclude_2010": {
+      "retained_elections": [
+        1994,
+        2002,
+        2006,
+        2014,
+        2018,
+        2022
+      ],
+      "total_episodes": 50,
+      "near_4_pct_mean_residual_pp": -0.3911,
+      "band_35_to_4_mean_res": -0.5948,
+      "band_4_to_45_mean_res": null,
+      "band_45_to_5_mean_res": -0.3402
+    },
+    "exclude_2014": {
+      "retained_elections": [
+        1994,
+        2002,
+        2006,
+        2010,
+        2018,
+        2022
+      ],
+      "total_episodes": 49,
+      "near_4_pct_mean_residual_pp": -0.3402,
+      "band_35_to_4_mean_res": null,
+      "band_4_to_45_mean_res": null,
+      "band_45_to_5_mean_res": -0.3402
+    },
+    "exclude_2018": {
+      "retained_elections": [
+        1994,
+        2002,
+        2006,
+        2010,
+        2014,
+        2022
+      ],
+      "total_episodes": 49,
+      "near_4_pct_mean_residual_pp": -0.3469,
+      "band_35_to_4_mean_res": -0.5948,
+      "band_4_to_45_mean_res": null,
+      "band_45_to_5_mean_res": -0.2642
+    },
+    "exclude_2022": {
+      "retained_elections": [
+        1994,
+        2002,
+        2006,
+        2010,
+        2014,
+        2018
+      ],
+      "total_episodes": 49,
+      "near_4_pct_mean_residual_pp": -0.4212,
+      "band_35_to_4_mean_res": -0.5948,
+      "band_4_to_45_mean_res": null,
+      "band_45_to_5_mean_res": -0.3633
+    }
+  }
+}

@@ -1,0 +1,256 @@
+{
+  "model": "no_change",
+  "start_date": "2026-01-01",
+  "end_date": "2026-08-23",
+  "horizons": [
+    7,
+    14,
+    28,
+    56,
+    84,
+    112
+  ],
+  "origin_step_days": 7,
+  "samples": 5000,
+  "base_seed": 12345,
+  "total_origins_generated": 34,
+  "skipped_origins_count": 0,
+  "evaluated_cases_count": 161,
+  "skipped_cases_count": 43,
+  "total_rows_evaluated": 1449,
+  "summary_by_horizon": [
+    {
+      "forecast_cases": 33,
+      "N": 297,
+      "MAE": 0.08545050505050504,
+      "RMSE": 0.1099649469707941,
+      "mean_CRPS": 0.09857589898989899,
+      "coverage_50": 0.9057239057239057,
+      "coverage_80": 0.9966329966329966,
+      "coverage_90": 1.0,
+      "mean_width_50": 0.48523737373737375,
+      "mean_width_80": 0.9261535353535353,
+      "mean_width_90": 1.1920757575757575,
+      "model": "no_change",
+      "horizon_days": 7
+    },
+    {
+      "forecast_cases": 32,
+      "N": 288,
+      "MAE": 0.14158888888888888,
+      "RMSE": 0.17997994679963655,
+      "mean_CRPS": 0.11852842013888888,
+      "coverage_50": 0.7222222222222222,
+      "coverage_80": 0.96875,
+      "coverage_90": 0.9930555555555556,
+      "mean_width_50": 0.4738545138888889,
+      "mean_width_80": 0.9037930555555556,
+      "mean_width_90": 1.162873611111111,
+      "model": "no_change",
+      "horizon_days": 14
+    },
+    {
+      "forecast_cases": 30,
+      "N": 270,
+      "MAE": 0.2617925925925926,
+      "RMSE": 0.3253997769126691,
+      "mean_CRPS": 0.18727106296296295,
+      "coverage_50": 0.4703703703703704,
+      "coverage_80": 0.7703703703703704,
+      "coverage_90": 0.8740740740740741,
+      "mean_width_50": 0.46696629629629627,
+      "mean_width_80": 0.8908277777777778,
+      "mean_width_90": 1.1465025925925927,
+      "model": "no_change",
+      "horizon_days": 28
+    },
+    {
+      "forecast_cases": 26,
+      "N": 234,
+      "MAE": 0.48144102564102564,
+      "RMSE": 0.5998820183147981,
+      "mean_CRPS": 0.3655319188034188,
+      "coverage_50": 0.28205128205128205,
+      "coverage_80": 0.452991452991453,
+      "coverage_90": 0.5641025641025641,
+      "mean_width_50": 0.47008846153846157,
+      "mean_width_80": 0.8968098290598291,
+      "mean_width_90": 1.154377777777778,
+      "model": "no_change",
+      "horizon_days": 56
+    },
+    {
+      "forecast_cases": 22,
+      "N": 198,
+      "MAE": 0.6645863636363636,
+      "RMSE": 0.8286748609994907,
+      "mean_CRPS": 0.5338314848484849,
+      "coverage_50": 0.23737373737373738,
+      "coverage_80": 0.32323232323232326,
+      "coverage_90": 0.4090909090909091,
+      "mean_width_50": 0.4748570707070708,
+      "mean_width_80": 0.9068525252525254,
+      "mean_width_90": 1.1671984848484849,
+      "model": "no_change",
+      "horizon_days": 84
+    },
+    {
+      "forecast_cases": 18,
+      "N": 162,
+      "MAE": 0.8324185185185184,
+      "RMSE": 1.035186379115458,
+      "mean_CRPS": 0.6938520555555556,
+      "coverage_50": 0.20987654320987653,
+      "coverage_80": 0.24691358024691357,
+      "coverage_90": 0.2777777777777778,
+      "mean_width_50": 0.46111728395061724,
+      "mean_width_80": 0.8802629629629629,
+      "mean_width_90": 1.133433950617284,
+      "model": "no_change",
+      "horizon_days": 112
+    }
+  ],
+  "skipped_cases_sample": [
+    {
+      "model": "no_change",
+      "origin_date": "2026-05-07",
+      "target_date": "2026-08-27",
+      "horizon_days": 112,
+      "reason": "missing_exact_target_observation"
+    },
+    {
+      "model": "no_change",
+      "origin_date": "2026-05-14",
+      "target_date": "2026-09-03",
+      "horizon_days": 112,
+      "reason": "missing_exact_target_observation"
+    },
+    {
+      "model": "no_change",
+      "origin_date": "2026-05-21",
+      "target_date": "2026-09-10",
+      "horizon_days": 112,
+      "reason": "missing_exact_target_observation"
+    },
+    {
+      "model": "no_change",
+      "origin_date": "2026-05-28",
+      "target_date": "2026-09-17",
+      "horizon_days": 112,
+      "reason": "missing_exact_target_observation"
+    },
+    {
+      "model": "no_change",
+      "origin_date": "2026-06-04",
+      "target_date": "2026-08-27",
+      "horizon_days": 84,
+      "reason": "missing_exact_target_observation"
+    },
+    {
+      "model": "no_change",
+      "origin_date": "2026-06-04",
+      "target_date": "2026-09-24",
+      "horizon_days": 112,
+      "reason": "missing_exact_target_observation"
+    },
+    {
+      "model": "no_change",
+      "origin_date": "2026-06-11",
+      "target_date": "2026-09-03",
+      "horizon_days": 84,
+      "reason": "missing_exact_target_observation"
+    },
+    {
+      "model": "no_change",
+      "origin_date": "2026-06-11",
+      "target_date": "2026-10-01",
+      "horizon_days": 112,
+      "reason": "missing_exact_target_observation"
+    },
+    {
+      "model": "no_change",
+      "origin_date": "2026-06-18",
+      "target_date": "2026-09-10",
+      "horizon_days": 84,
+      "reason": "missing_exact_target_observation"
+    },
+    {
+      "model": "no_change",
+      "origin_date": "2026-06-18",
+      "target_date": "2026-10-08",
+      "horizon_days": 112,
+      "reason": "missing_exact_target_observation"
+    },
+    {
+      "model": "no_change",
+      "origin_date": "2026-06-25",
+      "target_date": "2026-09-17",
+      "horizon_days": 84,
+      "reason": "missing_exact_target_observation"
+    },
+    {
+      "model": "no_change",
+      "origin_date": "2026-06-25",
+      "target_date": "2026-10-15",
+      "horizon_days": 112,
+      "reason": "missing_exact_target_observation"
+    },
+    {
+      "model": "no_change",
+      "origin_date": "2026-07-02",
+      "target_date": "2026-08-27",
+      "horizon_days": 56,
+      "reason": "missing_exact_target_observation"
+    },
+    {
+      "model": "no_change",
+      "origin_date": "2026-07-02",
+      "target_date": "2026-09-24",
+      "horizon_days": 84,
+      "reason": "missing_exact_target_observation"
+    },
+    {
+      "model": "no_change",
+      "origin_date": "2026-07-02",
+      "target_date": "2026-10-22",
+      "horizon_days": 112,
+      "reason": "missing_exact_target_observation"
+    },
+    {
+      "model": "no_change",
+      "origin_date": "2026-07-09",
+      "target_date": "2026-09-03",
+      "horizon_days": 56,
+      "reason": "missing_exact_target_observation"
+    },
+    {
+      "model": "no_change",
+      "origin_date": "2026-07-09",
+      "target_date": "2026-10-01",
+      "horizon_days": 84,
+      "reason": "missing_exact_target_observation"
+    },
+    {
+      "model": "no_change",
+      "origin_date": "2026-07-09",
+      "target_date": "2026-10-29",
+      "horizon_days": 112,
+      "reason": "missing_exact_target_observation"
+    },
+    {
+      "model": "no_change",
+      "origin_date": "2026-07-16",
+      "target_date": "2026-09-10",
+      "horizon_days": 56,
+      "reason": "missing_exact_target_observation"
+    },
+    {
+      "model": "no_change",
+      "origin_date": "2026-07-16",
+      "target_date": "2026-10-08",
+      "horizon_days": 84,
+      "reason": "missing_exact_target_observation"
+    }
+  ],
+  "skipped_origins": []
+}

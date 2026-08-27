@@ -1,0 +1,1157 @@
+{
+  "schema_version": "1.0",
+  "benchmark": "paired_precision_threshold_attribution",
+  "status": "COMPLETE",
+  "evidence_type": "retrospective_comparative_diagnostic_not_holdout",
+  "configuration": {
+    "seeds": [
+      12345,
+      24680,
+      98765
+    ],
+    "rolling_samples_per_case": 1000,
+    "election_samples_per_case": 5000,
+    "horizons_days": [
+      7,
+      14,
+      28,
+      56,
+      84,
+      112
+    ],
+    "rolling_start": "2014-09-15",
+    "rolling_end": null,
+    "rolling_origin_step_days": 7,
+    "run_rolling": false,
+    "run_elections": true,
+    "models": [
+      "election_simulator_v1_rc1_dynamics",
+      "pop_baseline_v1"
+    ],
+    "common_random_numbers_policy": "Identical exact cases and deterministic base seeds are paired. The architectures use model-specific derived substreams; exact draw-level common random numbers are not claimed.",
+    "aggregation_policy": "Seed replicates are collapsed per exact case/model/party before threshold reliability aggregation; rolling origins remain temporally dependent and all summaries are descriptive."
+  },
+  "case_set": {
+    "same_case_set_across_seeds": true,
+    "same_case_set_across_models": true,
+    "replicate_hashes": [
+      {
+        "replicate_seed": 12345,
+        "scored_case_count": 12,
+        "skipped_case_count": 0,
+        "case_identity_hash": "a74be0ecc650f27ca6ab56c3dab3024b49383693d60b2ac7cc19af20d1695342",
+        "missing_models": [],
+        "duplicate_scored_cases": []
+      },
+      {
+        "replicate_seed": 24680,
+        "scored_case_count": 12,
+        "skipped_case_count": 0,
+        "case_identity_hash": "a74be0ecc650f27ca6ab56c3dab3024b49383693d60b2ac7cc19af20d1695342",
+        "missing_models": [],
+        "duplicate_scored_cases": []
+      },
+      {
+        "replicate_seed": 98765,
+        "scored_case_count": 12,
+        "skipped_case_count": 0,
+        "case_identity_hash": "a74be0ecc650f27ca6ab56c3dab3024b49383693d60b2ac7cc19af20d1695342",
+        "missing_models": [],
+        "duplicate_scored_cases": []
+      }
+    ]
+  },
+  "skip_accounting": {
+    "total_skipped_case_replicates": 0,
+    "by_reason": {},
+    "by_reason_detail": {},
+    "policy": "Skipped cases remain explicit; no unavailable origin, target, or transition pool is imputed."
+  },
+  "seed_level_scores": [
+    {
+      "replicate_seed": 12345,
+      "evaluation": "election_vote_hindcast",
+      "model": "election_simulator_v1_rc1_dynamics",
+      "metric": "joint_vote_energy_score_9parties",
+      "scored_case_count": 12,
+      "mean_score": 2.8720649096007507
+    },
+    {
+      "replicate_seed": 12345,
+      "evaluation": "election_vote_hindcast",
+      "model": "election_simulator_v1_rc1_dynamics",
+      "metric": "median_vote_mae_8parties",
+      "scored_case_count": 12,
+      "mean_score": 1.1158760480720855
+    },
+    {
+      "replicate_seed": 12345,
+      "evaluation": "election_vote_hindcast",
+      "model": "election_simulator_v1_rc1_dynamics",
+      "metric": "threshold_brier_mean_8parties",
+      "scored_case_count": 12,
+      "mean_score": 0.05576308999999999
+    },
+    {
+      "replicate_seed": 12345,
+      "evaluation": "election_vote_hindcast",
+      "model": "election_simulator_v1_rc1_dynamics",
+      "metric": "vote_crps_mean_8parties",
+      "scored_case_count": 12,
+      "mean_score": 0.8032815367475711
+    },
+    {
+      "replicate_seed": 12345,
+      "evaluation": "election_vote_hindcast",
+      "model": "pop_baseline_v1",
+      "metric": "joint_vote_energy_score_9parties",
+      "scored_case_count": 12,
+      "mean_score": 3.0006436073684317
+    },
+    {
+      "replicate_seed": 12345,
+      "evaluation": "election_vote_hindcast",
+      "model": "pop_baseline_v1",
+      "metric": "median_vote_mae_8parties",
+      "scored_case_count": 12,
+      "mean_score": 1.0528485332985908
+    },
+    {
+      "replicate_seed": 12345,
+      "evaluation": "election_vote_hindcast",
+      "model": "pop_baseline_v1",
+      "metric": "threshold_brier_mean_8parties",
+      "scored_case_count": 12,
+      "mean_score": 0.01847583708333333
+    },
+    {
+      "replicate_seed": 12345,
+      "evaluation": "election_vote_hindcast",
+      "model": "pop_baseline_v1",
+      "metric": "vote_crps_mean_8parties",
+      "scored_case_count": 12,
+      "mean_score": 0.8499584021120583
+    },
+    {
+      "replicate_seed": 24680,
+      "evaluation": "election_vote_hindcast",
+      "model": "election_simulator_v1_rc1_dynamics",
+      "metric": "joint_vote_energy_score_9parties",
+      "scored_case_count": 12,
+      "mean_score": 2.871603120873742
+    },
+    {
+      "replicate_seed": 24680,
+      "evaluation": "election_vote_hindcast",
+      "model": "election_simulator_v1_rc1_dynamics",
+      "metric": "median_vote_mae_8parties",
+      "scored_case_count": 12,
+      "mean_score": 1.11416460880776
+    },
+    {
+      "replicate_seed": 24680,
+      "evaluation": "election_vote_hindcast",
+      "model": "election_simulator_v1_rc1_dynamics",
+      "metric": "threshold_brier_mean_8parties",
+      "scored_case_count": 12,
+      "mean_score": 0.05561873958333333
+    },
+    {
+      "replicate_seed": 24680,
+      "evaluation": "election_vote_hindcast",
+      "model": "election_simulator_v1_rc1_dynamics",
+      "metric": "vote_crps_mean_8parties",
+      "scored_case_count": 12,
+      "mean_score": 0.8026882905457949
+    },
+    {
+      "replicate_seed": 24680,
+      "evaluation": "election_vote_hindcast",
+      "model": "pop_baseline_v1",
+      "metric": "joint_vote_energy_score_9parties",
+      "scored_case_count": 12,
+      "mean_score": 3.0020447715014544
+    },
+    {
+      "replicate_seed": 24680,
+      "evaluation": "election_vote_hindcast",
+      "model": "pop_baseline_v1",
+      "metric": "median_vote_mae_8parties",
+      "scored_case_count": 12,
+      "mean_score": 1.0539097533446895
+    },
+    {
+      "replicate_seed": 24680,
+      "evaluation": "election_vote_hindcast",
+      "model": "pop_baseline_v1",
+      "metric": "threshold_brier_mean_8parties",
+      "scored_case_count": 12,
+      "mean_score": 0.018666824166666665
+    },
+    {
+      "replicate_seed": 24680,
+      "evaluation": "election_vote_hindcast",
+      "model": "pop_baseline_v1",
+      "metric": "vote_crps_mean_8parties",
+      "scored_case_count": 12,
+      "mean_score": 0.8505326347722634
+    },
+    {
+      "replicate_seed": 98765,
+      "evaluation": "election_vote_hindcast",
+      "model": "election_simulator_v1_rc1_dynamics",
+      "metric": "joint_vote_energy_score_9parties",
+      "scored_case_count": 12,
+      "mean_score": 2.863753769261887
+    },
+    {
+      "replicate_seed": 98765,
+      "evaluation": "election_vote_hindcast",
+      "model": "election_simulator_v1_rc1_dynamics",
+      "metric": "median_vote_mae_8parties",
+      "scored_case_count": 12,
+      "mean_score": 1.1158188305791379
+    },
+    {
+      "replicate_seed": 98765,
+      "evaluation": "election_vote_hindcast",
+      "model": "election_simulator_v1_rc1_dynamics",
+      "metric": "threshold_brier_mean_8parties",
+      "scored_case_count": 12,
+      "mean_score": 0.0554450175
+    },
+    {
+      "replicate_seed": 98765,
+      "evaluation": "election_vote_hindcast",
+      "model": "election_simulator_v1_rc1_dynamics",
+      "metric": "vote_crps_mean_8parties",
+      "scored_case_count": 12,
+      "mean_score": 0.8014310972471314
+    },
+    {
+      "replicate_seed": 98765,
+      "evaluation": "election_vote_hindcast",
+      "model": "pop_baseline_v1",
+      "metric": "joint_vote_energy_score_9parties",
+      "scored_case_count": 12,
+      "mean_score": 2.9988139550552178
+    },
+    {
+      "replicate_seed": 98765,
+      "evaluation": "election_vote_hindcast",
+      "model": "pop_baseline_v1",
+      "metric": "median_vote_mae_8parties",
+      "scored_case_count": 12,
+      "mean_score": 1.0558315569686019
+    },
+    {
+      "replicate_seed": 98765,
+      "evaluation": "election_vote_hindcast",
+      "model": "pop_baseline_v1",
+      "metric": "threshold_brier_mean_8parties",
+      "scored_case_count": 12,
+      "mean_score": 0.018622584999999997
+    },
+    {
+      "replicate_seed": 98765,
+      "evaluation": "election_vote_hindcast",
+      "model": "pop_baseline_v1",
+      "metric": "vote_crps_mean_8parties",
+      "scored_case_count": 12,
+      "mean_score": 0.8497659294861765
+    }
+  ],
+  "seed_stability": [
+    {
+      "evaluation": "election_vote_hindcast",
+      "model": "election_simulator_v1_rc1_dynamics",
+      "metric": "joint_vote_energy_score_9parties",
+      "seed_count": 3,
+      "mean_of_seed_scores": 2.8691405999121264,
+      "sd_across_seed_scores": 0.004670842595064407,
+      "min_seed_score": 2.863753769261887,
+      "max_seed_score": 2.8720649096007507
+    },
+    {
+      "evaluation": "election_vote_hindcast",
+      "model": "election_simulator_v1_rc1_dynamics",
+      "metric": "median_vote_mae_8parties",
+      "seed_count": 3,
+      "mean_of_seed_scores": 1.115286495819661,
+      "sd_across_seed_scores": 0.0009720037607845141,
+      "min_seed_score": 1.11416460880776,
+      "max_seed_score": 1.1158760480720855
+    },
+    {
+      "evaluation": "election_vote_hindcast",
+      "model": "election_simulator_v1_rc1_dynamics",
+      "metric": "threshold_brier_mean_8parties",
+      "seed_count": 3,
+      "mean_of_seed_scores": 0.05560894902777777,
+      "sd_across_seed_scores": 0.0001592621111489658,
+      "min_seed_score": 0.0554450175,
+      "max_seed_score": 0.05576308999999999
+    },
+    {
+      "evaluation": "election_vote_hindcast",
+      "model": "election_simulator_v1_rc1_dynamics",
+      "metric": "vote_crps_mean_8parties",
+      "seed_count": 3,
+      "mean_of_seed_scores": 0.8024669748468325,
+      "sd_across_seed_scores": 0.0009448635166797079,
+      "min_seed_score": 0.8014310972471314,
+      "max_seed_score": 0.8032815367475711
+    },
+    {
+      "evaluation": "election_vote_hindcast",
+      "model": "pop_baseline_v1",
+      "metric": "joint_vote_energy_score_9parties",
+      "seed_count": 3,
+      "mean_of_seed_scores": 3.0005007779750343,
+      "sd_across_seed_scores": 0.0016201370016242433,
+      "min_seed_score": 2.9988139550552178,
+      "max_seed_score": 3.0020447715014544
+    },
+    {
+      "evaluation": "election_vote_hindcast",
+      "model": "pop_baseline_v1",
+      "metric": "median_vote_mae_8parties",
+      "seed_count": 3,
+      "mean_of_seed_scores": 1.054196614537294,
+      "sd_across_seed_scores": 0.001512059708420402,
+      "min_seed_score": 1.0528485332985908,
+      "max_seed_score": 1.0558315569686019
+    },
+    {
+      "evaluation": "election_vote_hindcast",
+      "model": "pop_baseline_v1",
+      "metric": "threshold_brier_mean_8parties",
+      "seed_count": 3,
+      "mean_of_seed_scores": 0.018588415416666667,
+      "sd_across_seed_scores": 9.997343056494345e-05,
+      "min_seed_score": 0.01847583708333333,
+      "max_seed_score": 0.018666824166666665
+    },
+    {
+      "evaluation": "election_vote_hindcast",
+      "model": "pop_baseline_v1",
+      "metric": "vote_crps_mean_8parties",
+      "seed_count": 3,
+      "mean_of_seed_scores": 0.8500856554568328,
+      "sd_across_seed_scores": 0.00039887881523792206,
+      "min_seed_score": 0.8497659294861765,
+      "max_seed_score": 0.8505326347722634
+    }
+  ],
+  "paired_case_deltas": [
+    {
+      "evaluation": "election_vote_hindcast",
+      "metric": "joint_vote_energy_score_9parties",
+      "paired_case_count": 12,
+      "mean_delta_a_minus_b": -0.13136017806290778,
+      "median_delta_a_minus_b": -0.14888918706256102,
+      "sd_across_case_mean_deltas": 0.2853922386744972,
+      "min_case_mean_delta": -0.5386804168616761,
+      "max_case_mean_delta": 0.49323196863892055,
+      "a_wins": 10,
+      "b_wins": 2,
+      "ties": 0,
+      "lower_is_better": true,
+      "interpretation": "Descriptive paired case means; seed replicates and rolling origins are not independent, so no inferential confidence interval is reported."
+    },
+    {
+      "evaluation": "election_vote_hindcast",
+      "metric": "median_vote_mae_8parties",
+      "paired_case_count": 12,
+      "mean_delta_a_minus_b": 0.061089881282366844,
+      "median_delta_a_minus_b": 0.017682001524130943,
+      "sd_across_case_mean_deltas": 0.1420573533293491,
+      "min_case_mean_delta": -0.11648266287126408,
+      "max_case_mean_delta": 0.3839750971611964,
+      "a_wins": 6,
+      "b_wins": 6,
+      "ties": 0,
+      "lower_is_better": true,
+      "interpretation": "Descriptive paired case means; seed replicates and rolling origins are not independent, so no inferential confidence interval is reported."
+    },
+    {
+      "evaluation": "election_vote_hindcast",
+      "metric": "threshold_brier_mean_8parties",
+      "paired_case_count": 12,
+      "mean_delta_a_minus_b": 0.037020533611111114,
+      "median_delta_a_minus_b": 0.017493034166666664,
+      "sd_across_case_mean_deltas": 0.040863663484368144,
+      "min_case_mean_delta": 0.0002719116666666666,
+      "max_case_mean_delta": 0.09660347666666665,
+      "a_wins": 0,
+      "b_wins": 12,
+      "ties": 0,
+      "lower_is_better": true,
+      "interpretation": "Descriptive paired case means; seed replicates and rolling origins are not independent, so no inferential confidence interval is reported."
+    },
+    {
+      "evaluation": "election_vote_hindcast",
+      "metric": "vote_crps_mean_8parties",
+      "paired_case_count": 12,
+      "mean_delta_a_minus_b": -0.047618680610000276,
+      "median_delta_a_minus_b": -0.0603946258694541,
+      "sd_across_case_mean_deltas": 0.11159601938351446,
+      "min_case_mean_delta": -0.2528414079648327,
+      "max_case_mean_delta": 0.16967831162407784,
+      "a_wins": 9,
+      "b_wins": 3,
+      "ties": 0,
+      "lower_is_better": true,
+      "interpretation": "Descriptive paired case means; seed replicates and rolling origins are not independent, so no inferential confidence interval is reported."
+    }
+  ],
+  "threshold_brier": {
+    "row_count": 192,
+    "raw_seed_row_count": 576,
+    "dimensions": [
+      "election_year",
+      "horizon_days",
+      "party",
+      "forecast_probability",
+      "actual_above_threshold"
+    ],
+    "reliability": {
+      "by_election": [
+        {
+          "grouping": "model",
+          "group": "all",
+          "model": "election_simulator_v1_rc1_dynamics",
+          "observation_count": 96,
+          "mean_forecast_probability": 0.9144756944444444,
+          "observed_rate": 1.0,
+          "observed_successes": 96,
+          "observed_rate_wilson95_low": 0.9615230525151842,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.055605351620370363
+        },
+        {
+          "grouping": "model",
+          "group": "all",
+          "model": "pop_baseline_v1",
+          "observation_count": 96,
+          "mean_forecast_probability": 0.9656604166666666,
+          "observed_rate": 1.0,
+          "observed_successes": 96,
+          "observed_rate_wilson95_low": 0.9615230525151842,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.01858563912037037
+        },
+        {
+          "grouping": "election_year",
+          "group": 2018,
+          "model": "election_simulator_v1_rc1_dynamics",
+          "observation_count": 48,
+          "mean_forecast_probability": 0.8965847222222222,
+          "observed_rate": 1.0,
+          "observed_successes": 48,
+          "observed_rate_wilson95_low": 0.9258973488472576,
+          "observed_rate_wilson95_high": 0.9999999999999999,
+          "mean_brier": 0.07269990546296297
+        },
+        {
+          "grouping": "election_year",
+          "group": 2018,
+          "model": "pop_baseline_v1",
+          "observation_count": 48,
+          "mean_forecast_probability": 0.9564222222222223,
+          "observed_rate": 1.0,
+          "observed_successes": 48,
+          "observed_rate_wilson95_low": 0.9258973488472576,
+          "observed_rate_wilson95_high": 0.9999999999999999,
+          "mean_brier": 0.026696671851851855
+        },
+        {
+          "grouping": "election_year",
+          "group": 2022,
+          "model": "election_simulator_v1_rc1_dynamics",
+          "observation_count": 48,
+          "mean_forecast_probability": 0.9323666666666668,
+          "observed_rate": 1.0,
+          "observed_successes": 48,
+          "observed_rate_wilson95_low": 0.9258973488472576,
+          "observed_rate_wilson95_high": 0.9999999999999999,
+          "mean_brier": 0.03851079777777777
+        },
+        {
+          "grouping": "election_year",
+          "group": 2022,
+          "model": "pop_baseline_v1",
+          "observation_count": 48,
+          "mean_forecast_probability": 0.9748986111111112,
+          "observed_rate": 1.0,
+          "observed_successes": 48,
+          "observed_rate_wilson95_low": 0.9258973488472576,
+          "observed_rate_wilson95_high": 0.9999999999999999,
+          "mean_brier": 0.01047460638888889
+        }
+      ],
+      "by_horizon": [
+        {
+          "grouping": "model",
+          "group": "all",
+          "model": "election_simulator_v1_rc1_dynamics",
+          "observation_count": 96,
+          "mean_forecast_probability": 0.9144756944444444,
+          "observed_rate": 1.0,
+          "observed_successes": 96,
+          "observed_rate_wilson95_low": 0.9615230525151842,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.055605351620370363
+        },
+        {
+          "grouping": "model",
+          "group": "all",
+          "model": "pop_baseline_v1",
+          "observation_count": 96,
+          "mean_forecast_probability": 0.9656604166666666,
+          "observed_rate": 1.0,
+          "observed_successes": 96,
+          "observed_rate_wilson95_low": 0.9615230525151842,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.01858563912037037
+        },
+        {
+          "grouping": "horizon_days",
+          "group": 112,
+          "model": "election_simulator_v1_rc1_dynamics",
+          "observation_count": 16,
+          "mean_forecast_probability": 0.7973291666666666,
+          "observed_rate": 1.0,
+          "observed_successes": 16,
+          "observed_rate_wilson95_low": 0.8063865817272802,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.14933591583333333
+        },
+        {
+          "grouping": "horizon_days",
+          "group": 112,
+          "model": "pop_baseline_v1",
+          "observation_count": 16,
+          "mean_forecast_probability": 0.9018166666666666,
+          "observed_rate": 1.0,
+          "observed_successes": 16,
+          "observed_rate_wilson95_low": 0.8063865817272802,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.05387615111111112
+        },
+        {
+          "grouping": "horizon_days",
+          "group": 14,
+          "model": "election_simulator_v1_rc1_dynamics",
+          "observation_count": 16,
+          "mean_forecast_probability": 0.9902333333333333,
+          "observed_rate": 1.0,
+          "observed_successes": 16,
+          "observed_rate_wilson95_low": 0.8063865817272802,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.00044529555555555475
+        },
+        {
+          "grouping": "horizon_days",
+          "group": 14,
+          "model": "pop_baseline_v1",
+          "observation_count": 16,
+          "mean_forecast_probability": 0.9999166666666667,
+          "observed_rate": 1.0,
+          "observed_successes": 16,
+          "observed_rate_wilson95_low": 0.8063865817272802,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 6.722222222222129e-08
+        },
+        {
+          "grouping": "horizon_days",
+          "group": 28,
+          "model": "election_simulator_v1_rc1_dynamics",
+          "observation_count": 16,
+          "mean_forecast_probability": 0.9671666666666667,
+          "observed_rate": 1.0,
+          "observed_successes": 16,
+          "observed_rate_wilson95_low": 0.8063865817272802,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.010766892222222225
+        },
+        {
+          "grouping": "horizon_days",
+          "group": 28,
+          "model": "pop_baseline_v1",
+          "observation_count": 16,
+          "mean_forecast_probability": 0.9960041666666667,
+          "observed_rate": 1.0,
+          "observed_successes": 16,
+          "observed_rate_wilson95_low": 0.8063865817272802,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.0002470402777777783
+        },
+        {
+          "grouping": "horizon_days",
+          "group": 56,
+          "model": "election_simulator_v1_rc1_dynamics",
+          "observation_count": 16,
+          "mean_forecast_probability": 0.9009750000000001,
+          "observed_rate": 1.0,
+          "observed_successes": 16,
+          "observed_rate_wilson95_low": 0.8063865817272802,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.06634126555555557
+        },
+        {
+          "grouping": "horizon_days",
+          "group": 56,
+          "model": "pop_baseline_v1",
+          "observation_count": 16,
+          "mean_forecast_probability": 0.9681416666666667,
+          "observed_rate": 1.0,
+          "observed_successes": 16,
+          "observed_rate_wilson95_low": 0.8063865817272802,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.01355609611111111
+        },
+        {
+          "grouping": "horizon_days",
+          "group": 7,
+          "model": "election_simulator_v1_rc1_dynamics",
+          "observation_count": 16,
+          "mean_forecast_probability": 0.98475,
+          "observed_rate": 1.0,
+          "observed_successes": 16,
+          "observed_rate_wilson95_low": 0.8063865817272802,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.0013464861111111125
+        },
+        {
+          "grouping": "horizon_days",
+          "group": 7,
+          "model": "pop_baseline_v1",
+          "observation_count": 16,
+          "mean_forecast_probability": 0.9999625,
+          "observed_rate": 1.0,
+          "observed_successes": 16,
+          "observed_rate_wilson95_low": 0.8063865817272802,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 1.805555555555158e-08
+        },
+        {
+          "grouping": "horizon_days",
+          "group": 84,
+          "model": "election_simulator_v1_rc1_dynamics",
+          "observation_count": 16,
+          "mean_forecast_probability": 0.8464,
+          "observed_rate": 1.0,
+          "observed_successes": 16,
+          "observed_rate_wilson95_low": 0.8063865817272802,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.10539625444444442
+        },
+        {
+          "grouping": "horizon_days",
+          "group": 84,
+          "model": "pop_baseline_v1",
+          "observation_count": 16,
+          "mean_forecast_probability": 0.9281208333333334,
+          "observed_rate": 1.0,
+          "observed_successes": 16,
+          "observed_rate_wilson95_low": 0.8063865817272802,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.043834461944444444
+        }
+      ],
+      "by_party": [
+        {
+          "grouping": "model",
+          "group": "all",
+          "model": "election_simulator_v1_rc1_dynamics",
+          "observation_count": 96,
+          "mean_forecast_probability": 0.9144756944444444,
+          "observed_rate": 1.0,
+          "observed_successes": 96,
+          "observed_rate_wilson95_low": 0.9615230525151842,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.055605351620370363
+        },
+        {
+          "grouping": "model",
+          "group": "all",
+          "model": "pop_baseline_v1",
+          "observation_count": 96,
+          "mean_forecast_probability": 0.9656604166666666,
+          "observed_rate": 1.0,
+          "observed_successes": 96,
+          "observed_rate_wilson95_low": 0.9615230525151842,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.01858563912037037
+        },
+        {
+          "grouping": "party",
+          "group": "C",
+          "model": "election_simulator_v1_rc1_dynamics",
+          "observation_count": 12,
+          "mean_forecast_probability": 0.9987722222222222,
+          "observed_rate": 1.0,
+          "observed_successes": 12,
+          "observed_rate_wilson95_low": 0.7574992425007574,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 8.416666666666733e-06
+        },
+        {
+          "grouping": "party",
+          "group": "C",
+          "model": "pop_baseline_v1",
+          "observation_count": 12,
+          "mean_forecast_probability": 0.9999888888888888,
+          "observed_rate": 1.0,
+          "observed_successes": 12,
+          "observed_rate_wilson95_low": 0.7574992425007574,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 1.4814814814811553e-09
+        },
+        {
+          "grouping": "party",
+          "group": "KD",
+          "model": "election_simulator_v1_rc1_dynamics",
+          "observation_count": 12,
+          "mean_forecast_probability": 0.7129166666666666,
+          "observed_rate": 1.0,
+          "observed_successes": 12,
+          "observed_rate_wilson95_low": 0.7574992425007574,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.25439805962962964
+        },
+        {
+          "grouping": "party",
+          "group": "KD",
+          "model": "pop_baseline_v1",
+          "observation_count": 12,
+          "mean_forecast_probability": 0.8346944444444443,
+          "observed_rate": 1.0,
+          "observed_successes": 12,
+          "observed_rate_wilson95_low": 0.7574992425007574,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.10638842185185186
+        },
+        {
+          "grouping": "party",
+          "group": "L",
+          "model": "election_simulator_v1_rc1_dynamics",
+          "observation_count": 12,
+          "mean_forecast_probability": 0.8685722222222222,
+          "observed_rate": 1.0,
+          "observed_successes": 12,
+          "observed_rate_wilson95_low": 0.7574992425007574,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.050238738148148145
+        },
+        {
+          "grouping": "party",
+          "group": "L",
+          "model": "pop_baseline_v1",
+          "observation_count": 12,
+          "mean_forecast_probability": 0.9776666666666666,
+          "observed_rate": 1.0,
+          "observed_successes": 12,
+          "observed_rate_wilson95_low": 0.7574992425007574,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.00450960518518519
+        },
+        {
+          "grouping": "party",
+          "group": "M",
+          "model": "election_simulator_v1_rc1_dynamics",
+          "observation_count": 12,
+          "mean_forecast_probability": 1.0,
+          "observed_rate": 1.0,
+          "observed_successes": 12,
+          "observed_rate_wilson95_low": 0.7574992425007574,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.0
+        },
+        {
+          "grouping": "party",
+          "group": "M",
+          "model": "pop_baseline_v1",
+          "observation_count": 12,
+          "mean_forecast_probability": 1.0,
+          "observed_rate": 1.0,
+          "observed_successes": 12,
+          "observed_rate_wilson95_low": 0.7574992425007574,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.0
+        },
+        {
+          "grouping": "party",
+          "group": "MP",
+          "model": "election_simulator_v1_rc1_dynamics",
+          "observation_count": 12,
+          "mean_forecast_probability": 0.7355444444444443,
+          "observed_rate": 1.0,
+          "observed_successes": 12,
+          "observed_rate_wilson95_low": 0.7574992425007574,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.1401975985185185
+        },
+        {
+          "grouping": "party",
+          "group": "MP",
+          "model": "pop_baseline_v1",
+          "observation_count": 12,
+          "mean_forecast_probability": 0.9129333333333333,
+          "observed_rate": 1.0,
+          "observed_successes": 12,
+          "observed_rate_wilson95_low": 0.7574992425007574,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.037787084444444445
+        },
+        {
+          "grouping": "party",
+          "group": "S",
+          "model": "election_simulator_v1_rc1_dynamics",
+          "observation_count": 12,
+          "mean_forecast_probability": 1.0,
+          "observed_rate": 1.0,
+          "observed_successes": 12,
+          "observed_rate_wilson95_low": 0.7574992425007574,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.0
+        },
+        {
+          "grouping": "party",
+          "group": "S",
+          "model": "pop_baseline_v1",
+          "observation_count": 12,
+          "mean_forecast_probability": 1.0,
+          "observed_rate": 1.0,
+          "observed_successes": 12,
+          "observed_rate_wilson95_low": 0.7574992425007574,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.0
+        },
+        {
+          "grouping": "party",
+          "group": "SD",
+          "model": "election_simulator_v1_rc1_dynamics",
+          "observation_count": 12,
+          "mean_forecast_probability": 1.0,
+          "observed_rate": 1.0,
+          "observed_successes": 12,
+          "observed_rate_wilson95_low": 0.7574992425007574,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.0
+        },
+        {
+          "grouping": "party",
+          "group": "SD",
+          "model": "pop_baseline_v1",
+          "observation_count": 12,
+          "mean_forecast_probability": 1.0,
+          "observed_rate": 1.0,
+          "observed_successes": 12,
+          "observed_rate_wilson95_low": 0.7574992425007574,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.0
+        },
+        {
+          "grouping": "party",
+          "group": "V",
+          "model": "election_simulator_v1_rc1_dynamics",
+          "observation_count": 12,
+          "mean_forecast_probability": 1.0,
+          "observed_rate": 1.0,
+          "observed_successes": 12,
+          "observed_rate_wilson95_low": 0.7574992425007574,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.0
+        },
+        {
+          "grouping": "party",
+          "group": "V",
+          "model": "pop_baseline_v1",
+          "observation_count": 12,
+          "mean_forecast_probability": 1.0,
+          "observed_rate": 1.0,
+          "observed_successes": 12,
+          "observed_rate_wilson95_low": 0.7574992425007574,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.0
+        }
+      ],
+      "by_probability_bin": [
+        {
+          "grouping": "model",
+          "group": "all",
+          "model": "election_simulator_v1_rc1_dynamics",
+          "observation_count": 96,
+          "mean_forecast_probability": 0.9144756944444444,
+          "observed_rate": 1.0,
+          "observed_successes": 96,
+          "observed_rate_wilson95_low": 0.9615230525151842,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.055605351620370363
+        },
+        {
+          "grouping": "model",
+          "group": "all",
+          "model": "pop_baseline_v1",
+          "observation_count": 96,
+          "mean_forecast_probability": 0.9656604166666666,
+          "observed_rate": 1.0,
+          "observed_successes": 96,
+          "observed_rate_wilson95_low": 0.9615230525151842,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.01858563912037037
+        },
+        {
+          "grouping": "probability_bin",
+          "group": "[0,0.1)",
+          "model": "election_simulator_v1_rc1_dynamics",
+          "observation_count": 3,
+          "mean_forecast_probability": 0.01982222222222222,
+          "observed_rate": 1.0,
+          "observed_successes": 3,
+          "observed_rate_wilson95_low": 0.43849391955098227,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.9610682162962964
+        },
+        {
+          "grouping": "probability_bin",
+          "group": "[0.1,0.2)",
+          "model": "election_simulator_v1_rc1_dynamics",
+          "observation_count": 1,
+          "mean_forecast_probability": 0.14953333333333332,
+          "observed_rate": 1.0,
+          "observed_successes": 1,
+          "observed_rate_wilson95_low": 0.20654329147389294,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.7232935511111112
+        },
+        {
+          "grouping": "probability_bin",
+          "group": "[0.2,0.3)",
+          "model": "election_simulator_v1_rc1_dynamics",
+          "observation_count": 1,
+          "mean_forecast_probability": 0.29326666666666673,
+          "observed_rate": 1.0,
+          "observed_successes": 1,
+          "observed_rate_wilson95_low": 0.20654329147389294,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.4994720044444443
+        },
+        {
+          "grouping": "probability_bin",
+          "group": "[0.2,0.3)",
+          "model": "pop_baseline_v1",
+          "observation_count": 1,
+          "mean_forecast_probability": 0.22806666666666667,
+          "observed_rate": 1.0,
+          "observed_successes": 1,
+          "observed_rate_wilson95_low": 0.20654329147389294,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.5958810711111111
+        },
+        {
+          "grouping": "probability_bin",
+          "group": "[0.3,0.4)",
+          "model": "election_simulator_v1_rc1_dynamics",
+          "observation_count": 1,
+          "mean_forecast_probability": 0.3336666666666667,
+          "observed_rate": 1.0,
+          "observed_successes": 1,
+          "observed_rate_wilson95_low": 0.20654329147389294,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.444000111111111
+        },
+        {
+          "grouping": "probability_bin",
+          "group": "[0.3,0.4)",
+          "model": "pop_baseline_v1",
+          "observation_count": 1,
+          "mean_forecast_probability": 0.3206,
+          "observed_rate": 1.0,
+          "observed_successes": 1,
+          "observed_rate_wilson95_low": 0.20654329147389294,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.46158436
+        },
+        {
+          "grouping": "probability_bin",
+          "group": "[0.4,0.5)",
+          "model": "pop_baseline_v1",
+          "observation_count": 1,
+          "mean_forecast_probability": 0.41419999999999996,
+          "observed_rate": 1.0,
+          "observed_successes": 1,
+          "observed_rate_wilson95_low": 0.20654329147389294,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.3431616400000001
+        },
+        {
+          "grouping": "probability_bin",
+          "group": "[0.5,0.6)",
+          "model": "election_simulator_v1_rc1_dynamics",
+          "observation_count": 2,
+          "mean_forecast_probability": 0.5897,
+          "observed_rate": 1.0,
+          "observed_successes": 2,
+          "observed_rate_wilson95_low": 0.34237195288961925,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.1683516911111111
+        },
+        {
+          "grouping": "probability_bin",
+          "group": "[0.5,0.6)",
+          "model": "pop_baseline_v1",
+          "observation_count": 1,
+          "mean_forecast_probability": 0.5360666666666667,
+          "observed_rate": 1.0,
+          "observed_successes": 1,
+          "observed_rate_wilson95_low": 0.20654329147389294,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.21523413777777775
+        },
+        {
+          "grouping": "probability_bin",
+          "group": "[0.6,0.7)",
+          "model": "election_simulator_v1_rc1_dynamics",
+          "observation_count": 2,
+          "mean_forecast_probability": 0.6553,
+          "observed_rate": 1.0,
+          "observed_successes": 2,
+          "observed_rate_wilson95_low": 0.34237195288961925,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.11884689111111112
+        },
+        {
+          "grouping": "probability_bin",
+          "group": "[0.6,0.7)",
+          "model": "pop_baseline_v1",
+          "observation_count": 1,
+          "mean_forecast_probability": 0.6774666666666667,
+          "observed_rate": 1.0,
+          "observed_successes": 1,
+          "observed_rate_wilson95_low": 0.20654329147389294,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.10402775111111111
+        },
+        {
+          "grouping": "probability_bin",
+          "group": "[0.7,0.8)",
+          "model": "election_simulator_v1_rc1_dynamics",
+          "observation_count": 2,
+          "mean_forecast_probability": 0.7666,
+          "observed_rate": 1.0,
+          "observed_successes": 2,
+          "observed_rate_wilson95_low": 0.34237195288961925,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.05563156000000002
+        },
+        {
+          "grouping": "probability_bin",
+          "group": "[0.7,0.8)",
+          "model": "pop_baseline_v1",
+          "observation_count": 1,
+          "mean_forecast_probability": 0.7683333333333332,
+          "observed_rate": 1.0,
+          "observed_successes": 1,
+          "observed_rate_wilson95_low": 0.20654329147389294,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.053669444444444506
+        },
+        {
+          "grouping": "probability_bin",
+          "group": "[0.8,0.9)",
+          "model": "election_simulator_v1_rc1_dynamics",
+          "observation_count": 3,
+          "mean_forecast_probability": 0.8504888888888887,
+          "observed_rate": 1.0,
+          "observed_successes": 3,
+          "observed_rate_wilson95_low": 0.43849391955098227,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.023282432592592616
+        },
+        {
+          "grouping": "probability_bin",
+          "group": "[0.9,1]",
+          "model": "election_simulator_v1_rc1_dynamics",
+          "observation_count": 81,
+          "mean_forecast_probability": 0.9923341563786008,
+          "observed_rate": 1.0,
+          "observed_successes": 81,
+          "observed_rate_wilson95_low": 0.954720325877871,
+          "observed_rate_wilson95_high": 0.9999999999999999,
+          "mean_brier": 0.0004029118244170096
+        },
+        {
+          "grouping": "probability_bin",
+          "group": "[0.9,1]",
+          "model": "pop_baseline_v1",
+          "observation_count": 90,
+          "mean_forecast_probability": 0.9973185185185186,
+          "observed_rate": 1.0,
+          "observed_successes": 90,
+          "observed_rate_wilson95_low": 0.9590629315783191,
+          "observed_rate_wilson95_high": 0.9999999999999999,
+          "mean_brier": 0.00011847723456790136
+        }
+      ],
+      "by_outcome": [
+        {
+          "grouping": "model",
+          "group": "all",
+          "model": "election_simulator_v1_rc1_dynamics",
+          "observation_count": 96,
+          "mean_forecast_probability": 0.9144756944444444,
+          "observed_rate": 1.0,
+          "observed_successes": 96,
+          "observed_rate_wilson95_low": 0.9615230525151842,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.055605351620370363
+        },
+        {
+          "grouping": "model",
+          "group": "all",
+          "model": "pop_baseline_v1",
+          "observation_count": 96,
+          "mean_forecast_probability": 0.9656604166666666,
+          "observed_rate": 1.0,
+          "observed_successes": 96,
+          "observed_rate_wilson95_low": 0.9615230525151842,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.01858563912037037
+        },
+        {
+          "grouping": "actual_above_threshold",
+          "group": true,
+          "model": "election_simulator_v1_rc1_dynamics",
+          "observation_count": 96,
+          "mean_forecast_probability": 0.9144756944444444,
+          "observed_rate": 1.0,
+          "observed_successes": 96,
+          "observed_rate_wilson95_low": 0.9615230525151842,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.055605351620370363
+        },
+        {
+          "grouping": "actual_above_threshold",
+          "group": true,
+          "model": "pop_baseline_v1",
+          "observation_count": 96,
+          "mean_forecast_probability": 0.9656604166666666,
+          "observed_rate": 1.0,
+          "observed_successes": 96,
+          "observed_rate_wilson95_low": 0.9615230525151842,
+          "observed_rate_wilson95_high": 1.0,
+          "mean_brier": 0.01858563912037037
+        }
+      ]
+    }
+  },
+  "artifacts": {
+    "paired_case_deltas_csv": "data/processed/pop_baseline_benchmark/precision_election_v1/paired_case_deltas.csv",
+    "threshold_brier_breakdown_csv": "data/processed/pop_baseline_benchmark/precision_election_v1/threshold_brier_breakdown.csv",
+    "threshold_brier_seed_rows_csv": "data/processed/pop_baseline_benchmark/precision_election_v1/threshold_brier_seed_rows.csv",
+    "case_set_manifest_csv": "data/processed/pop_baseline_benchmark/precision_election_v1/case_set_manifest.csv"
+  }
+}

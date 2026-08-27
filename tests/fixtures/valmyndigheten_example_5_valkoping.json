@@ -1,0 +1,104 @@
+{
+  "fixture_id": "valmyndigheten_manual_example_5_valkoping",
+  "fixture_type": "official_worked_example",
+  "source": {
+    "authority": "Valmyndigheten",
+    "title": "Manual för mandatfördelning – regler och räkneexempel för val till riksdagen, Europaparlamentet, region- och kommunfullmäktige",
+    "url": "https://www.val.se/download/18.162047b519a91d05331183a9/1761747515752/manual-mandatfordelning-val-v785-05.pdf",
+    "pdf_sha256": "e3a7661a58bf97abc4c0386a1cb93a5d170e9027f3dabd819d5931dfafa7e34f",
+    "example": "Exempel 5: Komplett mandatfördelning i valkretsindelad kommun",
+    "pages": [12, 13, 14, 15, 16, 17],
+    "retrieved": "2026-08-27",
+    "transcription_note": "Values are transcribed from the published example without conversion to the 29-constituency Riksdag schema."
+  },
+  "jurisdiction": "Valköpings kommun",
+  "constituencies": ["Valköping V", "Valköping C", "Valköping Ö"],
+  "fixed_seats_by_constituency": {
+    "Valköping V": 22,
+    "Valköping C": 22,
+    "Valköping Ö": 23
+  },
+  "total_seats": 75,
+  "fixed_seats": {
+    "M": {"Valköping V": 5, "Valköping C": 7, "Valköping Ö": 6},
+    "C": {"Valköping V": 1, "Valköping C": 1, "Valköping Ö": 2},
+    "L": {"Valköping V": 1, "Valköping C": 2, "Valköping Ö": 1},
+    "KD": {"Valköping V": 1, "Valköping C": 1, "Valköping Ö": 1},
+    "S": {"Valköping V": 9, "Valköping C": 7, "Valköping Ö": 9},
+    "V": {"Valköping V": 1, "Valköping C": 1, "Valköping Ö": 1},
+    "MP": {"Valköping V": 1, "Valköping C": 1, "Valköping Ö": 1},
+    "SD": {"Valköping V": 3, "Valköping C": 2, "Valköping Ö": 2}
+  },
+  "votes": {
+    "Valköping V": {"M": 2913, "C": 852, "L": 934, "KD": 380, "S": 5366, "V": 516, "MP": 542, "SD": 1587, "FI": 410, "OTHER": 12},
+    "Valköping C": {"M": 4014, "C": 404, "L": 1191, "KD": 406, "S": 4369, "V": 660, "MP": 891, "SD": 1147, "FI": 134, "OTHER": 19},
+    "Valköping Ö": {"M": 3742, "C": 1170, "L": 884, "KD": 556, "S": 5775, "V": 535, "MP": 562, "SD": 1678, "FI": 265, "OTHER": 18}
+  },
+  "national_total_distribution": {
+    "M": 20,
+    "C": 4,
+    "L": 6,
+    "KD": 2,
+    "S": 28,
+    "V": 3,
+    "MP": 4,
+    "SD": 8
+  },
+  "expected_phase_order": [
+    "fixed",
+    "national_entitlement",
+    "excess_retracted",
+    "returned_reallocated",
+    "adjustment"
+  ],
+  "expected_events": [
+    {
+      "sequence": 1,
+      "phase": "excess_retracted",
+      "party": "KD",
+      "constituency": "Valköping V",
+      "comparison_number": {"numerator": 950, "denominator": 3},
+      "action": "retracted",
+      "reason": "KD has the lowest fixed-seat comparison number in Valköping V."
+    },
+    {
+      "sequence": 2,
+      "phase": "returned_reallocated",
+      "party": "L",
+      "constituency": "Valköping V",
+      "comparison_number": {"numerator": 934, "denominator": 3},
+      "action": "reassigned",
+      "reason": "L has the highest next comparison number among parties below total proportionality in Valköping V."
+    }
+  ],
+  "fixed_seats_after_return": {
+    "M": {"Valköping V": 5, "Valköping C": 7, "Valköping Ö": 6},
+    "C": {"Valköping V": 1, "Valköping C": 1, "Valköping Ö": 2},
+    "L": {"Valköping V": 2, "Valköping C": 2, "Valköping Ö": 1},
+    "KD": {"Valköping V": 0, "Valköping C": 1, "Valköping Ö": 1},
+    "S": {"Valköping V": 9, "Valköping C": 7, "Valköping Ö": 9},
+    "V": {"Valköping V": 1, "Valköping C": 1, "Valköping Ö": 1},
+    "MP": {"Valköping V": 1, "Valköping C": 1, "Valköping Ö": 1},
+    "SD": {"Valköping V": 3, "Valköping C": 2, "Valköping Ö": 2}
+  },
+  "adjustment_seats_by_party": {
+    "M": ["Valköping Ö", "Valköping C"],
+    "C": [],
+    "L": ["Valköping Ö"],
+    "KD": [],
+    "S": ["Valköping Ö", "Valköping C", "Valköping V"],
+    "V": [],
+    "MP": ["Valköping C"],
+    "SD": ["Valköping Ö"]
+  },
+  "final_seats": {
+    "M": {"Valköping V": 5, "Valköping C": 8, "Valköping Ö": 7},
+    "C": {"Valköping V": 1, "Valköping C": 1, "Valköping Ö": 2},
+    "L": {"Valköping V": 2, "Valköping C": 2, "Valköping Ö": 2},
+    "KD": {"Valköping V": 0, "Valköping C": 1, "Valköping Ö": 1},
+    "S": {"Valköping V": 10, "Valköping C": 8, "Valköping Ö": 10},
+    "V": {"Valköping V": 1, "Valköping C": 1, "Valköping Ö": 1},
+    "MP": {"Valköping V": 1, "Valköping C": 2, "Valköping Ö": 1},
+    "SD": {"Valköping V": 3, "Valköping C": 2, "Valköping Ö": 3}
+  }
+}

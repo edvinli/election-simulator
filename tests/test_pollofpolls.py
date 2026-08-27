@@ -1,0 +1,185 @@
+from __future__ import annotations
+
+import unittest
+from datetime import date
+from pathlib import Path
+
+from scripts.pollofpolls.normalize import (
+    enrich_with_swedishpolls,
+    merge_homepage_polls,
+    normalize_party,
+    parse_date,
+    parse_homepage_polls,
+    parse_party_chart_payload,
+    parse_percentage,
+    parse_swedishpolls_payloads,
+    parse_timeseries_payload,
+    polls_to_long_rows,
+    reconstruct_chart_polls,
+)
+from scripts.pollofpolls.validate import (
+    INDIVIDUAL_FIELDS,
+    SWEDISHPOLLS_FIELDS,
+    TIMESERIES_FIELDS,
+    validate_individual_polls,
+    validate_swedishpolls,
+    validate_timeseries,
+)
+
+
+FIXTURES = Path(__file__).parent / "fixtures"
+
+
+class ParsingTests(unittest.TestCase):
+    def test_party_name_normalization_preserves_historical_liberal_aliases(self) -> None:
+        for source_label in ("FP", "Folkpartiet", "Folkpartiet Liberalerna", "Liberalerna", "L"):
+            self.assertEqual(normalize_party(source_label), "L")
+        self.assertEqual(normalize_party("Övriga"), "other")
+        self.assertEqual(normalize_party("Piratpartiet"), "Piratpartiet")
+
+    def test_date_parsing(self) -> None:
+        self.assertEqual(parse_date("2014-09-15"), date(2014, 9, 15))
+        with self.assertRaises(ValueError):
+            parse_date("15/09")
+
+    def test_percentage_and_missing_value_parsing(self) -> None:
+        self.assertEqual(parse_percentage("28,4 %"), 28.4)
+        self.assertEqual(parse_percentage("0.0"), 0.0)
+        for missing in ("", "NaN", "null", None):
+            self.assertIsNone(parse_percentage(missing))
+
+    def test_html_timeseries_source_and_representative_observation(self) -> None:
+        rows, labels = parse_timeseries_payload(
+            (FIXTURES / "pollofpolls_timeseries.html").read_bytes()
+        )
+        self.assertEqual(len(rows), 2)
+        self.assertEqual(rows[0]["date"], "2014-09-15")
+        self.assertEqual(rows[0]["M"], 23.3)
+        self.assertEqual(rows[0]["L"], 5.8)
+        self.assertEqual(rows[0]["FI"], 3.0)
+        self.assertIsNone(rows[0]["other"])
+        self.assertIsNone(rows[1]["FI"])
+        self.assertEqual(labels["L"], "FP")
+
+    def test_homepage_period_and_original_pollster(self) -> None:
+        polls = parse_homepage_polls(
+            (FIXTURES / "homepage.html").read_bytes(), date(2026, 1, 10)
+        )
+        self.assertEqual(polls[0]["pollster"], "Sifo")
+        self.assertEqual(polls[0]["pollster_original"], "Kantar-Sifo")
+        self.assertEqual(polls[0]["interview_start"], date(2025, 12, 28))
+        self.assertEqual(polls[0]["interview_end"], date(2026, 1, 5))
+        self.assertEqual(polls[0]["values"]["other"], 2.4)
+
+
+class ReconstructionAndValidationTests(unittest.TestCase):
+    def _chart_polls(self):
+        payloads = {
+            "M": parse_party_chart_payload((FIXTURES / "party_M.csv").read_bytes(), "M"),
+            "L": parse_party_chart_payload((FIXTURES / "party_L.csv").read_bytes(), "L"),
+        }
+        return reconstruct_chart_polls(payloads)
+
+    def test_chart_runs_reconstruct_interview_spans(self) -> None:
+        polls = self._chart_polls()
+        demoskop = next(poll for poll in polls if poll["pollster"] == "Demoskop")
+        ipsos = next(poll for poll in polls if poll["pollster"] == "Ipsos")
+        self.assertEqual(demoskop["interview_start"], date(2014, 9, 1))
+        self.assertEqual(demoskop["interview_end"], date(2014, 9, 3))
+        self.assertEqual(demoskop["values"], {"M": 22.1, "L": 5.5})
+        self.assertEqual(ipsos["interview_start"], date(2014, 9, 2))
+        self.assertEqual(ipsos["interview_end"], date(2014, 9, 4))
+
+    def test_ambiguous_fi_zero_is_not_a_real_zero(self) -> None:
+        homepage = parse_homepage_polls(
+            (FIXTURES / "homepage.html").read_bytes(), date(2026, 1, 10)
+        )
+        polls = merge_homepage_polls([], homepage)
+        rows = polls_to_long_rows(polls, {"http://pollofpolls.se/": "2026-01-10T00:00:00+00:00"})
+        fi = next(row for row in rows if row["party"] == "FI")
+        self.assertIsNone(fi["support"])
+        self.assertEqual(fi["source_value"], 0.0)
+        self.assertEqual(fi["support_status"], "ambiguous_zero_or_included_in_other")
+
+    def test_duplicate_timeseries_dates_are_reported(self) -> None:
+        base = {field: None for field in TIMESERIES_FIELDS}
+        base.update({"date": "2014-09-15", "M": 23.3, "source_url": "fixture", "retrieved_at": "fixture"})
+        issues = validate_timeseries([dict(base), dict(base)])
+        codes = {issue["code"] for issue in issues}
+        self.assertIn("duplicate_timeseries_dates", codes)
+
+    def test_schema_validation_for_long_rows(self) -> None:
+        poll = {
+            "poll_id": "fixture",
+            "pollster": "Demoskop",
+            "pollster_original": "Demoskop",
+            "interview_start": date(2014, 9, 1),
+            "interview_end": date(2014, 9, 3),
+            "values": {"M": 22.1, "L": 5.5},
+            "value_sources": {},
+        }
+        rows = polls_to_long_rows([poll], {"http://pollofpolls.se/": "fixture"})
+        self.assertEqual(set(rows[0]), set(INDIVIDUAL_FIELDS))
+        errors = [issue for issue in validate_individual_polls(rows) if issue["severity"] == "error"]
+        self.assertEqual(errors, [])
+
+    def test_swedishpolls_parser_preserves_missing_dates_and_provenance(self) -> None:
+        wide, rows = parse_swedishpolls_payloads(
+            (FIXTURES / "swedishpolls.csv").read_bytes(),
+            (FIXTURES / "swedishpolls_sources.csv").read_bytes(),
+            retrieved_at="2026-08-26T00:00:00+00:00",
+        )
+        self.assertEqual(len(wide), 2)
+        self.assertEqual(len(rows), 20)
+        self.assertEqual(set(rows[0]), set(SWEDISHPOLLS_FIELDS))
+        ipsos_m = next(row for row in rows if row["pollster"] == "Ipsos" and row["party"] == "M")
+        self.assertEqual(ipsos_m["support"], 17.9)
+        self.assertEqual(ipsos_m["sample_size"], 1661)
+        self.assertIn("https://example.test/ipsos", ipsos_m["row_source_references_json"])
+        sifo = next(poll for poll in wide if poll["pollster"] == "Sifo")
+        self.assertIsNone(sifo["interview_start"])
+        self.assertIsNone(sifo["interview_end"])
+        self.assertTrue(sifo["collection_period_approximate"])
+        errors = [issue for issue in validate_swedishpolls(rows) if issue["severity"] == "error"]
+        self.assertEqual(errors, [])
+
+    def test_exact_supplementary_match_enriches_metadata_only(self) -> None:
+        wide, _ = parse_swedishpolls_payloads(
+            (FIXTURES / "swedishpolls.csv").read_bytes(),
+            (FIXTURES / "swedishpolls_sources.csv").read_bytes(),
+            retrieved_at="2026-08-26T00:00:00+00:00",
+        )
+        poll = {
+            "poll_id": "pop-fixture",
+            "pollster": "Ipsos",
+            "pollster_original": "Ipsos",
+            "interview_start": date(2026, 8, 11),
+            "interview_end": date(2026, 8, 23),
+            "values": {"M": 18.1, "L": 2.3},
+            "value_sources": {},
+        }
+        rows = polls_to_long_rows([poll], {"http://pollofpolls.se/": "fixture"})
+        crosswalk = enrich_with_swedishpolls(
+            rows, wide, metadata_retrieved_at="2026-08-26T00:00:00+00:00"
+        )
+        m_row = next(row for row in rows if row["party"] == "M")
+        self.assertEqual(m_row["support"], 18.1)
+        self.assertEqual(m_row["source_value"], 18.1)
+        self.assertEqual(m_row["publication_date"], "2026-08-25")
+        self.assertEqual(m_row["sample_size"], 1661)
+        self.assertEqual(m_row["metadata_match_status"], "exact_span_match")
+        self.assertEqual(crosswalk[0]["max_party_absolute_difference"], 0.2)
+
+    def test_duplicate_supplementary_poll_is_reported_not_discarded(self) -> None:
+        _, rows = parse_swedishpolls_payloads(
+            (FIXTURES / "swedishpolls.csv").read_bytes(),
+            (FIXTURES / "swedishpolls_sources.csv").read_bytes(),
+            retrieved_at="2026-08-26T00:00:00+00:00",
+        )
+        duplicate = [dict(row, poll_id="swp-duplicate") for row in rows[:10]]
+        issues = validate_swedishpolls(rows + duplicate)
+        self.assertIn("swedishpolls_duplicate_candidates", {issue["code"] for issue in issues})
+
+
+if __name__ == "__main__":
+    unittest.main()

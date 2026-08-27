@@ -1,0 +1,945 @@
+{
+  "summary": {
+    "total_scenarios_tested": 1016,
+    "scenarios_with_national_seat_difference": 0,
+    "fraction_with_national_seat_difference": 0.0,
+    "deterministic_agreement_rate": 1.0,
+    "forecast_distribution_scenarios": {
+      "total": 1001,
+      "differing": 0,
+      "agreement_rate": 1.0
+    },
+    "statutory_stress_test_scenarios": {
+      "total": 15,
+      "differing": 0,
+      "agreement_rate": 1.0
+    }
+  },
+  "first_25_scenarios": [
+    {
+      "scenario": "central_forecast",
+      "type": "forecast_distribution",
+      "seats_2022": {
+        "M": 68,
+        "L": 15,
+        "C": 18,
+        "KD": 16,
+        "S": 117,
+        "V": 28,
+        "MP": 16,
+        "SD": 71
+      },
+      "seats_2018": {
+        "M": 68,
+        "L": 15,
+        "C": 18,
+        "KD": 16,
+        "S": 117,
+        "V": 28,
+        "MP": 16,
+        "SD": 71
+      },
+      "seat_diffs": {
+        "M": 0,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 0,
+        "V": 0,
+        "MP": 0,
+        "SD": 0
+      },
+      "total_seat_diff": 0,
+      "differing_constituencies": 17,
+      "differing_cells": 36
+    },
+    {
+      "scenario": "L_at_3.0pct",
+      "type": "statutory_stress_test",
+      "seats_2022": {
+        "M": 71,
+        "L": 0,
+        "C": 19,
+        "KD": 16,
+        "S": 122,
+        "V": 29,
+        "MP": 17,
+        "SD": 75
+      },
+      "seats_2018": {
+        "M": 71,
+        "L": 0,
+        "C": 19,
+        "KD": 16,
+        "S": 122,
+        "V": 29,
+        "MP": 17,
+        "SD": 75
+      },
+      "seat_diffs": {
+        "M": 0,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 0,
+        "V": 0,
+        "MP": 0,
+        "SD": 0
+      },
+      "total_seat_diff": 0,
+      "differing_constituencies": 17,
+      "differing_cells": 28
+    },
+    {
+      "scenario": "L_at_3.9pct",
+      "type": "statutory_stress_test",
+      "seats_2022": {
+        "M": 71,
+        "L": 0,
+        "C": 19,
+        "KD": 16,
+        "S": 122,
+        "V": 29,
+        "MP": 17,
+        "SD": 75
+      },
+      "seats_2018": {
+        "M": 71,
+        "L": 0,
+        "C": 19,
+        "KD": 16,
+        "S": 122,
+        "V": 29,
+        "MP": 17,
+        "SD": 75
+      },
+      "seat_diffs": {
+        "M": 0,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 0,
+        "V": 0,
+        "MP": 0,
+        "SD": 0
+      },
+      "total_seat_diff": 0,
+      "differing_constituencies": 17,
+      "differing_cells": 28
+    },
+    {
+      "scenario": "L_at_4.0pct",
+      "type": "statutory_stress_test",
+      "seats_2022": {
+        "M": 71,
+        "L": 0,
+        "C": 19,
+        "KD": 16,
+        "S": 122,
+        "V": 29,
+        "MP": 17,
+        "SD": 75
+      },
+      "seats_2018": {
+        "M": 71,
+        "L": 0,
+        "C": 19,
+        "KD": 16,
+        "S": 122,
+        "V": 29,
+        "MP": 17,
+        "SD": 75
+      },
+      "seat_diffs": {
+        "M": 0,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 0,
+        "V": 0,
+        "MP": 0,
+        "SD": 0
+      },
+      "total_seat_diff": 0,
+      "differing_constituencies": 17,
+      "differing_cells": 28
+    },
+    {
+      "scenario": "L_at_4.1pct",
+      "type": "statutory_stress_test",
+      "seats_2022": {
+        "M": 68,
+        "L": 15,
+        "C": 18,
+        "KD": 16,
+        "S": 117,
+        "V": 28,
+        "MP": 16,
+        "SD": 71
+      },
+      "seats_2018": {
+        "M": 68,
+        "L": 15,
+        "C": 18,
+        "KD": 16,
+        "S": 117,
+        "V": 28,
+        "MP": 16,
+        "SD": 71
+      },
+      "seat_diffs": {
+        "M": 0,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 0,
+        "V": 0,
+        "MP": 0,
+        "SD": 0
+      },
+      "total_seat_diff": 0,
+      "differing_constituencies": 17,
+      "differing_cells": 36
+    },
+    {
+      "scenario": "L_at_5.0pct",
+      "type": "statutory_stress_test",
+      "seats_2022": {
+        "M": 67,
+        "L": 18,
+        "C": 18,
+        "KD": 16,
+        "S": 116,
+        "V": 27,
+        "MP": 16,
+        "SD": 71
+      },
+      "seats_2018": {
+        "M": 67,
+        "L": 18,
+        "C": 18,
+        "KD": 16,
+        "S": 116,
+        "V": 27,
+        "MP": 16,
+        "SD": 71
+      },
+      "seat_diffs": {
+        "M": 0,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 0,
+        "V": 0,
+        "MP": 0,
+        "SD": 0
+      },
+      "total_seat_diff": 0,
+      "differing_constituencies": 17,
+      "differing_cells": 36
+    },
+    {
+      "scenario": "KD_at_3.0pct",
+      "type": "statutory_stress_test",
+      "seats_2022": {
+        "M": 71,
+        "L": 16,
+        "C": 19,
+        "KD": 0,
+        "S": 122,
+        "V": 29,
+        "MP": 17,
+        "SD": 75
+      },
+      "seats_2018": {
+        "M": 71,
+        "L": 16,
+        "C": 19,
+        "KD": 0,
+        "S": 122,
+        "V": 29,
+        "MP": 17,
+        "SD": 75
+      },
+      "seat_diffs": {
+        "M": 0,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 0,
+        "V": 0,
+        "MP": 0,
+        "SD": 0
+      },
+      "total_seat_diff": 0,
+      "differing_constituencies": 15,
+      "differing_cells": 22
+    },
+    {
+      "scenario": "KD_at_3.9pct",
+      "type": "statutory_stress_test",
+      "seats_2022": {
+        "M": 71,
+        "L": 16,
+        "C": 19,
+        "KD": 0,
+        "S": 122,
+        "V": 29,
+        "MP": 17,
+        "SD": 75
+      },
+      "seats_2018": {
+        "M": 71,
+        "L": 16,
+        "C": 19,
+        "KD": 0,
+        "S": 122,
+        "V": 29,
+        "MP": 17,
+        "SD": 75
+      },
+      "seat_diffs": {
+        "M": 0,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 0,
+        "V": 0,
+        "MP": 0,
+        "SD": 0
+      },
+      "total_seat_diff": 0,
+      "differing_constituencies": 15,
+      "differing_cells": 22
+    },
+    {
+      "scenario": "KD_at_4.0pct",
+      "type": "statutory_stress_test",
+      "seats_2022": {
+        "M": 71,
+        "L": 16,
+        "C": 19,
+        "KD": 0,
+        "S": 122,
+        "V": 29,
+        "MP": 17,
+        "SD": 75
+      },
+      "seats_2018": {
+        "M": 71,
+        "L": 16,
+        "C": 19,
+        "KD": 0,
+        "S": 122,
+        "V": 29,
+        "MP": 17,
+        "SD": 75
+      },
+      "seat_diffs": {
+        "M": 0,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 0,
+        "V": 0,
+        "MP": 0,
+        "SD": 0
+      },
+      "total_seat_diff": 0,
+      "differing_constituencies": 15,
+      "differing_cells": 22
+    },
+    {
+      "scenario": "KD_at_4.1pct",
+      "type": "statutory_stress_test",
+      "seats_2022": {
+        "M": 68,
+        "L": 15,
+        "C": 18,
+        "KD": 15,
+        "S": 117,
+        "V": 28,
+        "MP": 16,
+        "SD": 72
+      },
+      "seats_2018": {
+        "M": 68,
+        "L": 15,
+        "C": 18,
+        "KD": 15,
+        "S": 117,
+        "V": 28,
+        "MP": 16,
+        "SD": 72
+      },
+      "seat_diffs": {
+        "M": 0,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 0,
+        "V": 0,
+        "MP": 0,
+        "SD": 0
+      },
+      "total_seat_diff": 0,
+      "differing_constituencies": 18,
+      "differing_cells": 36
+    },
+    {
+      "scenario": "KD_at_5.0pct",
+      "type": "statutory_stress_test",
+      "seats_2022": {
+        "M": 67,
+        "L": 15,
+        "C": 18,
+        "KD": 18,
+        "S": 116,
+        "V": 28,
+        "MP": 16,
+        "SD": 71
+      },
+      "seats_2018": {
+        "M": 67,
+        "L": 15,
+        "C": 18,
+        "KD": 18,
+        "S": 116,
+        "V": 28,
+        "MP": 16,
+        "SD": 71
+      },
+      "seat_diffs": {
+        "M": 0,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 0,
+        "V": 0,
+        "MP": 0,
+        "SD": 0
+      },
+      "total_seat_diff": 0,
+      "differing_constituencies": 16,
+      "differing_cells": 32
+    },
+    {
+      "scenario": "MP_at_3.0pct",
+      "type": "statutory_stress_test",
+      "seats_2022": {
+        "M": 71,
+        "L": 16,
+        "C": 19,
+        "KD": 16,
+        "S": 123,
+        "V": 29,
+        "MP": 0,
+        "SD": 75
+      },
+      "seats_2018": {
+        "M": 71,
+        "L": 16,
+        "C": 19,
+        "KD": 16,
+        "S": 123,
+        "V": 29,
+        "MP": 0,
+        "SD": 75
+      },
+      "seat_diffs": {
+        "M": 0,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 0,
+        "V": 0,
+        "MP": 0,
+        "SD": 0
+      },
+      "total_seat_diff": 0,
+      "differing_constituencies": 16,
+      "differing_cells": 30
+    },
+    {
+      "scenario": "MP_at_3.9pct",
+      "type": "statutory_stress_test",
+      "seats_2022": {
+        "M": 71,
+        "L": 16,
+        "C": 19,
+        "KD": 16,
+        "S": 123,
+        "V": 29,
+        "MP": 0,
+        "SD": 75
+      },
+      "seats_2018": {
+        "M": 71,
+        "L": 16,
+        "C": 19,
+        "KD": 16,
+        "S": 123,
+        "V": 29,
+        "MP": 0,
+        "SD": 75
+      },
+      "seat_diffs": {
+        "M": 0,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 0,
+        "V": 0,
+        "MP": 0,
+        "SD": 0
+      },
+      "total_seat_diff": 0,
+      "differing_constituencies": 16,
+      "differing_cells": 30
+    },
+    {
+      "scenario": "MP_at_4.0pct",
+      "type": "statutory_stress_test",
+      "seats_2022": {
+        "M": 71,
+        "L": 16,
+        "C": 19,
+        "KD": 16,
+        "S": 123,
+        "V": 29,
+        "MP": 0,
+        "SD": 75
+      },
+      "seats_2018": {
+        "M": 71,
+        "L": 16,
+        "C": 19,
+        "KD": 16,
+        "S": 123,
+        "V": 29,
+        "MP": 0,
+        "SD": 75
+      },
+      "seat_diffs": {
+        "M": 0,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 0,
+        "V": 0,
+        "MP": 0,
+        "SD": 0
+      },
+      "total_seat_diff": 0,
+      "differing_constituencies": 16,
+      "differing_cells": 30
+    },
+    {
+      "scenario": "MP_at_4.1pct",
+      "type": "statutory_stress_test",
+      "seats_2022": {
+        "M": 68,
+        "L": 15,
+        "C": 18,
+        "KD": 16,
+        "S": 117,
+        "V": 28,
+        "MP": 15,
+        "SD": 72
+      },
+      "seats_2018": {
+        "M": 68,
+        "L": 15,
+        "C": 18,
+        "KD": 16,
+        "S": 117,
+        "V": 28,
+        "MP": 15,
+        "SD": 72
+      },
+      "seat_diffs": {
+        "M": 0,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 0,
+        "V": 0,
+        "MP": 0,
+        "SD": 0
+      },
+      "total_seat_diff": 0,
+      "differing_constituencies": 19,
+      "differing_cells": 36
+    },
+    {
+      "scenario": "MP_at_5.0pct",
+      "type": "statutory_stress_test",
+      "seats_2022": {
+        "M": 67,
+        "L": 15,
+        "C": 18,
+        "KD": 16,
+        "S": 116,
+        "V": 28,
+        "MP": 18,
+        "SD": 71
+      },
+      "seats_2018": {
+        "M": 67,
+        "L": 15,
+        "C": 18,
+        "KD": 16,
+        "S": 116,
+        "V": 28,
+        "MP": 18,
+        "SD": 71
+      },
+      "seat_diffs": {
+        "M": 0,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 0,
+        "V": 0,
+        "MP": 0,
+        "SD": 0
+      },
+      "total_seat_diff": 0,
+      "differing_constituencies": 18,
+      "differing_cells": 35
+    },
+    {
+      "scenario": "mc_forecast_draw_1",
+      "type": "forecast_distribution",
+      "seats_2022": {
+        "M": 71,
+        "L": 18,
+        "C": 0,
+        "KD": 16,
+        "S": 118,
+        "V": 33,
+        "MP": 17,
+        "SD": 76
+      },
+      "seats_2018": {
+        "M": 71,
+        "L": 18,
+        "C": 0,
+        "KD": 16,
+        "S": 118,
+        "V": 33,
+        "MP": 17,
+        "SD": 76
+      },
+      "seat_diffs": {
+        "M": 0,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 0,
+        "V": 0,
+        "MP": 0,
+        "SD": 0
+      },
+      "total_seat_diff": 0,
+      "differing_constituencies": 18,
+      "differing_cells": 33
+    },
+    {
+      "scenario": "mc_forecast_draw_2",
+      "type": "forecast_distribution",
+      "seats_2022": {
+        "M": 76,
+        "L": 0,
+        "C": 24,
+        "KD": 0,
+        "S": 124,
+        "V": 30,
+        "MP": 26,
+        "SD": 69
+      },
+      "seats_2018": {
+        "M": 76,
+        "L": 0,
+        "C": 24,
+        "KD": 0,
+        "S": 124,
+        "V": 30,
+        "MP": 26,
+        "SD": 69
+      },
+      "seat_diffs": {
+        "M": 0,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 0,
+        "V": 0,
+        "MP": 0,
+        "SD": 0
+      },
+      "total_seat_diff": 0,
+      "differing_constituencies": 15,
+      "differing_cells": 26
+    },
+    {
+      "scenario": "mc_forecast_draw_3",
+      "type": "forecast_distribution",
+      "seats_2022": {
+        "M": 73,
+        "L": 0,
+        "C": 23,
+        "KD": 0,
+        "S": 119,
+        "V": 30,
+        "MP": 21,
+        "SD": 83
+      },
+      "seats_2018": {
+        "M": 73,
+        "L": 0,
+        "C": 23,
+        "KD": 0,
+        "S": 119,
+        "V": 30,
+        "MP": 21,
+        "SD": 83
+      },
+      "seat_diffs": {
+        "M": 0,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 0,
+        "V": 0,
+        "MP": 0,
+        "SD": 0
+      },
+      "total_seat_diff": 0,
+      "differing_constituencies": 15,
+      "differing_cells": 27
+    },
+    {
+      "scenario": "mc_forecast_draw_4",
+      "type": "forecast_distribution",
+      "seats_2022": {
+        "M": 66,
+        "L": 15,
+        "C": 20,
+        "KD": 0,
+        "S": 115,
+        "V": 32,
+        "MP": 22,
+        "SD": 79
+      },
+      "seats_2018": {
+        "M": 66,
+        "L": 15,
+        "C": 20,
+        "KD": 0,
+        "S": 115,
+        "V": 32,
+        "MP": 22,
+        "SD": 79
+      },
+      "seat_diffs": {
+        "M": 0,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 0,
+        "V": 0,
+        "MP": 0,
+        "SD": 0
+      },
+      "total_seat_diff": 0,
+      "differing_constituencies": 18,
+      "differing_cells": 30
+    },
+    {
+      "scenario": "mc_forecast_draw_5",
+      "type": "forecast_distribution",
+      "seats_2022": {
+        "M": 64,
+        "L": 0,
+        "C": 20,
+        "KD": 15,
+        "S": 134,
+        "V": 32,
+        "MP": 16,
+        "SD": 68
+      },
+      "seats_2018": {
+        "M": 64,
+        "L": 0,
+        "C": 20,
+        "KD": 15,
+        "S": 134,
+        "V": 32,
+        "MP": 16,
+        "SD": 68
+      },
+      "seat_diffs": {
+        "M": 0,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 0,
+        "V": 0,
+        "MP": 0,
+        "SD": 0
+      },
+      "total_seat_diff": 0,
+      "differing_constituencies": 21,
+      "differing_cells": 34
+    },
+    {
+      "scenario": "mc_forecast_draw_6",
+      "type": "forecast_distribution",
+      "seats_2022": {
+        "M": 78,
+        "L": 19,
+        "C": 18,
+        "KD": 0,
+        "S": 112,
+        "V": 32,
+        "MP": 16,
+        "SD": 74
+      },
+      "seats_2018": {
+        "M": 78,
+        "L": 19,
+        "C": 18,
+        "KD": 0,
+        "S": 112,
+        "V": 32,
+        "MP": 16,
+        "SD": 74
+      },
+      "seat_diffs": {
+        "M": 0,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 0,
+        "V": 0,
+        "MP": 0,
+        "SD": 0
+      },
+      "total_seat_diff": 0,
+      "differing_constituencies": 14,
+      "differing_cells": 26
+    },
+    {
+      "scenario": "mc_forecast_draw_7",
+      "type": "forecast_distribution",
+      "seats_2022": {
+        "M": 64,
+        "L": 19,
+        "C": 21,
+        "KD": 0,
+        "S": 124,
+        "V": 30,
+        "MP": 24,
+        "SD": 67
+      },
+      "seats_2018": {
+        "M": 64,
+        "L": 19,
+        "C": 21,
+        "KD": 0,
+        "S": 124,
+        "V": 30,
+        "MP": 24,
+        "SD": 67
+      },
+      "seat_diffs": {
+        "M": 0,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 0,
+        "V": 0,
+        "MP": 0,
+        "SD": 0
+      },
+      "total_seat_diff": 0,
+      "differing_constituencies": 19,
+      "differing_cells": 31
+    },
+    {
+      "scenario": "mc_forecast_draw_8",
+      "type": "forecast_distribution",
+      "seats_2022": {
+        "M": 72,
+        "L": 20,
+        "C": 15,
+        "KD": 0,
+        "S": 119,
+        "V": 20,
+        "MP": 17,
+        "SD": 86
+      },
+      "seats_2018": {
+        "M": 72,
+        "L": 20,
+        "C": 15,
+        "KD": 0,
+        "S": 119,
+        "V": 20,
+        "MP": 17,
+        "SD": 86
+      },
+      "seat_diffs": {
+        "M": 0,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 0,
+        "V": 0,
+        "MP": 0,
+        "SD": 0
+      },
+      "total_seat_diff": 0,
+      "differing_constituencies": 15,
+      "differing_cells": 26
+    },
+    {
+      "scenario": "mc_forecast_draw_9",
+      "type": "forecast_distribution",
+      "seats_2022": {
+        "M": 59,
+        "L": 0,
+        "C": 18,
+        "KD": 22,
+        "S": 129,
+        "V": 22,
+        "MP": 18,
+        "SD": 81
+      },
+      "seats_2018": {
+        "M": 59,
+        "L": 0,
+        "C": 18,
+        "KD": 22,
+        "S": 129,
+        "V": 22,
+        "MP": 18,
+        "SD": 81
+      },
+      "seat_diffs": {
+        "M": 0,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 0,
+        "V": 0,
+        "MP": 0,
+        "SD": 0
+      },
+      "total_seat_diff": 0,
+      "differing_constituencies": 18,
+      "differing_cells": 28
+    }
+  ]
+}

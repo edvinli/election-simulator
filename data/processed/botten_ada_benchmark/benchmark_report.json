@@ -1,0 +1,119 @@
+{
+  "schema_version": "1.0",
+  "generated_at_utc": "2026-08-27T13:08:15.810540+00:00",
+  "benchmark_status": "NOT_RUN",
+  "comparison_type": "comparative_retrospective_2018_2022_plus_prospective_2026",
+  "party_order": [
+    "M",
+    "L",
+    "C",
+    "KD",
+    "S",
+    "V",
+    "MP",
+    "SD"
+  ],
+  "candidate_a": {
+    "model_name": "ElectionSimulator",
+    "model_version": "1.0.0-rc1",
+    "source": {
+      "source_git_commit": "bd834a9e069881220c147d3b72d87683f57d69df",
+      "source_worktree_clean": true,
+      "deterministic_payload_sha256": "942ac0805dc7ef6f75caa8536c8b3eba7e7bad940bd1ebd107954d9c964f5288",
+      "note": "Candidate A is exported without calibration or model changes; raw draws are for benchmark exchange only, not the prospective compact archive."
+    },
+    "file_sha256": "2051c94cd7d165f8ae7217257e31d8d6000efdd20edeae56276e4c455c9fe0ab"
+  },
+  "candidate_b": {
+    "status": "NOT_RUN",
+    "reason": "No independently exported Botten Ada bundle was supplied",
+    "source": {
+      "model_name": "Botten Ada",
+      "repository_url": "https://github.com/MansMeg/ada_code",
+      "repository_commit": "2dfe246b86c5cab517e4a0cb87fd57e5a9c62512",
+      "official_data_url": "https://www.bottenada.se/data",
+      "official_forecast_url": "https://www.bottenada.se/",
+      "documentation_url": "https://www.bottenada.se/faq",
+      "license": "CC BY-NC-SA 4.0 (official Botten Ada data/code page)",
+      "pin_method": "git ls-remote HEAD; external bundle must record its own file SHA-256",
+      "retrieved_date": "2026-08-27",
+      "status": "EXTERNAL_BUNDLE_REQUIRED"
+    },
+    "required_input": "A standardized JSON bundle with independently generated predictive draws and file SHA-256"
+  },
+  "pinned_botten_ada_source": {
+    "model_name": "Botten Ada",
+    "repository_url": "https://github.com/MansMeg/ada_code",
+    "repository_commit": "2dfe246b86c5cab517e4a0cb87fd57e5a9c62512",
+    "official_data_url": "https://www.bottenada.se/data",
+    "official_forecast_url": "https://www.bottenada.se/",
+    "documentation_url": "https://www.bottenada.se/faq",
+    "license": "CC BY-NC-SA 4.0 (official Botten Ada data/code page)",
+    "pin_method": "git ls-remote HEAD; external bundle must record its own file SHA-256",
+    "retrieved_date": "2026-08-27",
+    "status": "EXTERNAL_BUNDLE_REQUIRED"
+  },
+  "pivot_rule": {
+    "rule_version": "1.0",
+    "candidate_a_action_if_tied_or_better": "KEEP_CANDIDATE_A_UNCHANGED",
+    "candidate_b_action_if_materially_better": "INVESTIGATE_TARGETED_LAYER_ONLY",
+    "priority_horizons_days": [
+      7,
+      14,
+      28
+    ],
+    "minimum_late_horizon_wins": 2,
+    "minimum_score_improvement": 0.1,
+    "minimum_threshold_brier_improvement": 0.005,
+    "tie_tolerance": 0.05,
+    "required_metrics": [
+      "vote_crps",
+      "joint_vote_energy_score",
+      "threshold_brier",
+      "mean_vote_mae",
+      "median_vote_mae",
+      "coverage_and_width",
+      "seat_crps",
+      "joint_seat_energy_score"
+    ],
+    "non_adoption_note": "This rule does not authorize automatic retuning or wholesale replacement of Candidate A."
+  },
+  "metric_contract": {
+    "vote_crps": "mean absolute error minus one-half mean pairwise absolute difference (V-statistic), in percentage points",
+    "joint_energy_score": "E||X-y|| minus one-half E||X-X'|| using the V-statistic, party order fixed above",
+    "threshold_brier": "(P(vote share >= 4.0%) - I(actual share >= 4.0%))^2, inclusive event",
+    "sample_weighting": "equal weight per forecast case; per-party means are macro-averages across the eight parties",
+    "coverage": "central empirical intervals at 50%, 80%, and 90%; width is upper minus lower",
+    "seat_draw_policy": "seat metrics are unavailable when seat draws or realized seats are missing; no point forecast is converted into draws"
+  },
+  "cases": [],
+  "aggregate": null,
+  "pivot_decision": {
+    "status": "NOT_ASSESSED_EXTERNAL_MODEL_DATA_MISSING",
+    "rule": {
+      "rule_version": "1.0",
+      "candidate_a_action_if_tied_or_better": "KEEP_CANDIDATE_A_UNCHANGED",
+      "candidate_b_action_if_materially_better": "INVESTIGATE_TARGETED_LAYER_ONLY",
+      "priority_horizons_days": [
+        7,
+        14,
+        28
+      ],
+      "minimum_late_horizon_wins": 2,
+      "minimum_score_improvement": 0.1,
+      "minimum_threshold_brier_improvement": 0.005,
+      "tie_tolerance": 0.05,
+      "required_metrics": [
+        "vote_crps",
+        "joint_vote_energy_score",
+        "threshold_brier",
+        "mean_vote_mae",
+        "median_vote_mae",
+        "coverage_and_width",
+        "seat_crps",
+        "joint_seat_energy_score"
+      ],
+      "non_adoption_note": "This rule does not authorize automatic retuning or wholesale replacement of Candidate A."
+    }
+  }
+}

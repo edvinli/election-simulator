@@ -1,0 +1,266 @@
+election_date,election_year,canonical_party,party_source_name,party_source_code,votes,source_vote_share,vote_share,valid_votes_total,source_url,retrieved_at
+2002-09-15,2002,M,Moderata Samlingspartiet,M,809041,15.26,15.2557,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,C,Centerpartiet,C,328428,6.19,6.193,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,L,Folkpartiet liberalerna,FP,710312,13.39,13.394,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,KD,Kristdemokraterna,KD,485235,9.15,9.1498,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,S,Arbetarepartiet-Socialdemokraterna,S,2113560,39.85,39.8543,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,V,Vänsterpartiet,V,444854,8.39,8.3884,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,MP,Miljöpartiet de gröna,MP,246392,4.65,4.6461,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,Republikanerna,0020,15,0.0,0.0003,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,Medborgarpartiet,0095,27,0.0,0.0005,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,Skånefederalisterna,0329,52,0.0,0.001,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,Sveriges Nationella Demokratiska Parti,0339,87,0.0,0.0016,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,Förskolepartiet - Barnens Röst,0354,6,0.0,0.0001,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,Crisis,0365,1,0.0,0.0,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,DUST-ONLINE,0367,1,0.0,0.0,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,VIKINGAPARTIET-Sverige ut ur EU,0370,2,0.0,0.0,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,BLANKRÖSTAR-PARTIET-En politiskt markering,0376,7,0.0,0.0001,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,TOMTE-PARTIET-Tomten: Barnens och djurens bästa vän,0378,1,0.0,0.0,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,"SINGELPARTIET-Ursäkta, men vi finns också",0379,3,0.0,0.0001,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,GUD-TROLL-HÄXOR-VÄSEN OCH KOSMISKA KRAFTERS-Parti,0387,4,0.0,0.0001,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,TANDLÄKARHÖGKOSTNADS-PARTIET,0390,1,0.0,0.0,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,"HUNDPARTIET-Hunden, människans bästa vän.",0391,2,0.0,0.0,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,LANDET VI ÄRVDE-PARTIET,0396,1,0.0,0.0,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,SHAMANENS-URBEFOLKNINGENS-PARTI,0398,2,0.0,0.0,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,DEN KOKTA GRODANS-PARTI. DEN SVENSKE MANNEN I NUTID,0399,1,0.0,0.0,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,ATP-PENSIONS OCH ÄNKEPENSIONS-PARTIET,0405,4,0.0,0.0001,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,KLONING NEJ TACK JAG ÄR EN UNIK MÄNNISKA Partiet,0409,3,0.0,0.0001,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,DJURSKYDDS-PARTIET-Ett kärleksfullt liv för våra djur,0410,3,0.0,0.0001,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,"Det fria folkets, röst",0420,207,0.0,0.0039,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,Fria Listan www.frialistan.st,0421,274,0.01,0.0052,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,Fotbolls Partiet,0432,1,0.0,0.0,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,Kalle Anka Partiet,0434,10,0.0,0.0002,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,Allianspartiet,ALP,58,0.0,0.0011,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,De Nya Svenskarna D.P.N.S,DPNS,11,0.0,0.0002,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,Europeiska Arbetarpartiet-EAP,EAP,163,0.0,0.0031,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,Enhet,ENH,603,0.01,0.0114,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,Folkdemokraterna,FDEM,12,0.0,0.0002,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,Idrottspartiet,IdroP,7,0.0,0.0001,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,Kommunisterna,KOMM,1182,0.02,0.0223,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,Kommunistiska Förbundet,KommF,46,0.0,0.0009,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,Nationaldemokraterna,ND,4122,0.08,0.0777,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,NyDemokrati,NYD,106,0.0,0.002,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,Ny Framtid,NYF,9337,0.18,0.1761,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,Kärlekspartiet The Party of Love,POL,8,0.0,0.0002,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,Populistpartiet,Pop,8,0.0,0.0002,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,Rikshushållarna,Riksh,17,0.0,0.0003,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,Rättvisepartiet Socialisterna,RS,1519,0.03,0.0286,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,SD,Sverigedemokraterna,SD,76300,1.44,1.4388,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,Socialistiska Partiet,SOC.P,3213,0.06,0.0606,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,SPI - Sveriges Pensionärers Intresseparti,SPI,37573,0.71,0.7085,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,Skattereformisterna,Sref,14,0.0,0.0003,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,Strandskyddspartiet,SSKP,3,0.0,0.0001,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2002-09-15,2002,OTHER,Övriga partier (ej särredovisade / handskrivna),ÖVR_EJ_SAR,30373,0.57,0.5727,5303212,https://historik.val.se/val/val_02/slutresultat/00R/00.html,2026-08-26T10:26:23.728456+00:00
+2006-09-17,2006,M,Moderata Samlingspartiet,M,1456014,26.23,26.2284,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/roster.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,C,Centerpartiet,C,437389,7.88,7.8791,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/roster.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,L,Folkpartiet liberalerna,FP,418395,7.54,7.5369,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/roster.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,KD,Kristdemokraterna,KD,365998,6.59,6.593,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/roster.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,S,Arbetarepartiet-Socialdemokraterna,S,1942625,34.99,34.9942,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/roster.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,V,Vänsterpartiet,V,324722,5.85,5.8495,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/roster.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,MP,Miljöpartiet de gröna,MP,291121,5.24,5.2442,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/roster.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,SD,Sverigedemokraterna,,162463,2.93,2.9266,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,FI,Feministiskt initiativ,,37954,0.68,0.6837,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,OTHER,Piratpartiet,,34918,0.63,0.629,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,OTHER,SPI - Sveriges Pensionärers Intresseparti,,28806,0.52,0.5189,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,OTHER,Junilistan,,26072,0.47,0.4697,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,OTHER,Sjukvårdspartiet,,11519,0.21,0.2075,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,OTHER,Nationaldemokraterna,,3064,0.06,0.0552,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,OTHER,Enhet,,2648,0.05,0.0477,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,OTHER,Nationalsocialistisk front (NSF),,1417,0.03,0.0255,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,OTHER,Ny Framtid,,1171,0.02,0.0211,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,OTHER,Rättvisepartiet Socialisterna,,1097,0.02,0.0198,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,OTHER,Folkets Vilja,,881,0.02,0.0159,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,OTHER,Kommunisterna,,438,0.01,0.0079,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,OTHER,Unika Partiet,,222,0.0,0.004,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,OTHER,Klassiskt Liberala Partiet,,202,0.0,0.0036,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,OTHER,Allianspartiet,,133,0.0,0.0024,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,OTHER,Kvinnokraft,,116,0.0,0.0021,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,OTHER,Europeiska Arbetarpartiet-EAP,,83,0.0,0.0015,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,OTHER,www.aktivdemokrati.se Partiet för kontinuerlig direktdemokrati,,81,0.0,0.0015,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,OTHER,Sverige ut ur EU (UT) / Frihetliga Rättvisepartiet (FRP),,75,0.0,0.0014,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,OTHER,Sveriges Nationella Demokratiska Parti,,68,0.0,0.0012,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,OTHER,Partiet.se,,61,0.0,0.0011,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,OTHER,Septemberlistan,,51,0.0,0.0009,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,OTHER,Kommunistiska förbundet,,30,0.0,0.0005,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,OTHER,Nordisk Union,,24,0.0,0.0004,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,OTHER,Skånepartiet,,11,0.0,0.0002,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,OTHER,Skattereformisterna,,9,0.0,0.0002,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,OTHER,Rikshushållarna,,8,0.0,0.0001,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,OTHER,Miata Partiet,,7,0.0,0.0001,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,OTHER,Demokratiska partiet de nya svenskarna D.P.N.S,,6,0.0,0.0001,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,OTHER,Fårgutapartiet,,6,0.0,0.0001,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,OTHER,PALMES PARTI,,5,0.0,0.0001,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,OTHER,Republikanerna,,2,0.0,0.0,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,OTHER,VIKINGAPARTIET-VALVARUHUSET 53 PARTIER,,1,0.0,0.0,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2006-09-17,2006,OTHER,Övriga partier,,1365,0.02,0.0246,5551278,https://historik.val.se/val/val2006/slutlig/R/rike/ovriga.html,2026-08-26T10:26:23.802498+00:00
+2010-09-19,2010,M,Moderata Samlingspartiet,M,1791766,30.06,30.0611,5960408,https://historik.val.se/val/val2010/slutresultat/R/rike/index.html,2026-08-26T10:26:23.990158+00:00
+2010-09-19,2010,C,Centerpartiet,C,390804,6.56,6.5567,5960408,https://historik.val.se/val/val2010/slutresultat/R/rike/index.html,2026-08-26T10:26:23.990158+00:00
+2010-09-19,2010,L,Folkpartiet liberalerna,FP,420524,7.06,7.0553,5960408,https://historik.val.se/val/val2010/slutresultat/R/rike/index.html,2026-08-26T10:26:23.990158+00:00
+2010-09-19,2010,KD,Kristdemokraterna,KD,333696,5.6,5.5985,5960408,https://historik.val.se/val/val2010/slutresultat/R/rike/index.html,2026-08-26T10:26:23.990158+00:00
+2010-09-19,2010,S,Arbetarepartiet-Socialdemokraterna,S,1827497,30.66,30.6606,5960408,https://historik.val.se/val/val2010/slutresultat/R/rike/index.html,2026-08-26T10:26:23.990158+00:00
+2010-09-19,2010,V,Vänsterpartiet,V,334053,5.6,5.6045,5960408,https://historik.val.se/val/val2010/slutresultat/R/rike/index.html,2026-08-26T10:26:23.990158+00:00
+2010-09-19,2010,MP,Miljöpartiet de gröna,MP,437435,7.34,7.339,5960408,https://historik.val.se/val/val2010/slutresultat/R/rike/index.html,2026-08-26T10:26:23.990158+00:00
+2010-09-19,2010,SD,Sverigedemokraterna,SD,339610,5.7,5.6978,5960408,https://historik.val.se/val/val2010/slutresultat/R/rike/index.html,2026-08-26T10:26:23.990158+00:00
+2010-09-19,2010,OTHER,Piratpartiet,PP,38491,0.65,0.6458,5960408,https://historik.val.se/val/val2010/slutresultat/R/rike/index.html,2026-08-26T10:26:23.990158+00:00
+2010-09-19,2010,FI,Feministiskt initiativ,FI,24139,0.4,0.405,5960408,https://historik.val.se/val/val2010/slutresultat/R/rike/index.html,2026-08-26T10:26:23.990158+00:00
+2010-09-19,2010,OTHER,SPI - Sveriges Pensionärers Intresseparti,SPI,11078,0.19,0.1859,5960408,https://historik.val.se/val/val2010/slutresultat/R/rike/index.html,2026-08-26T10:26:23.990158+00:00
+2010-09-19,2010,OTHER,Rättvisepartiet Socialisterna,RS,1507,0.03,0.0253,5960408,https://historik.val.se/val/val2010/slutresultat/R/rike/index.html,2026-08-26T10:26:23.990158+00:00
+2010-09-19,2010,OTHER,Norrländska Samlingspartiet,NorrS,1456,0.02,0.0244,5960408,https://historik.val.se/val/val2010/slutresultat/R/rike/index.html,2026-08-26T10:26:23.990158+00:00
+2010-09-19,2010,OTHER,Nationaldemokraterna,ND,1141,0.02,0.0191,5960408,https://historik.val.se/val/val2010/slutresultat/R/rike/index.html,2026-08-26T10:26:23.990158+00:00
+2010-09-19,2010,OTHER,Klassiskt liberala partiet,KLP,716,0.01,0.012,5960408,https://historik.val.se/val/val2010/slutresultat/R/rike/index.html,2026-08-26T10:26:23.990158+00:00
+2010-09-19,2010,OTHER,Svenskarnas parti,SVP,681,0.01,0.0114,5960408,https://historik.val.se/val/val2010/slutresultat/R/rike/index.html,2026-08-26T10:26:23.990158+00:00
+2010-09-19,2010,OTHER,Enhet,ENH,632,0.01,0.0106,5960408,https://historik.val.se/val/val2010/slutresultat/R/rike/index.html,2026-08-26T10:26:23.990158+00:00
+2010-09-19,2010,OTHER,Sveriges Kommunistiska Parti (SKP),SKP,375,0.01,0.0063,5960408,https://historik.val.se/val/val2010/slutresultat/R/rike/index.html,2026-08-26T10:26:23.990158+00:00
+2010-09-19,2010,OTHER,Europeiska Arbetarpartiet-EAP,EAP,187,,0.0031,5960408,https://historik.val.se/val/val2010/slutresultat/R/rike/index.html,2026-08-26T10:26:23.990158+00:00
+2010-09-19,2010,OTHER,Sjukvårdspartiet,Sjvåp,185,,0.0031,5960408,https://historik.val.se/val/val2010/slutresultat/R/rike/index.html,2026-08-26T10:26:23.990158+00:00
+2010-09-19,2010,OTHER,Allianspartiet/Medborgarens röst,ALP,87,,0.0015,5960408,https://historik.val.se/val/val2010/slutresultat/R/rike/index.html,2026-08-26T10:26:23.990158+00:00
+2010-09-19,2010,OTHER,Sveriges Nationella Demokratiska Parti,SNDP,63,,0.0011,5960408,https://historik.val.se/val/val2010/slutresultat/R/rike/index.html,2026-08-26T10:26:23.990158+00:00
+2010-09-19,2010,OTHER,Kommunistiska förbundet,KommF,26,,0.0004,5960408,https://historik.val.se/val/val2010/slutresultat/R/rike/index.html,2026-08-26T10:26:23.990158+00:00
+2010-09-19,2010,OTHER,Skånepartiet,SKÅ,17,,0.0003,5960408,https://historik.val.se/val/val2010/slutresultat/R/rike/index.html,2026-08-26T10:26:23.990158+00:00
+2010-09-19,2010,OTHER,Alexander's Lista,Alex,4,,0.0001,5960408,https://historik.val.se/val/val2010/slutresultat/R/rike/index.html,2026-08-26T10:26:23.990158+00:00
+2010-09-19,2010,OTHER,Rikshushållarna,Riksh,3,,0.0001,5960408,https://historik.val.se/val/val2010/slutresultat/R/rike/index.html,2026-08-26T10:26:23.990158+00:00
+2010-09-19,2010,OTHER,Övriga partier (ej särredovisade / handskrivna),ÖVR_EJ_SAR,4235,0.07,0.0711,5960408,https://historik.val.se/val/val2010/slutresultat/R/rike/index.html,2026-08-26T10:26:23.990158+00:00
+2014-09-14,2014,M,Moderaterna,M,1453517,23.33,23.325,6231573,https://historik.val.se/val/val2014/slutresultat/R/rike/index.html,2026-08-26T10:26:24.124625+00:00
+2014-09-14,2014,C,Centerpartiet,C,380937,6.11,6.113,6231573,https://historik.val.se/val/val2014/slutresultat/R/rike/index.html,2026-08-26T10:26:24.124625+00:00
+2014-09-14,2014,L,Folkpartiet liberalerna,FP,337773,5.42,5.4203,6231573,https://historik.val.se/val/val2014/slutresultat/R/rike/index.html,2026-08-26T10:26:24.124625+00:00
+2014-09-14,2014,KD,Kristdemokraterna,KD,284806,4.57,4.5704,6231573,https://historik.val.se/val/val2014/slutresultat/R/rike/index.html,2026-08-26T10:26:24.124625+00:00
+2014-09-14,2014,S,Arbetarepartiet-Socialdemokraterna,S,1932711,31.01,31.0148,6231573,https://historik.val.se/val/val2014/slutresultat/R/rike/index.html,2026-08-26T10:26:24.124625+00:00
+2014-09-14,2014,V,Vänsterpartiet,V,356331,5.72,5.7182,6231573,https://historik.val.se/val/val2014/slutresultat/R/rike/index.html,2026-08-26T10:26:24.124625+00:00
+2014-09-14,2014,MP,Miljöpartiet de gröna,MP,429275,6.89,6.8887,6231573,https://historik.val.se/val/val2014/slutresultat/R/rike/index.html,2026-08-26T10:26:24.124625+00:00
+2014-09-14,2014,SD,Sverigedemokraterna,SD,801178,12.86,12.8568,6231573,https://historik.val.se/val/val2014/slutresultat/R/rike/index.html,2026-08-26T10:26:24.124625+00:00
+2014-09-14,2014,FI,Feministiskt initiativ,FI,194719,3.12,3.1247,6231573,https://historik.val.se/val/val2014/slutresultat/R/rike/index.html,2026-08-26T10:26:24.124625+00:00
+2014-09-14,2014,OTHER,Piratpartiet,PP,26515,0.43,0.4255,6231573,https://historik.val.se/val/val2014/slutresultat/R/rike/index.html,2026-08-26T10:26:24.124625+00:00
+2014-09-14,2014,OTHER,Enhet,ENH,6277,0.1,0.1007,6231573,https://historik.val.se/val/val2014/slutresultat/R/rike/index.html,2026-08-26T10:26:24.124625+00:00
+2014-09-14,2014,OTHER,Svenskarnas parti,SVP,4189,0.07,0.0672,6231573,https://historik.val.se/val/val2014/slutresultat/R/rike/index.html,2026-08-26T10:26:24.124625+00:00
+2014-09-14,2014,OTHER,Djurens parti,DjuP,4093,0.07,0.0657,6231573,https://historik.val.se/val/val2014/slutresultat/R/rike/index.html,2026-08-26T10:26:24.124625+00:00
+2014-09-14,2014,OTHER,Kristna Värdepartiet,KrVP,3553,0.06,0.057,6231573,https://historik.val.se/val/val2014/slutresultat/R/rike/index.html,2026-08-26T10:26:24.124625+00:00
+2014-09-14,2014,OTHER,Landsbygdspartiet Oberoende,LBPO,3450,0.06,0.0554,6231573,https://historik.val.se/val/val2014/slutresultat/R/rike/index.html,2026-08-26T10:26:24.124625+00:00
+2014-09-14,2014,OTHER,SPI Välfärden,SPI,3369,0.05,0.0541,6231573,https://historik.val.se/val/val2014/slutresultat/R/rike/index.html,2026-08-26T10:26:24.124625+00:00
+2014-09-14,2014,OTHER,Klassiskt liberala partiet,KLP,1210,0.02,0.0194,6231573,https://historik.val.se/val/val2014/slutresultat/R/rike/index.html,2026-08-26T10:26:24.124625+00:00
+2014-09-14,2014,OTHER,Vägvalet,VägV,1037,0.02,0.0166,6231573,https://historik.val.se/val/val2014/slutresultat/R/rike/index.html,2026-08-26T10:26:24.124625+00:00
+2014-09-14,2014,OTHER,Rättvisepartiet Socialisterna,RS,791,0.01,0.0127,6231573,https://historik.val.se/val/val2014/slutresultat/R/rike/index.html,2026-08-26T10:26:24.124625+00:00
+2014-09-14,2014,OTHER,Sveriges Kommunistiska Parti (SKP),SKP,558,0.01,0.009,6231573,https://historik.val.se/val/val2014/slutresultat/R/rike/index.html,2026-08-26T10:26:24.124625+00:00
+2014-09-14,2014,OTHER,Europeiska Arbetarpartiet-EAP,EAP,140,,0.0022,6231573,https://historik.val.se/val/val2014/slutresultat/R/rike/index.html,2026-08-26T10:26:24.124625+00:00
+2014-09-14,2014,OTHER,Gula Partiet,Gup,35,,0.0006,6231573,https://historik.val.se/val/val2014/slutresultat/R/rike/index.html,2026-08-26T10:26:24.124625+00:00
+2014-09-14,2014,OTHER,Skånepartiet,SKÅ,28,,0.0004,6231573,https://historik.val.se/val/val2014/slutresultat/R/rike/index.html,2026-08-26T10:26:24.124625+00:00
+2014-09-14,2014,OTHER,De Nya Svenskarna D.P.N.S,DPNS,18,,0.0003,6231573,https://historik.val.se/val/val2014/slutresultat/R/rike/index.html,2026-08-26T10:26:24.124625+00:00
+2014-09-14,2014,OTHER,Reformist Neutral Partiet,RNP,11,,0.0002,6231573,https://historik.val.se/val/val2014/slutresultat/R/rike/index.html,2026-08-26T10:26:24.124625+00:00
+2014-09-14,2014,OTHER,Djurägarpartiet,Däp,3,,0.0,6231573,https://historik.val.se/val/val2014/slutresultat/R/rike/index.html,2026-08-26T10:26:24.124625+00:00
+2014-09-14,2014,OTHER,Humandemokraterna,HumDe,2,,0.0,6231573,https://historik.val.se/val/val2014/slutresultat/R/rike/index.html,2026-08-26T10:26:24.124625+00:00
+2014-09-14,2014,OTHER,Övriga partier (ej särredovisade / handskrivna),ÖVR_EJ_SAR,5047,0.08,0.081,6231573,https://historik.val.se/val/val2014/slutresultat/R/rike/index.html,2026-08-26T10:26:24.124625+00:00
+2018-09-09,2018,M,Moderaterna,M,1284698,19.84,19.8356,6476725,https://historik.val.se/val/val2018/slutresultat/R/rike/index.html,2026-08-26T10:26:24.225160+00:00
+2018-09-09,2018,C,Centerpartiet,C,557500,8.61,8.6077,6476725,https://historik.val.se/val/val2018/slutresultat/R/rike/index.html,2026-08-26T10:26:24.225160+00:00
+2018-09-09,2018,L,Liberalerna (tidigare Folkpartiet),L,355546,5.49,5.4896,6476725,https://historik.val.se/val/val2018/slutresultat/R/rike/index.html,2026-08-26T10:26:24.225160+00:00
+2018-09-09,2018,KD,Kristdemokraterna,KD,409478,6.32,6.3223,6476725,https://historik.val.se/val/val2018/slutresultat/R/rike/index.html,2026-08-26T10:26:24.225160+00:00
+2018-09-09,2018,S,Arbetarepartiet-Socialdemokraterna,S,1830386,28.26,28.261,6476725,https://historik.val.se/val/val2018/slutresultat/R/rike/index.html,2026-08-26T10:26:24.225160+00:00
+2018-09-09,2018,V,Vänsterpartiet,V,518454,8.0,8.0049,6476725,https://historik.val.se/val/val2018/slutresultat/R/rike/index.html,2026-08-26T10:26:24.225160+00:00
+2018-09-09,2018,MP,Miljöpartiet de gröna,MP,285899,4.41,4.4143,6476725,https://historik.val.se/val/val2018/slutresultat/R/rike/index.html,2026-08-26T10:26:24.225160+00:00
+2018-09-09,2018,SD,Sverigedemokraterna,SD,1135627,17.53,17.534,6476725,https://historik.val.se/val/val2018/slutresultat/R/rike/index.html,2026-08-26T10:26:24.225160+00:00
+2018-09-09,2018,FI,Feministiskt initiativ,FI,29665,0.46,0.458,6476725,https://historik.val.se/val/val2018/slutresultat/R/rike/index.html,2026-08-26T10:26:24.225160+00:00
+2018-09-09,2018,OTHER,Alternativ för Sverige,AfS,20290,0.31,0.3133,6476725,https://historik.val.se/val/val2018/slutresultat/R/rike/index.html,2026-08-26T10:26:24.225160+00:00
+2018-09-09,2018,OTHER,Medborgerlig Samling,MED,13056,0.2,0.2016,6476725,https://historik.val.se/val/val2018/slutresultat/R/rike/index.html,2026-08-26T10:26:24.225160+00:00
+2018-09-09,2018,OTHER,Piratpartiet,PP,7326,0.11,0.1131,6476725,https://historik.val.se/val/val2018/slutresultat/R/rike/index.html,2026-08-26T10:26:24.225160+00:00
+2018-09-09,2018,OTHER,Direktdemokraterna,DD,5153,0.08,0.0796,6476725,https://historik.val.se/val/val2018/slutresultat/R/rike/index.html,2026-08-26T10:26:24.225160+00:00
+2018-09-09,2018,OTHER,Landsbygdspartiet Oberoende,LPo,4962,0.08,0.0766,6476725,https://historik.val.se/val/val2018/slutresultat/R/rike/index.html,2026-08-26T10:26:24.225160+00:00
+2018-09-09,2018,OTHER,Enhet,ENH,4647,0.07,0.0717,6476725,https://historik.val.se/val/val2018/slutresultat/R/rike/index.html,2026-08-26T10:26:24.225160+00:00
+2018-09-09,2018,OTHER,Djurens parti,DjuP,3648,0.06,0.0563,6476725,https://historik.val.se/val/val2018/slutresultat/R/rike/index.html,2026-08-26T10:26:24.225160+00:00
+2018-09-09,2018,OTHER,Kristna Värdepartiet,KrVP,3202,0.05,0.0494,6476725,https://historik.val.se/val/val2018/slutresultat/R/rike/index.html,2026-08-26T10:26:24.225160+00:00
+2018-09-09,2018,OTHER,Nordiska motståndsrörelsen,NMR,2106,0.03,0.0325,6476725,https://historik.val.se/val/val2018/slutresultat/R/rike/index.html,2026-08-26T10:26:24.225160+00:00
+2018-09-09,2018,OTHER,Klassiskt liberala partiet,KLP,1504,0.02,0.0232,6476725,https://historik.val.se/val/val2018/slutresultat/R/rike/index.html,2026-08-26T10:26:24.225160+00:00
+2018-09-09,2018,OTHER,Sveriges Kommunistiska Parti (SKP),SKP,702,0.01,0.0108,6476725,https://historik.val.se/val/val2018/slutresultat/R/rike/index.html,2026-08-26T10:26:24.225160+00:00
+2018-09-09,2018,OTHER,TRYGGHETSPARTIET,TRP,511,0.01,0.0079,6476725,https://historik.val.se/val/val2018/slutresultat/R/rike/index.html,2026-08-26T10:26:24.225160+00:00
+2018-09-09,2018,OTHER,SKÅNEPARTIET,SKÅ,296,,0.0046,6476725,https://historik.val.se/val/val2018/slutresultat/R/rike/index.html,2026-08-26T10:26:24.225160+00:00
+2018-09-09,2018,OTHER,Europeiska Arbetarpartiet-EAP,EAP,52,,0.0008,6476725,https://historik.val.se/val/val2018/slutresultat/R/rike/index.html,2026-08-26T10:26:24.225160+00:00
+2018-09-09,2018,OTHER,Common sense in Sweden,CSIS,21,,0.0003,6476725,https://historik.val.se/val/val2018/slutresultat/R/rike/index.html,2026-08-26T10:26:24.225160+00:00
+2018-09-09,2018,OTHER,Reformist Neutral Partiet,RNP,4,,0.0001,6476725,https://historik.val.se/val/val2018/slutresultat/R/rike/index.html,2026-08-26T10:26:24.225160+00:00
+2018-09-09,2018,OTHER,Gula Partiet,Gup,1,,0.0,6476725,https://historik.val.se/val/val2018/slutresultat/R/rike/index.html,2026-08-26T10:26:24.225160+00:00
+2018-09-09,2018,OTHER,Övriga partier (ej särredovisade / handskrivna),ÖVR_EJ_SAR,1991,0.03,0.0307,6476725,https://historik.val.se/val/val2018/slutresultat/R/rike/index.html,2026-08-26T10:26:24.225160+00:00
+2022-09-11,2022,S,Arbetarepartiet-Socialdemokraterna,S,1964474,30.33,30.3255,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,SD,Sverigedemokraterna,SD,1330325,20.54,20.5361,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,M,Moderaterna,M,1237428,19.1,19.1021,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,V,Vänsterpartiet,V,437050,6.75,6.7467,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,C,Centerpartiet,C,434945,6.71,6.7142,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,KD,Kristdemokraterna,KD,345712,5.34,5.3367,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,MP,Miljöpartiet de gröna,MP,329242,5.08,5.0825,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,L,Liberalerna (tidigare Folkpartiet),L,298542,4.61,4.6086,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Partiet Nyans,PNy,28352,0.44,0.4377,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Alternativ för Sverige,AfS,16646,0.26,0.257,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Medborgerlig Samling,MED,12882,0.2,0.1989,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Piratpartiet,PP,9135,0.14,0.141,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,MoD,MD,6077,0.09,0.0938,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Kristna Värdepartiet,KrVP,5983,0.09,0.0924,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Knapptryckarna,Kn,5493,0.08,0.0848,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,FI,Feministiskt initiativ,FI,3157,0.05,0.0487,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Landsbygdspartiet Oberoende,LPo,2215,0.03,0.0342,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Direktdemokraterna,DD,1755,0.03,0.0271,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Klimatalliansen,KA,1702,0.03,0.0263,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Enhet,ENH,1356,0.02,0.0209,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,SKP,Skp,1181,0.02,0.0182,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Socialisterna-Välfärdspartiet,S-V,892,0.01,0.0138,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Nordiska motståndsrörelsen,NMR,847,0.01,0.0131,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Partiet Vändpunkt,PV,419,0.01,0.0065,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Basinkomstpartiet,,374,0.01,0.0058,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Klassiskt liberala partiet,KLP,344,0.01,0.0053,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,SKÅNEPARTIET,SKÅ,206,0.0,0.0032,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Sverige ut ur EU/Frihetliga Rättvisepartiet (FRP),,174,0.0,0.0027,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Förenade Demokratiska Partiet,,157,0.0,0.0024,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Stram Kurs Sverige,,156,0.0,0.0024,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Kalle ankapartiet,,144,0.0,0.0022,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Volt Sverige,Volt,89,0.0,0.0014,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Partiet Frihet,,76,0.0,0.0012,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,TRYGGHETSPARTIET,TRP,66,0.0,0.001,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,NY REFORM (NR),NR,47,0.0,0.0007,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Ond Kyckling Partiet,OKP,39,0.0,0.0006,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Politiskt Skifte,,22,0.0,0.0003,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,MITT SVERIGE,,21,0.0,0.0003,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Svenska Rikslagen,,17,0.0,0.0003,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Valsamverkanspartiet,,16,0.0,0.0002,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,FAMILJENS FRIHET,,16,0.0,0.0002,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Europeiska Arbetarpartiet-EAP,EAP,15,0.0,0.0002,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Common sense in Sweden,CSIS,10,0.0,0.0002,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Swexitpartiet,,10,0.0,0.0002,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Kärlek,,8,0.0,0.0001,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Frihetsrörelsen,,8,0.0,0.0001,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Nu får det fan vara nog,,8,0.0,0.0001,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Ändrings partiet revolution,,7,0.0,0.0001,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Reformpartiet,,7,0.0,0.0001,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Fria Wermland,,6,0.0,0.0001,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Det minst dåliga partiet,,6,0.0,0.0001,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,ANARKISTERNA,,6,0.0,0.0001,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Pax,,5,0.0,0.0001,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Nix to the Six,,5,0.0,0.0001,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Sverigepartiet,,4,0.0,0.0001,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Fritt val,,4,0.0,0.0001,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Ny Demokrati,,4,0.0,0.0001,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,GRÖNA DEMOKRATER,,4,0.0,0.0001,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,ANDOPARTIET,,4,0.0,0.0001,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Naturistpartiet,,4,0.0,0.0001,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Min röst,,3,0.0,0.0,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Partiet Folkomröstning,,3,0.0,0.0,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,John Mikkonen,,3,0.0,0.0,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Neoteknokraterna,,3,0.0,0.0,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Fattigmans parti,,3,0.0,0.0,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Yggdrasil,,2,0.0,0.0,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Majspartiet,,2,0.0,0.0,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Fredspartiet,,2,0.0,0.0,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Sociallibertarianerna,,2,0.0,0.0,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Företaget Sverige,,2,0.0,0.0,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Invandrarpartiet,,2,0.0,0.0,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Bjornpartiet,,2,0.0,0.0,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,En Vis Avskaffar Asylrätten!,EVA,1,0.0,0.0,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,FramtidsTro,FT,1,0.0,0.0,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Humanistisk demokrati (HD),HD,1,0.0,0.0,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Gula västarna,,1,0.0,0.0,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Nya Samhällspartiet,,1,0.0,0.0,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,SVENSKARNA,,1,0.0,0.0,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,NaturFilosoferna,,1,0.0,0.0,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Positivt Samhällsinitiativ (PSI),,1,0.0,0.0,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,OK,,1,0.0,0.0,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Monisterna,,1,0.0,0.0,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Stora Norrlands oberoende Frihetsparti,,1,0.0,0.0,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Enad Politik,,1,0.0,0.0,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Nationalsocialistiska reformistiska Partiet,,1,0.0,0.0,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,KSP,,1,0.0,0.0,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Eropean radical reflektion a european dream party ERR,,1,0.0,0.0,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,FN Parti art.27,,1,0.0,0.0,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00
+2022-09-11,2022,OTHER,Övriga ej särredovisade partier,ÖVR_EJ_SAR,26,0.0,0.0004,6477970,https://resultat.val.se/data/resultat/val2022/RD_S.json,2026-08-26T10:26:24.349826+00:00

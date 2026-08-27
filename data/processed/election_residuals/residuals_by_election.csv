@@ -1,0 +1,7 @@
+election_date,election_year,poll_count_total,pollster_count,pollsters,MAE_8parties,MAE_all9,max_miss_party,max_miss_pp,max_miss_abs_pp,REST_residual_pp
+2002-09-15,2002,44,5,"['Sifo', 'Ipsos', 'Novus', 'Skop', 'Demoskop']",1.6025,1.5077,S,3.4743,3.4743,-0.7489
+2006-09-17,2006,25,5,"['SVT', 'Sifo', 'Skop', 'Ipsos', 'Demoskop']",0.7038,0.6425,S,1.3029,1.3029,-0.1522
+2010-09-19,2010,27,7,"['SVT', 'United Minds', 'Novus', 'Sifo', 'Skop', 'Ipsos', 'Demoskop']",0.595,0.5482,MP,-1.3209,1.3209,-0.1738
+2014-09-14,2014,23,9,"['SVT', 'Skop', 'Novus', 'Demoskop', 'Sifo', 'United Minds', 'Ipsos', 'YouGov', 'Sentio']",1.2573,1.1896,SD,2.8846,2.8846,-0.648
+2018-09-09,2018,35,10,"['SVT', 'TV4', 'Skop', 'Inizio', 'Sifo', 'Novus', 'Demoskop', 'Ipsos', 'YouGov', 'Sentio']",1.1891,1.2341,S,3.165,3.165,-1.594
+2022-09-11,2022,47,7,"['SVT', 'Sifo', 'Skop', 'Demoskop', 'Ipsos', 'Novus', 'Sentio']",0.7732,0.7208,S,1.4862,1.4862,0.3018

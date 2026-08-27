@@ -1,0 +1,18 @@
+{
+  "sources": [
+    {
+      "filename": "antal_rostberattigade_2026_riksdagen.xlsx",
+      "source_url": "http://val.se/download/18.1a2972da19f159e73fd3b4a/1787064446298/antal-rostberattigade-per-valdistrikt-uppdelat-pa-kon-och-alder-kvalifikationsdagen-14-augusti-2026-val-till-riksdagen.xlsx",
+      "retrieved_at_utc": "2026-08-26T16:41:57.055291+00:00",
+      "byte_count": 651253,
+      "sha256": "45f77e862456f221907c6e49c52b2504106d35099782f96873637a0ba4e3d580"
+    },
+    {
+      "filename": "val2014_constituencies_votes.json",
+      "source_url": "https://historik.val.se/val/val2014/slutresultat/R/rvalkrets/XX/index.html (29 constituencies)",
+      "retrieved_at_utc": "2026-08-26T16:42:00.194433+00:00",
+      "byte_count": 12008,
+      "sha256": "48b038f9734fdeb179b6d6e4d2431320b63d16c42aa5383f03c308c7dacbdc90"
+    }
+  ]
+}
