@@ -305,6 +305,84 @@ class StaticExporterTests(unittest.TestCase):
             self.assertEqual(manifest["source_repository"], SOURCE_REPOSITORY)
             self.assertEqual(metadata["source_repository"], SOURCE_REPOSITORY)
 
+    def test_published_json_never_leaks_local_filesystem_paths(self) -> None:
+        """A freshly generated publication is free of machine-local paths.
+
+        The public contract is served to browsers, so a calibration source is
+        addressed by its stable logical name rather than by wherever the
+        generating machine happened to keep it.  Historical publications and
+        the legacy fixtures are immutable and deliberately not scanned here.
+        """
+
+        repository_root = Path(__file__).resolve().parents[1]
+        forbidden = ("/Users/", "/home/", "file://", "C:\\Users", "C:/Users")
+        result = self._clean_result()
+        with tempfile.TemporaryDirectory() as tmp:
+            # Case 1: the production layout, calibrated from the repository.
+            repository_output = Path(tmp) / "from-repository"
+            export_static_data(
+                result,
+                output_dir=repository_output,
+                generated_at_utc="2026-08-27T00:00:00+00:00",
+                calibration_dir=repository_root / "data" / "processed",
+            )
+            calibration = json.loads(
+                (self._version_dir(repository_output) / "calibration.json").read_text()
+            )
+            self.assertEqual(calibration["status"], "AVAILABLE_IF_ARTIFACTS_EXIST")
+            self.assertEqual(
+                {key: entry["path"] for key, entry in calibration["source_files"].items()},
+                {
+                    "seat_hindcast": "data/processed/seat_hindcasts/seat_hindcast_summary.json",
+                    "vote_share_hindcast": "data/processed/vote_share_calibration/vote_share_summary_2018_2022.json",
+                    "pop_head_to_head": "data/processed/pop_baseline_benchmark/benchmark_report.json",
+                },
+            )
+            for entry in calibration["source_files"].values():
+                self.assertRegex(entry["sha256"], r"^[0-9a-f]{64}$")
+
+            # Case 2: calibration artifacts outside the repository must not be
+            # serialised by their absolute location either.
+            outside_root = Path(tmp) / "outside" / "processed"
+            for relative in (
+                ("seat_hindcasts", "seat_hindcast_summary.json"),
+                ("vote_share_calibration", "vote_share_summary_2018_2022.json"),
+                ("pop_baseline_benchmark", "benchmark_report.json"),
+            ):
+                artifact = outside_root.joinpath(*relative)
+                artifact.parent.mkdir(parents=True, exist_ok=True)
+                artifact.write_text(json.dumps({"summary": {"stub": True}}), encoding="utf-8")
+            outside_output = Path(tmp) / "from-outside"
+            export_static_data(
+                result,
+                output_dir=outside_output,
+                generated_at_utc="2026-08-27T00:00:00+00:00",
+                calibration_dir=outside_root,
+            )
+            outside_calibration = json.loads(
+                (self._version_dir(outside_output) / "calibration.json").read_text()
+            )
+            self.assertEqual(
+                {key: entry["path"] for key, entry in outside_calibration["source_files"].items()},
+                {
+                    "seat_hindcast": "data/processed/seat_hindcasts/seat_hindcast_summary.json",
+                    "vote_share_hindcast": "data/processed/vote_share_calibration/vote_share_summary_2018_2022.json",
+                    "pop_head_to_head": "data/processed/pop_baseline_benchmark/benchmark_report.json",
+                },
+            )
+
+            for output in (repository_output, outside_output):
+                published = sorted(output.rglob("*.json"))
+                self.assertTrue(published)
+                for published_file in published:
+                    payload = published_file.read_text(encoding="utf-8")
+                    for needle in (*forbidden, str(repository_root), tmp):
+                        self.assertNotIn(
+                            needle,
+                            payload,
+                            f"{published_file.name} leaks a local path fragment: {needle}",
+                        )
+
     def test_historical_schema_1_0_publications_remain_valid(self) -> None:
         """A pre-extraction 1.0 version validates and means the old repository."""
 

@@ -47,6 +47,33 @@ PUBLICATION_FILES: tuple[str, ...] = (
     "metadata.json",
 )
 
+# The publication is a public artifact, so it must never carry the local
+# filesystem layout of whichever machine generated it.  Calibration sources are
+# addressed by their stable logical name under the processed data root instead.
+REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
+LOGICAL_CALIBRATION_ROOT = "data/processed"
+CALIBRATION_SOURCE_RELATIVE_PARTS: dict[str, tuple[str, ...]] = {
+    "seat_hindcast": ("seat_hindcasts", "seat_hindcast_summary.json"),
+    "vote_share_hindcast": ("vote_share_calibration", "vote_share_summary_2018_2022.json"),
+    "pop_head_to_head": ("pop_baseline_benchmark", "benchmark_report.json"),
+}
+
+
+def _public_source_path(path: Path, relative_parts: Sequence[str]) -> str:
+    """Return a stable POSIX path safe to publish for a calibration artifact.
+
+    A file inside the repository is serialised repo-relative.  Anything else --
+    a temporary directory in tests, a mounted artifact store -- falls back to
+    the logical ``data/processed`` name of that artifact.  Neither form can
+    contain a local absolute path, and both are byte-identical across machines
+    so the deterministic publication hash stays reproducible.
+    """
+
+    try:
+        return path.relative_to(REPOSITORY_ROOT).as_posix()
+    except ValueError:
+        return "/".join((LOGICAL_CALIBRATION_ROOT, *relative_parts))
+
 
 def _canonical_bytes(value: Any) -> bytes:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
@@ -229,9 +256,8 @@ def _build_contracts(
     if calibration_dir is not None:
         processed_root = calibration_dir
         calibration_paths = {
-            "seat_hindcast": processed_root / "seat_hindcasts" / "seat_hindcast_summary.json",
-            "vote_share_hindcast": processed_root / "vote_share_calibration" / "vote_share_summary_2018_2022.json",
-            "pop_head_to_head": processed_root / "pop_baseline_benchmark" / "benchmark_report.json",
+            key: processed_root.joinpath(*relative_parts)
+            for key, relative_parts in CALIBRATION_SOURCE_RELATIVE_PARTS.items()
         }
         for key, path in calibration_paths.items():
             path = path.resolve()
@@ -256,7 +282,7 @@ def _build_contracts(
                         "summary": source_value.get("summary", source_value.get("by_model_overall", source_value)),
                     }
                 calibration["source_files"][key] = {
-                    "path": str(path),
+                    "path": _public_source_path(path, CALIBRATION_SOURCE_RELATIVE_PARTS[key]),
                     "sha256": compute_file_sha256(path),
                     "summary": source_value,
                 }
