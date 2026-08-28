@@ -142,12 +142,18 @@ Every artifact this repository generates records:
 ### Schema versions
 
 Publication schema `1.1` adds `source_repository` to `metadata.json` and
-`manifest.json`. Archive schema `1.1` adds `generation_id` to snapshots and
-index entries and moves snapshots to `<generation_id>/snapshot.json`.
+`manifest.json`. Publication schema `1.2` adds a compact, precomputed
+`coalition_builder` lookup to `groups.json`; it contains all 256 bitmask
+subsets of the canonical parliamentary party order and no raw draws. Archive
+schema `1.1` adds `generation_id` to snapshots and index entries and moves
+snapshots to `<generation_id>/snapshot.json`.
 
-Only `1.1` is written. Validators accept both `1.0` and `1.1` so every
-historical publication and archive entry stays readable and valid without
-modification.
+Only `1.2` is written by the current exporter. Validators accept `1.0`, `1.1`,
+and `1.2` so every historical publication stays readable and valid without
+modification. Coalition summaries are computed from the same joint
+`seats_matrix` draws as the existing group summaries; the builder's majority
+probability means the chance that the selected parties jointly reach 175 seats,
+not the probability that they form a government.
 
 ## Cross-repository publishing
 

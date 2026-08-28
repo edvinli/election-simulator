@@ -2,15 +2,20 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+from copy import deepcopy
 import json
+from pathlib import Path
 import subprocess
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
-from types import SimpleNamespace
 
+import numpy as np
+
+from scripts.simulator.config import PARLIAMENTARY_PARTIES_8
 from scripts.simulator.engine import simulate_election
+from scripts.simulator.pipeline import build_canonical_summary_dict
 from scripts.simulator.reproducibility import (
     SOURCE_REPOSITORY,
     UNRESOLVED_GIT_COMMIT,
@@ -20,7 +25,10 @@ from scripts.simulator.reproducibility import (
     resolve_source_repository,
 )
 from scripts.static_exporter import export_static_data, validate_published_directory
-from scripts.static_exporter.exporter import validate_publication_contract
+from scripts.static_exporter.exporter import (
+    COALITION_BUILDER_SUMMARY_FIELDS,
+    validate_publication_contract,
+)
 
 
 class StaticExporterTests(unittest.TestCase):
@@ -78,6 +86,192 @@ class StaticExporterTests(unittest.TestCase):
                 sum(json.loads((version / "seats.json").read_text())["representative_allocation"]["seats"].values()),
                 349,
             )
+
+    def test_schema_1_2_contains_all_joint_coalitions_and_preserves_payload_hash(self) -> None:
+        result = self._clean_result()
+        payload_before = build_canonical_summary_dict(result)["deterministic_payload_sha256"]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            first = export_static_data(
+                result,
+                output_dir=root / "first",
+                generated_at_utc="2026-08-27T00:00:00+00:00",
+            )
+            second = export_static_data(
+                result,
+                output_dir=root / "second",
+                generated_at_utc="2026-08-27T01:00:00+00:00",
+            )
+            first_version = self._version_dir(root / "first")
+            second_version = self._version_dir(root / "second")
+            first_groups = json.loads((first_version / "groups.json").read_text())
+            second_groups = json.loads((second_version / "groups.json").read_text())
+
+            self.assertEqual(first["schema_version"], "1.2")
+            self.assertEqual(first_groups["schema_version"], "1.2")
+            self.assertEqual(first_groups["groups"]["tido"]["parties"], ["M", "SD", "KD", "L"])
+            builder = first_groups["coalition_builder"]
+            self.assertEqual(builder["party_order"], list(PARLIAMENTARY_PARTIES_8))
+            self.assertEqual(builder["encoding"], "bitmask")
+            self.assertEqual(builder["majority_threshold"], 175)
+            self.assertEqual(len(builder["coalitions"]), 256)
+            self.assertEqual(list(builder["coalitions"]), [str(mask) for mask in range(256)])
+            self.assertEqual(
+                (first_version / "groups.json").read_bytes(),
+                (second_version / "groups.json").read_bytes(),
+            )
+            self.assertEqual(
+                payload_before,
+                build_canonical_summary_dict(result)["deterministic_payload_sha256"],
+            )
+            self.assertEqual(
+                payload_before,
+                first_groups["deterministic_payload_sha256"],
+            )
+
+            metric_fields = tuple(field for field in COALITION_BUILDER_SUMMARY_FIELDS if field != "mask")
+            all_draws = result.seats_matrix
+            for mask in range(256):
+                key = str(mask)
+                entry = builder["coalitions"][key]
+                parties = [
+                    party
+                    for index, party in enumerate(PARLIAMENTARY_PARTIES_8)
+                    if mask & (1 << index)
+                ]
+                self.assertEqual(set(entry), set(COALITION_BUILDER_SUMMARY_FIELDS))
+                self.assertEqual(entry["mask"], mask)
+                self.assertEqual(entry["parties"], parties)
+
+                indices = [PARLIAMENTARY_PARTIES_8.index(party) for party in parties]
+                coalition_draws = (
+                    all_draws[:, indices].sum(axis=1)
+                    if indices
+                    else np.zeros(all_draws.shape[0], dtype=np.int64)
+                )
+                complement_mask = 255 ^ mask
+                complement_indices = [
+                    index
+                    for index in range(len(PARLIAMENTARY_PARTIES_8))
+                    if complement_mask & (1 << index)
+                ]
+                complement_draws = all_draws[:, complement_indices].sum(axis=1)
+                np.testing.assert_array_equal(coalition_draws + complement_draws, 349)
+                self.assertTrue(np.all((coalition_draws >= 0) & (coalition_draws <= 349)))
+
+                expected_summary = result.summarize_group(parties)
+                expected = expected_summary.__dict__
+                for field in metric_fields:
+                    if field == "parties":
+                        self.assertEqual(entry[field], list(expected[field]))
+                    else:
+                        self.assertEqual(entry[field], expected[field])
+
+                complement_entry = builder["coalitions"][str(complement_mask)]
+                self.assertAlmostEqual(
+                    entry["prob_majority"] + complement_entry["prob_majority"],
+                    1.0,
+                    places=12,
+                )
+                self.assertGreaterEqual(entry["mean_seats"], 0)
+                self.assertLessEqual(entry["mean_seats"], 349)
+                for field in (
+                    "median_seats",
+                    "p05_seats",
+                    "p10_seats",
+                    "p25_seats",
+                    "p75_seats",
+                    "p90_seats",
+                    "p95_seats",
+                ):
+                    self.assertGreaterEqual(entry[field], 0)
+                    self.assertLessEqual(entry[field], 349)
+
+            empty = builder["coalitions"]["0"]
+            for field in (
+                "mean_seats",
+                "median_seats",
+                "p05_seats",
+                "p10_seats",
+                "p25_seats",
+                "p75_seats",
+                "p90_seats",
+                "p95_seats",
+                "prob_majority",
+            ):
+                self.assertEqual(empty[field], 0)
+            full = builder["coalitions"]["255"]
+            for field in (
+                "mean_seats",
+                "median_seats",
+                "p05_seats",
+                "p10_seats",
+                "p25_seats",
+                "p75_seats",
+                "p90_seats",
+                "p95_seats",
+            ):
+                self.assertEqual(full[field], 349)
+            self.assertEqual(full["prob_majority"], 1)
+
+            for group_name, parties in (
+                ("tido", ["M", "SD", "KD", "L"]),
+                ("red_green_center", ["S", "V", "MP", "C"]),
+            ):
+                mask = sum(1 << PARLIAMENTARY_PARTIES_8.index(party) for party in parties)
+                entry = builder["coalitions"][str(mask)]
+                existing = first_groups["groups"][group_name]
+                for field in (
+                    "mean_seats",
+                    "median_seats",
+                    "p05_seats",
+                    "p10_seats",
+                    "p25_seats",
+                    "p75_seats",
+                    "p90_seats",
+                    "p95_seats",
+                    "prob_majority",
+                ):
+                    self.assertEqual(entry[field], existing[field])
+
+    def test_schema_1_0_and_1_1_contracts_remain_accepted_without_builder(self) -> None:
+        result = self._clean_result()
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / "publication"
+            manifest = export_static_data(result, output_dir=output)
+            version = output / "versions" / manifest["publication_generation"]
+            current = {
+                name: json.loads((version / name).read_text())
+                for name in ("forecast.json", "parties.json", "seats.json", "groups.json", "calibration.json", "metadata.json")
+            }
+            for schema in ("1.0", "1.1"):
+                contracts = deepcopy(current)
+                for contract in contracts.values():
+                    contract["schema_version"] = schema
+                contracts["groups.json"].pop("coalition_builder")
+                validate_publication_contract(contracts)
+
+    def test_schema_1_2_builder_validation_rejects_missing_or_malformed_entries(self) -> None:
+        result = self._clean_result()
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / "publication"
+            manifest = export_static_data(result, output_dir=output)
+            version = output / "versions" / manifest["publication_generation"]
+            current = {
+                name: json.loads((version / name).read_text())
+                for name in ("forecast.json", "parties.json", "seats.json", "groups.json", "calibration.json", "metadata.json")
+            }
+            for label, mutate in (
+                ("missing mask", lambda coalitions: coalitions.pop("7")),
+                ("wrong membership", lambda coalitions: coalitions["7"]["parties"].append("REST")),
+                ("raw draws", lambda coalitions: coalitions["7"].__setitem__("seat_histogram", {})),
+                ("out of bounds", lambda coalitions: coalitions["7"].__setitem__("median_seats", 350)),
+            ):
+                with self.subTest(case=label):
+                    contracts = deepcopy(current)
+                    mutate(contracts["groups.json"]["coalition_builder"]["coalitions"])
+                    with self.assertRaises(ValueError):
+                        validate_publication_contract(contracts)
 
     def test_dirty_source_is_rejected_for_certified_publication(self) -> None:
         result = simulate_election(as_of="2026-08-23", election_date="2026-09-13", samples=8, seed=12345)
@@ -300,8 +494,8 @@ class StaticExporterTests(unittest.TestCase):
             manifest = export_static_data(result, output_dir=output, generated_at_utc="2026-08-27T00:00:00+00:00")
             version = self._version_dir(output)
             metadata = json.loads((version / "metadata.json").read_text())
-            self.assertEqual(manifest["schema_version"], "1.1")
-            self.assertEqual(metadata["schema_version"], "1.1")
+            self.assertEqual(manifest["schema_version"], "1.2")
+            self.assertEqual(metadata["schema_version"], "1.2")
             self.assertEqual(manifest["source_repository"], SOURCE_REPOSITORY)
             self.assertEqual(metadata["source_repository"], SOURCE_REPOSITORY)
 

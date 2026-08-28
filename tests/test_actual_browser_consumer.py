@@ -150,6 +150,118 @@ class ActualBrowserConsumerTests(unittest.TestCase):
             ],
         )
 
+    @staticmethod
+    def _browser_probability(value: float) -> str:
+        parsed = float(value)
+        if parsed == 0:
+            return "0.0%"
+        if parsed == 1:
+            return "100.0%"
+        percent = parsed * 100
+        if percent < 0.005:
+            return "<0.01%"
+        if percent > 99.995:
+            return ">99.99%"
+        return f"{percent:.2f}%" if percent < 1 or percent > 99 else f"{percent:.1f}%"
+
+    def test_production_consumer_renders_and_resolves_the_joint_coalition_lookup(self) -> None:
+        verdict = run_actual_consumer(self.publication)
+        initial = verdict["builder_initial"]
+        self.assertTrue(initial["available"])
+        self.assertFalse(initial["empty_hidden"])
+        self.assertTrue(initial["results_hidden"])
+        self.assertTrue(initial["alone_hidden"])
+        self.assertTrue(initial["support_hidden"])
+        self.assertEqual(
+            [(button["party"], button["mask"]) for button in initial["government_buttons"]],
+            [(party, str(1 << index)) for index, party in enumerate(("M", "L", "C", "KD", "S", "V", "MP", "SD"))],
+        )
+        self.assertTrue(all(button["pressed"] == "false" for button in initial["government_buttons"]))
+        self.assertTrue(all(button["pressed"] == "false" for button in initial["support_buttons"]))
+
+        groups = json.loads((self.version / "groups.json").read_text(encoding="utf-8"))
+        coalitions = groups["coalition_builder"]["coalitions"]
+
+        government = verdict["builder_government"]
+        government_entry = coalitions["137"]  # M + KD + SD
+        self.assertTrue(government["available"])
+        self.assertTrue(government["empty_hidden"])
+        self.assertFalse(government["results_hidden"])
+        self.assertFalse(government["alone_hidden"])
+        self.assertTrue(government["support_hidden"])
+        self.assertEqual(government["alone_mask"], "137")
+        self.assertIn("M + KD + SD", government["alone_html"])
+        self.assertIn(f">{government_entry['median_seats']} seats</dd>", government["alone_html"])
+        self.assertIn(
+            f">{government_entry['p05_seats']}–{government_entry['p95_seats']} seats</dd>",
+            government["alone_html"],
+        )
+        self.assertIn(
+            f">{self._browser_probability(government_entry['prob_majority'])}</dd>",
+            government["alone_html"],
+        )
+        for button in government["support_buttons"]:
+            if button["party"] in {"M", "KD", "SD"}:
+                self.assertTrue(button["disabled"])
+
+        with_support = verdict["builder_with_support"]
+        union_entry = coalitions["139"]  # M + KD + SD + L
+        self.assertFalse(with_support["support_hidden"])
+        self.assertEqual(with_support["alone_mask"], "137")
+        self.assertEqual(with_support["support_mask"], "139")
+        self.assertIn("With support from L", with_support["support_html"])
+        self.assertIn("M + L + KD + SD", with_support["support_html"])
+        self.assertIn(f">{union_entry['median_seats']} seats</dd>", with_support["support_html"])
+        self.assertIn(
+            f">{union_entry['p05_seats']}–{union_entry['p95_seats']} seats</dd>",
+            with_support["support_html"],
+        )
+        self.assertIn(
+            f">{self._browser_probability(union_entry['prob_majority'])}</dd>",
+            with_support["support_html"],
+        )
+
+    def test_production_consumer_hides_builder_for_a_schema_1_1_publication_without_lookup(self) -> None:
+        def mutate(root: Path, version: Path) -> None:
+            for name in ("forecast.json", "parties.json", "seats.json", "groups.json", "calibration.json", "metadata.json"):
+                path = version / name
+                contract = json.loads(path.read_text(encoding="utf-8"))
+                contract["schema_version"] = "1.1"
+                if name == "groups.json":
+                    contract.pop("coalition_builder", None)
+                path.write_text(json.dumps(contract, indent=2) + "\n", encoding="utf-8")
+            manifest_path = version / "manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["schema_version"] = "1.1"
+            manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+            pointer_path = root / "current.json"
+            pointer = json.loads(pointer_path.read_text(encoding="utf-8"))
+            pointer["schema_version"] = "1.1"
+            pointer_path.write_text(json.dumps(pointer, indent=2) + "\n", encoding="utf-8")
+            self._repair_pointer_hash(root, version)
+
+        legacy = self._mutated_copy(mutate)
+        verdict = run_actual_consumer(legacy)
+        self.assertTrue(verdict["accepted"], verdict)
+        self.assertFalse(verdict["builder_initial"]["available"])
+        self.assertIsNone(verdict["builder_government"])
+        self.assertIsNone(verdict["builder_with_support"])
+
+    def test_production_consumer_hides_a_malformed_coalition_lookup(self) -> None:
+        def mutate(root: Path, version: Path) -> None:
+            groups_path = version / "groups.json"
+            groups = json.loads(groups_path.read_text(encoding="utf-8"))
+            groups["coalition_builder"]["coalitions"].pop("7")
+            groups_path.write_text(json.dumps(groups, indent=2) + "\n", encoding="utf-8")
+            self._repair_pointer_hash(root, version)
+
+        malformed = self._mutated_copy(mutate)
+        verdict = run_actual_consumer(malformed)
+        self.assertTrue(verdict["accepted"], verdict)
+        self.assertFalse(verdict["builder_initial"]["available"])
+        self.assertIsNone(verdict["builder_government"])
+        self.assertIsNone(verdict["builder_with_support"])
+
     # ---- rejection under the production rules ---------------------------
 
     def test_production_consumer_rejects_a_malformed_pointer(self) -> None:

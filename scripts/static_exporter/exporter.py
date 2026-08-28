@@ -21,7 +21,11 @@ import uuid
 
 import numpy as np
 
-from scripts.simulator.config import MODEL_PARTIES_9, PARLIAMENTARY_PARTIES_8
+from scripts.simulator.config import (
+    DEFAULT_MAJORITY_THRESHOLD,
+    MODEL_PARTIES_9,
+    PARLIAMENTARY_PARTIES_8,
+)
 from scripts.simulator.pipeline import build_canonical_summary_dict
 from scripts.simulator.reproducibility import (
     GENERATION_ID_PATTERN,
@@ -34,10 +38,12 @@ from scripts.simulator.reproducibility import (
 
 
 # 1.0 is the pre-extraction publication schema.  1.1 adds ``source_repository``
-# to metadata and manifests.  Validators accept both so historical 1.0
-# publications stay readable and are never rewritten; only 1.1 is written.
-PUBLICATION_SCHEMA_VERSION = "1.1"
-SUPPORTED_PUBLICATION_SCHEMA_VERSIONS: tuple[str, ...] = ("1.0", "1.1")
+# to metadata and manifests.  1.2 adds the precomputed coalition-builder
+# summaries to groups.json.  Validators accept every historical version so
+# existing immutable publications stay readable and are never rewritten; only
+# 1.2 is written by this exporter.
+PUBLICATION_SCHEMA_VERSION = "1.2"
+SUPPORTED_PUBLICATION_SCHEMA_VERSIONS: tuple[str, ...] = ("1.0", "1.1", "1.2")
 PUBLICATION_FILES: tuple[str, ...] = (
     "forecast.json",
     "parties.json",
@@ -57,6 +63,20 @@ CALIBRATION_SOURCE_RELATIVE_PARTS: dict[str, tuple[str, ...]] = {
     "vote_share_hindcast": ("vote_share_calibration", "vote_share_summary_2018_2022.json"),
     "pop_head_to_head": ("pop_baseline_benchmark", "benchmark_report.json"),
 }
+
+COALITION_BUILDER_SUMMARY_FIELDS: tuple[str, ...] = (
+    "mask",
+    "parties",
+    "mean_seats",
+    "median_seats",
+    "p05_seats",
+    "p10_seats",
+    "p25_seats",
+    "p75_seats",
+    "p90_seats",
+    "p95_seats",
+    "prob_majority",
+)
 
 
 def _public_source_path(path: Path, relative_parts: Sequence[str]) -> str:
@@ -154,6 +174,131 @@ def _representative_seat_allocation(result: Any) -> dict[str, Any]:
     }
 
 
+def _build_coalition_builder(result: Any) -> dict[str, Any]:
+    """Build the compact coalition lookup from the joint seat draws.
+
+    ``SimulationResult.summarize_group`` delegates to ``GroupSummaryHelper``
+    over the result's original ``seats_matrix``.  Calling that method once for
+    every bitmask intentionally keeps coalition quantiles and majority logic
+    identical to the existing published group summaries.  No marginal party
+    summaries, reconstructed distributions, or browser-side sampling enter
+    this contract.
+    """
+
+    party_order = list(PARLIAMENTARY_PARTIES_8)
+    coalitions: dict[str, dict[str, Any]] = {}
+    for mask in range(1 << len(party_order)):
+        parties = [
+            party
+            for index, party in enumerate(party_order)
+            if mask & (1 << index)
+        ]
+        summary = result.summarize_group(
+            parties,
+            majority_threshold=DEFAULT_MAJORITY_THRESHOLD,
+        )
+        coalitions[str(mask)] = {
+            "mask": mask,
+            "parties": parties,
+            "mean_seats": float(summary.mean_seats),
+            "median_seats": int(summary.median_seats),
+            "p05_seats": int(summary.p05_seats),
+            "p10_seats": int(summary.p10_seats),
+            "p25_seats": int(summary.p25_seats),
+            "p75_seats": int(summary.p75_seats),
+            "p90_seats": int(summary.p90_seats),
+            "p95_seats": int(summary.p95_seats),
+            "prob_majority": float(summary.prob_majority),
+        }
+    return {
+        "party_order": party_order,
+        "encoding": "bitmask",
+        "majority_threshold": DEFAULT_MAJORITY_THRESHOLD,
+        "coalitions": coalitions,
+    }
+
+
+def _is_finite_number(value: Any) -> bool:
+    """Return whether a JSON-compatible numeric value is finite and non-bool."""
+
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and np.isfinite(value)
+
+
+def _validate_coalition_builder(value: Mapping[str, Any]) -> None:
+    """Validate the schema-1.2 coalition lookup without seeing raw draws."""
+
+    expected_keys = {"party_order", "encoding", "majority_threshold", "coalitions"}
+    if set(value) != expected_keys:
+        raise ValueError("coalition_builder has unexpected fields")
+    if value.get("party_order") != list(PARLIAMENTARY_PARTIES_8):
+        raise ValueError("coalition_builder has incorrect canonical party order")
+    if value.get("encoding") != "bitmask":
+        raise ValueError("coalition_builder must use bitmask encoding")
+    threshold = value.get("majority_threshold")
+    if (
+        not isinstance(threshold, int)
+        or isinstance(threshold, bool)
+        or threshold != DEFAULT_MAJORITY_THRESHOLD
+    ):
+        raise ValueError("coalition_builder has incorrect majority threshold")
+
+    coalitions = value.get("coalitions")
+    if not isinstance(coalitions, Mapping):
+        raise ValueError("coalition_builder.coalitions must be an object")
+    expected_mask_keys = [str(mask) for mask in range(1 << len(PARLIAMENTARY_PARTIES_8))]
+    if list(coalitions) != expected_mask_keys:
+        raise ValueError("coalition_builder must contain keys \"0\" through \"255\" in order")
+
+    for mask, key in enumerate(expected_mask_keys):
+        entry = coalitions[key]
+        if not isinstance(entry, Mapping):
+            raise ValueError(f"coalition {key} must be an object")
+        if set(entry) != set(COALITION_BUILDER_SUMMARY_FIELDS):
+            raise ValueError(f"coalition {key} has unexpected fields")
+        entry_mask = entry.get("mask")
+        if entry_mask != mask or isinstance(entry_mask, bool) or not isinstance(entry_mask, int):
+            raise ValueError(f"coalition {key} has an inconsistent mask")
+        expected_parties = [
+            party
+            for index, party in enumerate(PARLIAMENTARY_PARTIES_8)
+            if mask & (1 << index)
+        ]
+        if entry.get("parties") != expected_parties:
+            raise ValueError(f"coalition {key} does not match the canonical bitmask membership")
+
+        mean = entry.get("mean_seats")
+        if not _is_finite_number(mean) or not 0 <= float(mean) <= 349:
+            raise ValueError(f"coalition {key} mean_seats is outside 0–349")
+        quantiles = [entry.get(field) for field in (
+            "p05_seats",
+            "p10_seats",
+            "p25_seats",
+            "median_seats",
+            "p75_seats",
+            "p90_seats",
+            "p95_seats",
+        )]
+        if any(
+            not isinstance(seats, int)
+            or isinstance(seats, bool)
+            or not 0 <= seats <= 349
+            for seats in quantiles
+        ):
+            raise ValueError(f"coalition {key} quantiles must be integer seats in 0–349")
+        if quantiles != sorted(quantiles):
+            raise ValueError(f"coalition {key} quantiles are not monotone")
+        probability = entry.get("prob_majority")
+        if not _is_finite_number(probability) or not 0 <= float(probability) <= 1:
+            raise ValueError(f"coalition {key} probability must be between 0 and 1")
+
+        if mask == 0:
+            if any(seats != 0 for seats in quantiles) or mean != 0 or probability != 0:
+                raise ValueError("Empty coalition must have zero seats and zero majority probability")
+        elif mask == (1 << len(PARLIAMENTARY_PARTIES_8)) - 1:
+            if any(seats != 349 for seats in quantiles) or mean != 349 or probability != 1:
+                raise ValueError("Full coalition must have 349 seats and certainty of majority")
+
+
 def _build_contracts(
     result: Any,
     *,
@@ -246,6 +391,7 @@ def _build_contracts(
     }
     for row in groups.values():
         row["parties"] = list(row["parties"])
+    coalition_builder = _build_coalition_builder(result)
 
     calibration: dict[str, Any] = {
         "schema_version": PUBLICATION_SCHEMA_VERSION,
@@ -334,6 +480,7 @@ def _build_contracts(
         "schema_version": PUBLICATION_SCHEMA_VERSION,
         "majority_threshold": 175,
         "groups": groups,
+        "coalition_builder": coalition_builder,
         "note": "Groups are configurable summaries over parliamentary-party seat draws; REST is never included as an eligible party.",
         "deterministic_payload_sha256": deterministic_payload_sha256,
     }
@@ -388,8 +535,20 @@ def validate_publication_contract(contracts: Mapping[str, Mapping[str, Any]]) ->
         raise ValueError("REST must be explicitly marked ineligible")
     if forecast["threshold_probabilities_4pct"].keys() != set(PARLIAMENTARY_PARTIES_8):
         raise ValueError("Threshold probabilities must cover exactly the eight parliamentary parties")
-    if groups.get("majority_threshold") != 175:
+    group_threshold = groups.get("majority_threshold")
+    if (
+        not isinstance(group_threshold, int)
+        or isinstance(group_threshold, bool)
+        or group_threshold != DEFAULT_MAJORITY_THRESHOLD
+    ):
         raise ValueError("Group majority threshold must be 175")
+    if groups.get("schema_version") == "1.2":
+        coalition_builder = groups.get("coalition_builder")
+        if not isinstance(coalition_builder, Mapping):
+            raise ValueError("Schema 1.2 groups.json must include coalition_builder")
+        _validate_coalition_builder(coalition_builder)
+    elif "coalition_builder" in groups:
+        raise ValueError("coalition_builder is only valid in schema 1.2 groups.json")
     metadata = contracts["metadata.json"]
     if not metadata.get("deterministic_payload_sha256"):
         raise ValueError("metadata.json must link the deterministic simulation payload")

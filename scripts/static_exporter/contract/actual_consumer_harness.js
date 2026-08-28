@@ -42,6 +42,8 @@ class StubElement {
     this.id = id || "";
     this.className = "";
     this.hidden = true;
+    this.disabled = false;
+    this.type = "";
     this.style = {};
     this.children = [];
     this.attributes = {};
@@ -86,6 +88,12 @@ class StubElement {
     (this._listeners[type] = this._listeners[type] || []).push(handler);
   }
 
+  dispatchEvent(event) {
+    const handlers = this._listeners[event.type] || [];
+    handlers.forEach((handler) => handler(event));
+    return true;
+  }
+
   querySelector(selector) {
     // The production file queries only for nodes it just wrote via innerHTML
     // and then writes style/textContent onto them. Nothing is ever read back,
@@ -119,6 +127,13 @@ function buildDocument(publicationBase, statusSettled) {
     "election-seats",
     "election-seat-bars",
     "election-parliament",
+    "election-government-builder",
+    "election-government-parties",
+    "election-support-parties",
+    "election-government-empty",
+    "election-government-results",
+    "election-government-alone-result",
+    "election-government-support-result",
     "election-changes",
     "election-changes-status",
     "election-changes-content",
@@ -159,6 +174,48 @@ function buildDocument(publicationBase, statusSettled) {
       return new StubElement(tagName);
     },
     _elements: elements,
+  };
+}
+
+function findButton(host, party) {
+  if (!host) return null;
+  return host.children.find((child) => child.getAttribute("data-party") === party) || null;
+}
+
+function clickButton(host, party) {
+  const button = findButton(host, party);
+  if (!button) throw new Error("Could not find coalition button for " + party);
+  if (button.disabled) throw new Error("Coalition button is unexpectedly disabled for " + party);
+  if (!(button._listeners.click || []).length) throw new Error("Coalition button has no click handler for " + party);
+  button.dispatchEvent({ type: "click", target: button });
+}
+
+function coalitionSnapshot(document) {
+  const section = document._elements.get("election-government-builder");
+  const government = document._elements.get("election-government-parties");
+  const support = document._elements.get("election-support-parties");
+  const empty = document._elements.get("election-government-empty");
+  const results = document._elements.get("election-government-results");
+  const alone = document._elements.get("election-government-alone-result");
+  const withSupport = document._elements.get("election-government-support-result");
+  const describeButtons = (host) => (host ? host.children : []).map((button) => ({
+    party: button.getAttribute("data-party"),
+    mask: button.getAttribute("data-mask"),
+    pressed: button.getAttribute("aria-pressed"),
+    disabled: Boolean(button.disabled),
+  }));
+  return {
+    available: Boolean(section && !section.hidden),
+    empty_hidden: Boolean(!empty || empty.hidden),
+    results_hidden: Boolean(!results || results.hidden),
+    alone_hidden: Boolean(!alone || alone.hidden),
+    support_hidden: Boolean(!withSupport || withSupport.hidden),
+    government_buttons: describeButtons(government),
+    support_buttons: describeButtons(support),
+    alone_mask: alone ? alone.getAttribute("data-coalition-mask") : null,
+    support_mask: withSupport ? withSupport.getAttribute("data-coalition-mask") : null,
+    alone_html: alone ? alone.innerHTML : "",
+    support_html: withSupport ? withSupport.innerHTML : "",
   };
 }
 
@@ -255,6 +312,17 @@ async function main() {
   const statusText = status.textContent;
   const errored = status.className.indexOf("election-status--error") !== -1;
   const parliament = document._elements.get("election-parliament");
+  const builderInitial = coalitionSnapshot(document);
+  let builderGovernment = null;
+  let builderWithSupport = null;
+  if (builderInitial.available) {
+    for (const party of ["M", "KD", "SD"]) {
+      clickButton(document._elements.get("election-government-parties"), party);
+    }
+    builderGovernment = coalitionSnapshot(document);
+    clickButton(document._elements.get("election-support-parties"), "L");
+    builderWithSupport = coalitionSnapshot(document);
+  }
 
   const verdict = {
     accepted: !errored,
@@ -265,6 +333,9 @@ async function main() {
     parliament_aria_label: parliament.getAttribute("aria-label"),
     seat_nodes: parliament.children.length,
     requested_paths: requested,
+    builder_initial: builderInitial,
+    builder_government: builderGovernment,
+    builder_with_support: builderWithSupport,
     source_file: path.resolve(websiteJsPath),
     source_sha256: require("crypto").createHash("sha256").update(source).digest("hex"),
   };

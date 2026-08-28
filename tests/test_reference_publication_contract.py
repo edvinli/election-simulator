@@ -96,7 +96,7 @@ class ReferencePublicationContractTests(unittest.TestCase):
         self.assertEqual(verdict["status_text"], "Certified forecast loaded.")
         self.assertEqual(verdict["seat_allocation_source"], "representative_joint_simulation_draw")
         self.assertEqual(verdict["seat_total"], 349)
-        self.assertEqual(verdict["schema_version"], "1.1")
+        self.assertEqual(verdict["schema_version"], "1.2")
         self.assertEqual(verdict["source_repository"], "edvinli/election-simulator")
 
     def test_published_version_contains_seven_real_files_and_no_symlinks(self) -> None:
