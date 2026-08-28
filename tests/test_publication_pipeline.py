@@ -152,6 +152,7 @@ class PublicationPipelineTests(unittest.TestCase):
                 publication_dir=Path(tmp) / "publication",
                 append_archive=True,
                 export_publication=True,
+                simulation_runner=self._dirty_runner,
             )
             self.assertEqual(run.status, "FAILED")
             self.assertEqual(run.error["type"], "PipelineInputError")
