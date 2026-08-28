@@ -419,7 +419,8 @@ def merge_homepage_polls(
 
 
 def polls_to_long_rows(
-    polls: Iterable[dict[str, Any]], retrieved_at_by_url: dict[str, str]
+    polls: Iterable[dict[str, Any]],
+    retrieved_at_by_url: dict[str, str] | None = None,
 ) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for poll in polls:
@@ -439,7 +440,6 @@ def polls_to_long_rows(
             source_url = poll.get("value_sources", {}).get(party)
             if source_url is None and party in SOURCE_BY_KEY:
                 source_url = SOURCE_BY_KEY[party].url
-            retrieved_at = retrieved_at_by_url.get(source_url or SITE_HOME, "")
             rows.append(
                 {
                     "poll_id": poll["poll_id"],
@@ -455,7 +455,7 @@ def polls_to_long_rows(
                     "sample_size": None,
                     "poll_method": None,
                     "source_url": source_url or SITE_HOME,
-                    "retrieved_at": retrieved_at,
+                    "retrieved_at": "",
                     "metadata_source_url": None,
                     "metadata_retrieved_at": None,
                     "metadata_match_status": "no_match",
@@ -473,10 +473,9 @@ def normalize_raw_dataset(
     timeseries, source_labels = parse_timeseries_payload(
         (raw_dir / timeseries_source.raw_filename).read_bytes()
     )
-    ts_record = source_records["timeseries"]
     for row in timeseries:
         row["source_url"] = TIMESERIES_CSV
-        row["retrieved_at"] = ts_record["retrieved_at"]
+        row["retrieved_at"] = ""
 
     party_payloads = {
         source.party: parse_party_chart_payload(
@@ -494,11 +493,7 @@ def normalize_raw_dataset(
         (raw_dir / SOURCE_BY_KEY["homepage"].raw_filename).read_bytes(), reference
     )
     polls = merge_homepage_polls(chart_polls, homepage_polls)
-    retrieved_at_by_url = {
-        source.url: source_records[source.key]["retrieved_at"] for source in PARTY_SOURCES
-    }
-    retrieved_at_by_url[SITE_HOME] = homepage_record["retrieved_at"]
-    individual_rows = polls_to_long_rows(polls, retrieved_at_by_url)
+    individual_rows = polls_to_long_rows(polls)
     metadata = {
         "timeseries_source_party_labels": source_labels,
         "party_identifier_normalization": {"FP": "L", "Folkpartiet": "L", "Liberalerna": "L"},
@@ -526,7 +521,7 @@ def parse_swedishpolls_payloads(
     polls_payload: bytes,
     sources_payload: bytes,
     *,
-    retrieved_at: str,
+    retrieved_at: str = "",
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Normalize the CC0 SwedishPolls table without conflating it with Pollofpolls."""
 
@@ -628,7 +623,7 @@ def parse_swedishpolls_payloads(
                     ),
                     "sources_index_url": SWEDISHPOLLS_SOURCES_CSV,
                     "source_row": source_row_number,
-                    "retrieved_at": retrieved_at,
+                    "retrieved_at": "",
                 }
             )
     return wide_polls, long_rows
@@ -638,7 +633,7 @@ def enrich_with_swedishpolls(
     pollofpolls_rows: list[dict[str, Any]],
     swedishpolls_wide: list[dict[str, Any]],
     *,
-    metadata_retrieved_at: str,
+    metadata_retrieved_at: str | None = None,
 ) -> list[dict[str, Any]]:
     """Enrich metadata only for unique pollster + exact interview-span matches."""
 
@@ -695,7 +690,7 @@ def enrich_with_swedishpolls(
                 )
                 row["sample_size"] = match["sample_size"]
                 row["metadata_source_url"] = SWEDISHPOLLS_CSV
-                row["metadata_retrieved_at"] = metadata_retrieved_at
+                row["metadata_retrieved_at"] = None
                 row["metadata_match_status"] = status
                 row["metadata_row_source_references_json"] = refs_json
 

@@ -240,5 +240,68 @@ class AcquisitionIdentityTests(unittest.TestCase):
         self.assertEqual(captured["headers"]["Accept-encoding"], "identity")
 
 
+class RefreshStabilityTests(unittest.TestCase):
+    """Processed scientific outputs must be byte-stable across semantically identical refreshes."""
+
+    def _normalize_fixture_homepage(self, html_payload: bytes, retrieved_at: str) -> list[dict]:
+        reference = parse_date(retrieved_at[:10])
+        homepage_polls = parse_homepage_polls(html_payload, reference)
+        chart_polls = reconstruct_chart_polls(
+            {
+                "M": parse_party_chart_payload((FIXTURES / "party_M.csv").read_bytes(), "M"),
+                "L": parse_party_chart_payload((FIXTURES / "party_L.csv").read_bytes(), "L"),
+            }
+        )
+        polls = merge_homepage_polls(chart_polls, homepage_polls)
+        return polls_to_long_rows(polls)
+
+    def test_homepage_table_id_and_retrieval_time_differ_produces_byte_identical_rows(self) -> None:
+        raw_text = (FIXTURES / "homepage.html").read_text(encoding="utf-8")
+        payload_a = raw_text.replace(
+            'table id="csvtohtml_id-6a90a39fbab3e"',
+            'table id="csvtohtml_id-aaaaaaaaaaaaa"',
+        ).encode("utf-8")
+        payload_b = raw_text.replace(
+            'table id="csvtohtml_id-6a90a39fbab3e"',
+            'table id="csvtohtml_id-bbbbbbbbbbbbb"',
+        ).encode("utf-8")
+
+        rows_a = self._normalize_fixture_homepage(payload_a, "2026-08-27T20:52:47+00:00")
+        rows_b = self._normalize_fixture_homepage(payload_b, "2026-08-28T21:06:02+00:00")
+
+        self.assertEqual(rows_a, rows_b)
+        # Format both to CSV bytes to verify byte-level stability
+        import io, csv
+        buf_a, buf_b = io.StringIO(), io.StringIO()
+        writer_a = csv.DictWriter(buf_a, fieldnames=list(INDIVIDUAL_FIELDS))
+        writer_b = csv.DictWriter(buf_b, fieldnames=list(INDIVIDUAL_FIELDS))
+        writer_a.writeheader(); writer_a.writerows(rows_a)
+        writer_b.writeheader(); writer_b.writerows(rows_b)
+        self.assertEqual(buf_a.getvalue().encode("utf-8"), buf_b.getvalue().encode("utf-8"))
+
+    def test_actual_poll_value_change_changes_processed_output(self) -> None:
+        raw_text = (FIXTURES / "homepage.html").read_text(encoding="utf-8")
+        payload_a = raw_text.encode("utf-8")
+        # Modify Kantar-Sifo support value in the first row from 18,2 to 19,5
+        payload_c = raw_text.replace("18,2", "19,5", 1).encode("utf-8")
+        self.assertNotEqual(payload_a, payload_c)
+
+        rows_a = self._normalize_fixture_homepage(payload_a, "2026-08-27T20:52:47+00:00")
+        rows_c = self._normalize_fixture_homepage(payload_c, "2026-08-27T20:52:47+00:00")
+
+        self.assertNotEqual(rows_a, rows_c)
+        changed_rows = [
+            (ra, rc) for ra, rc in zip(rows_a, rows_c) if ra != rc
+        ]
+        self.assertEqual(len(changed_rows), 10)
+        m_a = next(ra for ra, _ in changed_rows if ra["party"] == "M")
+        m_c = next(rc for _, rc in changed_rows if rc["party"] == "M")
+        self.assertEqual(m_a["pollster"], "Sifo")
+        self.assertEqual(m_a["support"], 18.2)
+        self.assertEqual(m_c["support"], 19.5)
+        self.assertNotEqual(m_a["poll_id"], m_c["poll_id"])
+
+
 if __name__ == "__main__":
     unittest.main()
+

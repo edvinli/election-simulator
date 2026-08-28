@@ -83,17 +83,22 @@ byte length, retrieval time, and SHA-256 hash.
 ## Files and fields
 
 `raw/pollofpolls/` stores exact response payloads plus `retrieval_manifest.json`.
-Raw payloads are never edited. `processed/pollofpolls/` contains:
+Raw payloads are never edited. Exact acquisition timestamps, response hashes, HTTP
+metadata, and byte counts live in `data/raw/pollofpolls/retrieval_manifest.json` and the
+raw snapshot.
+
+`processed/pollofpolls/` contains:
 
 - `pollofpolls_timeseries.csv`: `date`, M, L, C, KD, S, V, MP, SD, FI,
   `other`, `source_extra_json`, `source_url`, and `retrieved_at`.
 - `individual_polls.csv`: deterministic `poll_id`, normalized and original pollster,
   separate interview/publication dates, party, normalized `support`, exact numeric
-  `source_value`, reporting status, sample/method, source URL, retrieval time, and
-  separate supplementary-metadata provenance.
+  `source_value`, reporting status, sample/method, source URL, `retrieved_at`, and
+  supplementary-metadata provenance (`metadata_source_url`, `metadata_retrieved_at`,
+  `metadata_match_status`, and `metadata_row_source_references_json`).
 - `swedishpolls_individual_polls.csv`: separately normalized long-format copy of the
   supplementary table, including original company/house, approximate-period flag,
-  sample size, source row, and poll-level source references.
+  sample size, source row, poll-level source references, and `retrieved_at`.
 - `pollofpolls_swedishpolls_crosswalk.csv`: every Pollofpolls poll's match status,
   candidate count, linked SwedishPolls ID, and source-value differences.
 - `validation_report.json`, `dataset_summary.json`, and
@@ -103,6 +108,13 @@ Dates use ISO `YYYY-MM-DD`. Support values are percentage points: `28.4` means 2
 not 0.284. `poll_method` remains null because neither acquired table supplies it.
 Unmatched Pollofpolls publication dates and sample sizes remain null; they are never
 inferred from another date or a non-unique match.
+
+Processed CSV schemas retain `retrieved_at` and `metadata_retrieved_at` columns for
+schema compatibility, but those observation-row fields are intentionally blank so that
+processed rows are byte-stable when polling content is semantically unchanged. Exact
+network acquisition timestamps live in the raw retrieval manifest, while observation
+and source provenance (such as source URLs, dataset references, and matching status)
+remains in processed rows.
 
 ## Historical naming and missingness
 
@@ -162,7 +174,7 @@ For a deterministic parse/validation run without network access:
 make process-pollofpolls
 ```
 
-The refresh stages writes atomically, compares hashes, preserves the original
-`retrieved_at` when upstream bytes are unchanged, normalizes both datasets, runs all
-validations, writes reports, and prints a concise coverage summary. Unit tests use saved
-fixtures; no normal test makes a live request.
+The refresh stages writes atomically, records exact raw retrieval metadata in the
+manifest, normalizes both datasets deterministically, runs all validations, writes
+reports, and prints a concise coverage summary. Unit tests use saved fixtures; no normal
+test makes a live request.
