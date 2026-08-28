@@ -381,9 +381,19 @@ class DataLeakageAndAsOfSafetyTests(unittest.TestCase):
         self.assertGreater(len(state_early.diagnostics["warnings"]), 0)
 
     def test_default_as_of_uses_latest_timeseries_date(self) -> None:
+        timeseries_path = (
+            Path(__file__).resolve().parents[1]
+            / "data"
+            / "processed"
+            / "pollofpolls"
+            / "pollofpolls_timeseries.csv"
+        )
+        latest_timeseries_date = max(
+            row["date"] for row in load_timeseries_dataset(timeseries_path)
+        )
         state_default = estimate_opinion()
-        state_explicit = estimate_opinion(as_of="2026-08-23")
-        self.assertEqual(state_default.as_of, date(2026, 8, 23))
+        state_explicit = estimate_opinion(as_of=latest_timeseries_date)
+        self.assertEqual(state_default.as_of, latest_timeseries_date)
         self.assertEqual(state_default.mean_pct, state_explicit.mean_pct)
         self.assertEqual(state_default.covariance_alr, state_explicit.covariance_alr)
 
