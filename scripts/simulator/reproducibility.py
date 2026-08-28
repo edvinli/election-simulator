@@ -262,10 +262,21 @@ def compute_simulation_payload_sha256(
                     "generated_at_utc",
                     "runtime_seconds",
                     "wall_clock_seconds",
-                    # This is provenance metadata, not a simulation input;
+                    # These are provenance metadata, not simulation inputs;
                     # writing an artifact between two identical runs must not
-                    # change the deterministic payload identity.
+                    # change the deterministic payload identity.  A Git commit
+                    # identifies the code that produced a run, not anything the
+                    # run consumed: the actual inputs are pinned by the data
+                    # hashes, model_config_hash, base_seed, samples, as_of,
+                    # election_date and model_version, all of which stay in the
+                    # digest.  Including the commit made a code-only change
+                    # (docs, comments, an unrelated module) move the payload
+                    # identity of a bit-identical simulation.  Both fields
+                    # remain in the manifest and in published provenance; only
+                    # this hashed copy drops them.
                     "source_worktree_clean",
+                    "source_git_commit",
+                    "git_commit",
                     "deterministic_payload_sha256",
                     "payload_sha256",
                 }
