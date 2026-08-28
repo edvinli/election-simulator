@@ -157,6 +157,40 @@ the same joint `seats_matrix` draws as the existing group summaries; the
 builder's majority probability means the chance that the selected parties
 jointly reach 175 seats, not the probability that they form a government.
 
+### Representation-only 1.2 → 1.3 migration
+
+`scripts.presentation_reexport` is a separate, one-off migration boundary for
+an already certified immutable publication. It validates the pinned 1.2
+generation first, validates the explicitly supplied preserved integer seat
+matrix (including its SHA-256, shape, dtype, non-negative seats, and 349-seat
+row invariant), and then clones the six contracts while adding exact
+coalition histograms using the production helpers in
+`scripts.static_exporter.exporter`. It performs no simulation, does not read
+polling inputs, and never mutates the prospective forecast archive.
+
+The migration preserves the source forecast's
+`deterministic_payload_sha256` because the original vote-share draw matrix was
+not preserved. Its clean committed `source_git_commit` identifies the
+re-export code that produced the representation. This is a representation
+identity, not a claim that the current payload-hash algorithm was recomputed;
+new prospective simulations continue to use that algorithm.
+
+Run the migration only after committing the utility and tests, from a clean
+worktree. The generated immutable version and pointer are then a separate
+artifact-only commit:
+
+```bash
+uv run python -m scripts.presentation_reexport \
+  --source-version files/election-simulator/versions/20260828T064703Z-1da59168 \
+  --matrix ~/Documents/election-simulator-audit/20260828-coalition-covariance-audit/seats_matrix.npy \
+  --output-dir files/election-simulator
+```
+
+The command audits all 256 masks, verifies production summary semantics and
+complement counts, pins the release spot checks, recursively compares the
+cloned contracts against schema 1.2, and refuses any unapproved scientific
+leaf change.
+
 ## Cross-repository publishing
 
 Publishing to the website is a separate, explicit step. `scripts.site_publisher`
