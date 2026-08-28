@@ -154,15 +154,44 @@ class ActualBrowserConsumerTests(unittest.TestCase):
     def _browser_probability(value: float) -> str:
         parsed = float(value)
         if parsed == 0:
-            return "0.0%"
+            return "0,0\xa0%"
         if parsed == 1:
-            return "100.0%"
+            return "100,0\xa0%"
         percent = parsed * 100
         if percent < 0.005:
-            return "<0.01%"
+            return "<0,01\xa0%"
         if percent > 99.995:
-            return ">99.99%"
-        return f"{percent:.2f}%" if percent < 1 or percent > 99 else f"{percent:.1f}%"
+            return ">99,99\xa0%"
+        rendered = f"{percent:.2f}" if percent < 1 or percent > 99 else f"{percent:.1f}"
+        return rendered.replace(".", ",") + "\xa0%"
+
+    @staticmethod
+    def _assert_histogram_matches_entry(test_case: unittest.TestCase, snapshot: dict, entry: dict, mask: int) -> None:
+        """Assert the rendered SVG bins are the published contiguous histogram."""
+
+        histogram = entry["seat_histogram"]
+        bins = snapshot["histogram_bins"]
+        counts = histogram["counts"]
+        total = sum(counts)
+        test_case.assertFalse(snapshot["histogram_hidden"])
+        test_case.assertEqual(snapshot["histogram_mask"], str(mask))
+        test_case.assertEqual(snapshot["histogram_total_count"], str(total))
+        test_case.assertEqual(snapshot["histogram_sample_count"], str(total))
+        test_case.assertEqual(snapshot["histogram_min_seats"], str(histogram["min_seats"]))
+        test_case.assertEqual(
+            snapshot["histogram_max_seats"],
+            str(histogram["min_seats"] + len(counts) - 1),
+        )
+        test_case.assertEqual(len(bins), len(counts))
+        test_case.assertEqual([item["seat"] for item in bins], list(range(histogram["min_seats"], histogram["min_seats"] + len(counts))))
+        test_case.assertEqual([item["count"] for item in bins], counts)
+        test_case.assertEqual(sum(item["count"] for item in bins), total)
+        test_case.assertEqual({item["coalition_mask"] for item in bins}, {str(mask)})
+        test_case.assertTrue(all(item["majority"] == ("majority" if item["seat"] >= 175 else "below") for item in bins))
+        test_case.assertEqual(snapshot["histogram_threshold"], 175)
+        majority_count = sum(count for seat, count in zip(range(histogram["min_seats"], histogram["min_seats"] + len(counts)), counts) if seat >= 175)
+        test_case.assertAlmostEqual(majority_count / total, entry["prob_majority"], places=12)
+        test_case.assertIn("175 mandat", snapshot["histogram_text"])
 
     def test_production_consumer_renders_and_resolves_the_joint_coalition_lookup(self) -> None:
         verdict = run_actual_consumer(self.publication)
@@ -170,14 +199,14 @@ class ActualBrowserConsumerTests(unittest.TestCase):
         self.assertTrue(initial["available"])
         self.assertFalse(initial["empty_hidden"])
         self.assertTrue(initial["results_hidden"])
-        self.assertTrue(initial["alone_hidden"])
-        self.assertTrue(initial["support_hidden"])
+        self.assertTrue(initial["histogram_hidden"])
         self.assertEqual(
-            [(button["party"], button["mask"]) for button in initial["government_buttons"]],
-            [(party, str(1 << index)) for index, party in enumerate(("M", "L", "C", "KD", "S", "V", "MP", "SD"))],
+            [tile["party"] for tile in initial["pool_tiles"]],
+            ["M", "L", "C", "KD", "S", "V", "MP", "SD"],
         )
-        self.assertTrue(all(button["pressed"] == "false" for button in initial["government_buttons"]))
-        self.assertTrue(all(button["pressed"] == "false" for button in initial["support_buttons"]))
+        self.assertEqual(initial["government_tiles"], [])
+        self.assertEqual(initial["support_tiles"], [])
+        self.assertTrue(all({action["action"] for action in tile["actions"]} == {"government", "support"} for tile in initial["pool_tiles"]))
 
         groups = json.loads((self.version / "groups.json").read_text(encoding="utf-8"))
         coalitions = groups["coalition_builder"]["coalitions"]
@@ -187,39 +216,61 @@ class ActualBrowserConsumerTests(unittest.TestCase):
         self.assertTrue(government["available"])
         self.assertTrue(government["empty_hidden"])
         self.assertFalse(government["results_hidden"])
-        self.assertFalse(government["alone_hidden"])
-        self.assertTrue(government["support_hidden"])
-        self.assertEqual(government["alone_mask"], "137")
-        self.assertIn("M + KD + SD", government["alone_html"])
-        self.assertIn(f">{government_entry['median_seats']} seats</dd>", government["alone_html"])
-        self.assertIn(
-            f">{government_entry['p05_seats']}–{government_entry['p95_seats']} seats</dd>",
-            government["alone_html"],
+        self.assertEqual(government["government_mask"], "137")
+        self.assertEqual(government["selected_support_mask"], "0")
+        self.assertEqual(government["coalition_mask"], "137")
+        self.assertIn("Sannolikhet för minst 175 mandat", government["results_html"])
+        self.assertIn(self._browser_probability(government_entry["prob_majority"]), government["results_html"])
+        self._assert_histogram_matches_entry(self, government, government_entry, 137)
+        self.assertEqual({tile["party"] for tile in government["government_tiles"]}, {"M", "KD", "SD"})
+        self.assertEqual({tile["party"] for tile in government["pool_tiles"]}, {"L", "C", "S", "V", "MP"})
+        self.assertTrue(
+            all(
+                {action["action"] for action in tile["actions"]} == {"support", "pool"}
+                for tile in government["government_tiles"]
+            )
         )
-        self.assertIn(
-            f">{self._browser_probability(government_entry['prob_majority'])}</dd>",
-            government["alone_html"],
-        )
-        for button in government["support_buttons"]:
-            if button["party"] in {"M", "KD", "SD"}:
-                self.assertTrue(button["disabled"])
 
         with_support = verdict["builder_with_support"]
         union_entry = coalitions["139"]  # M + KD + SD + L
-        self.assertFalse(with_support["support_hidden"])
-        self.assertEqual(with_support["alone_mask"], "137")
-        self.assertEqual(with_support["support_mask"], "139")
-        self.assertIn("With support from L", with_support["support_html"])
-        self.assertIn("M + L + KD + SD", with_support["support_html"])
-        self.assertIn(f">{union_entry['median_seats']} seats</dd>", with_support["support_html"])
-        self.assertIn(
-            f">{union_entry['p05_seats']}–{union_entry['p95_seats']} seats</dd>",
-            with_support["support_html"],
-        )
-        self.assertIn(
-            f">{self._browser_probability(union_entry['prob_majority'])}</dd>",
-            with_support["support_html"],
-        )
+        self.assertEqual(with_support["government_mask"], "137")
+        self.assertEqual(with_support["selected_support_mask"], "2")
+        self.assertEqual(with_support["coalition_mask"], "139")
+        self.assertIn("M + L + KD + SD", with_support["histogram_context"])
+        self.assertIn(self._browser_probability(union_entry["prob_majority"]), with_support["results_html"])
+        self._assert_histogram_matches_entry(self, with_support, union_entry, 139)
+        self.assertEqual({tile["party"] for tile in with_support["support_tiles"]}, {"L"})
+
+    def test_production_consumer_degrades_schema_1_2_without_inventing_histogram_data(self) -> None:
+        def mutate(root: Path, version: Path) -> None:
+            for name in ("forecast.json", "parties.json", "seats.json", "groups.json", "calibration.json", "metadata.json"):
+                path = version / name
+                contract = json.loads(path.read_text(encoding="utf-8"))
+                contract["schema_version"] = "1.2"
+                if name == "groups.json":
+                    for entry in contract["coalition_builder"]["coalitions"].values():
+                        entry.pop("seat_histogram", None)
+                path.write_text(json.dumps(contract, indent=2) + "\n", encoding="utf-8")
+            manifest_path = version / "manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["schema_version"] = "1.2"
+            manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+            pointer_path = root / "current.json"
+            pointer = json.loads(pointer_path.read_text(encoding="utf-8"))
+            pointer["schema_version"] = "1.2"
+            pointer_path.write_text(json.dumps(pointer, indent=2) + "\n", encoding="utf-8")
+            self._repair_pointer_hash(root, version)
+
+        legacy_builder = self._mutated_copy(mutate)
+        verdict = run_actual_consumer(legacy_builder)
+        self.assertTrue(verdict["accepted"], verdict)
+        self.assertTrue(verdict["builder_initial"]["available"])
+        self.assertTrue(verdict["builder_initial"]["histogram_hidden"])
+        self.assertEqual(verdict["builder_initial"]["histogram_bins"], [])
+        self.assertTrue(verdict["builder_government"]["histogram_hidden"])
+        self.assertEqual(verdict["builder_government"]["histogram_bins"], [])
+        self.assertTrue(verdict["builder_with_support"]["histogram_hidden"])
+        self.assertEqual(verdict["builder_with_support"]["histogram_bins"], [])
 
     def test_production_consumer_hides_builder_for_a_schema_1_1_publication_without_lookup(self) -> None:
         def mutate(root: Path, version: Path) -> None:
@@ -247,11 +298,11 @@ class ActualBrowserConsumerTests(unittest.TestCase):
         self.assertIsNone(verdict["builder_government"])
         self.assertIsNone(verdict["builder_with_support"])
 
-    def test_production_consumer_hides_a_malformed_coalition_lookup(self) -> None:
+    def test_production_consumer_hides_a_malformed_coalition_histogram(self) -> None:
         def mutate(root: Path, version: Path) -> None:
             groups_path = version / "groups.json"
             groups = json.loads(groups_path.read_text(encoding="utf-8"))
-            groups["coalition_builder"]["coalitions"].pop("7")
+            groups["coalition_builder"]["coalitions"]["7"]["seat_histogram"]["counts"][0] = -1
             groups_path.write_text(json.dumps(groups, indent=2) + "\n", encoding="utf-8")
             self._repair_pointer_hash(root, version)
 

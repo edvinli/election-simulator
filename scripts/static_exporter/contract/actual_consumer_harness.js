@@ -50,6 +50,7 @@ class StubElement {
     this._textContent = "";
     this._innerHTML = "";
     this._listeners = {};
+    this.parentNode = null;
   }
 
   get textContent() {
@@ -58,6 +59,7 @@ class StubElement {
 
   set textContent(value) {
     this._textContent = String(value);
+    this.children = [];
   }
 
   get innerHTML() {
@@ -77,9 +79,18 @@ class StubElement {
 
   setAttribute(name, value) {
     this.attributes[name] = String(value);
+    if (name === "class") this.className = String(value);
+    if (name === "id") this.id = String(value);
+  }
+
+  removeAttribute(name) {
+    delete this.attributes[name];
+    if (name === "class") this.className = "";
+    if (name === "id") this.id = "";
   }
 
   appendChild(child) {
+    child.parentNode = this;
     this.children.push(child);
     return child;
   }
@@ -89,18 +100,37 @@ class StubElement {
   }
 
   dispatchEvent(event) {
+    if (!event.target) event.target = this;
+    event.currentTarget = this;
     const handlers = this._listeners[event.type] || [];
     handlers.forEach((handler) => handler(event));
     return true;
   }
 
   querySelector(selector) {
-    // The production file queries only for nodes it just wrote via innerHTML
-    // and then writes style/textContent onto them. Nothing is ever read back,
-    // so a fresh detached stub is behaviourally equivalent here.
-    const found = new StubElement("div");
-    found.matchedSelector = selector;
-    return found;
+    return this.querySelectorAll(selector)[0] || null;
+  }
+
+  querySelectorAll(selector) {
+    const wanted = String(selector || "").trim();
+    if (!wanted) return [];
+    const descendants = [];
+    const visit = (node) => {
+      node.children.forEach((child) => {
+        descendants.push(child);
+        visit(child);
+      });
+    };
+    visit(this);
+    return descendants.filter((node) => matchesSelector(node, wanted));
+  }
+
+  contains(node) {
+    return this.querySelectorAll("*").indexOf(node) !== -1;
+  }
+
+  focus() {
+    this.dispatchEvent({ type: "focus", target: this });
   }
 
   // <select> semantics: `value` reflects the first option unless set. The
@@ -117,6 +147,35 @@ class StubElement {
   }
 }
 
+function matchesSimpleSelector(node, selector) {
+  if (selector === "*") return true;
+  const tag = selector.match(/^[A-Za-z][A-Za-z0-9-]*/);
+  if (tag && String(node.tagName).toLowerCase() !== tag[0].toLowerCase()) return false;
+  const classes = selector.match(/\.([A-Za-z0-9_-]+)/g) || [];
+  const classList = String(node.className || "").split(/\s+/).filter(Boolean);
+  if (classes.some((value) => classList.indexOf(value.slice(1)) === -1)) return false;
+  const attributes = selector.match(/\[([^\]=]+)(?:=["']?([^\]"']+)["']?)?\]/g) || [];
+  for (const raw of attributes) {
+    const match = raw.match(/^\[([^\]=]+)(?:=["']?([^\]"']+)["']?)?\]$/);
+    if (!match) return false;
+    const actual = node.getAttribute(match[1]);
+    if (actual === null || (match[2] !== undefined && actual !== match[2])) return false;
+  }
+  return true;
+}
+
+function matchesSelector(node, selector) {
+  const parts = selector.split(/\s+/).filter(Boolean);
+  if (!parts.length || !matchesSimpleSelector(node, parts[parts.length - 1])) return false;
+  let ancestor = node.parentNode;
+  for (let index = parts.length - 2; index >= 0; index -= 1) {
+    while (ancestor && !matchesSimpleSelector(ancestor, parts[index])) ancestor = ancestor.parentNode;
+    if (!ancestor) return false;
+    ancestor = ancestor.parentNode;
+  }
+  return true;
+}
+
 function buildDocument(publicationBase, statusSettled) {
   const elements = new Map();
   for (const id of [
@@ -128,10 +187,29 @@ function buildDocument(publicationBase, statusSettled) {
     "election-seat-bars",
     "election-parliament",
     "election-government-builder",
+    "election-available-parties",
     "election-government-parties",
     "election-support-parties",
     "election-government-empty",
+    "election-pool-empty",
     "election-government-results",
+    "election-government-note",
+    "election-government-announcement",
+    "election-government-bar",
+    "election-union-bar",
+    "election-government-column",
+    "election-union-column",
+    "election-government-total",
+    "election-union-total",
+    "election-government-histogram",
+    "election-government-histogram-context",
+    "election-government-histogram-description",
+    "election-government-histogram-status",
+    "election-government-histogram-svg",
+    "election-government-histogram-text",
+    "election-government-histogram-title",
+    // Retain the prior result IDs so this harness can still observe older
+    // website revisions if a caller points it at one explicitly.
     "election-government-alone-result",
     "election-government-support-result",
     "election-changes",
@@ -173,18 +251,27 @@ function buildDocument(publicationBase, statusSettled) {
     createElement(tagName) {
       return new StubElement(tagName);
     },
+    createElementNS(namespace, tagName) {
+      return new StubElement(tagName);
+    },
     _elements: elements,
   };
 }
 
-function findButton(host, party) {
+function findPartyAction(host, party, action) {
   if (!host) return null;
+  const nested = host.querySelector(
+    '.eg-party[data-party="' + party + '"] .eg-party__btn[data-action="' + action + '"]'
+  );
+  if (nested) return nested;
+  // Compatibility with the first builder implementation, whose controls
+  // were direct children of each zone and had no data-action attribute.
   return host.children.find((child) => child.getAttribute("data-party") === party) || null;
 }
 
-function clickButton(host, party) {
-  const button = findButton(host, party);
-  if (!button) throw new Error("Could not find coalition button for " + party);
+function clickPartyAction(host, party, action) {
+  const button = findPartyAction(host, party, action);
+  if (!button) throw new Error("Could not find coalition button for " + party + " (" + action + ")");
   if (button.disabled) throw new Error("Coalition button is unexpectedly disabled for " + party);
   if (!(button._listeners.click || []).length) throw new Error("Coalition button has no click handler for " + party);
   button.dispatchEvent({ type: "click", target: button });
@@ -198,24 +285,66 @@ function coalitionSnapshot(document) {
   const results = document._elements.get("election-government-results");
   const alone = document._elements.get("election-government-alone-result");
   const withSupport = document._elements.get("election-government-support-result");
-  const describeButtons = (host) => (host ? host.children : []).map((button) => ({
-    party: button.getAttribute("data-party"),
-    mask: button.getAttribute("data-mask"),
-    pressed: button.getAttribute("aria-pressed"),
-    disabled: Boolean(button.disabled),
+  const histogram = document._elements.get("election-government-histogram");
+  const histogramSvg = document._elements.get("election-government-histogram-svg");
+  const describeZone = (host) => (host ? host.children : [])
+    .filter((tile) => tile.getAttribute("data-party") !== null)
+    .map((tile) => ({
+      party: tile.getAttribute("data-party"),
+      zone: tile.getAttribute("data-zone"),
+      actions: tile.querySelectorAll(".eg-party__btn").map((button) => ({
+        action: button.getAttribute("data-action"),
+        disabled: Boolean(button.disabled),
+        label: button.getAttribute("aria-label"),
+      })),
+    }));
+  const describeLegacyButtons = (host) => (host ? host.children : [])
+    .filter((button) => button.getAttribute("data-party") !== null)
+    .map((button) => ({
+      party: button.getAttribute("data-party"),
+      mask: button.getAttribute("data-mask"),
+      pressed: button.getAttribute("aria-pressed"),
+      disabled: Boolean(button.disabled),
   }));
+  const bins = histogramSvg ? histogramSvg.querySelectorAll(".egh-bin") : [];
+  const threshold = histogramSvg ? histogramSvg.querySelector(".egh-threshold") : null;
   return {
     available: Boolean(section && !section.hidden),
     empty_hidden: Boolean(!empty || empty.hidden),
     results_hidden: Boolean(!results || results.hidden),
     alone_hidden: Boolean(!alone || alone.hidden),
     support_hidden: Boolean(!withSupport || withSupport.hidden),
-    government_buttons: describeButtons(government),
-    support_buttons: describeButtons(support),
+    government_buttons: describeLegacyButtons(government),
+    support_buttons: describeLegacyButtons(support),
+    pool_tiles: describeZone(document._elements.get("election-available-parties")),
+    government_tiles: describeZone(government),
+    support_tiles: describeZone(support),
     alone_mask: alone ? alone.getAttribute("data-coalition-mask") : null,
     support_mask: withSupport ? withSupport.getAttribute("data-coalition-mask") : null,
+    government_mask: results ? results.getAttribute("data-government-mask") : null,
+    selected_support_mask: results ? results.getAttribute("data-support-mask") : null,
+    coalition_mask: results ? results.getAttribute("data-coalition-mask") : null,
     alone_html: alone ? alone.innerHTML : "",
     support_html: withSupport ? withSupport.innerHTML : "",
+    results_html: results ? results.innerHTML : "",
+    histogram_hidden: Boolean(!histogram || histogram.hidden),
+    histogram_mask: histogram ? histogram.getAttribute("data-coalition-mask") : null,
+    histogram_total_count: histogram ? histogram.getAttribute("data-total-count") : null,
+    histogram_sample_count: histogram ? histogram.getAttribute("data-sample-count") : null,
+    histogram_min_seats: histogram ? histogram.getAttribute("data-min-seats") : null,
+    histogram_max_seats: histogram ? histogram.getAttribute("data-max-seats") : null,
+    histogram_context: document._elements.get("election-government-histogram-context")?.textContent || "",
+    histogram_status: document._elements.get("election-government-histogram-status")?.textContent || "",
+    histogram_text: document._elements.get("election-government-histogram-text")?.textContent || "",
+    histogram_bins: bins.map((bin) => ({
+      seat: Number(bin.getAttribute("data-seat")),
+      count: Number(bin.getAttribute("data-count")),
+      share: Number(bin.getAttribute("data-share")),
+      majority: bin.getAttribute("data-majority"),
+      coalition_mask: bin.getAttribute("data-coalition-mask"),
+      aria_label: bin.getAttribute("aria-label"),
+    })),
+    histogram_threshold: threshold ? Number(threshold.getAttribute("data-seat")) : null,
   };
 }
 
@@ -317,10 +446,10 @@ async function main() {
   let builderWithSupport = null;
   if (builderInitial.available) {
     for (const party of ["M", "KD", "SD"]) {
-      clickButton(document._elements.get("election-government-parties"), party);
+      clickPartyAction(document._elements.get("election-available-parties"), party, "government");
     }
     builderGovernment = coalitionSnapshot(document);
-    clickButton(document._elements.get("election-support-parties"), "L");
+    clickPartyAction(document._elements.get("election-available-parties"), "L", "support");
     builderWithSupport = coalitionSnapshot(document);
   }
 

@@ -96,8 +96,59 @@ class ReferencePublicationContractTests(unittest.TestCase):
         self.assertEqual(verdict["status_text"], "Certified forecast loaded.")
         self.assertEqual(verdict["seat_allocation_source"], "representative_joint_simulation_draw")
         self.assertEqual(verdict["seat_total"], 349)
-        self.assertEqual(verdict["schema_version"], "1.2")
+        self.assertEqual(verdict["schema_version"], "1.3")
         self.assertEqual(verdict["source_repository"], "edvinli/election-simulator")
+
+    def test_reference_validator_checks_schema_1_3_coalition_histograms(self) -> None:
+        cases = {
+            "missing histogram": lambda entry: entry.pop("seat_histogram"),
+            "negative count": lambda entry: entry["seat_histogram"]["counts"].__setitem__(0, -1),
+            "quantile mismatch": lambda entry: entry.__setitem__("p95_seats", 0),
+            "histogram field order": lambda entry: entry.__setitem__(
+                "seat_histogram",
+                {
+                    field: entry["seat_histogram"][field]
+                    for field in reversed(list(entry["seat_histogram"]))
+                },
+            ),
+        }
+        for label, mutate_entry in cases.items():
+            with self.subTest(case=label):
+
+                def mutate(root: Path, version: Path, mutate_entry=mutate_entry) -> None:
+                    groups_path = version / "groups.json"
+                    groups = json.loads(groups_path.read_text(encoding="utf-8"))
+                    mutate_entry(groups["coalition_builder"]["coalitions"]["7"])
+                    groups_path.write_text(json.dumps(groups, indent=2) + "\n", encoding="utf-8")
+                    self._repair_manifest(version)
+
+                verdict = run_reference_validator(self._mutated_copy(mutate))
+                self.assertFalse(verdict["accepted"], verdict)
+                self.assertIn("coalition", verdict["error"])
+
+    def test_reference_validator_keeps_schema_1_2_builder_compatible_without_histograms(self) -> None:
+        def mutate(root: Path, version: Path) -> None:
+            for name in ("forecast.json", "parties.json", "seats.json", "groups.json", "calibration.json", "metadata.json"):
+                path = version / name
+                contract = json.loads(path.read_text(encoding="utf-8"))
+                contract["schema_version"] = "1.2"
+                if name == "groups.json":
+                    for entry in contract["coalition_builder"]["coalitions"].values():
+                        entry.pop("seat_histogram")
+                path.write_text(json.dumps(contract, indent=2) + "\n", encoding="utf-8")
+            manifest_path = version / "manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["schema_version"] = "1.2"
+            manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+            pointer_path = root / "current.json"
+            pointer = json.loads(pointer_path.read_text(encoding="utf-8"))
+            pointer["schema_version"] = "1.2"
+            pointer_path.write_text(json.dumps(pointer, indent=2) + "\n", encoding="utf-8")
+            self._repair_manifest(version)
+
+        verdict = run_reference_validator(self._mutated_copy(mutate))
+        self.assertTrue(verdict["accepted"], verdict)
+        self.assertEqual(verdict["schema_version"], "1.2")
 
     def test_published_version_contains_seven_real_files_and_no_symlinks(self) -> None:
         self.assertEqual(

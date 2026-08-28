@@ -39,11 +39,12 @@ from scripts.simulator.reproducibility import (
 
 # 1.0 is the pre-extraction publication schema.  1.1 adds ``source_repository``
 # to metadata and manifests.  1.2 adds the precomputed coalition-builder
-# summaries to groups.json.  Validators accept every historical version so
-# existing immutable publications stay readable and are never rewritten; only
-# 1.2 is written by this exporter.
-PUBLICATION_SCHEMA_VERSION = "1.2"
-SUPPORTED_PUBLICATION_SCHEMA_VERSIONS: tuple[str, ...] = ("1.0", "1.1", "1.2")
+# summaries to groups.json.  1.3 adds exact contiguous integer seat
+# histograms for those coalitions.  Validators accept every historical version
+# so existing immutable publications stay readable and are never rewritten;
+# only 1.3 is written by this exporter.
+PUBLICATION_SCHEMA_VERSION = "1.3"
+SUPPORTED_PUBLICATION_SCHEMA_VERSIONS: tuple[str, ...] = ("1.0", "1.1", "1.2", "1.3")
 PUBLICATION_FILES: tuple[str, ...] = (
     "forecast.json",
     "parties.json",
@@ -76,6 +77,11 @@ COALITION_BUILDER_SUMMARY_FIELDS: tuple[str, ...] = (
     "p90_seats",
     "p95_seats",
     "prob_majority",
+)
+COALITION_BUILDER_HISTOGRAM_FIELD = "seat_histogram"
+COALITION_BUILDER_ENTRY_FIELDS: tuple[str, ...] = (
+    *COALITION_BUILDER_SUMMARY_FIELDS,
+    COALITION_BUILDER_HISTOGRAM_FIELD,
 )
 
 
@@ -174,6 +180,50 @@ def _representative_seat_allocation(result: Any) -> dict[str, Any]:
     }
 
 
+def _compact_integer_seat_histogram(group_seats: np.ndarray) -> dict[str, Any]:
+    """Encode integer seat draws as a contiguous, exact count vector.
+
+    ``group_seats`` is deliberately supplied by the caller after summing the
+    original joint ``seats_matrix``.  This helper never sees marginal
+    summaries and never samples or reconstructs a distribution.  The first
+    and last bins are the observed minimum and maximum, making the encoding
+    compact while retaining zero-count seats in between them.
+    """
+
+    values = np.asarray(group_seats)
+    if values.ndim != 1 or values.size == 0:
+        raise ValueError("Cannot encode an empty coalition seat distribution")
+    if not np.issubdtype(values.dtype, np.integer):
+        raise ValueError("Coalition seat draws must be integer values")
+    if np.any(values < 0) or np.any(values > 349):
+        raise ValueError("Coalition seat draws must be within 0–349")
+
+    min_seats = int(np.min(values))
+    max_seats = int(np.max(values))
+    counts = np.bincount(values.astype(np.int64), minlength=max_seats + 1)[min_seats:]
+    if counts.size != max_seats - min_seats + 1:
+        raise ValueError("Coalition seat histogram is not contiguous")
+    if int(counts[0]) <= 0 or int(counts[-1]) <= 0:
+        raise ValueError("Coalition seat histogram bounds must be observed")
+    if int(np.sum(counts, dtype=np.int64)) != int(values.size):
+        raise ValueError("Coalition seat histogram counts do not sum to the draws")
+    return {
+        "min_seats": min_seats,
+        "counts": [int(count) for count in counts],
+    }
+
+
+def _coalition_draws(seats_matrix: np.ndarray, party_order: Sequence[str], mask: int) -> np.ndarray:
+    """Return one coalition's seats in every original joint simulation draw."""
+
+    indices = [index for index in range(len(party_order)) if mask & (1 << index)]
+    if not indices:
+        return np.zeros(seats_matrix.shape[0], dtype=np.int64)
+    # The source matrix is already validated as integer seat draws by the
+    # caller.  Summing columns preserves draw-by-draw dependence exactly.
+    return np.sum(seats_matrix[:, indices], axis=1, dtype=np.int64)
+
+
 def _build_coalition_builder(result: Any) -> dict[str, Any]:
     """Build the compact coalition lookup from the joint seat draws.
 
@@ -182,10 +232,25 @@ def _build_coalition_builder(result: Any) -> dict[str, Any]:
     every bitmask intentionally keeps coalition quantiles and majority logic
     identical to the existing published group summaries.  No marginal party
     summaries, reconstructed distributions, or browser-side sampling enter
-    this contract.
+    this contract.  Histograms are counted directly from the same matrix,
+    rather than by multiplying the existing floating-point probability map by
+    the sample count.
     """
 
     party_order = list(PARLIAMENTARY_PARTIES_8)
+    seats_matrix = np.asarray(result.seats_matrix)
+    if seats_matrix.ndim != 2 or seats_matrix.shape[1] != len(party_order) or seats_matrix.shape[0] == 0:
+        raise ValueError("Cannot publish coalition histograms from an invalid seat matrix")
+    if not np.issubdtype(seats_matrix.dtype, np.integer):
+        raise ValueError("Cannot publish coalition histograms from non-integer seat draws")
+    if np.any(seats_matrix < 0) or np.any(seats_matrix > 349):
+        raise ValueError("Cannot publish coalition histograms from out-of-range seat draws")
+    if not np.all(np.sum(seats_matrix, axis=1) == 349):
+        raise ValueError("Cannot publish coalition histograms before the 349-seat invariant holds")
+    expected_samples = getattr(result.summary, "total_samples", None)
+    if expected_samples != seats_matrix.shape[0]:
+        raise ValueError("Coalition histogram sample count does not match the simulation result")
+
     coalitions: dict[str, dict[str, Any]] = {}
     for mask in range(1 << len(party_order)):
         parties = [
@@ -197,6 +262,8 @@ def _build_coalition_builder(result: Any) -> dict[str, Any]:
             parties,
             majority_threshold=DEFAULT_MAJORITY_THRESHOLD,
         )
+        group_seats = _coalition_draws(seats_matrix, party_order, mask)
+        seat_histogram = _compact_integer_seat_histogram(group_seats)
         coalitions[str(mask)] = {
             "mask": mask,
             "parties": parties,
@@ -209,6 +276,7 @@ def _build_coalition_builder(result: Any) -> dict[str, Any]:
             "p90_seats": int(summary.p90_seats),
             "p95_seats": int(summary.p95_seats),
             "prob_majority": float(summary.prob_majority),
+            COALITION_BUILDER_HISTOGRAM_FIELD: seat_histogram,
         }
     return {
         "party_order": party_order,
@@ -224,11 +292,133 @@ def _is_finite_number(value: Any) -> bool:
     return isinstance(value, (int, float)) and not isinstance(value, bool) and np.isfinite(value)
 
 
-def _validate_coalition_builder(value: Mapping[str, Any]) -> None:
-    """Validate the schema-1.2 coalition lookup without seeing raw draws."""
+def _histogram_count(histogram: Mapping[str, Any], seats: int) -> int:
+    """Return one integer bin count, treating seats outside support as zero."""
 
-    expected_keys = {"party_order", "encoding", "majority_threshold", "coalitions"}
-    if set(value) != expected_keys:
+    minimum = int(histogram["min_seats"])
+    counts = histogram["counts"]
+    offset = seats - minimum
+    if offset < 0 or offset >= len(counts):
+        return 0
+    return int(counts[offset])
+
+
+def _histogram_value_at_order_index(minimum: int, counts: Sequence[int], index: int) -> int:
+    """Return the sorted integer value at a zero-based order statistic index."""
+
+    remaining = index
+    for offset, count in enumerate(counts):
+        if remaining < count:
+            return minimum + offset
+        remaining -= count
+    raise ValueError("Histogram order-statistic index is outside its support")
+
+
+def _histogram_quantile(minimum: int, counts: Sequence[int], quantile: float) -> int:
+    """Match NumPy's default linear percentile followed by integer truncation.
+
+    Existing group summaries use ``int(np.percentile(values, q))`` with the
+    default ``linear`` method.  This computes the same convention directly
+    from counts without materialising raw draws in a validator.
+    """
+
+    total = int(sum(counts))
+    if total <= 0:
+        raise ValueError("Cannot calculate a quantile from an empty histogram")
+    position = (total - 1) * float(quantile)
+    lower_index = int(np.floor(position))
+    upper_index = int(np.ceil(position))
+    lower = _histogram_value_at_order_index(minimum, counts, lower_index)
+    upper = _histogram_value_at_order_index(minimum, counts, upper_index)
+    gamma = position - lower_index
+    # NumPy's private _lerp helper deliberately evaluates the upper-end
+    # expression for gamma >= 0.5.  This avoids a one-ULP downward drift in
+    # cases such as an interpolated value that is mathematically integral;
+    # that drift would change the existing int(np.percentile(...)) result.
+    if gamma >= 0.5:
+        interpolated = upper - (upper - lower) * (1.0 - gamma)
+    else:
+        interpolated = lower + (upper - lower) * gamma
+    return int(interpolated)
+
+
+def _validate_coalition_seat_histogram(
+    value: Any,
+    *,
+    expected_samples: int,
+    entry: Mapping[str, Any],
+    key: str,
+) -> dict[str, Any]:
+    """Validate one exact contiguous histogram and its published summaries."""
+
+    if not isinstance(value, Mapping) or list(value) != ["min_seats", "counts"]:
+        raise ValueError(f"coalition {key} has an invalid seat_histogram")
+    minimum = value.get("min_seats")
+    counts = value.get("counts")
+    if (
+        not isinstance(minimum, int)
+        or isinstance(minimum, bool)
+        or not 0 <= minimum <= 349
+    ):
+        raise ValueError(f"coalition {key} seat_histogram min_seats is outside 0–349")
+    if not isinstance(counts, list) or not counts:
+        raise ValueError(f"coalition {key} seat_histogram counts must be a non-empty list")
+    if any(
+        not isinstance(count, int) or isinstance(count, bool) or count < 0
+        for count in counts
+    ):
+        raise ValueError(f"coalition {key} seat_histogram counts must be non-negative integers")
+    if counts[0] <= 0 or counts[-1] <= 0:
+        raise ValueError(f"coalition {key} seat_histogram bounds must be observed")
+    maximum = minimum + len(counts) - 1
+    if maximum > 349:
+        raise ValueError(f"coalition {key} seat_histogram support exceeds 349 seats")
+    if sum(counts) != expected_samples:
+        raise ValueError(f"coalition {key} seat_histogram counts do not sum to samples")
+
+    mean = sum((minimum + offset) * count for offset, count in enumerate(counts)) / expected_samples
+    if not np.isclose(mean, float(entry["mean_seats"]), rtol=0.0, atol=1e-12):
+        raise ValueError(f"coalition {key} mean_seats disagrees with seat_histogram")
+    quantile_fields = (
+        ("p05_seats", 0.05),
+        ("p10_seats", 0.10),
+        ("p25_seats", 0.25),
+        ("median_seats", 0.50),
+        ("p75_seats", 0.75),
+        ("p90_seats", 0.90),
+        ("p95_seats", 0.95),
+    )
+    for field, quantile in quantile_fields:
+        if _histogram_quantile(minimum, counts, quantile) != entry[field]:
+            raise ValueError(f"coalition {key} {field} disagrees with seat_histogram")
+
+    threshold = DEFAULT_MAJORITY_THRESHOLD
+    majority_count = sum(
+        count
+        for offset, count in enumerate(counts)
+        if minimum + offset >= threshold
+    )
+    probability = majority_count / expected_samples
+    if not np.isclose(probability, float(entry["prob_majority"]), rtol=0.0, atol=1e-12):
+        raise ValueError(f"coalition {key} prob_majority disagrees with seat_histogram")
+    return {"min_seats": minimum, "counts": counts}
+
+
+def _validate_coalition_builder(
+    value: Mapping[str, Any],
+    *,
+    expected_samples: int | None = None,
+    require_histogram: bool = False,
+) -> None:
+    """Validate a coalition lookup without seeing raw draws.
+
+    Schema 1.2 entries contain only the original compact summaries.  Schema
+    1.3 adds an exact contiguous integer histogram and cross-checks every
+    summary value against it.
+    """
+
+    expected_keys = ["party_order", "encoding", "majority_threshold", "coalitions"]
+    if list(value) != expected_keys:
         raise ValueError("coalition_builder has unexpected fields")
     if value.get("party_order") != list(PARLIAMENTARY_PARTIES_8):
         raise ValueError("coalition_builder has incorrect canonical party order")
@@ -249,12 +439,23 @@ def _validate_coalition_builder(value: Mapping[str, Any]) -> None:
     if list(coalitions) != expected_mask_keys:
         raise ValueError("coalition_builder must contain keys \"0\" through \"255\" in order")
 
+    if require_histogram and (
+        not isinstance(expected_samples, int)
+        or isinstance(expected_samples, bool)
+        or expected_samples <= 0
+    ):
+        raise ValueError("Schema 1.3 coalition histograms require a positive sample count")
+
+    expected_entry_fields = (
+        COALITION_BUILDER_ENTRY_FIELDS if require_histogram else COALITION_BUILDER_SUMMARY_FIELDS
+    )
+    validated_histograms: dict[int, dict[str, Any]] = {}
     for mask, key in enumerate(expected_mask_keys):
         entry = coalitions[key]
         if not isinstance(entry, Mapping):
             raise ValueError(f"coalition {key} must be an object")
-        if set(entry) != set(COALITION_BUILDER_SUMMARY_FIELDS):
-            raise ValueError(f"coalition {key} has unexpected fields")
+        if list(entry) != list(expected_entry_fields):
+            raise ValueError(f"coalition {key} has unexpected or unordered fields")
         entry_mask = entry.get("mask")
         if entry_mask != mask or isinstance(entry_mask, bool) or not isinstance(entry_mask, int):
             raise ValueError(f"coalition {key} has an inconsistent mask")
@@ -291,12 +492,48 @@ def _validate_coalition_builder(value: Mapping[str, Any]) -> None:
         if not _is_finite_number(probability) or not 0 <= float(probability) <= 1:
             raise ValueError(f"coalition {key} probability must be between 0 and 1")
 
+        if require_histogram:
+            validated_histograms[mask] = _validate_coalition_seat_histogram(
+                entry.get(COALITION_BUILDER_HISTOGRAM_FIELD),
+                expected_samples=expected_samples,
+                entry=entry,
+                key=key,
+            )
+
         if mask == 0:
             if any(seats != 0 for seats in quantiles) or mean != 0 or probability != 0:
                 raise ValueError("Empty coalition must have zero seats and zero majority probability")
+            if require_histogram and validated_histograms[mask] != {
+                "min_seats": 0,
+                "counts": [expected_samples],
+            }:
+                raise ValueError("Empty coalition must contain only zero-seat draws")
         elif mask == (1 << len(PARLIAMENTARY_PARTIES_8)) - 1:
             if any(seats != 349 for seats in quantiles) or mean != 349 or probability != 1:
                 raise ValueError("Full coalition must have 349 seats and certainty of majority")
+            if require_histogram and validated_histograms[mask] != {
+                "min_seats": 349,
+                "counts": [expected_samples],
+            }:
+                raise ValueError("Full coalition must contain only 349-seat draws")
+
+    if require_histogram:
+        assert expected_samples is not None
+        # Every underlying draw has exactly 349 seats.  In the compact public
+        # representation this is the reflection identity between each mask
+        # and its complement: count(mask, s) == count(~mask, 349-s).
+        full_mask = (1 << len(PARLIAMENTARY_PARTIES_8)) - 1
+        for mask in range(1 << len(PARLIAMENTARY_PARTIES_8)):
+            complement = full_mask ^ mask
+            if mask > complement:
+                continue
+            for seats in range(350):
+                if _histogram_count(validated_histograms[mask], seats) != _histogram_count(
+                    validated_histograms[complement], 349 - seats
+                ):
+                    raise ValueError(
+                        f"coalition {mask} and complement {complement} violate the 349-seat identity"
+                    )
 
 
 def _build_contracts(
@@ -547,8 +784,24 @@ def validate_publication_contract(contracts: Mapping[str, Mapping[str, Any]]) ->
         if not isinstance(coalition_builder, Mapping):
             raise ValueError("Schema 1.2 groups.json must include coalition_builder")
         _validate_coalition_builder(coalition_builder)
+    elif groups.get("schema_version") == "1.3":
+        coalition_builder = groups.get("coalition_builder")
+        if not isinstance(coalition_builder, Mapping):
+            raise ValueError("Schema 1.3 groups.json must include coalition_builder")
+        total_samples = forecast.get("total_samples")
+        if (
+            not isinstance(total_samples, int)
+            or isinstance(total_samples, bool)
+            or total_samples <= 0
+        ):
+            raise ValueError("Schema 1.3 forecast.json must include a positive total_samples")
+        _validate_coalition_builder(
+            coalition_builder,
+            expected_samples=total_samples,
+            require_histogram=True,
+        )
     elif "coalition_builder" in groups:
-        raise ValueError("coalition_builder is only valid in schema 1.2 groups.json")
+        raise ValueError("coalition_builder is only valid in schema 1.2 or 1.3 groups.json")
     metadata = contracts["metadata.json"]
     if not metadata.get("deterministic_payload_sha256"):
         raise ValueError("metadata.json must link the deterministic simulation payload")

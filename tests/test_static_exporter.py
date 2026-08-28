@@ -26,7 +26,9 @@ from scripts.simulator.reproducibility import (
 )
 from scripts.static_exporter import export_static_data, validate_published_directory
 from scripts.static_exporter.exporter import (
+    COALITION_BUILDER_ENTRY_FIELDS,
     COALITION_BUILDER_SUMMARY_FIELDS,
+    _histogram_quantile,
     validate_publication_contract,
 )
 
@@ -87,7 +89,7 @@ class StaticExporterTests(unittest.TestCase):
                 349,
             )
 
-    def test_schema_1_2_contains_all_joint_coalitions_and_preserves_payload_hash(self) -> None:
+    def test_schema_1_3_contains_all_joint_coalitions_histograms_and_preserves_payload_hash(self) -> None:
         result = self._clean_result()
         payload_before = build_canonical_summary_dict(result)["deterministic_payload_sha256"]
         with tempfile.TemporaryDirectory() as tmp:
@@ -107,8 +109,8 @@ class StaticExporterTests(unittest.TestCase):
             first_groups = json.loads((first_version / "groups.json").read_text())
             second_groups = json.loads((second_version / "groups.json").read_text())
 
-            self.assertEqual(first["schema_version"], "1.2")
-            self.assertEqual(first_groups["schema_version"], "1.2")
+            self.assertEqual(first["schema_version"], "1.3")
+            self.assertEqual(first_groups["schema_version"], "1.3")
             self.assertEqual(first_groups["groups"]["tido"]["parties"], ["M", "SD", "KD", "L"])
             builder = first_groups["coalition_builder"]
             self.assertEqual(builder["party_order"], list(PARLIAMENTARY_PARTIES_8))
@@ -139,7 +141,7 @@ class StaticExporterTests(unittest.TestCase):
                     for index, party in enumerate(PARLIAMENTARY_PARTIES_8)
                     if mask & (1 << index)
                 ]
-                self.assertEqual(set(entry), set(COALITION_BUILDER_SUMMARY_FIELDS))
+                self.assertEqual(list(entry), list(COALITION_BUILDER_ENTRY_FIELDS))
                 self.assertEqual(entry["mask"], mask)
                 self.assertEqual(entry["parties"], parties)
 
@@ -159,6 +161,41 @@ class StaticExporterTests(unittest.TestCase):
                 np.testing.assert_array_equal(coalition_draws + complement_draws, 349)
                 self.assertTrue(np.all((coalition_draws >= 0) & (coalition_draws <= 349)))
 
+                histogram = entry["seat_histogram"]
+                self.assertEqual(list(histogram), ["min_seats", "counts"])
+                minimum = int(coalition_draws.min())
+                maximum = int(coalition_draws.max())
+                expected_counts = np.bincount(
+                    coalition_draws.astype(np.int64), minlength=maximum + 1
+                )[minimum:]
+                self.assertEqual(histogram["min_seats"], minimum)
+                self.assertEqual(histogram["counts"], [int(count) for count in expected_counts])
+                self.assertEqual(sum(histogram["counts"]), all_draws.shape[0])
+                self.assertGreaterEqual(histogram["min_seats"], 0)
+                self.assertLessEqual(
+                    histogram["min_seats"] + len(histogram["counts"]) - 1,
+                    349,
+                )
+                self.assertTrue(
+                    all(isinstance(count, int) and count >= 0 for count in histogram["counts"])
+                )
+                expanded = np.repeat(
+                    np.arange(
+                        histogram["min_seats"],
+                        histogram["min_seats"] + len(histogram["counts"]),
+                    ),
+                    histogram["counts"],
+                )
+                self.assertEqual(int(np.median(expanded)), entry["median_seats"])
+                self.assertEqual(int(np.percentile(expanded, 5)), entry["p05_seats"])
+                self.assertEqual(int(np.percentile(expanded, 95)), entry["p95_seats"])
+                majority_count = int(np.sum(coalition_draws >= 175))
+                self.assertAlmostEqual(
+                    majority_count / all_draws.shape[0],
+                    entry["prob_majority"],
+                    places=15,
+                )
+
                 expected_summary = result.summarize_group(parties)
                 expected = expected_summary.__dict__
                 for field in metric_fields:
@@ -173,6 +210,20 @@ class StaticExporterTests(unittest.TestCase):
                     1.0,
                     places=12,
                 )
+                complement_histogram = complement_entry["seat_histogram"]
+                for seats in range(350):
+                    coalition_count = (
+                        histogram["counts"][seats - histogram["min_seats"]]
+                        if histogram["min_seats"] <= seats < histogram["min_seats"] + len(histogram["counts"])
+                        else 0
+                    )
+                    reflected_seats = 349 - seats
+                    complement_count = (
+                        complement_histogram["counts"][reflected_seats - complement_histogram["min_seats"]]
+                        if complement_histogram["min_seats"] <= reflected_seats < complement_histogram["min_seats"] + len(complement_histogram["counts"])
+                        else 0
+                    )
+                    self.assertEqual(coalition_count, complement_count)
                 self.assertGreaterEqual(entry["mean_seats"], 0)
                 self.assertLessEqual(entry["mean_seats"], 349)
                 for field in (
@@ -200,6 +251,10 @@ class StaticExporterTests(unittest.TestCase):
                 "prob_majority",
             ):
                 self.assertEqual(empty[field], 0)
+            self.assertEqual(
+                empty["seat_histogram"],
+                {"min_seats": 0, "counts": [all_draws.shape[0]]},
+            )
             full = builder["coalitions"]["255"]
             for field in (
                 "mean_seats",
@@ -213,6 +268,10 @@ class StaticExporterTests(unittest.TestCase):
             ):
                 self.assertEqual(full[field], 349)
             self.assertEqual(full["prob_majority"], 1)
+            self.assertEqual(
+                full["seat_histogram"],
+                {"min_seats": 349, "counts": [all_draws.shape[0]]},
+            )
 
             for group_name, parties in (
                 ("tido", ["M", "SD", "KD", "L"]),
@@ -251,7 +310,7 @@ class StaticExporterTests(unittest.TestCase):
                 contracts["groups.json"].pop("coalition_builder")
                 validate_publication_contract(contracts)
 
-    def test_schema_1_2_builder_validation_rejects_missing_or_malformed_entries(self) -> None:
+    def test_schema_1_3_builder_validation_rejects_missing_or_malformed_entries(self) -> None:
         result = self._clean_result()
         with tempfile.TemporaryDirectory() as tmp:
             output = Path(tmp) / "publication"
@@ -264,7 +323,30 @@ class StaticExporterTests(unittest.TestCase):
             for label, mutate in (
                 ("missing mask", lambda coalitions: coalitions.pop("7")),
                 ("wrong membership", lambda coalitions: coalitions["7"]["parties"].append("REST")),
-                ("raw draws", lambda coalitions: coalitions["7"].__setitem__("seat_histogram", {})),
+                ("malformed histogram", lambda coalitions: coalitions["7"].__setitem__("seat_histogram", {})),
+                (
+                    "entry field order",
+                    lambda coalitions: coalitions.__setitem__(
+                        "7",
+                        {field: coalitions["7"][field] for field in reversed(COALITION_BUILDER_ENTRY_FIELDS)},
+                    ),
+                ),
+                (
+                    "histogram count total",
+                    lambda coalitions: coalitions["7"]["seat_histogram"]["counts"].__setitem__(0, 0),
+                ),
+                (
+                    "histogram support",
+                    lambda coalitions: coalitions["7"]["seat_histogram"].__setitem__("min_seats", 350),
+                ),
+                (
+                    "histogram probability",
+                    lambda coalitions: coalitions["7"].__setitem__("prob_majority", 0.5),
+                ),
+                (
+                    "histogram quantile",
+                    lambda coalitions: coalitions["7"].__setitem__("p95_seats", 0),
+                ),
                 ("out of bounds", lambda coalitions: coalitions["7"].__setitem__("median_seats", 350)),
             ):
                 with self.subTest(case=label):
@@ -272,6 +354,74 @@ class StaticExporterTests(unittest.TestCase):
                     mutate(contracts["groups.json"]["coalition_builder"]["coalitions"])
                     with self.assertRaises(ValueError):
                         validate_publication_contract(contracts)
+
+    def test_histogram_quantiles_match_numpy_lerp_upper_branch(self) -> None:
+        """Integer truncation must preserve NumPy's upper-end _lerp branch."""
+
+        adversarial = (
+            ([84, 341, 278, 215, 199, 89, 281, 157], 0.95, 319),
+            ([71, 10, 241], 0.95, 224),
+        )
+        for values, quantile, expected in adversarial:
+            with self.subTest(values=values):
+                minimum = min(values)
+                counts = [values.count(seats) for seats in range(min(values), max(values) + 1)]
+                self.assertEqual(_histogram_quantile(minimum, counts, quantile), expected)
+
+    def test_schema_1_3_validator_requires_deterministic_object_key_order(self) -> None:
+        result = self._clean_result()
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / "publication"
+            manifest = export_static_data(result, output_dir=output)
+            version = output / "versions" / manifest["publication_generation"]
+            current = {
+                name: json.loads((version / name).read_text())
+                for name in ("forecast.json", "parties.json", "seats.json", "groups.json", "calibration.json", "metadata.json")
+            }
+            # Rebuild each object with reversed insertion order.  Dict.update
+            # alone cannot change an existing key's position, so replacement
+            # is performed explicitly below for a focused order regression.
+            for label in ("builder", "histogram"):
+                with self.subTest(case=label):
+                    contracts = deepcopy(current)
+                    groups = contracts["groups.json"]
+                    builder = groups["coalition_builder"]
+                    if label == "builder":
+                        groups["coalition_builder"] = {
+                            field: builder[field] for field in reversed(list(builder))
+                        }
+                    else:
+                        entry = builder["coalitions"]["7"]
+                        entry["seat_histogram"] = {
+                            field: entry["seat_histogram"][field]
+                            for field in reversed(list(entry["seat_histogram"]))
+                        }
+                    with self.assertRaises(ValueError):
+                        validate_publication_contract(contracts)
+
+    def test_schema_1_2_builder_remains_accepted_without_histograms(self) -> None:
+        result = self._clean_result()
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / "publication"
+            manifest = export_static_data(result, output_dir=output)
+            version = output / "versions" / manifest["publication_generation"]
+            contracts = {
+                name: json.loads((version / name).read_text())
+                for name in (
+                    "forecast.json",
+                    "parties.json",
+                    "seats.json",
+                    "groups.json",
+                    "calibration.json",
+                    "metadata.json",
+                )
+            }
+            for contract in contracts.values():
+                contract["schema_version"] = "1.2"
+            builder = contracts["groups.json"]["coalition_builder"]
+            for entry in builder["coalitions"].values():
+                entry.pop("seat_histogram")
+            validate_publication_contract(contracts)
 
     def test_dirty_source_is_rejected_for_certified_publication(self) -> None:
         result = simulate_election(as_of="2026-08-23", election_date="2026-09-13", samples=8, seed=12345)
@@ -494,8 +644,8 @@ class StaticExporterTests(unittest.TestCase):
             manifest = export_static_data(result, output_dir=output, generated_at_utc="2026-08-27T00:00:00+00:00")
             version = self._version_dir(output)
             metadata = json.loads((version / "metadata.json").read_text())
-            self.assertEqual(manifest["schema_version"], "1.2")
-            self.assertEqual(metadata["schema_version"], "1.2")
+            self.assertEqual(manifest["schema_version"], "1.3")
+            self.assertEqual(metadata["schema_version"], "1.3")
             self.assertEqual(manifest["source_repository"], SOURCE_REPOSITORY)
             self.assertEqual(metadata["source_repository"], SOURCE_REPOSITORY)
 
