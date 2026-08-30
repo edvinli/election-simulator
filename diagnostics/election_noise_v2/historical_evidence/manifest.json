@@ -1,0 +1,134 @@
+{
+  "schema_version": "1.0",
+  "document": "docs/election_noise_v2_historical_evidence.md",
+  "generated_at_utc": "2026-08-30T20:35:00Z",
+  "status": "RESEARCH ONLY - no production data added, altered or replaced",
+  "preregistration": {
+    "freeze": "FROZEN - AMENDMENT 1",
+    "commit": "80b1c671c4b6d879a888f28a859ee392e8f59bc5",
+    "body_sha256": "bac3ca06e52cc07fe74ca9e5aa785d94e30934db32193c7f948e95a49a6ae075",
+    "whole_file_sha256": "03dc843bd73d12c51a8deb7f727a7a4a29a198ee8513d0df5dd8c1fd309e5a97"
+  },
+  "outcome": {
+    "decision": "PROCEED_WITH_EXISTING_HISTORY",
+    "accepted_new_residual_years": [],
+    "rejected_residual_years": [
+      1991,
+      1994,
+      1998
+    ],
+    "residual_pool_years": [
+      2002,
+      2006,
+      2010,
+      2014,
+      2018,
+      2022
+    ],
+    "K": 6,
+    "N_T1": 3,
+    "tier1_eligible_targets": [
+      2014,
+      2018,
+      2022
+    ],
+    "N_seat": 2,
+    "seat_evaluable_years": [
+      2018,
+      2022
+    ],
+    "deferred_seat_years": [
+      2010,
+      2014
+    ],
+    "historically_versioned_allocator_required_for": [
+      2010,
+      2014
+    ]
+  },
+  "archived_sources": [
+    {
+      "file": "raw/swedishpolls_Polls.csv",
+      "source": "MansMeg/SwedishPolls (GitHub) — upstream metadata source for the repository's poll dates and sample sizes",
+      "url": "https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv",
+      "retrieved_at": "2026-08-30T20:30:10Z",
+      "purpose": "Verify at source whether the 1991/1994/1998 fieldwork dates and sample sizes missing from the repository are recoverable upstream.",
+      "years_covered": "1972-2026",
+      "access_caveat": "Community-maintained research dataset. Upstream documentation states earlier data has more NA in sample size and collection period, and that quality improves from 2008.",
+      "sha256": "4cd11c83e76d7b37425956d9d9944dafa86fcf273408207cd32f3d670a2253d8",
+      "byte_count": 268340
+    },
+    {
+      "file": "raw/valmyndigheten_mandatfordelning_v785_05.pdf",
+      "source": "Valmyndigheten — official manual 'Mandatfördelning' (VAL V785 05)",
+      "url": "https://www.val.se/download/18.162047b519a91d05331183a9/1761747515752/manual-mandatfordelning-val-v785-05.pdf",
+      "retrieved_at": "2026-08-30T20:32:53Z",
+      "purpose": "Authoritative statement of the mandate-allocation rules currently in force (post-2018), used as the reference point for identifying what differs in 2010/2014.",
+      "years_covered": "current law (2018-)",
+      "access_caveat": null,
+      "sha256": "e3a7661a58bf97abc4c0386a1cb93a5d170e9027f3dabd819d5931dfafa7e34f",
+      "byte_count": 887982
+    },
+    {
+      "file": "raw/prop_2013_14_48_proportionell_fordelning.pdf",
+      "source": "Regeringen — Proposition 2013/14:48 'Proportionell fördelning av mandat och förhandsanmälan av partier i val'",
+      "url": "https://www.regeringen.se/contentassets/3bb36f6f751d4ed1ae9ada6aeab9f5ac/proportionell-fordelning-av-mandat-och-forhandsanmalan-av-partier-i-val-prop.-20131448",
+      "retrieved_at": "2026-08-30T20:33:07Z",
+      "purpose": "Primary legal source for the change of the modified Sainte-Lague first divisor from 1.4 to 1.2 and the introduction of mandate return (aterforing), both effective from the 2018 election (enacted as SFS 2014:1384).",
+      "years_covered": "law change effective 2018",
+      "access_caveat": null,
+      "sha256": "5aa84ff21840515a126928dd1300f847752ca2ed4c497ecc4115bee5bcf923cb",
+      "byte_count": 877677
+    }
+  ],
+  "cited_sources": [
+    {
+      "source": "Valmyndigheten — 'Fördelning av fasta mandat till riksdagen 1988-2026'",
+      "url": "http://val.se/download/18.4005a7d19dee20a8ea544/1778074856144/valkretsmandat-riksdag-1988-2026.xlsx",
+      "note": "ALREADY IN REPOSITORY as data/raw/mandates/valkretsmandat_riksdag_1988_2026.xlsx (sha256 74d02c44f2c30722c995eee196cdb55d7dbf2371c0e4d3bec64cb44786aa5576, retrieved 2026-08-26T16:30:51Z). Supplies authoritative fixed constituency seats for 2010 and 2014 and documents every constituency boundary change 1988-2026. Not re-downloaded and not modified.",
+      "years_covered": "1988-2026"
+    },
+    {
+      "source": "Valmyndigheten historical results — Riksdag 2010, national",
+      "url": "https://historik.val.se/val/val2010/slutresultat/R/rike/index.html",
+      "note": "Cited, not archived. Confirms national 2010 results and the constituency URL pattern /slutresultat/R/rvalkrets/NN/index.html.",
+      "years_covered": "2010"
+    },
+    {
+      "source": "Valmyndigheten historical results — Riksdag 2010, Stockholms kommun constituency",
+      "url": "https://historik.val.se/val/val2010/slutresultat/R/rvalkrets/01/index.html",
+      "note": "Cited, not archived. Confirms per-constituency party votes and 'Giltiga röster' totals exist for 2010.",
+      "years_covered": "2010"
+    },
+    {
+      "source": "Valmyndigheten historical results — Riksdag 2010, Stockholms kommun elected",
+      "url": "https://historik.val.se/val/val2010/slutresultat/R/rvalkrets/01/valda.html",
+      "note": "Cited, not archived. Confirms per-constituency per-party seat totals exist for 2010, but WITHOUT a fixed/adjustment (fasta/utjamnings) split.",
+      "years_covered": "2010"
+    },
+    {
+      "source": "Valmyndigheten — index of past election results",
+      "url": "https://www.val.se/valresultat-och-statistik/riksdags--region--och-kommunval/tidigare-valresultat.html",
+      "note": "Cited, not archived. Official presentations run 2002-2018; no official presentation is offered for 1998, 1994 or 1991.",
+      "years_covered": "2002-2018"
+    },
+    {
+      "source": "Sveriges riksdag / lagboken — SFS 2014:1384 Lag om ändring i vallagen (2005:837)",
+      "url": "https://www.riksdagen.se/sv/dokument-och-lagar/dokument/svensk-forfattningssamling/vallag-2005837_sfs-2005-837/",
+      "note": "Cited, not archived. The enacting instrument for the 1.4 -> 1.2 divisor change and the aterforing mechanism.",
+      "years_covered": "law"
+    },
+    {
+      "source": "Linkoping University (L. Alm) — 'Riksdagsvalet 2018 - mandatfordelning enligt den gamla vallagen'",
+      "url": "https://users.mai.liu.se/laral26/Val/Data/2018/riksdag_gamla-vallagen.html",
+      "note": "Cited, not archived. SECONDARY corroboration only, used solely to cross-check the pre-2018 algorithm description (first divisor 1.4, no return mechanism). Not usable as a primary input.",
+      "years_covered": "pre-2018 law"
+    },
+    {
+      "source": "SCB Statistikdatabasen ME0104T3 (via repository)",
+      "url": "https://api.scb.se/OV0104/v1/doris/sv/ssd/ME/ME0104/ME0104C/ME0104T3",
+      "note": "ALREADY IN REPOSITORY as data/raw/threshold_events/official_election_results_archive.json and scripts/threshold_events/election_results.py. Supplies certified 1991/1994/1998 national party votes and valid-vote totals. Not modified.",
+      "years_covered": "1991, 1994, 1998"
+    }
+  ]
+}

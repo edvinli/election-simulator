@@ -1,0 +1,630 @@
+{
+  "purpose": "Part 2 historical-data feasibility audit (research only)",
+  "preregistration_freeze_commit": "80b1c671c4b6d879a888f28a859ee392e8f59bc5",
+  "preregistration_body_sha256": "bac3ca06e52cc07fe74ca9e5aa785d94e30934db32193c7f948e95a49a6ae075",
+  "production_window_days": 14,
+  "polls_file": "data/processed/pollofpolls/swedishpolls_individual_polls.csv",
+  "polls_file_sha256": "1e799233d97efdb382fe8a78311aff636502c1f736ce99b71913bc181a46868b",
+  "polls_file_coverage": {
+    "rows": 26400,
+    "distinct_polls": 2640,
+    "earliest_interview_end": "1973-02-18",
+    "latest_interview_end": "2026-08-26"
+  },
+  "track_a_candidate_elections": {
+    "1991": {
+      "election_date": "1991-09-15",
+      "canonical_window": {
+        "window_start": "1991-09-01",
+        "window_end": "1991-09-15",
+        "eligible_polls": 0,
+        "distinct_pollsters": 0,
+        "pollsters": []
+      },
+      "metadata_census": {
+        "lookback_days": 120,
+        "polls_published_in_lookback": 5,
+        "missing_interview_end": 0,
+        "missing_sample_size": 0,
+        "corrupt_interview_end_after_publication": 0,
+        "polls": [
+          {
+            "pollster": "Sifo",
+            "interview_start": "1991-05-06",
+            "interview_end": "1991-05-23",
+            "publication_date": "1991-05-26",
+            "sample_size": 1850,
+            "days_before_election": 115,
+            "interview_end_after_publication": false
+          },
+          {
+            "pollster": "Ipsos",
+            "interview_start": "1991-05-13",
+            "interview_end": "1991-06-05",
+            "publication_date": "1991-06-14",
+            "sample_size": 1053,
+            "days_before_election": 102,
+            "interview_end_after_publication": false
+          },
+          {
+            "pollster": "SCB",
+            "interview_start": "1991-05-02",
+            "interview_end": "1991-05-24",
+            "publication_date": "1991-06-18",
+            "sample_size": 9306,
+            "days_before_election": 114,
+            "interview_end_after_publication": false
+          },
+          {
+            "pollster": "Sifo",
+            "interview_start": "1991-05-29",
+            "interview_end": "1991-06-19",
+            "publication_date": "1991-06-23",
+            "sample_size": 1916,
+            "days_before_election": 88,
+            "interview_end_after_publication": false
+          },
+          {
+            "pollster": "Ipsos",
+            "interview_start": "1991-08-19",
+            "interview_end": "1991-08-28",
+            "publication_date": "1991-09-13",
+            "sample_size": 1800,
+            "days_before_election": 18,
+            "interview_end_after_publication": false
+          }
+        ]
+      }
+    },
+    "1994": {
+      "election_date": "1994-09-18",
+      "canonical_window": {
+        "window_start": "1994-09-04",
+        "window_end": "1994-09-18",
+        "eligible_polls": 1,
+        "distinct_pollsters": 1,
+        "pollsters": [
+          "Ipsos"
+        ]
+      },
+      "metadata_census": {
+        "lookback_days": 120,
+        "polls_published_in_lookback": 6,
+        "missing_interview_end": 0,
+        "missing_sample_size": 0,
+        "corrupt_interview_end_after_publication": 0,
+        "polls": [
+          {
+            "pollster": "Ipsos",
+            "interview_start": "1994-05-18",
+            "interview_end": "1994-05-26",
+            "publication_date": "1994-05-28",
+            "sample_size": 1022,
+            "days_before_election": 115,
+            "interview_end_after_publication": false
+          },
+          {
+            "pollster": "Sifo",
+            "interview_start": "1994-05-02",
+            "interview_end": "1994-05-26",
+            "publication_date": "1994-05-29",
+            "sample_size": 3708,
+            "days_before_election": 115,
+            "interview_end_after_publication": false
+          },
+          {
+            "pollster": "SCB",
+            "interview_start": "1994-05-02",
+            "interview_end": "1994-05-24",
+            "publication_date": "1994-06-02",
+            "sample_size": 9367,
+            "days_before_election": 117,
+            "interview_end_after_publication": false
+          },
+          {
+            "pollster": "Ipsos",
+            "interview_start": "1994-06-08",
+            "interview_end": "1994-06-15",
+            "publication_date": "1994-06-18",
+            "sample_size": 1012,
+            "days_before_election": 95,
+            "interview_end_after_publication": false
+          },
+          {
+            "pollster": "Ipsos",
+            "interview_start": "1994-08-17",
+            "interview_end": "1994-08-24",
+            "publication_date": "1994-08-26",
+            "sample_size": 1018,
+            "days_before_election": 25,
+            "interview_end_after_publication": false
+          },
+          {
+            "pollster": "Ipsos",
+            "interview_start": "1994-09-11",
+            "interview_end": "1994-09-14",
+            "publication_date": "1994-09-16",
+            "sample_size": 1358,
+            "days_before_election": 4,
+            "interview_end_after_publication": false
+          }
+        ]
+      }
+    },
+    "1998": {
+      "election_date": "1998-09-20",
+      "canonical_window": {
+        "window_start": "1998-09-06",
+        "window_end": "1998-09-20",
+        "eligible_polls": 0,
+        "distinct_pollsters": 0,
+        "pollsters": []
+      },
+      "metadata_census": {
+        "lookback_days": 120,
+        "polls_published_in_lookback": 13,
+        "missing_interview_end": 5,
+        "missing_sample_size": 5,
+        "corrupt_interview_end_after_publication": 1,
+        "polls": [
+          {
+            "pollster": "Sifo",
+            "interview_start": "1998-04-27",
+            "interview_end": "1998-04-28",
+            "publication_date": "1998-05-31",
+            "sample_size": 4691,
+            "days_before_election": 145,
+            "interview_end_after_publication": false
+          },
+          {
+            "pollster": "SCB",
+            "interview_start": "1998-05-06",
+            "interview_end": "1998-06-01",
+            "publication_date": "1998-06-11",
+            "sample_size": 9439,
+            "days_before_election": 111,
+            "interview_end_after_publication": false
+          },
+          {
+            "pollster": "Ipsos",
+            "interview_start": "1998-06-03",
+            "interview_end": "1998-06-10",
+            "publication_date": "1998-06-12",
+            "sample_size": 1021,
+            "days_before_election": 102,
+            "interview_end_after_publication": false
+          },
+          {
+            "pollster": "Sifo",
+            "interview_start": "1998-06-01",
+            "interview_end": "1998-06-17",
+            "publication_date": "1998-06-21",
+            "sample_size": 2851,
+            "days_before_election": 95,
+            "interview_end_after_publication": false
+          },
+          {
+            "pollster": "Sifo",
+            "interview_start": "1998-08-03",
+            "interview_end": "1998-08-13",
+            "publication_date": "1998-08-16",
+            "sample_size": 1440,
+            "days_before_election": 38,
+            "interview_end_after_publication": false
+          },
+          {
+            "pollster": "Demoskop",
+            "interview_start": null,
+            "interview_end": null,
+            "publication_date": "1998-08-20",
+            "sample_size": null,
+            "days_before_election": null,
+            "interview_end_after_publication": false
+          },
+          {
+            "pollster": "Ipsos",
+            "interview_start": "1998-08-05",
+            "interview_end": "1998-08-19",
+            "publication_date": "1998-08-21",
+            "sample_size": 2071,
+            "days_before_election": 32,
+            "interview_end_after_publication": false
+          },
+          {
+            "pollster": "Demoskop",
+            "interview_start": null,
+            "interview_end": null,
+            "publication_date": "1998-08-26",
+            "sample_size": null,
+            "days_before_election": null,
+            "interview_end_after_publication": false
+          },
+          {
+            "pollster": "Sifo",
+            "interview_start": "1998-08-25",
+            "interview_end": "1998-08-31",
+            "publication_date": "1998-09-02",
+            "sample_size": 2502,
+            "days_before_election": 20,
+            "interview_end_after_publication": false
+          },
+          {
+            "pollster": "Demoskop",
+            "interview_start": null,
+            "interview_end": null,
+            "publication_date": "1998-09-02",
+            "sample_size": null,
+            "days_before_election": null,
+            "interview_end_after_publication": false
+          },
+          {
+            "pollster": "Demoskop",
+            "interview_start": null,
+            "interview_end": null,
+            "publication_date": "1998-09-09",
+            "sample_size": null,
+            "days_before_election": null,
+            "interview_end_after_publication": false
+          },
+          {
+            "pollster": "Demoskop",
+            "interview_start": null,
+            "interview_end": null,
+            "publication_date": "1998-09-16",
+            "sample_size": null,
+            "days_before_election": null,
+            "interview_end_after_publication": false
+          },
+          {
+            "pollster": "Ipsos",
+            "interview_start": "1999-09-07",
+            "interview_end": "1999-09-17",
+            "publication_date": "1998-09-19",
+            "sample_size": 1769,
+            "days_before_election": -362,
+            "interview_end_after_publication": true
+          }
+        ]
+      }
+    }
+  },
+  "track_a_incumbent_pool": {
+    "2002": {
+      "window_start": "2002-09-01",
+      "window_end": "2002-09-15",
+      "eligible_polls": 44,
+      "distinct_pollsters": 7,
+      "pollsters": [
+        "Demoskop",
+        "Ipsos",
+        "Novus",
+        "SVT",
+        "Sifo",
+        "Skop",
+        "YouGov"
+      ]
+    },
+    "2006": {
+      "window_start": "2006-09-03",
+      "window_end": "2006-09-17",
+      "eligible_polls": 25,
+      "distinct_pollsters": 5,
+      "pollsters": [
+        "Demoskop",
+        "Ipsos",
+        "SVT",
+        "Sifo",
+        "Skop"
+      ]
+    },
+    "2010": {
+      "window_start": "2010-09-05",
+      "window_end": "2010-09-19",
+      "eligible_polls": 27,
+      "distinct_pollsters": 7,
+      "pollsters": [
+        "Demoskop",
+        "Ipsos",
+        "Novus",
+        "SVT",
+        "Sifo",
+        "Skop",
+        "United Minds"
+      ]
+    },
+    "2014": {
+      "window_start": "2014-08-31",
+      "window_end": "2014-09-14",
+      "eligible_polls": 23,
+      "distinct_pollsters": 9,
+      "pollsters": [
+        "Demoskop",
+        "Ipsos",
+        "Novus",
+        "SVT",
+        "Sentio",
+        "Sifo",
+        "Skop",
+        "United Minds",
+        "YouGov"
+      ]
+    },
+    "2018": {
+      "window_start": "2018-08-26",
+      "window_end": "2018-09-09",
+      "eligible_polls": 35,
+      "distinct_pollsters": 10,
+      "pollsters": [
+        "Demoskop",
+        "Inizio",
+        "Ipsos",
+        "Novus",
+        "SVT",
+        "Sentio",
+        "Sifo",
+        "Skop",
+        "TV4",
+        "YouGov"
+      ]
+    },
+    "2022": {
+      "window_start": "2022-08-28",
+      "window_end": "2022-09-11",
+      "eligible_polls": 47,
+      "distinct_pollsters": 8,
+      "pollsters": [
+        "Demoskop",
+        "Infostat",
+        "Ipsos",
+        "Novus",
+        "SVT",
+        "Sentio",
+        "Sifo",
+        "Skop"
+      ]
+    }
+  },
+  "residual_pool": {
+    "production_years": [
+      2002,
+      2006,
+      2010,
+      2014,
+      2018,
+      2022
+    ],
+    "accepted_new_years": [],
+    "resulting_years": [
+      2002,
+      2006,
+      2010,
+      2014,
+      2018,
+      2022
+    ],
+    "K": 6
+  },
+  "tier1": {
+    "candidate_targets": [
+      2010,
+      2014,
+      2018,
+      2022
+    ],
+    "K_outer_min": 3,
+    "rows": [
+      {
+        "target": 2010,
+        "prior_accepted_residual_years": [
+          2002,
+          2006
+        ],
+        "K_outer": 2,
+        "eligible": false
+      },
+      {
+        "target": 2014,
+        "prior_accepted_residual_years": [
+          2002,
+          2006,
+          2010
+        ],
+        "K_outer": 3,
+        "eligible": true
+      },
+      {
+        "target": 2018,
+        "prior_accepted_residual_years": [
+          2002,
+          2006,
+          2010,
+          2014
+        ],
+        "K_outer": 4,
+        "eligible": true
+      },
+      {
+        "target": 2022,
+        "prior_accepted_residual_years": [
+          2002,
+          2006,
+          2010,
+          2014,
+          2018
+        ],
+        "K_outer": 5,
+        "eligible": true
+      }
+    ],
+    "N_T1": 3
+  },
+  "track_c_pool_profile": [
+    {
+      "year": 2002,
+      "election_date": "2002-09-15",
+      "retained_pollsters": 5,
+      "eligible_polls_in_window": 44,
+      "pollsters": [
+        "Demoskop",
+        "Ipsos",
+        "Novus",
+        "Sifo",
+        "Skop"
+      ],
+      "summed_sample_size": 7639,
+      "polls_missing_sample_size": 0,
+      "mean_consensus_age_days": 3.2,
+      "min_consensus_age_days": 3,
+      "max_consensus_age_days": 4,
+      "structurally_unpolled_parties": [
+        "SD"
+      ],
+      "unpolled_party_official_pct": {
+        "SD": 1.4388
+      },
+      "mean_abs_residual_pp": 1.5077,
+      "max_abs_residual_pp": 3.4743,
+      "residual_l2_norm_pp": 5.4459,
+      "centered_residual_l2_norm_pp": 4.2251
+    },
+    {
+      "year": 2006,
+      "election_date": "2006-09-17",
+      "retained_pollsters": 5,
+      "eligible_polls_in_window": 25,
+      "pollsters": [
+        "Demoskop",
+        "Ipsos",
+        "SVT",
+        "Sifo",
+        "Skop"
+      ],
+      "summed_sample_size": 18447,
+      "polls_missing_sample_size": 0,
+      "mean_consensus_age_days": 2.8,
+      "min_consensus_age_days": 0,
+      "max_consensus_age_days": 5,
+      "structurally_unpolled_parties": [],
+      "unpolled_party_official_pct": {},
+      "mean_abs_residual_pp": 0.6425,
+      "max_abs_residual_pp": 1.3029,
+      "residual_l2_norm_pp": 2.2801,
+      "centered_residual_l2_norm_pp": 1.6463
+    },
+    {
+      "year": 2010,
+      "election_date": "2010-09-19",
+      "retained_pollsters": 7,
+      "eligible_polls_in_window": 27,
+      "pollsters": [
+        "Demoskop",
+        "Ipsos",
+        "Novus",
+        "SVT",
+        "Sifo",
+        "Skop",
+        "United Minds"
+      ],
+      "summed_sample_size": 22231,
+      "polls_missing_sample_size": 0,
+      "mean_consensus_age_days": 2.429,
+      "min_consensus_age_days": 0,
+      "max_consensus_age_days": 4,
+      "structurally_unpolled_parties": [],
+      "unpolled_party_official_pct": {},
+      "mean_abs_residual_pp": 0.5482,
+      "max_abs_residual_pp": 1.3209,
+      "residual_l2_norm_pp": 2.1038,
+      "centered_residual_l2_norm_pp": 1.2195
+    },
+    {
+      "year": 2014,
+      "election_date": "2014-09-14",
+      "retained_pollsters": 9,
+      "eligible_polls_in_window": 23,
+      "pollsters": [
+        "Demoskop",
+        "Ipsos",
+        "Novus",
+        "SVT",
+        "Sentio",
+        "Sifo",
+        "Skop",
+        "United Minds",
+        "YouGov"
+      ],
+      "summed_sample_size": 25558,
+      "polls_missing_sample_size": 0,
+      "mean_consensus_age_days": 2.667,
+      "min_consensus_age_days": 0,
+      "max_consensus_age_days": 6,
+      "structurally_unpolled_parties": [],
+      "unpolled_party_official_pct": {},
+      "mean_abs_residual_pp": 1.1896,
+      "max_abs_residual_pp": 2.8846,
+      "residual_l2_norm_pp": 4.2374,
+      "centered_residual_l2_norm_pp": 2.8496
+    },
+    {
+      "year": 2018,
+      "election_date": "2018-09-09",
+      "retained_pollsters": 10,
+      "eligible_polls_in_window": 35,
+      "pollsters": [
+        "Demoskop",
+        "Inizio",
+        "Ipsos",
+        "Novus",
+        "SVT",
+        "Sentio",
+        "Sifo",
+        "Skop",
+        "TV4",
+        "YouGov"
+      ],
+      "summed_sample_size": 32739,
+      "polls_missing_sample_size": 0,
+      "mean_consensus_age_days": 3.7,
+      "min_consensus_age_days": 0,
+      "max_consensus_age_days": 12,
+      "structurally_unpolled_parties": [],
+      "unpolled_party_official_pct": {},
+      "mean_abs_residual_pp": 1.2341,
+      "max_abs_residual_pp": 3.165,
+      "residual_l2_norm_pp": 4.6939,
+      "centered_residual_l2_norm_pp": 3.076
+    },
+    {
+      "year": 2022,
+      "election_date": "2022-09-11",
+      "retained_pollsters": 7,
+      "eligible_polls_in_window": 47,
+      "pollsters": [
+        "Demoskop",
+        "Ipsos",
+        "Novus",
+        "SVT",
+        "Sentio",
+        "Sifo",
+        "Skop"
+      ],
+      "summed_sample_size": 26357,
+      "polls_missing_sample_size": 0,
+      "mean_consensus_age_days": 3.143,
+      "min_consensus_age_days": 0,
+      "max_consensus_age_days": 13,
+      "structurally_unpolled_parties": [],
+      "unpolled_party_official_pct": {},
+      "mean_abs_residual_pp": 0.7208,
+      "max_abs_residual_pp": 1.4862,
+      "residual_l2_norm_pp": 2.5423,
+      "centered_residual_l2_norm_pp": 2.0337
+    }
+  ],
+  "track_c_descriptive_trend": {
+    "n": 6,
+    "pearson_year_vs_residual_l2": -0.1935,
+    "spearman_year_vs_residual_l2": -0.0857,
+    "note": "Descriptive only, n=6. No trend is fitted, no recency weighting is implied, and no residual is altered."
+  }
+}
