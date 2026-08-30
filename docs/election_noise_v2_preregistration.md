@@ -1,7 +1,8 @@
 # Preregistration — ElectionNoise v2 challenger competition
 
-**PREREGISTRATION STATUS: FROZEN** (see §J for the freeze block, and §J.2 for the
-single clause held open by reviewer instruction).
+**PREREGISTRATION STATUS: FROZEN — AMENDMENT 1** (see §J: J.1 records the
+superseded Amendment-0 freeze, J.2 the Amendment-1 rationale, J.3 the operative
+freeze record).
 
 **Written before any challenger implementation and before any challenger score
 exists.** No challenger has been implemented, run, or scored. The 2026 forecast
@@ -14,9 +15,9 @@ separate, explicit decision.
 
 | | |
 |---|---|
-| Document version | 2.0 — reviewer decisions applied, frozen |
+| Document version | 2.1 — Amendment 1 (pre-data, pre-challenger ambiguity resolution) |
 | Written | 2026-08-30 |
-| Frozen | 2026-08-30T20:08:21Z (§J) |
+| Frozen | Amendment 0: 2026-08-30T20:08:21Z · Amendment 1: see §J.3 |
 | Author | Diagnostic work on branch `diagnostic/election-noise-mixture` |
 | Motivating evidence | `diagnostics/election_noise_mixture/summary.md` (commit `f55c3c9`) |
 | Component under test | ElectionNoise only |
@@ -76,8 +77,12 @@ read the committed copy.
 1. This document is frozen (§J) — satisfied.
 2. No challenger has been implemented, run, or scored — satisfied.
 3. The 2026 forecast under any challenger has not been computed — satisfied.
-4. **The single open clause identified in §J.2 has been resolved by the reviewer.**
-   Implementation may not begin until then.
+4. The Amendment-0 open clause (the non-operative Tier-1 "3 of 4" threshold) has
+   been resolved by the reviewer and replaced by the general `N_T1 − 1` rule of
+   §F.3 G5 — satisfied under Amendment 1.
+5. The Part-2 historical-data feasibility search has not been run. It may change
+   `N_T1` and `N_seat` **only** through the mechanical eligibility rules frozen
+   here (§E.6).
 
 ---
 
@@ -213,29 +218,57 @@ H = {0.25, 0.50, 0.75, 1.00}
 **`h = 0` is deliberately excluded: CONTROL already is the unsmoothed empirical
 model, and including it would let A trivially collapse onto the control.**
 
-Selection is by **LOEO-FIT**, run strictly inside the training pool and never
-touching the target election (§E.4):
+Selection is by **LOEO-FIT**, run strictly inside the **outer** training pool
+`P` and never touching the target election (§E.4):
 
 ```
 for each h in H:
-    score(h) = (1/K) Σ_{j∈P}  ES( F^A(h, P\{j}),  r_j − r̄_{P\{j}} )
+    score(h) = (1/K_outer) Σ_{j∈P}  ES( F^A(h, P\{j}),  r_j − r̄_{P\{j}} )
 h* = argmin_h score(h);  ties broken toward the smallest h (most conservative)
 ```
 
-`F^A(h, P\{j})` is Challenger A fitted on the pool with election `j` removed and
-re-centered by the production centering algorithm on `P\{j}`; the held-out target
-is the held-out residual expressed in that same centering. `ES` is the energy
-score of §D1, estimated from 20 000 draws under seed token
-`":election_noise_v2_a_loeo"` for each of the five seeds of §D0.
+`F^A(h, P\{j})` is Challenger A fitted on the **inner** pool `P\{j}`
+(`K_inner = K_outer − 1`) and re-centered by the production centering algorithm
+on `P\{j}`; the held-out target is the held-out residual expressed in that same
+centering. `ES` is the energy score of §D1, estimated from 20 000 draws under
+seed token `":election_noise_v2_a_loeo"` for each of the five seeds of §D0.
 
-**Minimum training-pool size — binding (§I item 3).**
+**Nested pool-size rule — binding (§I item 3, clarified by Amendment 1).**
 
-> **Challenger A requires `K ≥ 3`.** There is no fallback rule. Any evaluation
-> case whose training pool has `K < 3` is **excluded from the comparative
-> adoption dataset**, and the identical exclusion is applied to **CONTROL and
-> Challenger B** so that every model ranking compares exactly the same historical
-> cases. The surviving case set is enumerated in §E.2 and is fixed by this
-> document.
+Two distinct pool sizes exist and each has its own frozen minimum:
+
+| | Definition | Frozen minimum |
+|---|---|---|
+| `K_outer` | size of the training pool for an evaluation target — all elections strictly earlier than the target | **`K_outer ≥ 3`** |
+| `K_inner` | size of a pool inside LOEO-FIT, i.e. `K_outer − 1` | **`K_inner ≥ 2`** |
+
+> **Outer evaluation eligibility.** A comparative historical target is eligible
+> only if `K_outer ≥ 3`. **There is no `K_outer = 2` fallback**; such a target is
+> excluded outright, and the identical common-case exclusion is applied to
+> **CONTROL, Challenger A and Challenger B** so that every model ranking compares
+> exactly the same historical cases.
+>
+> **Inner fitting.** For an eligible outer target, Challenger A selects `h` by the
+> preregistered inner leave-one-out procedure over the outer pool. A target with
+> `K_outer = 3` therefore necessarily produces inner fits with `K_inner = 2`.
+> **This is explicitly allowed.** The Challenger A distribution is fitted normally
+> at `K_inner = 2` for the purpose of scoring candidate `h` values.
+>
+> This is **not** the removed "K = 2 fallback": `h` is not fixed arbitrarily, the
+> `K_inner = 2` fit exists only inside the already-preregistered inner validation,
+> and candidate `h` values are still chosen from the frozen grid by held-out
+> scoring.
+>
+> **`K_inner = 1` is prohibited.** That is precisely why an outer `K_outer = 2`
+> case is excluded: its inner tuning would require a `K_inner = 1` fit, which
+> provides no meaningful residual covariance and no meaningful smoothing fit.
+
+Disclosed consequence at the smallest eligible size: with `K_inner = 2` the two
+centered inner residuals satisfy `c_1 + c_2 = 0`, so `rank(C) = 1` and the inner
+kernel covariance is rank 1 — the inner smoothing is one-dimensional. This is a
+known and accepted property of the smallest eligible fold, not a defect, and it
+affects only the *scoring of candidate `h` values*, never the outer model that is
+actually evaluated (which is fitted at `K_outer ≥ 3`).
 
 **Tail behaviour.** The marginal law is an equal-weight K-component Gaussian
 mixture with component means `c_k/√(1+h²)` and common covariance
@@ -243,8 +276,9 @@ mixture with component means `c_k/√(1+h²)` and common covariance
 none may be substituted after results are seen.**
 
 **Support / degeneracy — disclosed.** `ε ∈ span{c_1,…,c_K}`, dimension `≤ K−1`
-(≤ 5 for the 2026 pool). A is therefore continuous but **singular**: supported on
-a `(K−1)`-dimensional affine subspace of the 8-dimensional zero-sum hyperplane.
+(≤ 5 for the 2026 pool; ≤ 2 at the smallest eligible outer pool `K_outer = 3`).
+A is therefore continuous but **singular**: supported on a `(K−1)`-dimensional
+affine subspace of the 8-dimensional zero-sum hyperplane.
 It cannot produce an error pattern outside the historical span. This is the
 deliberate "conservative" property of the family and the main scientific contrast
 with B.
@@ -463,25 +497,48 @@ This is the production rule and is a leave-all-future-out design. The target
 election's own residual never enters the pool, the bandwidth selection, or the
 covariance estimate.
 
-### E.2 Tiers, and exactly which cases survive the `K ≥ 3` rule
+### E.2 Tiers, the frozen Tier-1 target set, and the `K_outer ≥ 3` eligibility rule
 
-`K` depends only on the target election year (the pool is all strictly earlier
-elections), never on the horizon.
+`K_outer` depends only on the target election year (the pool is all elections
+strictly earlier than the target), never on the horizon.
 
 **Tier 1 — standalone forward evaluation from the 14-day polling consensus.**
 Vote level only. The base composition is the poll consensus, so OpinionState and
 Dynamics are absent; this tier isolates ElectionNoise. Mirrors
 `docs/election_layer_v2.md` §4.
 
-| Target | Pool | K | Status under `K ≥ 3` |
-|---|---|---|---|
-| 2010 | {2002, 2006} | 2 | **EXCLUDED** |
-| 2014 | {2002, 2006, 2010} | 3 | included |
-| 2018 | {2002, 2006, 2010, 2014} | 4 | included |
-| 2022 | {2002, 2006, 2010, 2014, 2018} | 5 | included |
+> **FROZEN TIER-1 CANDIDATE TARGET SET — `{2010, 2014, 2018, 2022}`, and only
+> those four.** This set is fixed by this document and **must not expand**. Part 2
+> may find credible older residual elections that enter historical *training*
+> pools under the frozen data-inclusion criteria of §E.3; **older discovered
+> elections never become new Tier-1 target elections**, and no target may be added
+> because its result is favourable.
 
-> **Frozen Tier-1 case set: `{2014, 2018, 2022}` — 3 elections, 3 cases.**
-> The same exclusion is applied identically to CONTROL, A and B.
+Eligibility of each candidate target is then decided **mechanically** by
+`K_outer ≥ 3`:
+
+| Candidate target | Pool under the current residual history | `K_outer` | Eligible? |
+|---|---|---|---|
+| 2010 | {2002, 2006} | 2 | **NO** — excluded |
+| 2014 | {2002, 2006, 2010} | 3 | yes (inner folds run at `K_inner = 2`, allowed) |
+| 2018 | {2002, 2006, 2010, 2014} | 4 | yes |
+| 2022 | {2002, 2006, 2010, 2014, 2018} | 5 | yes |
+
+**Definition.** `N_T1` = the number of **eligible** targets among the frozen
+candidate set `{2010, 2014, 2018, 2022}`, after applying the frozen historical-data
+inclusion criteria of §E.3 and the `K_outer ≥ 3` rule.
+
+> **`N_T1 = 3` under the current residual history** (eligible: `{2014, 2018, 2022}`;
+> 2010 excluded because `K_outer = 2`).
+>
+> `N_T1` becomes **4** if and only if Part 2 admits at least one pre-2002 residual
+> election under §E.3, which would raise the 2010 target to `K_outer ≥ 3`. That is
+> the *only* mechanism by which `N_T1` can change. The same eligibility set is
+> applied identically to CONTROL, A and B.
+>
+> **If `N_T1 < 3`: STOP.** The preregistered Tier-1 evidence base is deemed
+> insufficient for the challenger competition, and a new methodological decision
+> is required before implementation. **A two-election rule must not be invented.**
 
 **Tier 2 — full-pipeline hindcast (rolling origin).** Vote level, full frozen
 pipeline. Mirrors `docs/election_layer_v2.md` §5 and `scripts/seat_hindcasts`.
@@ -492,7 +549,7 @@ pipeline. Mirrors `docs/election_layer_v2.md` §5 and `scripts/seat_hindcasts`.
 | 2022 | 5 elections | 5 | 112, 84, 56, 28, 14, 7 | all 6 included |
 
 > **Frozen Tier-2 case set: 12 cases over 2 elections. No case is excluded by the
-> `K ≥ 3` rule.**
+> `K_outer ≥ 3` rule** (2018 has `K_outer = 4`, 2022 has `K_outer = 5`).
 
 **Tier 3 — seat and coalition level.** The same 12 cases as Tier 2, with
 geography baselines 2014→2018 and 2018→2022, through the identical geography +
@@ -500,9 +557,10 @@ exact mandate allocator. Metrics D3, D4, D5.
 
 > **Frozen Tier-3 case set as of this freeze: 12 cases over 2 elections
 > ({2018, 2022}), subject only to the Part-2 backward-extension investigation of
-> §E.3 and the conditional rule of §F.2/G5.**
+> §E.3 and the conditional coalition-Brier rule of §F.3 G5.**
 
-Total draw budget per model: (3 + 12 + 12) cases × 5 seeds × 20 000 draws.
+Total draw budget per model: (`N_T1` + 12 + 12) cases × 5 seeds × 20 000 draws
+(= (3 + 12 + 12) under the current residual history).
 
 ### E.3 Backward extension of the seat/coalition evidence — a Part-2 investigation, not a licence (§I item 7)
 
@@ -556,20 +614,47 @@ and the rejection is documented with the specific criterion that failed. A
 rejected election may not be admitted with a weakened criterion.
 
 The number of seat-evaluable elections that survives this process determines
-which branch of the frozen conditional rule in §F.2/G5 applies. **That rule is
+which branch of the frozen conditional coalition-Brier rule in §F.3 G5 applies.
+**That rule is
 fixed now, before the search, precisely so that the outcome of the search cannot
 select a favourable rule after the fact.**
 
 ### E.4 Two distinct leave-one-out loops — named to prevent confusion
 
-* **LOEO-FIT** — inside the training pool, for Challenger A's bandwidth only (§C). Never sees the target election. Requires `K ≥ 3`.
+* **LOEO-FIT** — inside the **outer** training pool, for Challenger A's bandwidth only (§C). Never sees the target election. Operates at `K_inner = K_outer − 1`, with **`K_inner ≥ 2`** permitted and **`K_inner = 1` prohibited**. It is the outer rule `K_outer ≥ 3` that guarantees `K_inner ≥ 2`.
 * **LOEO-EVAL** — over the *evaluation* set, used only by the robustness criterion G5: each evaluation election is dropped in turn and the headline metrics are recomputed. A stability check on the conclusion, not a model-fitting step.
+
+### E.6 What Part 2 may and may not determine (Amendment 1)
+
+Part 2 is a **data-feasibility investigation only**. It may determine which
+historical observations satisfy the frozen data-quality criteria of §E.3.
+
+**Part 2 may NOT change any of the following. All are frozen by this document:**
+
+* the Tier-1 candidate target set `{2010, 2014, 2018, 2022}`
+* the `K_outer` minimum (3)
+* the `K_inner` minimum (2)
+* Challenger A's `h` grid `{0.25, 0.50, 0.75, 1.00}`
+* any scoring metric (§D)
+* any numerical adoption threshold (§F.1)
+* the `N_T1 − 1` Tier-1 robustness rule (§F.3 G5)
+* the conditional coalition-Brier rule (§F.3 G5)
+* horizon weights (§F.3 G4b and the primary Tier-2 summary)
+* the seed policy or sample counts (§D0)
+* the Challenger A and Challenger B specifications (§C)
+
+**Data availability may change `N_T1` or `N_seat` only through the mechanical
+eligibility rules frozen above** — `K_outer ≥ 3` for Tier-1 targets (§E.2) and the
+seven admission requirements for seat-evaluable elections (§E.3). No discretionary
+judgement enters either count.
 
 ### E.5 Limitations — to be restated in every report produced under this preregistration
 
-1. The residual pool has at most **six** observations. Every covariance and
-   bandwidth quantity is estimated from ≤6 points in a 9-dimensional zero-sum
-   space of rank ≤5.
+1. The residual pool has at most **six** observations under the current history.
+   Every covariance and bandwidth quantity is estimated from ≤6 points in a
+   9-dimensional zero-sum space of rank ≤5, and at the smallest eligible outer
+   pool (`K_outer = 3`) from 3 points of rank ≤2, with inner LOEO-FIT folds at
+   `K_inner = 2` of rank 1 (§C).
 2. The coalition-threshold gate rests on **two** realized elections as of this
    freeze (possibly more after §E.3), and on 127 effectively distinct, strongly
    dependent binary events per election. It is a **decision rule, not a hypothesis
@@ -653,24 +738,50 @@ this short-horizon aggregate.
 The **primary Tier-2 summary keeps equal weighting over all six preregistered
 horizons**; primary weights are not changed on the basis of the current 2026 date.
 
-**G5 — robustness to individual elections (§I item 9).**
+**G5 — robustness to individual elections (§I item 9; Tier-1 clause replaced by
+Amendment 1).**
 
-*Tier-1 joint vote:*
-* The aggregate challenger improvement must survive **every** leave-one-evaluation-election-out recomputation **directionally** (challenger strictly better than CONTROL in each).
-* **At least 3 of the 4 preregistered Tier-1 held-out election cases must individually favour the challenger on the primary joint vote score.**
+*Tier-1 joint vote — general `N_T1 − 1` rule, declared before Part 2 so that
+historical-data availability cannot select a favourable robustness criterion
+afterwards.* Let `N_T1` be as defined in §E.2.
 
-> ⚠ **BLOCKING DISCREPANCY — flagged, not silently rewritten.** The `K ≥ 3` rule
-> frozen in §C/§E.2 excludes the 2010 target, so the frozen Tier-1 case set is
-> **3 elections `{2014, 2018, 2022}`, not 4**. The clause above therefore cannot
-> be applied as written. Per the reviewer's own instruction — *"If the actual
-> frozen Tier-1 case count differs, stop and flag rather than silently rewriting
-> this rule"* — **the numeric threshold in this clause is left exactly as the
-> reviewer wrote it and is NOT operative until the reviewer resolves it.** See
-> §J.2. No challenger implementation may begin until it is resolved.
+**A. Aggregate requirement (unchanged).** The challenger improves the frozen
+Tier-1 aggregate primary joint-vote energy score by **≥ 2.0 %** (this is G1).
+
+**B. Leave-one-target-out robustness.** For each of the `N_T1` eligible Tier-1
+targets: remove that target from the evaluation aggregate and recompute challenger
+versus CONTROL over the remaining eligible targets. Then
+
+* **every** leave-one-target-out relative improvement must be **> 0** — the
+  challenger must beat CONTROL directionally in **all** `N_T1` recomputations;
+  **and**
+* at least **`N_T1 − 1`** of the `N_T1` leave-one-target-out recomputations must
+  show at least **1.0 % relative improvement**.
+
+**C. Individual-election consistency.** At least **`N_T1 − 1`** of the `N_T1`
+eligible individual Tier-1 target elections must have a **lower** primary
+joint-vote energy score under the challenger than under CONTROL.
+
+Instantiations (both fixed now; neither is chosen after seeing data):
+
+| | `N_T1 = 3` (current) | `N_T1 = 4` (if Part 2 restores 2010) |
+|---|---|---|
+| B — all LOO aggregates favour challenger | all **3** | all **4** |
+| B — LOO aggregates improving ≥ 1 % | at least **2** of 3 | at least **3** of 4 |
+| C — individual elections favouring challenger | at least **2** of 3 | at least **3** of 4 |
+
+The `N_T1 = 4` instantiation reproduces the originally intended "3 of 4"
+robustness requirement exactly; the `N_T1 = 3` instantiation is defined by the
+same formula rather than by post-hoc discretion.
+
+**If `N_T1 < 3`: STOP.** The Tier-1 evidence base is deemed insufficient and a new
+methodological decision is required before implementation. **A two-election rule
+must not be invented.**
 
 *Coalition Brier — frozen conditional rule, declared before the §E.3 historical-data
 search so that data availability cannot select a favourable rule after the fact.*
-Let `N_elections` be the number of seat-evaluable elections admitted under §E.3.
+Let `N_elections` (also written `N_seat`) be the number of seat-evaluable
+elections admitted under §E.3. **This rule is unchanged by Amendment 1.**
 
 * **If `N_elections == 2`:**
   * aggregate coalition Brier must improve **≥ 2 %**; **and**
@@ -749,8 +860,10 @@ Every comparison holds these fixed, byte-for-byte, across CONTROL, A and B:
   forecast computed after the gate
 * Historical as-of construction, the 14-day consensus window, and the strict
   chronological pool rule
-* The frozen case sets of §E.2, including the `K ≥ 3` exclusion applied identically
-  to all three models
+* The frozen Tier-1 **candidate target set** `{2010, 2014, 2018, 2022}` (§E.2),
+  which may never expand, and the frozen Tier-2/Tier-3 case sets
+* The nested pool-size minima `K_outer ≥ 3` and `K_inner ≥ 2`, with `K_inner = 1`
+  prohibited, applied identically to all three models (§C, §E.2, §E.4)
 * The tactical-voting decision (rejected; no threshold behaviour is modelled)
 * Pollster treatment, deduplication, and house-effect handling
 * REST semantics (aggregate ineligible mass, never receives seats)
@@ -783,31 +896,102 @@ This preregistration does **not**:
 |---|---|---|
 | 1 | Tier roles | **Tier 1 = required improvement** on the primary joint vote ES; **Tier 2 = hard non-inferiority** on integrated metrics; coalition Brier a **separate required-improvement** criterion after the identical geography + exact allocator. **No compensation** of a Tier-2 degradation by a Tier-1 improvement. (§F.2) |
 | 2 | Tolerances | Frozen: improve ≥ **2.0 %** relative; non-inferiority ≤ **1.0 %** relative; coverage deviation may not grow by more than **3.0 pp**. Not to be retuned. (§F.1) |
-| 3 | A's grid and small-K rule | Grid `{0.25, 0.50, 0.75, 1.00}` retained; **`h = 0` not added** (CONTROL is the unsmoothed model). **The K = 2 fallback is removed.** A requires **`K ≥ 3`**; cases with `K < 3` are excluded from the adoption dataset, **identically for CONTROL and B**. Surviving cases enumerated in §E.2. (§C, §E.2) |
+| 3 | A's grid and small-K rule | Grid `{0.25, 0.50, 0.75, 1.00}` retained; **`h = 0` not added** (CONTROL is the unsmoothed model). **The K = 2 outer fallback is removed.** **Amendment 1 clarification:** outer evaluation eligibility requires **`K_outer ≥ 3`** (applied identically to CONTROL, A and B); inner LOEO-FIT folds may run at **`K_inner = 2`**, which is explicitly allowed and is not the removed fallback; **`K_inner = 1` is prohibited**, which is exactly why an outer `K_outer = 2` target is excluded. (§C, §E.2, §E.4) |
 | 4 | Monte Carlo design | **Five fixed seeds** `12345, 24680, 98765, 54321, 13579`; **N = 20 000 per seed per case per model**; per-seed scores reported with the five-seed mean and SD; **gate applied to the five-seed mean**; no seed selection or favourable pooling. G6 clarified: determinism is per (model, case, seed); different seeds need not match. (§D0, §F.3 G6) |
 | 5 | B's distribution | **Gaussian, frozen. Student-t rejected** for this competition; a heavy-tail challenger only in a future preregistered experiment. Covariance conventions (K vs K−1 / Bessel) written out explicitly and declared binding. (§C) |
 | 6 | Simplex transfer / λ | **Invariant downstream transformation** for every candidate; identical feasibility mapping for discrete and continuous models. λ diagnostics (fraction < 1, mean, p01/p05/p10, min, binding donor counts) are **mandatory records, never selection criteria**; **no clipping-frequency gate may be added after results**; extreme clipping in a passing challenger is reported for scientific review before promotion, never fixed by silently changing the transfer. (§D5, §G) |
 | 7 | Historical seat/geography evidence | The 2018/2022-only Tier-3 set is **not permanently fixed**. Part 2 must investigate backward extension to 2014 (2010 baseline) and 2010 (2006 baseline) under the explicit provenance/inclusion requirements declared in §E.3 **before** the search. The geography algorithm may not be altered to admit an older election; an election that cannot run the identical chronological path with authoritative inputs is rejected from Tier 2. (§E.3) |
 | 8 | Horizon weighting | **Equal weighting over all six preregistered horizons retained** for the primary Tier-2 summary; primary weights not changed on the basis of the current 2026 date. **Added:** a short-horizon operational **non-inferiority guard** on the aggregated 14-day and 28-day Tier-2 cases at the same 1.0 % tolerance (G4b). |
-| 9 | G5 robustness | Rewritten and frozen **before** the §E.3 data search. Tier-1: directional survival of every leave-one-election-out recomputation, plus the reviewer's individual-case threshold — **see the blocking discrepancy in §J.2**. Coalition Brier: the frozen `N_elections == 2` / `N_elections ≥ 3` conditional rule of §F.3 G5. |
+| 9 | G5 robustness | Frozen **before** the §E.3 data search. **Amendment 1** replaces the non-operative Tier-1 "3 of 4" threshold with the general **`N_T1 − 1`** rule of §F.3 G5: all `N_T1` leave-one-target-out aggregates must favour the challenger directionally, at least `N_T1 − 1` of them by ≥ 1.0 %, and at least `N_T1 − 1` individual targets must favour the challenger. At `N_T1 = 4` this reproduces the original "3 of 4" exactly; at `N_T1 = 3` it yields "2 of 3" by the same formula. `N_T1 < 3` ⇒ STOP. Coalition Brier: the `N_elections` (= `N_seat`) `== 2` / `≥ 3` conditional rule is **unchanged**. |
+| 11 | Nested-CV K ambiguity (Amendment 1) | Discovered **before** Part 2 and before any challenger implementation or score. `K_outer ≥ 3` governs evaluation eligibility; `K_inner ≥ 2` governs fitting inside the already-preregistered `h` selection; `K_inner = 1` prohibited. Tier-1 candidate targets frozen at `{2010, 2014, 2018, 2022}` and may never expand; `N_T1` is determined mechanically. (§C, §E.2, §E.6, §F.3 G5, §J.2) |
 | 10 | Stale audit file | Documented as a **provenance-maintenance caveat** in §0.2. It does not invalidate residual values. **Its repair is explicitly excluded from this preregistration and from any commit carrying it**; a separate maintenance change is recommended, which must prove the regenerated residual pool is unchanged. |
 
 ---
 
-## J. Freeze block
+## J. Freeze block and amendment history
 
-### J.1 Freeze record
+### J.1 Amendment 0 — superseded freeze record (preserved audit trail)
+
+The preregistration was first frozen as **Amendment 0**. That freeze is valid and
+is **not erased**; it is superseded only by Amendment 1 below.
 
 ```
-PREREGISTRATION STATUS: FROZEN
+PREREGISTRATION STATUS (superseded): FROZEN — AMENDMENT 0
 
 FREEZE TIMESTAMP (UTC): 2026-08-30T20:08:21Z
 FREEZE BASE COMMIT:     f4c169dcb25f907cac602bbc3b6c436dde193eaa
+FREEZE COMMIT:          ef5aaeba02b5a3d43334d5743381d219c2e80c71
+BODY SHA-256:           7222f9a27755b41a4689d639b46f6675808de42ca2a5186a953b9b17965ad1f0
+WHOLE-FILE SHA-256:     f8c68d75e220cbb203fe0d2ebdb7b35cf765ca7cdab62325f495dab015b197f8
+REVIEWER:               repository owner (decisions of 2026-08-30, applied in full at §I items 1–10)
+```
+
+Amendment 0 froze everything in §§A–I except one clause, which it explicitly
+recorded as **non-operative** rather than silently rewriting it: the Tier-1
+individual-case threshold in G5, written as *"at least 3 of the 4 preregistered
+Tier-1 held-out election cases"*, which had no referent once the `K ≥ 3` rule
+excluded the 2010 target and left 3 Tier-1 elections. Amendment 0 recorded three
+candidate readings and adopted none. **That is the ambiguity Amendment 1 resolves.**
+
+### J.2 Amendment 1 — rationale and scope
+
+**When it was made.** Before the Part-2 historical-data feasibility search, before
+any challenger implementation, before any challenger score, and before any 2026
+challenger forecast. Nothing empirical about challenger performance exists, so
+nothing empirical could have motivated it.
+
+**Why it was made.** Two items required resolution:
+
+1. **An explicit ambiguity.** The Amendment-0 Tier-1 G5 threshold was recorded as
+   non-operative and had to be given an operative form before any evaluation.
+2. **A nested-validation clarification.** Amendment 0's phrase "Challenger A
+   requires `K ≥ 3`" admitted an impossible reading: applied to *every* fit, it
+   would forbid the inner leave-one-out folds that A's own already-preregistered
+   `h`-selection procedure depends on (an eligible `K_outer = 3` target
+   necessarily produces `K_inner = 2` folds). Amendment 1 separates the outer
+   eligibility minimum from the inner fitting minimum so the preregistered
+   procedure is executable as written.
+
+**What it does and does not do.**
+
+* It **generalizes** the originally intended robustness requirement rather than
+  weakening or strengthening it after seeing performance. At `N_T1 = 4` the new
+  `N_T1 − 1` rule reproduces the original "3 of 4" **exactly**; at `N_T1 = 3` it
+  yields "2 of 3" from the same formula, with no post-hoc discretion.
+* It **fixes the Tier-1 candidate target set** at `{2010, 2014, 2018, 2022}` and
+  forbids it from expanding, so no target can be added after the data search
+  because its result is favourable.
+* It makes `N_T1` and `N_seat` **mechanically determined** by frozen eligibility
+  rules, and forbids Part 2 from changing any other rule (§E.6).
+* It **does not** alter the coalition-Brier conditional rule, the metrics, the
+  tolerances, the seed policy, the sample counts, the horizon weights, the `h`
+  grid, or the Challenger A/B specifications.
+* It **does not** touch the stale `contributing_polls_audit.csv` maintenance item
+  (§0.2, §I item 10), which remains separate and does not block Part 2.
+
+**Current instantiation.** Under the existing residual history `N_T1 = 3`
+(eligible: `{2014, 2018, 2022}`; 2010 excluded at `K_outer = 2`). If Part 2 admits
+a pre-2002 residual election under §E.3, 2010 reaches `K_outer ≥ 3`, `N_T1` becomes
+4, and the `N_T1 = 4` column of the §F.3 G5 table applies automatically with no
+further decision.
+
+### J.3 Amendment 1 — operative freeze record
+
+```
+PREREGISTRATION STATUS: FROZEN — AMENDMENT 1
+
+FREEZE TIMESTAMP (UTC): 2026-08-30T20:21:28Z
+AMENDMENT 0 COMMIT:     ef5aaeba02b5a3d43334d5743381d219c2e80c71  (superseded, §J.1)
+FREEZE BASE COMMIT:     ef5aaeba02b5a3d43334d5743381d219c2e80c71
 FREEZE COMMIT:          the commit that introduces this block on branch
                         diagnostic/election-noise-mixture (reported with the
                         amendment; it cannot be embedded in the file it hashes)
 BODY SHA-256:           recorded after the marker at the end of this file
-REVIEWER:               repository owner (decisions of 2026-08-30, applied in full at §I)
+WHOLE-FILE SHA-256:     recorded in the amendment commit message (it cannot be
+                        embedded in the file it covers)
+REVIEWER:               repository owner (Amendment-1 instruction of 2026-08-30)
+SCOPE:                  ambiguity resolution only; pre-data, pre-challenger
+OPEN CLAUSES:           none
 ```
 
 **BODY SHA-256** — the hash covers every byte of this document **strictly before
@@ -827,40 +1011,18 @@ print(hashlib.sha256(body).hexdigest())
 PY
 ```
 
-The whole-file SHA-256 of the frozen file, and the freeze commit hash, are
+The whole-file SHA-256 of the frozen file and the Amendment-1 commit hash are
 recorded in the amendment commit message.
 
-### J.2 Single clause held open by reviewer instruction
+### J.4 What may happen next
 
-One item could not be frozen without violating an explicit reviewer instruction,
-and is therefore reported rather than resolved:
-
-> **G5, Tier-1 individual-case threshold.**
-> The reviewer's rule reads: *"at least 3 of the 4 preregistered Tier-1 held-out
-> election cases must individually favour the challenger,"* with the standing
-> instruction *"If the actual frozen Tier-1 case count differs, stop and flag
-> rather than silently rewriting this rule."*
->
-> The `K ≥ 3` rule frozen under decision 3 excludes the 2010 target (pool
-> `{2002, 2006}`, K = 2). **The frozen Tier-1 case set is therefore 3 elections
-> `{2014, 2018, 2022}`, not 4**, and "3 of 4" has no referent.
->
-> The clause is left verbatim and **is not operative**. The reviewer must supply
-> the threshold for a 3-case Tier 1. Candidate readings are recorded here for
-> convenience and **none is adopted**:
-> (a) all 3 of 3 must individually favour the challenger — strictest, preserves
-> "no single election drives the result" most literally;
-> (b) at least 2 of 3 — preserves the 75 % ratio of "3 of 4" most closely
-> (2/3 ≈ 67 %, 3/3 = 100 %; neither matches exactly);
-> (c) restore the 2010 Tier-1 case by exempting Tier 1 from the `K ≥ 3` rule —
-> would contradict decision 3's "apply the SAME common-case restriction" and is
-> noted only for completeness.
->
-> **No challenger implementation may begin until this is resolved.** Everything
-> else in this document is frozen and may not be revised.
+Only the Part-2 historical-data feasibility search, under §E.3 and bounded by
+§E.6. Challenger implementation, challenger scoring, and any 2026 challenger
+forecast remain prohibited until Part 2 has determined `N_T1` and `N_seat` and the
+result has been reviewed.
 
 <!-- FREEZE-BLOCK-START -->
 All bytes above this marker line are covered by BODY SHA-256.
 
-BODY SHA-256: 7222f9a27755b41a4689d639b46f6675808de42ca2a5186a953b9b17965ad1f0
+BODY SHA-256: bac3ca06e52cc07fe74ca9e5aa785d94e30934db32193c7f948e95a49a6ae075
 <!-- FREEZE-BLOCK-END -->
