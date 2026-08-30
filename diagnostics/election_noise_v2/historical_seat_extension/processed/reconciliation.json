@@ -1,0 +1,73 @@
+{
+  "status": "RESEARCH ONLY",
+  "checks": {
+    "votes_2006": {
+      "constituencies": 29,
+      "constituency_valid_sum": 5551278,
+      "official_valid_total": 5551278,
+      "valid_total_difference": 0,
+      "per_party_difference": {
+        "M": 0,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 0,
+        "V": 0,
+        "MP": 0,
+        "SD": 0,
+        "REST": 0
+      },
+      "max_abs_party_difference": 0,
+      "exact": true
+    },
+    "votes_2010": {
+      "constituencies": 29,
+      "constituency_valid_sum": 5960408,
+      "official_valid_total": 5960408,
+      "valid_total_difference": 0,
+      "per_party_difference": {
+        "M": 0,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 0,
+        "V": 0,
+        "MP": 0,
+        "SD": 0,
+        "REST": 0
+      },
+      "max_abs_party_difference": 0,
+      "exact": true
+    },
+    "mandates_2010": {
+      "constituencies": 29,
+      "national_seat_vector": {
+        "M": 107,
+        "L": 24,
+        "C": 23,
+        "KD": 19,
+        "S": 112,
+        "V": 19,
+        "MP": 25,
+        "SD": 20
+      },
+      "total_seats": 349,
+      "sums_to_349": true
+    },
+    "mandates_2014": {
+      "constituencies": 29,
+      "national_seat_vector": {
+        "M": 84,
+        "L": 19,
+        "C": 22,
+        "KD": 16,
+        "S": 113,
+        "V": 21,
+        "MP": 25,
+        "SD": 49
+      },
+      "total_seats": 349,
+      "sums_to_349": true
+    }
+  }
+}

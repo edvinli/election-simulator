@@ -3,6 +3,11 @@
 References:
     - Regeringsformen (1974:152) 3 kap. 7 § (4% national threshold and 12% constituency exception)
     - Vallagen (2005:837) 14 kap. 1–5 §§ (Modified Sainte-Laguë, fixed seats, national entitlement, excess returns, adjustment seats)
+
+Two law versions are supported, selected explicitly via the ``law`` argument and
+never inferred from the wall clock; see :mod:`scripts.mandates.law`.
+``MandateLaw.POST_2018`` is the production default and its behaviour is
+unchanged by the availability of the historical version.
 """
 
 from __future__ import annotations
@@ -22,6 +27,7 @@ from .config import (
     TOTAL_FIXED_SEATS,
     TOTAL_RIKSDAG_SEATS,
 )
+from .law import MandateLaw
 from .tie_breaker import DeterministicLotteryTieBreaker, TieBreaker
 
 MAX_RETURN_ITERATIONS: int = 50
@@ -64,6 +70,9 @@ class SeatAllocation:
     final_seats_by_party: dict[str, int]
     total_seats: int
     event_log: tuple[SeatAllocationEvent, ...]
+    law: str = MandateLaw.POST_2018.value
+    #: Parties set aside as over-represented under PRE_2018 (empty under POST_2018).
+    set_aside_parties: tuple[str, ...] = ()
 
 
 def _normalize_first_divisor(divisor: Fraction | float | int) -> Fraction:
@@ -192,6 +201,63 @@ def _compute_national_entitlement(
     return entitlement, seq_counter
 
 
+def _pre_2018_national_entitlement(
+    national_votes: Mapping[str, int],
+    nationally_eligible_parties: Sequence[str],
+    fixed_seats_by_party: Mapping[str, int],
+    seats_to_distribute: int,
+    first_divisor: Fraction,
+    tie_breaker: TieBreaker,
+    seq_counter: int,
+    event_log: list[SeatAllocationEvent],
+    scenario_id: str,
+) -> tuple[dict[str, int], int, list[str]]:
+    """National entitlement under the law in force before SFS 2014:1384.
+
+    There is no mandate return. A party whose fixed constituency seats exceed its
+    nationwide proportional entitlement keeps those seats and is set aside,
+    together with them, from the remaining distribution, which is then carried
+    out among the other participating parties so that those are proportional
+    among themselves (3 kap. 8 § RF; 14 kap. 5 § vallagen in its pre-2018
+    wording; prop. 2013/14:48 §4.1.1).
+
+    The set-aside test is iterated because removing one over-represented party
+    can push another above its recomputed entitlement.
+
+    Returns:
+        (entitlement including set-aside parties at their fixed-seat count,
+         updated sequence counter, set-aside parties in deterministic order)
+    """
+    set_aside: list[str] = []
+    for _ in range(len(nationally_eligible_parties) + 1):
+        remaining = [p for p in nationally_eligible_parties if p not in set_aside]
+        aside_fixed = sum(fixed_seats_by_party[p] for p in set_aside)
+        entitlement, seq_counter = _compute_national_entitlement(
+            national_votes=national_votes,
+            eligible_parties=remaining,
+            seats_to_distribute=seats_to_distribute - aside_fixed,
+            first_divisor=first_divisor,
+            tie_breaker=tie_breaker,
+            seq_counter=seq_counter,
+            event_log=event_log,
+            phase_label="national_entitlement",
+            scenario_id=scenario_id,
+        )
+        newly_over = sorted(
+            p for p in remaining if fixed_seats_by_party[p] > entitlement[p]
+        )
+        if not newly_over:
+            full_entitlement: dict[str, int] = {p: fixed_seats_by_party[p] for p in set_aside}
+            full_entitlement.update(entitlement)
+            return full_entitlement, seq_counter, set_aside
+        set_aside.extend(newly_over)
+
+    raise RuntimeError(
+        "Pre-2018 set-aside iteration failed to converge: every nationally eligible "
+        "party was set aside as over-represented."
+    )
+
+
 def allocate_riksdag_seats(
     constituency_votes: Mapping[str, Mapping[str, int]],
     fixed_seats_by_constituency: Mapping[str, int],
@@ -202,10 +268,20 @@ def allocate_riksdag_seats(
     tie_breaker: TieBreaker | None = None,
     ineligible_parties: set[str] | Sequence[str] | None = None,
     scenario_id: str = "production",
+    law: MandateLaw = MandateLaw.POST_2018,
 ) -> SeatAllocation:
     """Execute complete certified Riksdag seat allocation according to Swedish electoral law.
 
     Law reference: Vallagen 14 kap. 1–5 §§.
+
+    Parameters:
+        law: Version of Vallagen 14 kap. to apply. ``POST_2018`` (default,
+            production) uses mandate return (14 kap. 4a–4c §§). ``PRE_2018``
+            uses the set-aside rule that governed the 2010 and 2014 elections.
+            The caller is responsible for passing the matching ``first_divisor``
+            (1.2 post-2018, 1.4 pre-2018); use
+            :func:`scripts.mandates.law.mandate_law_for_election_year` to obtain
+            a self-consistent pair. Never inferred from the current date.
     """
     f_div = _normalize_first_divisor(first_divisor)
     _validate_allocator_inputs(constituency_votes, fixed_seats_by_constituency, total_seats)
@@ -332,6 +408,7 @@ def allocate_riksdag_seats(
     iteration = 0
     seen_states: set[str] = set()
     national_entitlement: dict[str, int] = {p: 0 for p in nationally_eligible_parties}
+    set_aside_parties: list[str] = []
 
     while True:
         iteration += 1
@@ -345,6 +422,26 @@ def allocate_riksdag_seats(
             if not threshold_eligibility[p]
         )
         seats_to_distribute = total_seats - L
+
+        if law is MandateLaw.PRE_2018:
+            # Pre-SFS 2014:1384: no return. Over-represented parties keep their
+            # fixed seats and are set aside from the remaining distribution.
+            # ``active_fixed_alloc`` is therefore never modified.
+            national_entitlement, seq_counter, set_aside_parties = _pre_2018_national_entitlement(
+                national_votes=national_votes,
+                nationally_eligible_parties=nationally_eligible_parties,
+                fixed_seats_by_party={
+                    p: sum(active_fixed_alloc[c][p] for c in constituencies)
+                    for p in nationally_eligible_parties
+                },
+                seats_to_distribute=seats_to_distribute,
+                first_divisor=f_div,
+                tie_breaker=tb,
+                seq_counter=seq_counter,
+                event_log=event_log,
+                scenario_id=scenario_id,
+            )
+            break
 
         # Step 3A: Compute national entitlement E_p for qualifying parties
         national_entitlement, seq_counter = _compute_national_entitlement(
@@ -651,4 +748,6 @@ def allocate_riksdag_seats(
         final_seats_by_party=final_seats_by_party,
         total_seats=total_seats,
         event_log=tuple(event_log),
+        law=law.value,
+        set_aside_parties=tuple(set_aside_parties),
     )

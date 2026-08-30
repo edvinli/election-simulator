@@ -1,0 +1,883 @@
+{
+  "status": "RESEARCH ONLY",
+  "results": {
+    "2010": {
+      "law_config": {
+        "law": "PRE_2018",
+        "first_divisor": "7/5",
+        "statute": "Vallagen (2005:837) 14 kap. as in force before SFS 2014:1384 (first divisor 1.4; no mandate return; over-represented party keeps its fixed seats and is set aside from the adjustment distribution, 3 kap. 8 § RF)"
+      },
+      "correct_law": {
+        "certified_national": {
+          "M": 107,
+          "L": 24,
+          "C": 23,
+          "KD": 19,
+          "S": 112,
+          "V": 19,
+          "MP": 25,
+          "SD": 20
+        },
+        "produced_national": {
+          "M": 107,
+          "L": 24,
+          "C": 23,
+          "KD": 19,
+          "S": 112,
+          "V": 19,
+          "MP": 25,
+          "SD": 20
+        },
+        "national_difference": {
+          "M": 0,
+          "L": 0,
+          "C": 0,
+          "KD": 0,
+          "S": 0,
+          "V": 0,
+          "MP": 0,
+          "SD": 0
+        },
+        "national_exact_match": true,
+        "total_seats": 349,
+        "sums_to_349": true,
+        "constituency_mismatches": [],
+        "constituency_exact_match": true,
+        "detail": {
+          "seats_by_party": {
+            "M": 107,
+            "L": 24,
+            "C": 23,
+            "KD": 19,
+            "S": 112,
+            "V": 19,
+            "MP": 25,
+            "SD": 20
+          },
+          "per_constituency": {
+            "01": {
+              "M": 10,
+              "L": 3,
+              "C": 2,
+              "KD": 2,
+              "S": 6,
+              "V": 2,
+              "MP": 3,
+              "SD": 1
+            },
+            "02": {
+              "M": 15,
+              "L": 3,
+              "C": 2,
+              "KD": 3,
+              "S": 8,
+              "V": 2,
+              "MP": 3,
+              "SD": 2
+            },
+            "03": {
+              "M": 4,
+              "L": 1,
+              "C": 1,
+              "KD": 1,
+              "S": 3,
+              "V": 1,
+              "MP": 1,
+              "SD": 1
+            },
+            "04": {
+              "M": 3,
+              "L": 1,
+              "C": 1,
+              "KD": 0,
+              "S": 4,
+              "V": 0,
+              "MP": 1,
+              "SD": 1
+            },
+            "05": {
+              "M": 4,
+              "L": 1,
+              "C": 1,
+              "KD": 1,
+              "S": 5,
+              "V": 1,
+              "MP": 1,
+              "SD": 1
+            },
+            "06": {
+              "M": 3,
+              "L": 1,
+              "C": 1,
+              "KD": 2,
+              "S": 4,
+              "V": 0,
+              "MP": 1,
+              "SD": 1
+            },
+            "07": {
+              "M": 2,
+              "L": 0,
+              "C": 1,
+              "KD": 0,
+              "S": 3,
+              "V": 0,
+              "MP": 0,
+              "SD": 0
+            },
+            "08": {
+              "M": 3,
+              "L": 0,
+              "C": 1,
+              "KD": 1,
+              "S": 4,
+              "V": 0,
+              "MP": 0,
+              "SD": 0
+            },
+            "09": {
+              "M": 1,
+              "L": 0,
+              "C": 0,
+              "KD": 0,
+              "S": 1,
+              "V": 0,
+              "MP": 0,
+              "SD": 0
+            },
+            "10": {
+              "M": 2,
+              "L": 0,
+              "C": 0,
+              "KD": 0,
+              "S": 3,
+              "V": 0,
+              "MP": 0,
+              "SD": 1
+            },
+            "11": {
+              "M": 3,
+              "L": 1,
+              "C": 0,
+              "KD": 0,
+              "S": 3,
+              "V": 1,
+              "MP": 1,
+              "SD": 1
+            },
+            "12": {
+              "M": 4,
+              "L": 1,
+              "C": 0,
+              "KD": 0,
+              "S": 3,
+              "V": 0,
+              "MP": 1,
+              "SD": 1
+            },
+            "13": {
+              "M": 5,
+              "L": 1,
+              "C": 1,
+              "KD": 1,
+              "S": 3,
+              "V": 0,
+              "MP": 1,
+              "SD": 1
+            },
+            "14": {
+              "M": 4,
+              "L": 1,
+              "C": 1,
+              "KD": 1,
+              "S": 3,
+              "V": 0,
+              "MP": 1,
+              "SD": 1
+            },
+            "15": {
+              "M": 4,
+              "L": 1,
+              "C": 1,
+              "KD": 1,
+              "S": 3,
+              "V": 0,
+              "MP": 1,
+              "SD": 1
+            },
+            "16": {
+              "M": 5,
+              "L": 1,
+              "C": 1,
+              "KD": 1,
+              "S": 5,
+              "V": 2,
+              "MP": 2,
+              "SD": 1
+            },
+            "17": {
+              "M": 4,
+              "L": 1,
+              "C": 1,
+              "KD": 1,
+              "S": 3,
+              "V": 1,
+              "MP": 1,
+              "SD": 1
+            },
+            "18": {
+              "M": 3,
+              "L": 1,
+              "C": 1,
+              "KD": 1,
+              "S": 3,
+              "V": 1,
+              "MP": 1,
+              "SD": 1
+            },
+            "19": {
+              "M": 3,
+              "L": 0,
+              "C": 0,
+              "KD": 0,
+              "S": 3,
+              "V": 0,
+              "MP": 0,
+              "SD": 0
+            },
+            "20": {
+              "M": 3,
+              "L": 1,
+              "C": 1,
+              "KD": 1,
+              "S": 4,
+              "V": 0,
+              "MP": 0,
+              "SD": 0
+            },
+            "21": {
+              "M": 3,
+              "L": 1,
+              "C": 1,
+              "KD": 0,
+              "S": 5,
+              "V": 1,
+              "MP": 1,
+              "SD": 0
+            },
+            "22": {
+              "M": 3,
+              "L": 1,
+              "C": 0,
+              "KD": 1,
+              "S": 4,
+              "V": 1,
+              "MP": 1,
+              "SD": 1
+            },
+            "23": {
+              "M": 3,
+              "L": 1,
+              "C": 0,
+              "KD": 0,
+              "S": 4,
+              "V": 1,
+              "MP": 1,
+              "SD": 1
+            },
+            "24": {
+              "M": 3,
+              "L": 0,
+              "C": 1,
+              "KD": 0,
+              "S": 4,
+              "V": 1,
+              "MP": 1,
+              "SD": 1
+            },
+            "25": {
+              "M": 3,
+              "L": 1,
+              "C": 1,
+              "KD": 0,
+              "S": 4,
+              "V": 1,
+              "MP": 1,
+              "SD": 1
+            },
+            "26": {
+              "M": 2,
+              "L": 0,
+              "C": 1,
+              "KD": 0,
+              "S": 5,
+              "V": 1,
+              "MP": 0,
+              "SD": 0
+            },
+            "27": {
+              "M": 1,
+              "L": 0,
+              "C": 1,
+              "KD": 0,
+              "S": 2,
+              "V": 0,
+              "MP": 0,
+              "SD": 0
+            },
+            "28": {
+              "M": 2,
+              "L": 1,
+              "C": 1,
+              "KD": 1,
+              "S": 4,
+              "V": 1,
+              "MP": 1,
+              "SD": 0
+            },
+            "29": {
+              "M": 2,
+              "L": 0,
+              "C": 0,
+              "KD": 0,
+              "S": 6,
+              "V": 1,
+              "MP": 0,
+              "SD": 0
+            }
+          },
+          "national_entitlement": {
+            "M": 107,
+            "S": 112,
+            "C": 23,
+            "KD": 19,
+            "L": 24,
+            "MP": 25,
+            "SD": 20,
+            "V": 19
+          },
+          "initial_national_fixed": {
+            "M": 107,
+            "L": 17,
+            "C": 21,
+            "KD": 11,
+            "S": 112,
+            "V": 9,
+            "MP": 19,
+            "SD": 14
+          },
+          "national_adjustment_seats": {
+            "M": 0,
+            "L": 7,
+            "C": 2,
+            "KD": 8,
+            "S": 0,
+            "V": 10,
+            "MP": 6,
+            "SD": 6
+          },
+          "set_aside_parties": [
+            "M",
+            "S"
+          ],
+          "law": "PRE_2018",
+          "total_seats": 349
+        }
+      },
+      "wrong_law_contrast_post_2018": {
+        "produced_national": {
+          "M": 106,
+          "L": 25,
+          "C": 23,
+          "KD": 20,
+          "S": 109,
+          "V": 20,
+          "MP": 26,
+          "SD": 20
+        },
+        "national_difference": {
+          "M": -1,
+          "L": 1,
+          "C": 0,
+          "KD": 1,
+          "S": -3,
+          "V": 1,
+          "MP": 1,
+          "SD": 0
+        },
+        "national_exact_match": false,
+        "total_absolute_seat_error": 8
+      }
+    },
+    "2014": {
+      "law_config": {
+        "law": "PRE_2018",
+        "first_divisor": "7/5",
+        "statute": "Vallagen (2005:837) 14 kap. as in force before SFS 2014:1384 (first divisor 1.4; no mandate return; over-represented party keeps its fixed seats and is set aside from the adjustment distribution, 3 kap. 8 § RF)"
+      },
+      "correct_law": {
+        "certified_national": {
+          "M": 84,
+          "L": 19,
+          "C": 22,
+          "KD": 16,
+          "S": 113,
+          "V": 21,
+          "MP": 25,
+          "SD": 49
+        },
+        "produced_national": {
+          "M": 84,
+          "L": 19,
+          "C": 22,
+          "KD": 16,
+          "S": 113,
+          "V": 21,
+          "MP": 25,
+          "SD": 49
+        },
+        "national_difference": {
+          "M": 0,
+          "L": 0,
+          "C": 0,
+          "KD": 0,
+          "S": 0,
+          "V": 0,
+          "MP": 0,
+          "SD": 0
+        },
+        "national_exact_match": true,
+        "total_seats": 349,
+        "sums_to_349": true,
+        "constituency_mismatches": [],
+        "constituency_exact_match": true,
+        "detail": {
+          "seats_by_party": {
+            "M": 84,
+            "L": 19,
+            "C": 22,
+            "KD": 16,
+            "S": 113,
+            "V": 21,
+            "MP": 25,
+            "SD": 49
+          },
+          "per_constituency": {
+            "01": {
+              "M": 9,
+              "L": 3,
+              "C": 2,
+              "KD": 2,
+              "S": 7,
+              "V": 3,
+              "MP": 4,
+              "SD": 2
+            },
+            "02": {
+              "M": 13,
+              "L": 3,
+              "C": 2,
+              "KD": 3,
+              "S": 9,
+              "V": 2,
+              "MP": 3,
+              "SD": 4
+            },
+            "03": {
+              "M": 3,
+              "L": 1,
+              "C": 1,
+              "KD": 1,
+              "S": 3,
+              "V": 1,
+              "MP": 1,
+              "SD": 1
+            },
+            "04": {
+              "M": 3,
+              "L": 0,
+              "C": 0,
+              "KD": 0,
+              "S": 4,
+              "V": 1,
+              "MP": 1,
+              "SD": 2
+            },
+            "05": {
+              "M": 3,
+              "L": 1,
+              "C": 1,
+              "KD": 1,
+              "S": 5,
+              "V": 1,
+              "MP": 1,
+              "SD": 2
+            },
+            "06": {
+              "M": 3,
+              "L": 1,
+              "C": 1,
+              "KD": 1,
+              "S": 4,
+              "V": 0,
+              "MP": 1,
+              "SD": 2
+            },
+            "07": {
+              "M": 2,
+              "L": 0,
+              "C": 1,
+              "KD": 0,
+              "S": 2,
+              "V": 0,
+              "MP": 0,
+              "SD": 1
+            },
+            "08": {
+              "M": 2,
+              "L": 0,
+              "C": 1,
+              "KD": 0,
+              "S": 3,
+              "V": 0,
+              "MP": 0,
+              "SD": 2
+            },
+            "09": {
+              "M": 1,
+              "L": 0,
+              "C": 0,
+              "KD": 0,
+              "S": 1,
+              "V": 0,
+              "MP": 0,
+              "SD": 0
+            },
+            "10": {
+              "M": 1,
+              "L": 0,
+              "C": 0,
+              "KD": 0,
+              "S": 3,
+              "V": 0,
+              "MP": 0,
+              "SD": 1
+            },
+            "11": {
+              "M": 3,
+              "L": 1,
+              "C": 0,
+              "KD": 0,
+              "S": 3,
+              "V": 1,
+              "MP": 1,
+              "SD": 2
+            },
+            "12": {
+              "M": 3,
+              "L": 1,
+              "C": 0,
+              "KD": 0,
+              "S": 4,
+              "V": 0,
+              "MP": 1,
+              "SD": 2
+            },
+            "13": {
+              "M": 4,
+              "L": 1,
+              "C": 1,
+              "KD": 1,
+              "S": 3,
+              "V": 0,
+              "MP": 1,
+              "SD": 2
+            },
+            "14": {
+              "M": 3,
+              "L": 1,
+              "C": 1,
+              "KD": 1,
+              "S": 3,
+              "V": 0,
+              "MP": 1,
+              "SD": 3
+            },
+            "15": {
+              "M": 3,
+              "L": 1,
+              "C": 1,
+              "KD": 1,
+              "S": 3,
+              "V": 0,
+              "MP": 1,
+              "SD": 2
+            },
+            "16": {
+              "M": 4,
+              "L": 1,
+              "C": 1,
+              "KD": 1,
+              "S": 4,
+              "V": 2,
+              "MP": 2,
+              "SD": 2
+            },
+            "17": {
+              "M": 3,
+              "L": 1,
+              "C": 1,
+              "KD": 1,
+              "S": 3,
+              "V": 1,
+              "MP": 1,
+              "SD": 2
+            },
+            "18": {
+              "M": 2,
+              "L": 1,
+              "C": 1,
+              "KD": 1,
+              "S": 4,
+              "V": 1,
+              "MP": 1,
+              "SD": 2
+            },
+            "19": {
+              "M": 2,
+              "L": 0,
+              "C": 0,
+              "KD": 0,
+              "S": 3,
+              "V": 0,
+              "MP": 0,
+              "SD": 1
+            },
+            "20": {
+              "M": 2,
+              "L": 0,
+              "C": 1,
+              "KD": 1,
+              "S": 4,
+              "V": 0,
+              "MP": 0,
+              "SD": 2
+            },
+            "21": {
+              "M": 2,
+              "L": 0,
+              "C": 1,
+              "KD": 0,
+              "S": 5,
+              "V": 1,
+              "MP": 1,
+              "SD": 1
+            },
+            "22": {
+              "M": 2,
+              "L": 1,
+              "C": 0,
+              "KD": 1,
+              "S": 4,
+              "V": 1,
+              "MP": 1,
+              "SD": 2
+            },
+            "23": {
+              "M": 2,
+              "L": 1,
+              "C": 0,
+              "KD": 0,
+              "S": 4,
+              "V": 1,
+              "MP": 0,
+              "SD": 2
+            },
+            "24": {
+              "M": 2,
+              "L": 0,
+              "C": 1,
+              "KD": 0,
+              "S": 4,
+              "V": 1,
+              "MP": 1,
+              "SD": 2
+            },
+            "25": {
+              "M": 2,
+              "L": 0,
+              "C": 1,
+              "KD": 0,
+              "S": 4,
+              "V": 1,
+              "MP": 1,
+              "SD": 2
+            },
+            "26": {
+              "M": 2,
+              "L": 0,
+              "C": 1,
+              "KD": 0,
+              "S": 5,
+              "V": 1,
+              "MP": 0,
+              "SD": 1
+            },
+            "27": {
+              "M": 1,
+              "L": 0,
+              "C": 1,
+              "KD": 0,
+              "S": 2,
+              "V": 0,
+              "MP": 0,
+              "SD": 0
+            },
+            "28": {
+              "M": 1,
+              "L": 0,
+              "C": 1,
+              "KD": 0,
+              "S": 5,
+              "V": 1,
+              "MP": 1,
+              "SD": 1
+            },
+            "29": {
+              "M": 1,
+              "L": 0,
+              "C": 0,
+              "KD": 0,
+              "S": 5,
+              "V": 1,
+              "MP": 0,
+              "SD": 1
+            }
+          },
+          "national_entitlement": {
+            "S": 113,
+            "SD": 49,
+            "C": 22,
+            "KD": 16,
+            "L": 19,
+            "M": 84,
+            "MP": 25,
+            "V": 21
+          },
+          "initial_national_fixed": {
+            "M": 84,
+            "L": 10,
+            "C": 21,
+            "KD": 7,
+            "S": 113,
+            "V": 10,
+            "MP": 16,
+            "SD": 49
+          },
+          "national_adjustment_seats": {
+            "M": 0,
+            "L": 9,
+            "C": 1,
+            "KD": 9,
+            "S": 0,
+            "V": 11,
+            "MP": 9,
+            "SD": 0
+          },
+          "set_aside_parties": [
+            "S",
+            "SD"
+          ],
+          "law": "PRE_2018",
+          "total_seats": 349
+        }
+      },
+      "wrong_law_contrast_post_2018": {
+        "produced_national": {
+          "M": 85,
+          "L": 20,
+          "C": 22,
+          "KD": 17,
+          "S": 112,
+          "V": 21,
+          "MP": 25,
+          "SD": 47
+        },
+        "national_difference": {
+          "M": 1,
+          "L": 1,
+          "C": 0,
+          "KD": 1,
+          "S": -1,
+          "V": 0,
+          "MP": 0,
+          "SD": -2
+        },
+        "national_exact_match": false,
+        "total_absolute_seat_error": 6
+      }
+    },
+    "2018": {
+      "law_config": {
+        "law": "POST_2018",
+        "first_divisor": "6/5"
+      },
+      "invoked": "allocate_riksdag_seats(votes, fixed)  # no law kwarg -> production default",
+      "produced_national": {
+        "M": 70,
+        "L": 20,
+        "C": 31,
+        "KD": 22,
+        "S": 100,
+        "V": 28,
+        "MP": 16,
+        "SD": 62
+      },
+      "certified_national": {
+        "M": 70,
+        "L": 20,
+        "C": 31,
+        "KD": 22,
+        "S": 100,
+        "V": 28,
+        "MP": 16,
+        "SD": 62
+      },
+      "national_exact_match": true,
+      "constituency_exact_match": true,
+      "set_aside_parties": [],
+      "law_recorded": "POST_2018"
+    },
+    "2022": {
+      "law_config": {
+        "law": "POST_2018",
+        "first_divisor": "6/5"
+      },
+      "invoked": "allocate_riksdag_seats(votes, fixed)  # no law kwarg -> production default",
+      "produced_national": {
+        "M": 68,
+        "L": 16,
+        "C": 24,
+        "KD": 19,
+        "S": 107,
+        "V": 24,
+        "MP": 18,
+        "SD": 73
+      },
+      "certified_national": {
+        "M": 68,
+        "L": 16,
+        "C": 24,
+        "KD": 19,
+        "S": 107,
+        "V": 24,
+        "MP": 18,
+        "SD": 73
+      },
+      "national_exact_match": true,
+      "constituency_exact_match": true,
+      "set_aside_parties": [],
+      "law_recorded": "POST_2018"
+    }
+  }
+}

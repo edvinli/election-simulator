@@ -1,0 +1,465 @@
+{
+  "status": "RESEARCH ONLY",
+  "chains": [
+    {
+      "baseline_year": 2006,
+      "target_year": 2010,
+      "mode": "chronological",
+      "law": "PRE_2018",
+      "first_divisor": "7/5",
+      "constituency_share_mae": 0.006770350100967667,
+      "constituency_share_max_abs_error": 0.04682662896269041,
+      "party_share_mae": {
+        "M": 0.01203649952873586,
+        "L": 0.003988027866596777,
+        "C": 0.008289768896238768,
+        "KD": 0.004308366766387128,
+        "S": 0.013284143341502873,
+        "V": 0.004121485106116638,
+        "MP": 0.003887888252949851,
+        "SD": 0.00781567461581471,
+        "REST": 0.0032012965343664016
+      },
+      "national_share_max_error": 1.2273883304159128e-07,
+      "national_votes_reconciliation_diff": 0,
+      "ipf_iterations": 10,
+      "projected_seats": {
+        "M": 108,
+        "L": 25,
+        "C": 23,
+        "KD": 19,
+        "S": 108,
+        "V": 20,
+        "MP": 26,
+        "SD": 20
+      },
+      "certified_seats": {
+        "M": 107,
+        "L": 24,
+        "C": 23,
+        "KD": 19,
+        "S": 112,
+        "V": 19,
+        "MP": 25,
+        "SD": 20
+      },
+      "seat_differences": {
+        "M": 1,
+        "L": 1,
+        "C": 0,
+        "KD": 0,
+        "S": -4,
+        "V": 1,
+        "MP": 1,
+        "SD": 0
+      },
+      "total_absolute_seat_error": 8,
+      "exact_seat_match": false,
+      "set_aside_parties": [
+        "M",
+        "S"
+      ]
+    },
+    {
+      "baseline_year": 2006,
+      "target_year": 2010,
+      "mode": "oracle",
+      "law": "PRE_2018",
+      "first_divisor": "7/5",
+      "constituency_share_mae": 0.006847924144347747,
+      "constituency_share_max_abs_error": 0.045871370962464963,
+      "party_share_mae": {
+        "M": 0.01260293257811236,
+        "L": 0.004002753252475933,
+        "C": 0.008364570264568987,
+        "KD": 0.004336051870285588,
+        "S": 0.01328197376690304,
+        "V": 0.0041055649106123224,
+        "MP": 0.003912087588291512,
+        "SD": 0.00782740360349695,
+        "REST": 0.0031979794643830373
+      },
+      "national_share_max_error": 0.0,
+      "national_votes_reconciliation_diff": 0,
+      "ipf_iterations": 10,
+      "projected_seats": {
+        "M": 107,
+        "L": 25,
+        "C": 23,
+        "KD": 19,
+        "S": 109,
+        "V": 20,
+        "MP": 26,
+        "SD": 20
+      },
+      "certified_seats": {
+        "M": 107,
+        "L": 24,
+        "C": 23,
+        "KD": 19,
+        "S": 112,
+        "V": 19,
+        "MP": 25,
+        "SD": 20
+      },
+      "seat_differences": {
+        "M": 0,
+        "L": 1,
+        "C": 0,
+        "KD": 0,
+        "S": -3,
+        "V": 1,
+        "MP": 1,
+        "SD": 0
+      },
+      "total_absolute_seat_error": 6,
+      "exact_seat_match": false,
+      "set_aside_parties": [
+        "M",
+        "S"
+      ]
+    },
+    {
+      "baseline_year": 2010,
+      "target_year": 2014,
+      "mode": "chronological",
+      "law": "PRE_2018",
+      "first_divisor": "7/5",
+      "constituency_share_mae": 0.006278561586601331,
+      "constituency_share_max_abs_error": 0.03304328508729218,
+      "party_share_mae": {
+        "M": 0.005262215388186251,
+        "L": 0.0041948520901775475,
+        "C": 0.004319893422269878,
+        "KD": 0.0019028355403392886,
+        "S": 0.012069807572750512,
+        "V": 0.0038957721027672327,
+        "MP": 0.004515830932383121,
+        "SD": 0.013316894032059195,
+        "REST": 0.007028953198478952
+      },
+      "national_share_max_error": 1.0780083587597078e-07,
+      "national_votes_reconciliation_diff": 0,
+      "ipf_iterations": 10,
+      "projected_seats": {
+        "M": 83,
+        "L": 19,
+        "C": 22,
+        "KD": 16,
+        "S": 114,
+        "V": 20,
+        "MP": 25,
+        "SD": 50
+      },
+      "certified_seats": {
+        "M": 84,
+        "L": 19,
+        "C": 22,
+        "KD": 16,
+        "S": 113,
+        "V": 21,
+        "MP": 25,
+        "SD": 49
+      },
+      "seat_differences": {
+        "M": -1,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 1,
+        "V": -1,
+        "MP": 0,
+        "SD": 1
+      },
+      "total_absolute_seat_error": 4,
+      "exact_seat_match": false,
+      "set_aside_parties": [
+        "S",
+        "SD"
+      ]
+    },
+    {
+      "baseline_year": 2010,
+      "target_year": 2014,
+      "mode": "oracle",
+      "law": "PRE_2018",
+      "first_divisor": "7/5",
+      "constituency_share_mae": 0.0062764842833556095,
+      "constituency_share_max_abs_error": 0.0333551085129786,
+      "party_share_mae": {
+        "M": 0.005258843270802397,
+        "L": 0.004111090508773664,
+        "C": 0.004308211230829156,
+        "KD": 0.0019068104197245102,
+        "S": 0.01222046362575484,
+        "V": 0.003885086469593399,
+        "MP": 0.004467178952636529,
+        "SD": 0.013322063380408785,
+        "REST": 0.0070086106916772035
+      },
+      "national_share_max_error": 0.0,
+      "national_votes_reconciliation_diff": 0,
+      "ipf_iterations": 10,
+      "projected_seats": {
+        "M": 83,
+        "L": 19,
+        "C": 22,
+        "KD": 16,
+        "S": 114,
+        "V": 20,
+        "MP": 25,
+        "SD": 50
+      },
+      "certified_seats": {
+        "M": 84,
+        "L": 19,
+        "C": 22,
+        "KD": 16,
+        "S": 113,
+        "V": 21,
+        "MP": 25,
+        "SD": 49
+      },
+      "seat_differences": {
+        "M": -1,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 1,
+        "V": -1,
+        "MP": 0,
+        "SD": 1
+      },
+      "total_absolute_seat_error": 4,
+      "exact_seat_match": false,
+      "set_aside_parties": [
+        "S",
+        "SD"
+      ]
+    },
+    {
+      "baseline_year": 2014,
+      "target_year": 2018,
+      "mode": "chronological",
+      "law": "POST_2018",
+      "first_divisor": "6/5",
+      "constituency_share_mae": 0.006485181948867014,
+      "constituency_share_max_abs_error": 0.03114212731168159,
+      "party_share_mae": {
+        "M": 0.01112739505754963,
+        "L": 0.002295335464553098,
+        "C": 0.00974036931298826,
+        "KD": 0.007249961619925536,
+        "S": 0.008870860443731712,
+        "V": 0.005413857305829182,
+        "MP": 0.002100824030842984,
+        "SD": 0.008238755860038183,
+        "REST": 0.003329278444344538
+      },
+      "national_share_max_error": 8.709328342890177e-08,
+      "national_votes_reconciliation_diff": 0,
+      "ipf_iterations": 10,
+      "projected_seats": {
+        "M": 70,
+        "L": 20,
+        "C": 31,
+        "KD": 22,
+        "S": 100,
+        "V": 28,
+        "MP": 16,
+        "SD": 62
+      },
+      "certified_seats": {
+        "M": 70,
+        "L": 20,
+        "C": 31,
+        "KD": 22,
+        "S": 100,
+        "V": 28,
+        "MP": 16,
+        "SD": 62
+      },
+      "seat_differences": {
+        "M": 0,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 0,
+        "V": 0,
+        "MP": 0,
+        "SD": 0
+      },
+      "total_absolute_seat_error": 0,
+      "exact_seat_match": true,
+      "set_aside_parties": []
+    },
+    {
+      "baseline_year": 2014,
+      "target_year": 2018,
+      "mode": "oracle",
+      "law": "POST_2018",
+      "first_divisor": "6/5",
+      "constituency_share_mae": 0.006562647439562944,
+      "constituency_share_max_abs_error": 0.03057718551818256,
+      "party_share_mae": {
+        "M": 0.011486524830833636,
+        "L": 0.002351863118854137,
+        "C": 0.009822938468431693,
+        "KD": 0.007270843486754369,
+        "S": 0.009041503751786905,
+        "V": 0.0053762268028256606,
+        "MP": 0.0020836078563244813,
+        "SD": 0.008277700782094787,
+        "REST": 0.003352617858160817
+      },
+      "national_share_max_error": 0.0,
+      "national_votes_reconciliation_diff": 0,
+      "ipf_iterations": 10,
+      "projected_seats": {
+        "M": 70,
+        "L": 20,
+        "C": 31,
+        "KD": 22,
+        "S": 100,
+        "V": 28,
+        "MP": 16,
+        "SD": 62
+      },
+      "certified_seats": {
+        "M": 70,
+        "L": 20,
+        "C": 31,
+        "KD": 22,
+        "S": 100,
+        "V": 28,
+        "MP": 16,
+        "SD": 62
+      },
+      "seat_differences": {
+        "M": 0,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 0,
+        "V": 0,
+        "MP": 0,
+        "SD": 0
+      },
+      "total_absolute_seat_error": 0,
+      "exact_seat_match": true,
+      "set_aside_parties": []
+    },
+    {
+      "baseline_year": 2018,
+      "target_year": 2022,
+      "mode": "chronological",
+      "law": "POST_2018",
+      "first_divisor": "6/5",
+      "constituency_share_mae": 0.006650850435601411,
+      "constituency_share_max_abs_error": 0.03265380396635642,
+      "party_share_mae": {
+        "M": 0.009299056146568237,
+        "L": 0.0022623727646595973,
+        "C": 0.00628246585154466,
+        "KD": 0.005749782585011019,
+        "S": 0.013013260075596457,
+        "V": 0.006659115391723474,
+        "MP": 0.0037895708023579235,
+        "SD": 0.010613809637513403,
+        "REST": 0.002188220665437928
+      },
+      "national_share_max_error": 6.918028189195624e-08,
+      "national_votes_reconciliation_diff": 0,
+      "ipf_iterations": 9,
+      "projected_seats": {
+        "M": 68,
+        "L": 16,
+        "C": 24,
+        "KD": 19,
+        "S": 107,
+        "V": 24,
+        "MP": 18,
+        "SD": 73
+      },
+      "certified_seats": {
+        "M": 68,
+        "L": 16,
+        "C": 24,
+        "KD": 19,
+        "S": 107,
+        "V": 24,
+        "MP": 18,
+        "SD": 73
+      },
+      "seat_differences": {
+        "M": 0,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 0,
+        "V": 0,
+        "MP": 0,
+        "SD": 0
+      },
+      "total_absolute_seat_error": 0,
+      "exact_seat_match": true,
+      "set_aside_parties": []
+    },
+    {
+      "baseline_year": 2018,
+      "target_year": 2022,
+      "mode": "oracle",
+      "law": "POST_2018",
+      "first_divisor": "6/5",
+      "constituency_share_mae": 0.006698870845743012,
+      "constituency_share_max_abs_error": 0.032534041500689975,
+      "party_share_mae": {
+        "M": 0.009405163241390933,
+        "L": 0.002261798248676618,
+        "C": 0.006271339870511006,
+        "KD": 0.005775816492593204,
+        "S": 0.013256987413584616,
+        "V": 0.006690121109635229,
+        "MP": 0.0037852154336147836,
+        "SD": 0.010656584184937996,
+        "REST": 0.0021868116167427266
+      },
+      "national_share_max_error": 0.0,
+      "national_votes_reconciliation_diff": 0,
+      "ipf_iterations": 9,
+      "projected_seats": {
+        "M": 68,
+        "L": 16,
+        "C": 24,
+        "KD": 19,
+        "S": 107,
+        "V": 24,
+        "MP": 18,
+        "SD": 73
+      },
+      "certified_seats": {
+        "M": 68,
+        "L": 16,
+        "C": 24,
+        "KD": 19,
+        "S": 107,
+        "V": 24,
+        "MP": 18,
+        "SD": 73
+      },
+      "seat_differences": {
+        "M": 0,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 0,
+        "V": 0,
+        "MP": 0,
+        "SD": 0
+      },
+      "total_absolute_seat_error": 0,
+      "exact_seat_match": true,
+      "set_aside_parties": []
+    }
+  ]
+}

@@ -1,0 +1,465 @@
+election_year,constituency_code,constituency_name,party,total_seats
+2010,01,Stockholms kommun,M,10
+2010,01,Stockholms kommun,L,3
+2010,01,Stockholms kommun,C,2
+2010,01,Stockholms kommun,KD,2
+2010,01,Stockholms kommun,S,6
+2010,01,Stockholms kommun,V,2
+2010,01,Stockholms kommun,MP,3
+2010,01,Stockholms kommun,SD,1
+2010,02,Stockholms län,M,15
+2010,02,Stockholms län,L,3
+2010,02,Stockholms län,C,2
+2010,02,Stockholms län,KD,3
+2010,02,Stockholms län,S,8
+2010,02,Stockholms län,V,2
+2010,02,Stockholms län,MP,3
+2010,02,Stockholms län,SD,2
+2010,03,Uppsala län,M,4
+2010,03,Uppsala län,L,1
+2010,03,Uppsala län,C,1
+2010,03,Uppsala län,KD,1
+2010,03,Uppsala län,S,3
+2010,03,Uppsala län,V,1
+2010,03,Uppsala län,MP,1
+2010,03,Uppsala län,SD,1
+2010,04,Södermanlands län,M,3
+2010,04,Södermanlands län,L,1
+2010,04,Södermanlands län,C,1
+2010,04,Södermanlands län,KD,0
+2010,04,Södermanlands län,S,4
+2010,04,Södermanlands län,V,0
+2010,04,Södermanlands län,MP,1
+2010,04,Södermanlands län,SD,1
+2010,05,Östergötlands län,M,4
+2010,05,Östergötlands län,L,1
+2010,05,Östergötlands län,C,1
+2010,05,Östergötlands län,KD,1
+2010,05,Östergötlands län,S,5
+2010,05,Östergötlands län,V,1
+2010,05,Östergötlands län,MP,1
+2010,05,Östergötlands län,SD,1
+2010,06,Jönköpings län,M,3
+2010,06,Jönköpings län,L,1
+2010,06,Jönköpings län,C,1
+2010,06,Jönköpings län,KD,2
+2010,06,Jönköpings län,S,4
+2010,06,Jönköpings län,V,0
+2010,06,Jönköpings län,MP,1
+2010,06,Jönköpings län,SD,1
+2010,07,Kronobergs län,M,2
+2010,07,Kronobergs län,L,0
+2010,07,Kronobergs län,C,1
+2010,07,Kronobergs län,KD,0
+2010,07,Kronobergs län,S,3
+2010,07,Kronobergs län,V,0
+2010,07,Kronobergs län,MP,0
+2010,07,Kronobergs län,SD,0
+2010,08,Kalmar län,M,3
+2010,08,Kalmar län,L,0
+2010,08,Kalmar län,C,1
+2010,08,Kalmar län,KD,1
+2010,08,Kalmar län,S,4
+2010,08,Kalmar län,V,0
+2010,08,Kalmar län,MP,0
+2010,08,Kalmar län,SD,0
+2010,09,Gotlands län,M,1
+2010,09,Gotlands län,L,0
+2010,09,Gotlands län,C,0
+2010,09,Gotlands län,KD,0
+2010,09,Gotlands län,S,1
+2010,09,Gotlands län,V,0
+2010,09,Gotlands län,MP,0
+2010,09,Gotlands län,SD,0
+2010,10,Blekinge län,M,2
+2010,10,Blekinge län,L,0
+2010,10,Blekinge län,C,0
+2010,10,Blekinge län,KD,0
+2010,10,Blekinge län,S,3
+2010,10,Blekinge län,V,0
+2010,10,Blekinge län,MP,0
+2010,10,Blekinge län,SD,1
+2010,11,Malmö kommun,M,3
+2010,11,Malmö kommun,L,1
+2010,11,Malmö kommun,C,0
+2010,11,Malmö kommun,KD,0
+2010,11,Malmö kommun,S,3
+2010,11,Malmö kommun,V,1
+2010,11,Malmö kommun,MP,1
+2010,11,Malmö kommun,SD,1
+2010,12,Skåne läns västra,M,4
+2010,12,Skåne läns västra,L,1
+2010,12,Skåne läns västra,C,0
+2010,12,Skåne läns västra,KD,0
+2010,12,Skåne läns västra,S,3
+2010,12,Skåne läns västra,V,0
+2010,12,Skåne läns västra,MP,1
+2010,12,Skåne läns västra,SD,1
+2010,13,Skåne läns södra,M,5
+2010,13,Skåne läns södra,L,1
+2010,13,Skåne läns södra,C,1
+2010,13,Skåne läns södra,KD,1
+2010,13,Skåne läns södra,S,3
+2010,13,Skåne läns södra,V,0
+2010,13,Skåne läns södra,MP,1
+2010,13,Skåne läns södra,SD,1
+2010,14,Skåne läns norra och östra,M,4
+2010,14,Skåne läns norra och östra,L,1
+2010,14,Skåne läns norra och östra,C,1
+2010,14,Skåne läns norra och östra,KD,1
+2010,14,Skåne läns norra och östra,S,3
+2010,14,Skåne läns norra och östra,V,0
+2010,14,Skåne läns norra och östra,MP,1
+2010,14,Skåne läns norra och östra,SD,1
+2010,15,Hallands län,M,4
+2010,15,Hallands län,L,1
+2010,15,Hallands län,C,1
+2010,15,Hallands län,KD,1
+2010,15,Hallands län,S,3
+2010,15,Hallands län,V,0
+2010,15,Hallands län,MP,1
+2010,15,Hallands län,SD,1
+2010,16,Göteborgs kommun,M,5
+2010,16,Göteborgs kommun,L,1
+2010,16,Göteborgs kommun,C,1
+2010,16,Göteborgs kommun,KD,1
+2010,16,Göteborgs kommun,S,5
+2010,16,Göteborgs kommun,V,2
+2010,16,Göteborgs kommun,MP,2
+2010,16,Göteborgs kommun,SD,1
+2010,17,Västra Götalands läns västra,M,4
+2010,17,Västra Götalands läns västra,L,1
+2010,17,Västra Götalands läns västra,C,1
+2010,17,Västra Götalands läns västra,KD,1
+2010,17,Västra Götalands läns västra,S,3
+2010,17,Västra Götalands läns västra,V,1
+2010,17,Västra Götalands läns västra,MP,1
+2010,17,Västra Götalands läns västra,SD,1
+2010,18,Västra Götalands läns norra,M,3
+2010,18,Västra Götalands läns norra,L,1
+2010,18,Västra Götalands läns norra,C,1
+2010,18,Västra Götalands läns norra,KD,1
+2010,18,Västra Götalands läns norra,S,3
+2010,18,Västra Götalands läns norra,V,1
+2010,18,Västra Götalands läns norra,MP,1
+2010,18,Västra Götalands läns norra,SD,1
+2010,19,Västra Götalands läns södra,M,3
+2010,19,Västra Götalands läns södra,L,0
+2010,19,Västra Götalands läns södra,C,0
+2010,19,Västra Götalands läns södra,KD,0
+2010,19,Västra Götalands läns södra,S,3
+2010,19,Västra Götalands läns södra,V,0
+2010,19,Västra Götalands läns södra,MP,0
+2010,19,Västra Götalands läns södra,SD,0
+2010,20,Västra Götalands läns östra,M,3
+2010,20,Västra Götalands läns östra,L,1
+2010,20,Västra Götalands läns östra,C,1
+2010,20,Västra Götalands läns östra,KD,1
+2010,20,Västra Götalands läns östra,S,4
+2010,20,Västra Götalands läns östra,V,0
+2010,20,Västra Götalands läns östra,MP,0
+2010,20,Västra Götalands läns östra,SD,0
+2010,21,Värmlands län,M,3
+2010,21,Värmlands län,L,1
+2010,21,Värmlands län,C,1
+2010,21,Värmlands län,KD,0
+2010,21,Värmlands län,S,5
+2010,21,Värmlands län,V,1
+2010,21,Värmlands län,MP,1
+2010,21,Värmlands län,SD,0
+2010,22,Örebro län,M,3
+2010,22,Örebro län,L,1
+2010,22,Örebro län,C,0
+2010,22,Örebro län,KD,1
+2010,22,Örebro län,S,4
+2010,22,Örebro län,V,1
+2010,22,Örebro län,MP,1
+2010,22,Örebro län,SD,1
+2010,23,Västmanlands län,M,3
+2010,23,Västmanlands län,L,1
+2010,23,Västmanlands län,C,0
+2010,23,Västmanlands län,KD,0
+2010,23,Västmanlands län,S,4
+2010,23,Västmanlands län,V,1
+2010,23,Västmanlands län,MP,1
+2010,23,Västmanlands län,SD,1
+2010,24,Dalarnas län,M,3
+2010,24,Dalarnas län,L,0
+2010,24,Dalarnas län,C,1
+2010,24,Dalarnas län,KD,0
+2010,24,Dalarnas län,S,4
+2010,24,Dalarnas län,V,1
+2010,24,Dalarnas län,MP,1
+2010,24,Dalarnas län,SD,1
+2010,25,Gävleborgs län,M,3
+2010,25,Gävleborgs län,L,1
+2010,25,Gävleborgs län,C,1
+2010,25,Gävleborgs län,KD,0
+2010,25,Gävleborgs län,S,4
+2010,25,Gävleborgs län,V,1
+2010,25,Gävleborgs län,MP,1
+2010,25,Gävleborgs län,SD,1
+2010,26,Västernorrlands län,M,2
+2010,26,Västernorrlands län,L,0
+2010,26,Västernorrlands län,C,1
+2010,26,Västernorrlands län,KD,0
+2010,26,Västernorrlands län,S,5
+2010,26,Västernorrlands län,V,1
+2010,26,Västernorrlands län,MP,0
+2010,26,Västernorrlands län,SD,0
+2010,27,Jämtlands län,M,1
+2010,27,Jämtlands län,L,0
+2010,27,Jämtlands län,C,1
+2010,27,Jämtlands län,KD,0
+2010,27,Jämtlands län,S,2
+2010,27,Jämtlands län,V,0
+2010,27,Jämtlands län,MP,0
+2010,27,Jämtlands län,SD,0
+2010,28,Västerbottens län,M,2
+2010,28,Västerbottens län,L,1
+2010,28,Västerbottens län,C,1
+2010,28,Västerbottens län,KD,1
+2010,28,Västerbottens län,S,4
+2010,28,Västerbottens län,V,1
+2010,28,Västerbottens län,MP,1
+2010,28,Västerbottens län,SD,0
+2010,29,Norrbottens län,M,2
+2010,29,Norrbottens län,L,0
+2010,29,Norrbottens län,C,0
+2010,29,Norrbottens län,KD,0
+2010,29,Norrbottens län,S,6
+2010,29,Norrbottens län,V,1
+2010,29,Norrbottens län,MP,0
+2010,29,Norrbottens län,SD,0
+2014,01,Stockholms kommun,M,9
+2014,01,Stockholms kommun,L,3
+2014,01,Stockholms kommun,C,2
+2014,01,Stockholms kommun,KD,2
+2014,01,Stockholms kommun,S,7
+2014,01,Stockholms kommun,V,3
+2014,01,Stockholms kommun,MP,4
+2014,01,Stockholms kommun,SD,2
+2014,02,Stockholms län,M,13
+2014,02,Stockholms län,L,3
+2014,02,Stockholms län,C,2
+2014,02,Stockholms län,KD,3
+2014,02,Stockholms län,S,9
+2014,02,Stockholms län,V,2
+2014,02,Stockholms län,MP,3
+2014,02,Stockholms län,SD,4
+2014,03,Uppsala län,M,3
+2014,03,Uppsala län,L,1
+2014,03,Uppsala län,C,1
+2014,03,Uppsala län,KD,1
+2014,03,Uppsala län,S,3
+2014,03,Uppsala län,V,1
+2014,03,Uppsala län,MP,1
+2014,03,Uppsala län,SD,1
+2014,04,Södermanlands län,M,3
+2014,04,Södermanlands län,L,0
+2014,04,Södermanlands län,C,0
+2014,04,Södermanlands län,KD,0
+2014,04,Södermanlands län,S,4
+2014,04,Södermanlands län,V,1
+2014,04,Södermanlands län,MP,1
+2014,04,Södermanlands län,SD,2
+2014,05,Östergötlands län,M,3
+2014,05,Östergötlands län,L,1
+2014,05,Östergötlands län,C,1
+2014,05,Östergötlands län,KD,1
+2014,05,Östergötlands län,S,5
+2014,05,Östergötlands län,V,1
+2014,05,Östergötlands län,MP,1
+2014,05,Östergötlands län,SD,2
+2014,06,Jönköpings län,M,3
+2014,06,Jönköpings län,L,1
+2014,06,Jönköpings län,C,1
+2014,06,Jönköpings län,KD,1
+2014,06,Jönköpings län,S,4
+2014,06,Jönköpings län,V,0
+2014,06,Jönköpings län,MP,1
+2014,06,Jönköpings län,SD,2
+2014,07,Kronobergs län,M,2
+2014,07,Kronobergs län,L,0
+2014,07,Kronobergs län,C,1
+2014,07,Kronobergs län,KD,0
+2014,07,Kronobergs län,S,2
+2014,07,Kronobergs län,V,0
+2014,07,Kronobergs län,MP,0
+2014,07,Kronobergs län,SD,1
+2014,08,Kalmar län,M,2
+2014,08,Kalmar län,L,0
+2014,08,Kalmar län,C,1
+2014,08,Kalmar län,KD,0
+2014,08,Kalmar län,S,3
+2014,08,Kalmar län,V,0
+2014,08,Kalmar län,MP,0
+2014,08,Kalmar län,SD,2
+2014,09,Gotlands län,M,1
+2014,09,Gotlands län,L,0
+2014,09,Gotlands län,C,0
+2014,09,Gotlands län,KD,0
+2014,09,Gotlands län,S,1
+2014,09,Gotlands län,V,0
+2014,09,Gotlands län,MP,0
+2014,09,Gotlands län,SD,0
+2014,10,Blekinge län,M,1
+2014,10,Blekinge län,L,0
+2014,10,Blekinge län,C,0
+2014,10,Blekinge län,KD,0
+2014,10,Blekinge län,S,3
+2014,10,Blekinge län,V,0
+2014,10,Blekinge län,MP,0
+2014,10,Blekinge län,SD,1
+2014,11,Malmö kommun,M,3
+2014,11,Malmö kommun,L,1
+2014,11,Malmö kommun,C,0
+2014,11,Malmö kommun,KD,0
+2014,11,Malmö kommun,S,3
+2014,11,Malmö kommun,V,1
+2014,11,Malmö kommun,MP,1
+2014,11,Malmö kommun,SD,2
+2014,12,Skåne läns västra,M,3
+2014,12,Skåne läns västra,L,1
+2014,12,Skåne läns västra,C,0
+2014,12,Skåne läns västra,KD,0
+2014,12,Skåne läns västra,S,4
+2014,12,Skåne läns västra,V,0
+2014,12,Skåne läns västra,MP,1
+2014,12,Skåne läns västra,SD,2
+2014,13,Skåne läns södra,M,4
+2014,13,Skåne läns södra,L,1
+2014,13,Skåne läns södra,C,1
+2014,13,Skåne läns södra,KD,1
+2014,13,Skåne läns södra,S,3
+2014,13,Skåne läns södra,V,0
+2014,13,Skåne läns södra,MP,1
+2014,13,Skåne läns södra,SD,2
+2014,14,Skåne läns norra och östra,M,3
+2014,14,Skåne läns norra och östra,L,1
+2014,14,Skåne läns norra och östra,C,1
+2014,14,Skåne läns norra och östra,KD,1
+2014,14,Skåne läns norra och östra,S,3
+2014,14,Skåne läns norra och östra,V,0
+2014,14,Skåne läns norra och östra,MP,1
+2014,14,Skåne läns norra och östra,SD,3
+2014,15,Hallands län,M,3
+2014,15,Hallands län,L,1
+2014,15,Hallands län,C,1
+2014,15,Hallands län,KD,1
+2014,15,Hallands län,S,3
+2014,15,Hallands län,V,0
+2014,15,Hallands län,MP,1
+2014,15,Hallands län,SD,2
+2014,16,Göteborgs kommun,M,4
+2014,16,Göteborgs kommun,L,1
+2014,16,Göteborgs kommun,C,1
+2014,16,Göteborgs kommun,KD,1
+2014,16,Göteborgs kommun,S,4
+2014,16,Göteborgs kommun,V,2
+2014,16,Göteborgs kommun,MP,2
+2014,16,Göteborgs kommun,SD,2
+2014,17,Västra Götalands läns västra,M,3
+2014,17,Västra Götalands läns västra,L,1
+2014,17,Västra Götalands läns västra,C,1
+2014,17,Västra Götalands läns västra,KD,1
+2014,17,Västra Götalands läns västra,S,3
+2014,17,Västra Götalands läns västra,V,1
+2014,17,Västra Götalands läns västra,MP,1
+2014,17,Västra Götalands läns västra,SD,2
+2014,18,Västra Götalands läns norra,M,2
+2014,18,Västra Götalands läns norra,L,1
+2014,18,Västra Götalands läns norra,C,1
+2014,18,Västra Götalands läns norra,KD,1
+2014,18,Västra Götalands läns norra,S,4
+2014,18,Västra Götalands läns norra,V,1
+2014,18,Västra Götalands läns norra,MP,1
+2014,18,Västra Götalands läns norra,SD,2
+2014,19,Västra Götalands läns södra,M,2
+2014,19,Västra Götalands läns södra,L,0
+2014,19,Västra Götalands läns södra,C,0
+2014,19,Västra Götalands läns södra,KD,0
+2014,19,Västra Götalands läns södra,S,3
+2014,19,Västra Götalands läns södra,V,0
+2014,19,Västra Götalands läns södra,MP,0
+2014,19,Västra Götalands läns södra,SD,1
+2014,20,Västra Götalands läns östra,M,2
+2014,20,Västra Götalands läns östra,L,0
+2014,20,Västra Götalands läns östra,C,1
+2014,20,Västra Götalands läns östra,KD,1
+2014,20,Västra Götalands läns östra,S,4
+2014,20,Västra Götalands läns östra,V,0
+2014,20,Västra Götalands läns östra,MP,0
+2014,20,Västra Götalands läns östra,SD,2
+2014,21,Värmlands län,M,2
+2014,21,Värmlands län,L,0
+2014,21,Värmlands län,C,1
+2014,21,Värmlands län,KD,0
+2014,21,Värmlands län,S,5
+2014,21,Värmlands län,V,1
+2014,21,Värmlands län,MP,1
+2014,21,Värmlands län,SD,1
+2014,22,Örebro län,M,2
+2014,22,Örebro län,L,1
+2014,22,Örebro län,C,0
+2014,22,Örebro län,KD,1
+2014,22,Örebro län,S,4
+2014,22,Örebro län,V,1
+2014,22,Örebro län,MP,1
+2014,22,Örebro län,SD,2
+2014,23,Västmanlands län,M,2
+2014,23,Västmanlands län,L,1
+2014,23,Västmanlands län,C,0
+2014,23,Västmanlands län,KD,0
+2014,23,Västmanlands län,S,4
+2014,23,Västmanlands län,V,1
+2014,23,Västmanlands län,MP,0
+2014,23,Västmanlands län,SD,2
+2014,24,Dalarnas län,M,2
+2014,24,Dalarnas län,L,0
+2014,24,Dalarnas län,C,1
+2014,24,Dalarnas län,KD,0
+2014,24,Dalarnas län,S,4
+2014,24,Dalarnas län,V,1
+2014,24,Dalarnas län,MP,1
+2014,24,Dalarnas län,SD,2
+2014,25,Gävleborgs län,M,2
+2014,25,Gävleborgs län,L,0
+2014,25,Gävleborgs län,C,1
+2014,25,Gävleborgs län,KD,0
+2014,25,Gävleborgs län,S,4
+2014,25,Gävleborgs län,V,1
+2014,25,Gävleborgs län,MP,1
+2014,25,Gävleborgs län,SD,2
+2014,26,Västernorrlands län,M,2
+2014,26,Västernorrlands län,L,0
+2014,26,Västernorrlands län,C,1
+2014,26,Västernorrlands län,KD,0
+2014,26,Västernorrlands län,S,5
+2014,26,Västernorrlands län,V,1
+2014,26,Västernorrlands län,MP,0
+2014,26,Västernorrlands län,SD,1
+2014,27,Jämtlands län,M,1
+2014,27,Jämtlands län,L,0
+2014,27,Jämtlands län,C,1
+2014,27,Jämtlands län,KD,0
+2014,27,Jämtlands län,S,2
+2014,27,Jämtlands län,V,0
+2014,27,Jämtlands län,MP,0
+2014,27,Jämtlands län,SD,0
+2014,28,Västerbottens län,M,1
+2014,28,Västerbottens län,L,0
+2014,28,Västerbottens län,C,1
+2014,28,Västerbottens län,KD,0
+2014,28,Västerbottens län,S,5
+2014,28,Västerbottens län,V,1
+2014,28,Västerbottens län,MP,1
+2014,28,Västerbottens län,SD,1
+2014,29,Norrbottens län,M,1
+2014,29,Norrbottens län,L,0
+2014,29,Norrbottens län,C,0
+2014,29,Norrbottens län,KD,0
+2014,29,Norrbottens län,S,5
+2014,29,Norrbottens län,V,1
+2014,29,Norrbottens län,MP,0
+2014,29,Norrbottens län,SD,1

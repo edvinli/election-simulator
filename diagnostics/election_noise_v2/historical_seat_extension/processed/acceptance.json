@@ -1,0 +1,334 @@
+{
+  "status": "RESEARCH ONLY",
+  "majority_threshold": 175,
+  "cases": {
+    "2010": {
+      "target_year": 2010,
+      "baseline_year": 2006,
+      "already_in_frozen_set": false,
+      "law": "PRE_2018",
+      "first_divisor": "7/5",
+      "constituency_share_mae": 0.006770350100967667,
+      "pipeline_seats": {
+        "M": 108,
+        "L": 25,
+        "C": 23,
+        "KD": 19,
+        "S": 108,
+        "V": 20,
+        "MP": 26,
+        "SD": 20
+      },
+      "certified_seats": {
+        "M": 107,
+        "L": 24,
+        "C": 23,
+        "KD": 19,
+        "S": 112,
+        "V": 19,
+        "MP": 25,
+        "SD": 20
+      },
+      "seat_differences": {
+        "M": 1,
+        "L": 1,
+        "C": 0,
+        "KD": 0,
+        "S": -4,
+        "V": 1,
+        "MP": 1,
+        "SD": 0
+      },
+      "total_absolute_seat_error": 8,
+      "set_aside_parties": [
+        "M",
+        "S"
+      ],
+      "coalition_mask_check": {
+        "masks_evaluated": 254,
+        "effective_distinct_events": 127,
+        "masks_disagreeing": 10,
+        "distinct_events_disagreeing": 5,
+        "examples": [
+          {
+            "mask": 15,
+            "parties": [
+              "M",
+              "L",
+              "C",
+              "KD"
+            ],
+            "pipeline_seats": 175,
+            "certified_seats": 173
+          },
+          {
+            "mask": 39,
+            "parties": [
+              "M",
+              "L",
+              "C",
+              "V"
+            ],
+            "pipeline_seats": 176,
+            "certified_seats": 173
+          },
+          {
+            "mask": 77,
+            "parties": [
+              "M",
+              "C",
+              "KD",
+              "MP"
+            ],
+            "pipeline_seats": 176,
+            "certified_seats": 174
+          },
+          {
+            "mask": 101,
+            "parties": [
+              "M",
+              "C",
+              "V",
+              "MP"
+            ],
+            "pipeline_seats": 177,
+            "certified_seats": 174
+          },
+          {
+            "mask": 120,
+            "parties": [
+              "KD",
+              "S",
+              "V",
+              "MP"
+            ],
+            "pipeline_seats": 173,
+            "certified_seats": 175
+          },
+          {
+            "mask": 135,
+            "parties": [
+              "M",
+              "L",
+              "C",
+              "SD"
+            ],
+            "pipeline_seats": 176,
+            "certified_seats": 174
+          },
+          {
+            "mask": 154,
+            "parties": [
+              "L",
+              "KD",
+              "S",
+              "SD"
+            ],
+            "pipeline_seats": 172,
+            "certified_seats": 175
+          },
+          {
+            "mask": 178,
+            "parties": [
+              "L",
+              "S",
+              "V",
+              "SD"
+            ],
+            "pipeline_seats": 173,
+            "certified_seats": 175
+          }
+        ]
+      },
+      "criteria": {
+        "authoritative_inputs_preserved": true,
+        "vote_mappings_reconcile_exactly": true,
+        "historical_law_unambiguous": true,
+        "allocator_reproduces_certified_from_official_votes": true,
+        "geography_runs_chronologically_without_new_model": true,
+        "coalition_indicator_reproduced_for_every_mask": false
+      },
+      "verdict": "DEFER"
+    },
+    "2014": {
+      "target_year": 2014,
+      "baseline_year": 2010,
+      "already_in_frozen_set": false,
+      "law": "PRE_2018",
+      "first_divisor": "7/5",
+      "constituency_share_mae": 0.006278561586601331,
+      "pipeline_seats": {
+        "M": 83,
+        "L": 19,
+        "C": 22,
+        "KD": 16,
+        "S": 114,
+        "V": 20,
+        "MP": 25,
+        "SD": 50
+      },
+      "certified_seats": {
+        "M": 84,
+        "L": 19,
+        "C": 22,
+        "KD": 16,
+        "S": 113,
+        "V": 21,
+        "MP": 25,
+        "SD": 49
+      },
+      "seat_differences": {
+        "M": -1,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 1,
+        "V": -1,
+        "MP": 0,
+        "SD": 1
+      },
+      "total_absolute_seat_error": 4,
+      "set_aside_parties": [
+        "S",
+        "SD"
+      ],
+      "coalition_mask_check": {
+        "masks_evaluated": 254,
+        "effective_distinct_events": 127,
+        "masks_disagreeing": 0,
+        "distinct_events_disagreeing": 0,
+        "examples": []
+      },
+      "criteria": {
+        "authoritative_inputs_preserved": true,
+        "vote_mappings_reconcile_exactly": true,
+        "historical_law_unambiguous": true,
+        "allocator_reproduces_certified_from_official_votes": true,
+        "geography_runs_chronologically_without_new_model": true,
+        "coalition_indicator_reproduced_for_every_mask": true
+      },
+      "verdict": "ACCEPT"
+    },
+    "2018": {
+      "target_year": 2018,
+      "baseline_year": 2014,
+      "already_in_frozen_set": true,
+      "law": "POST_2018",
+      "first_divisor": "6/5",
+      "constituency_share_mae": 0.006485181948867014,
+      "pipeline_seats": {
+        "M": 70,
+        "L": 20,
+        "C": 31,
+        "KD": 22,
+        "S": 100,
+        "V": 28,
+        "MP": 16,
+        "SD": 62
+      },
+      "certified_seats": {
+        "M": 70,
+        "L": 20,
+        "C": 31,
+        "KD": 22,
+        "S": 100,
+        "V": 28,
+        "MP": 16,
+        "SD": 62
+      },
+      "seat_differences": {
+        "M": 0,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 0,
+        "V": 0,
+        "MP": 0,
+        "SD": 0
+      },
+      "total_absolute_seat_error": 0,
+      "set_aside_parties": [],
+      "coalition_mask_check": {
+        "masks_evaluated": 254,
+        "effective_distinct_events": 127,
+        "masks_disagreeing": 0,
+        "distinct_events_disagreeing": 0,
+        "examples": []
+      },
+      "criteria": {
+        "authoritative_inputs_preserved": true,
+        "vote_mappings_reconcile_exactly": true,
+        "historical_law_unambiguous": true,
+        "allocator_reproduces_certified_from_official_votes": true,
+        "geography_runs_chronologically_without_new_model": true,
+        "coalition_indicator_reproduced_for_every_mask": true
+      },
+      "verdict": "ACCEPT"
+    },
+    "2022": {
+      "target_year": 2022,
+      "baseline_year": 2018,
+      "already_in_frozen_set": true,
+      "law": "POST_2018",
+      "first_divisor": "6/5",
+      "constituency_share_mae": 0.006650850435601411,
+      "pipeline_seats": {
+        "M": 68,
+        "L": 16,
+        "C": 24,
+        "KD": 19,
+        "S": 107,
+        "V": 24,
+        "MP": 18,
+        "SD": 73
+      },
+      "certified_seats": {
+        "M": 68,
+        "L": 16,
+        "C": 24,
+        "KD": 19,
+        "S": 107,
+        "V": 24,
+        "MP": 18,
+        "SD": 73
+      },
+      "seat_differences": {
+        "M": 0,
+        "L": 0,
+        "C": 0,
+        "KD": 0,
+        "S": 0,
+        "V": 0,
+        "MP": 0,
+        "SD": 0
+      },
+      "total_absolute_seat_error": 0,
+      "set_aside_parties": [],
+      "coalition_mask_check": {
+        "masks_evaluated": 254,
+        "effective_distinct_events": 127,
+        "masks_disagreeing": 0,
+        "distinct_events_disagreeing": 0,
+        "examples": []
+      },
+      "criteria": {
+        "authoritative_inputs_preserved": true,
+        "vote_mappings_reconcile_exactly": true,
+        "historical_law_unambiguous": true,
+        "allocator_reproduces_certified_from_official_votes": true,
+        "geography_runs_chronologically_without_new_model": true,
+        "coalition_indicator_reproduced_for_every_mask": true
+      },
+      "verdict": "ACCEPT"
+    }
+  },
+  "N_seat": 3,
+  "accepted_years": [
+    2014,
+    2018,
+    2022
+  ],
+  "deferred_years": [
+    2010
+  ]
+}

@@ -1,0 +1,118 @@
+{
+  "schema_version": "1.0",
+  "document": "docs/election_noise_v2_historical_seat_extension.md",
+  "status": "RESEARCH ONLY - no production data written or modified",
+  "preregistration": {
+    "freeze": "FROZEN - AMENDMENT 1",
+    "commit": "80b1c671c4b6d879a888f28a859ee392e8f59bc5",
+    "body_sha256": "bac3ca06e52cc07fe74ca9e5aa785d94e30934db32193c7f948e95a49a6ae075",
+    "note": "Not edited by this task."
+  },
+  "part2_predecessor_commit": "cb39e84074def993e804ba4d2ec478d59c27fa4a",
+  "outcome": {
+    "accepted_seat_years": [
+      2014,
+      2018,
+      2022
+    ],
+    "deferred_seat_years": [
+      2010
+    ],
+    "rejected_seat_years": [],
+    "N_seat": 3,
+    "historically_versioned_allocator_implemented": true,
+    "law_versions": [
+      "POST_2018 (production default, unchanged)",
+      "PRE_2018 (2010/2014)"
+    ]
+  },
+  "acquired_sources": {
+    "publisher": "Valmyndigheten (historik.val.se)",
+    "page_groups": {
+      "votes_mandates_2006": {
+        "election_year": 2006,
+        "count": 29,
+        "url_pattern": "https://historik.val.se/val/val2006/slutlig/R/riksdagsvalkrets/<cc>/roster.html",
+        "purpose": "2006 constituency party votes (geography baseline for the 2010 target) and certified 2006 constituency mandates",
+        "parsing_notes": "ISO-8859-1. Table[1] is 'Röstfördelning' with a two-row header; data rows are [förk, parti, antal_2006, andel_2006, mandat_2006, antal_2002, andel_2002, mandat_2002]. Only the 2006 columns are used. Table[2] 'Röstredovisning' row 'Summa giltiga röster' gives the constituency valid-vote total (2006 column).",
+        "retrieved_at_utc": "cached (see prior manifest entry)"
+      },
+      "ovriga_2006": {
+        "election_year": 2006,
+        "count": 29,
+        "url_pattern": "https://historik.val.se/val/val2006/slutlig/R/riksdagsvalkrets/<cc>/ovriga.html",
+        "purpose": "2006 per-constituency breakdown of the aggregate 'ÖVR' row, needed because the 2006 result pages do not break out Sverigedemokraterna",
+        "parsing_notes": "UTF-8 (unlike the 2010/2014 pages, which are ISO-8859-1). Single table: [partibeteckning, antal, andel]. 'Sverigedemokraterna' is extracted as SD; every other row stays inside REST.",
+        "retrieved_at_utc": "2026-08-30T20:51:01.664488+00:00"
+      },
+      "votes_2010": {
+        "election_year": 2010,
+        "count": 29,
+        "url_pattern": "https://historik.val.se/val/val2010/slutresultat/R/rvalkrets/<cc>/index.html",
+        "purpose": "2010 constituency party votes (target results, and geography baseline for the 2014 target)",
+        "parsing_notes": "ISO-8859-1. Same layout as the 2014 pages already parsed by scripts/geography/fetch.py: table[3] rows are [förk, parti, antal, andel, ...]; vote count is cell index 2. Non-party rows (BLANK, OG, VDT, &nbsp;) are excluded.",
+        "retrieved_at_utc": "cached (see prior manifest entry)"
+      },
+      "mandates_2010": {
+        "election_year": 2010,
+        "count": 29,
+        "url_pattern": "https://historik.val.se/val/val2010/slutresultat/R/rvalkrets/<cc>/valda.html",
+        "purpose": "Certified 2010 per-constituency per-party mandates (golden target)",
+        "parsing_notes": "ISO-8859-1. Table[1] 'Mandatfördelning' rows are [förk, parti, mandat_2010, +/-, mandat_2006]; the final row is the 'Totalt' control total.",
+        "retrieved_at_utc": "cached (see prior manifest entry)"
+      },
+      "mandates_2014": {
+        "election_year": 2014,
+        "count": 29,
+        "url_pattern": "https://historik.val.se/val/val2014/slutresultat/R/rvalkrets/<cc>/valda.html",
+        "purpose": "Certified 2014 per-constituency per-party mandates (golden target)",
+        "parsing_notes": "ISO-8859-1. Same layout as the 2010 valda pages.",
+        "retrieved_at_utc": "cached (see prior manifest entry)"
+      }
+    },
+    "total_pages": 145,
+    "aggregate_page_sha256": "e4041a79fa84c1cce084aec0700223e6378535612e64a4ee85c937a56b585103",
+    "per_page_provenance": "raw/fetch_manifest.json (URL, retrieval timestamp, byte count, SHA-256 per page)"
+  },
+  "derived_from_existing_repository_artifacts": [
+    {
+      "artifact": "data/raw/mandates/valkretsmandat_riksdag_1988_2026.xlsx",
+      "sha256": "74d02c44f2c30722c995eee196cdb55d7dbf2371c0e4d3bec64cb44786aa5576",
+      "use": "fixed constituency seats for 2010 and 2014",
+      "verification": "the same parse reproduces the repository's hard-coded FIXED_SEATS_2018 and FIXED_SEATS_2022 exactly",
+      "modified": false
+    },
+    {
+      "artifact": "data/processed/geography/constituency_party_votes_2014_2022.csv",
+      "use": "2014 target votes and the 2014/2018/2022 baselines; copied unchanged into the research geography dir",
+      "modified": false
+    },
+    {
+      "artifact": "data/processed/elections/riksdag_election_results.csv",
+      "use": "official national totals used as the exact reconciliation reference for 2006 and 2010",
+      "modified": false
+    }
+  ],
+  "legal_sources": [
+    {
+      "source": "Prop. 2013/14:48",
+      "archived_at": "diagnostics/election_noise_v2/historical_evidence/raw/prop_2013_14_48_proportionell_fordelning.pdf",
+      "sha256": "5aa84ff21840515a126928dd1300f847752ca2ed4c497ecc4115bee5bcf923cb",
+      "use": "enumerates the two Riksdag-relevant legal changes and states the pre-reform overhang rule"
+    },
+    {
+      "source": "SFS 2014:1384",
+      "use": "enacting instrument; effective from the 2018 general election"
+    }
+  ],
+  "generated_artifacts": {
+    "constituency_party_votes_2006_2010.csv": "545a08222c24960b6ca1f3409d5734aa189ce915624f4ab2c814b6b738cb4fd2",
+    "certified_mandates_2010_2014.csv": "3af0c56f0a94724242c39da205b86f121b8b8f2d64d2aaefefd86c70541c8fcc",
+    "fixed_seats_by_year.json": "f5fbeff5a691f28364930b66e47bf6738651aa8c00afc1c1d594136020781d5a",
+    "reconciliation.json": "6ee5cb61f3fdcd74f39c8ddc63b3d32ceb59c46403e36732f97a3aeafb4b46dc",
+    "allocator_validation.json": "31341fd889b328fcecf3a126b44135cd97be0a890029d08b7127c451e18266c4",
+    "geography_validation.json": "3b987537dddffcbe2658b285d1e7d7076aa3fe654ead4e7bedffbd92d47e500d",
+    "acceptance.json": "602d8f8e472f8315ef6fff1520b626ef99d09f4e58c59f72d03adc3cd112f5c8",
+    "part3_seat_cases.json": "b8471a488609dc463935c0ed300e5056fb2a95f57942fe4f44ce4d3dc0bf4714"
+  }
+}
