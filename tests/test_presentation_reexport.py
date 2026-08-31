@@ -23,11 +23,13 @@ from scripts.static_exporter import validate_publication_version
 
 def _preserved_matrix_available() -> bool:
     """Return whether the optional external audit artifact is available."""
-
-    return (
-        DEFAULT_MATRIX_PATH.is_file()
-        and compute_file_sha256(DEFAULT_MATRIX_PATH) == EXPECTED_MATRIX_SHA256
-    )
+    try:
+        return (
+            DEFAULT_MATRIX_PATH.is_file()
+            and compute_file_sha256(DEFAULT_MATRIX_PATH) == EXPECTED_MATRIX_SHA256
+        )
+    except (PermissionError, OSError):
+        return False
 
 
 class PresentationReexportTests(unittest.TestCase):

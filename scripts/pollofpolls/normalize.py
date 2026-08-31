@@ -264,6 +264,80 @@ def parse_party_chart_payload(payload: bytes, party: str) -> dict[date, dict[str
     return parsed
 
 
+def parse_party_chart_pop_series(payload: bytes, party: str) -> dict[date, float]:
+    """Parse the daily Poll of Polls estimate column (pofp) for a single party."""
+    text = _decode(payload)
+    rows = csv.DictReader(io.StringIO(text))
+    if not rows.fieldnames or "date" not in rows.fieldnames or "pofp" not in rows.fieldnames:
+        raise ValueError(f"party {party} chart CSV is missing date or pofp column")
+    parsed: dict[date, float] = {}
+    for row in rows:
+        observation_date = parse_date(row["date"])
+        val = parse_percentage(row.get("pofp"))
+        if val is not None:
+            parsed[observation_date] = val
+    return parsed
+
+
+def extract_party_chart_pop_timeseries(
+    raw_dir: Path,
+    *,
+    canonical_timeseries: list[dict[str, Any]] | None = None,
+    discrepancy_tolerance: float = 1e-4,
+) -> list[dict[str, Any]]:
+    """Extract daily 2009+ Poll of Polls estimates across parties from raw party charts.
+
+    Validates that for all overlapping observation dates with the canonical 2014+
+    Poll of Polls series, differences remain within discrepancy_tolerance.
+    """
+    party_series: dict[str, dict[date, float]] = {}
+    for source in PARTY_SOURCES:
+        if source.party is None:
+            continue
+        path = raw_dir / source.raw_filename
+        if path.is_file():
+            party_series[source.party] = parse_party_chart_pop_series(path.read_bytes(), source.party)
+
+    parliamentary_parties = ["M", "L", "C", "KD", "S", "V", "MP", "SD"]
+    for p in parliamentary_parties:
+        if p not in party_series or not party_series[p]:
+            raise ValueError(f"missing required party chart pofp data for party {p}")
+
+    all_dates = sorted({d for s in party_series.values() for d in s})
+    rows: list[dict[str, Any]] = []
+    for d in all_dates:
+        if not all(d in party_series[p] for p in parliamentary_parties):
+            continue
+        row: dict[str, Any] = {"date": d.isoformat()}
+        for p in parliamentary_parties:
+            row[p] = party_series[p][d]
+        if "FI" in party_series and d in party_series["FI"]:
+            row["FI"] = party_series["FI"][d]
+        else:
+            row["FI"] = None
+        rows.append(row)
+
+    if canonical_timeseries is not None:
+        canonical_by_date = {
+            parse_date(r["date"]): r
+            for r in canonical_timeseries
+            if "date" in r
+        }
+        for row in rows:
+            d = parse_date(row["date"])
+            if d in canonical_by_date:
+                canon = canonical_by_date[d]
+                for p in parliamentary_parties:
+                    if canon.get(p) is not None:
+                        diff = abs(float(row[p]) - float(canon[p]))
+                        if diff > discrepancy_tolerance:
+                            raise ValueError(
+                                f"Discrepancy on {d} for party {p}: party chart pofp={row[p]} vs "
+                                f"canonical={canon[p]} (diff={diff:.6f} > tolerance={discrepancy_tolerance})"
+                            )
+    return rows
+
+
 def parse_homepage_polls(payload: bytes, reference: date) -> list[dict[str, Any]]:
     tables = extract_html_tables(_decode(payload))
     matching = [

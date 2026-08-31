@@ -32,7 +32,10 @@ import unittest
 from scripts.simulator.engine import simulate_election
 from scripts.static_exporter import export_static_data
 
-from ._website_repo import SKIP_REASON, website_consumer_path
+try:
+    from ._website_repo import SKIP_REASON, website_consumer_path
+except (ImportError, ValueError):
+    from tests._website_repo import SKIP_REASON, website_consumer_path
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]

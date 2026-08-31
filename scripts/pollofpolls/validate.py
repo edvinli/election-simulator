@@ -26,6 +26,19 @@ TIMESERIES_FIELDS = (
     "retrieved_at",
 )
 
+PARTY_CHART_TIMESERIES_FIELDS = (
+    "date",
+    "M",
+    "L",
+    "C",
+    "KD",
+    "S",
+    "V",
+    "MP",
+    "SD",
+    "FI",
+)
+
 SWEDISHPOLLS_FIELDS = (
     "poll_id",
     "pollster",
