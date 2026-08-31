@@ -26,6 +26,7 @@ import unittest
 
 from scripts.simulator.engine import simulate_election
 from scripts.static_exporter import export_static_data
+from scripts.static_exporter.exporter import PUBLICATION_SCHEMA_VERSION
 
 try:
     from ._website_repo import website_consumer_path
@@ -99,7 +100,7 @@ class ReferencePublicationContractTests(unittest.TestCase):
         self.assertEqual(verdict["status_text"], "Certified forecast loaded.")
         self.assertEqual(verdict["seat_allocation_source"], "representative_joint_simulation_draw")
         self.assertEqual(verdict["seat_total"], 349)
-        self.assertEqual(verdict["schema_version"], "1.3")
+        self.assertEqual(verdict["schema_version"], PUBLICATION_SCHEMA_VERSION)
         self.assertEqual(verdict["source_repository"], "edvinli/election-simulator")
 
     def test_reference_validator_checks_schema_1_3_coalition_histograms(self) -> None:

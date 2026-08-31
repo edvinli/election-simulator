@@ -35,7 +35,11 @@ const PUBLICATION_FILES = [
 ];
 const PUBLICATION_CONTRACTS = PUBLICATION_FILES.slice(0, 6);
 const POINTER_PATH_PATTERN = /^versions\/[A-Za-z0-9_-]+$/;
-const SUPPORTED_SCHEMA_VERSIONS = new Set(["1.0", "1.1", "1.2", "1.3"]);
+// 1.4 is 1.3 plus metadata only (election_noise_law / election_noise_candidate);
+// groups.json keeps the 1.3 coalition contract, histograms included.
+const SUPPORTED_SCHEMA_VERSIONS = new Set(["1.0", "1.1", "1.2", "1.3", "1.4"]);
+const HISTOGRAM_SCHEMA_VERSIONS = new Set(["1.3", "1.4"]);
+const COALITION_BUILDER_SCHEMA_VERSIONS = new Set(["1.2", "1.3", "1.4"]);
 const COALITION_PARTY_ORDER = ["M", "L", "C", "KD", "S", "V", "MP", "SD"];
 const COALITION_SUMMARY_FIELDS = [
   "mask",
@@ -262,7 +266,7 @@ function validateCoalitionBuilder(builder, schemaVersion, expectedTotal) {
   if (coalitionKeys.length !== 256 || !coalitionKeys.every((key, index) => key === String(index))) {
     throw new Error("coalition_builder must contain keys \"0\" through \"255\" in order");
   }
-  const histogramRequired = schemaVersion === "1.3";
+  const histogramRequired = HISTOGRAM_SCHEMA_VERSIONS.has(schemaVersion);
   if (histogramRequired && (!isInteger(expectedTotal) || expectedTotal <= 0)) {
     throw new Error("Schema 1.3 coalition histograms require a positive sample count");
   }
@@ -329,9 +333,10 @@ function validateCoalitionPublication(forecast, groups) {
   if (groups.majority_threshold !== MAJORITY_THRESHOLD) {
     throw new Error("Group majority threshold must be 175");
   }
-  if (groups.schema_version === "1.2" || groups.schema_version === "1.3") {
+  if (COALITION_BUILDER_SCHEMA_VERSIONS.has(groups.schema_version)) {
     validateCoalitionBuilder(groups.coalition_builder, groups.schema_version,
-      groups.schema_version === "1.3" ? forecast && forecast.total_samples : null);
+      HISTOGRAM_SCHEMA_VERSIONS.has(groups.schema_version)
+        ? forecast && forecast.total_samples : null);
   } else if (Object.prototype.hasOwnProperty.call(groups, "coalition_builder")) {
     throw new Error("coalition_builder is only valid in schema 1.2 or 1.3 groups.json");
   }
