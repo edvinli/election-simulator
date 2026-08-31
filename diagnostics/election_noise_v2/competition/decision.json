@@ -1,7 +1,8 @@
 {
   "artifact": "ELECTIONNOISE V2 ADOPTION DECISION",
   "decided_utc": "2026-08-31T14:12:51Z",
-  "git_commit_of_results": "1450e6f301a98d5d6e4af1357113435534b0e7a9",
+  "git_commit_results_produced_from": "1450e6f301a98d5d6e4af1357113435534b0e7a9",
+  "git_commit_containing_results": "ff89621848c95ac9320804ffc4f148454f522284",
   "authoritative_commits": {
     "evaluator_refreeze_base": "a5b8c7a234acf60cac71ef1ab1439343fae88639",
     "challenger_implementation": "0facfe6cf542e650bcdf7fdc2d01a6795366c045",

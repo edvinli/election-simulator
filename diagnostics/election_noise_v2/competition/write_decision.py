@@ -38,8 +38,12 @@ def main() -> int:
     rec = {
         "artifact": "ELECTIONNOISE V2 ADOPTION DECISION",
         "decided_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "git_commit_of_results": subprocess.check_output(
+        # HEAD at write time is the frozen base the results were produced FROM; the
+        # commit that CONTAINS the results cannot be known until they are committed,
+        # so it is filled in by a follow-up addendum (see stamp_results_commit.py).
+        "git_commit_results_produced_from": subprocess.check_output(
             ["git", "rev-parse", "HEAD"], cwd=REPO_ROOT).decode().strip(),
+        "git_commit_containing_results": None,
         "authoritative_commits": man["authoritative_commits"],
         "freeze_hashes": man["freeze_hashes"],
         "preregistration": man["preregistration"],
