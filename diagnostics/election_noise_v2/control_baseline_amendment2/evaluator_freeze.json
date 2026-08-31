@@ -1,10 +1,10 @@
 {
   "artifact": "ELECTIONNOISE V2 EVALUATOR FREEZE",
   "purpose": "Part-4 challenger implementation must not silently alter the evaluator. Re-run verify() before implementing a challenger; any changed hash is a hard stop.",
-  "freeze_timestamp_utc": "2026-08-31T09:39:48Z",
+  "freeze_timestamp_utc": "2026-08-31T11:35:22Z",
   "git": {
-    "base_commit": "7f37e127a81b2bbdccaa26a27b7275ba39e96dec",
-    "branch": "research/control-baseline-amendment2",
+    "base_commit": "aea30bacfa8dfe342198d3d6ff8748e84c9ffd9c",
+    "branch": "research/evaluator-refreeze",
     "freeze_commit": "the commit that introduces this artifact; reported with the commit"
   },
   "preregistration": {
@@ -86,7 +86,7 @@
     "diagnostics/election_noise_v2/control_baseline_amendment2/harness2/freeze.py": {
       "module": "__mp_main__",
       "working_tree_sha256": "e06c8e47a2b988a928301126c219aa0236dcf78968eeb861a0234792512c4bd8",
-      "head_sha256": null,
+      "head_sha256": "e06c8e47a2b988a928301126c219aa0236dcf78968eeb861a0234792512c4bd8",
       "uncommitted_local_edit": false
     },
     "diagnostics/__init__.py": {
@@ -134,37 +134,37 @@
     "diagnostics/election_noise_v2/control_baseline_amendment2/__init__.py": {
       "module": "diagnostics.election_noise_v2.control_baseline_amendment2",
       "working_tree_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "head_sha256": null,
+      "head_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "uncommitted_local_edit": false
     },
     "diagnostics/election_noise_v2/control_baseline_amendment2/harness2/__init__.py": {
       "module": "diagnostics.election_noise_v2.control_baseline_amendment2.harness2",
       "working_tree_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "head_sha256": null,
+      "head_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "uncommitted_local_edit": false
     },
     "diagnostics/election_noise_v2/control_baseline_amendment2/harness2/exact_oracle.py": {
       "module": "diagnostics.election_noise_v2.control_baseline_amendment2.harness2.exact_oracle",
       "working_tree_sha256": "fd4740c7c4bc24bb1653e294d592a84e010c696b2ba79c7de9d9133c3ac716f0",
-      "head_sha256": null,
+      "head_sha256": "fd4740c7c4bc24bb1653e294d592a84e010c696b2ba79c7de9d9133c3ac716f0",
       "uncommitted_local_edit": false
     },
     "diagnostics/election_noise_v2/control_baseline_amendment2/harness2/isolated.py": {
       "module": "diagnostics.election_noise_v2.control_baseline_amendment2.harness2.isolated",
       "working_tree_sha256": "7ff6d111e5f9c8b76c22178d210d711b06dd9ce69bbea4620b1233242a73f832",
-      "head_sha256": null,
+      "head_sha256": "7ff6d111e5f9c8b76c22178d210d711b06dd9ce69bbea4620b1233242a73f832",
       "uncommitted_local_edit": false
     },
     "diagnostics/election_noise_v2/control_baseline_amendment2/harness2/manifest.py": {
       "module": "diagnostics.election_noise_v2.control_baseline_amendment2.harness2.manifest",
       "working_tree_sha256": "56f1074da7db33295fb17efe2d997e5fb0fcf1919a2ae87ff4cc88f007cc00ee",
-      "head_sha256": null,
+      "head_sha256": "56f1074da7db33295fb17efe2d997e5fb0fcf1919a2ae87ff4cc88f007cc00ee",
       "uncommitted_local_edit": false
     },
     "diagnostics/election_noise_v2/control_baseline_amendment2/harness2/run_control.py": {
       "module": "diagnostics.election_noise_v2.control_baseline_amendment2.harness2.run_control",
       "working_tree_sha256": "43ee640d21855e0d6dfce94798690c44af374106dd73d79bd4068496d4471d8a",
-      "head_sha256": null,
+      "head_sha256": "43ee640d21855e0d6dfce94798690c44af374106dd73d79bd4068496d4471d8a",
       "uncommitted_local_edit": false
     },
     "scripts/__init__.py": {
@@ -361,9 +361,9 @@
     },
     "scripts/pollofpolls/normalize.py": {
       "module": "scripts.pollofpolls.normalize",
-      "working_tree_sha256": "c6b0480d89cde0b892e1769a394e13d29bdde04d1a8abcce178cbe44cd4da09a",
+      "working_tree_sha256": "437a78560aea68163f425352348ba95e7d944d72350bd48e74e286feeec75b59",
       "head_sha256": "437a78560aea68163f425352348ba95e7d944d72350bd48e74e286feeec75b59",
-      "uncommitted_local_edit": true
+      "uncommitted_local_edit": false
     },
     "scripts/pollofpolls/state.py": {
       "module": "scripts.pollofpolls.state",
