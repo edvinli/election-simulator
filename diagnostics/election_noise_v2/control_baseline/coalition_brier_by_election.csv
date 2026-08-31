@@ -1,0 +1,4 @@
+model,target_year,coalition_brier_election_aggregate,masks_per_case,effective_distinct_events,horizons_averaged,n_seeds
+CONTROL_pp_centered_noise,2018,0.020517793568241467,254,127,6,5
+CONTROL_pp_centered_noise,2022,0.025287288029527556,254,127,6,5
+CONTROL_pp_centered_noise,HEADLINE_mean_over_elections,0.022902540798884513,254,127,6,5

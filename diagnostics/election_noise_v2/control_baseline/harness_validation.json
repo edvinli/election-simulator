@@ -1,0 +1,209 @@
+{
+  "status": "HARNESS VALIDATION - research only",
+  "crps_estimator_equivalence": {
+    "check": "compute_discrete_crps vs calculate_crps",
+    "max_abs_difference": 6.661338147750939e-16,
+    "tolerance": 1e-12,
+    "passes": true
+  },
+  "tier1_exact_vs_legacy": {
+    "check": "Tier 1 closed form vs forward_eval_2010_2022.json (pp_noise_only)",
+    "rows": [
+      {
+        "election_year": 2014,
+        "k_support_points": 3,
+        "legacy_training_pool_size": 3,
+        "exact_crps_8party": 0.9743,
+        "legacy_crps_8party": 0.9743,
+        "crps_8party_exact_match": true,
+        "exact_crps_all9": 0.9233,
+        "legacy_crps_all9": 0.9233,
+        "crps_all9_exact_match": true,
+        "support_points_match_pool_size": true
+      },
+      {
+        "election_year": 2018,
+        "k_support_points": 4,
+        "legacy_training_pool_size": 4,
+        "exact_crps_8party": 0.8856,
+        "legacy_crps_8party": 0.8856,
+        "crps_8party_exact_match": true,
+        "exact_crps_all9": 0.9486,
+        "legacy_crps_all9": 0.9486,
+        "crps_all9_exact_match": true,
+        "support_points_match_pool_size": true
+      },
+      {
+        "election_year": 2022,
+        "k_support_points": 5,
+        "legacy_training_pool_size": 5,
+        "exact_crps_8party": 0.4713,
+        "legacy_crps_8party": 0.4713,
+        "crps_8party_exact_match": true,
+        "exact_crps_all9": 0.4394,
+        "legacy_crps_all9": 0.4394,
+        "crps_all9_exact_match": true,
+        "support_points_match_pool_size": true
+      }
+    ],
+    "passes": true
+  },
+  "tier3_vs_legacy_seat_hindcast": {
+    "check": "Tier 3 vs seat_hindcast_summary.json (joint_energy_score), legacy configuration",
+    "legacy_samples_per_case": 5000,
+    "legacy_seed": 12345,
+    "rows": [
+      {
+        "election_year": 2018,
+        "horizon_days": 7,
+        "seed": 12345,
+        "samples": 5000,
+        "reproduced_seat_energy_score": 6.4061,
+        "legacy_seat_energy_score": 6.4061,
+        "exact_match": true
+      },
+      {
+        "election_year": 2018,
+        "horizon_days": 14,
+        "seed": 12345,
+        "samples": 5000,
+        "reproduced_seat_energy_score": 8.6076,
+        "legacy_seat_energy_score": 8.6076,
+        "exact_match": true
+      },
+      {
+        "election_year": 2018,
+        "horizon_days": 28,
+        "seed": 12345,
+        "samples": 5000,
+        "reproduced_seat_energy_score": 14.0369,
+        "legacy_seat_energy_score": 14.0369,
+        "exact_match": true
+      },
+      {
+        "election_year": 2018,
+        "horizon_days": 56,
+        "seed": 12345,
+        "samples": 5000,
+        "reproduced_seat_energy_score": 21.7182,
+        "legacy_seat_energy_score": 21.7182,
+        "exact_match": true
+      },
+      {
+        "election_year": 2018,
+        "horizon_days": 84,
+        "seed": 12345,
+        "samples": 5000,
+        "reproduced_seat_energy_score": 22.685,
+        "legacy_seat_energy_score": 22.685,
+        "exact_match": true
+      },
+      {
+        "election_year": 2018,
+        "horizon_days": 112,
+        "seed": 12345,
+        "samples": 5000,
+        "reproduced_seat_energy_score": 22.2586,
+        "legacy_seat_energy_score": 22.2586,
+        "exact_match": true
+      },
+      {
+        "election_year": 2022,
+        "horizon_days": 7,
+        "seed": 12345,
+        "samples": 5000,
+        "reproduced_seat_energy_score": 4.3286,
+        "legacy_seat_energy_score": 4.3286,
+        "exact_match": true
+      },
+      {
+        "election_year": 2022,
+        "horizon_days": 14,
+        "seed": 12345,
+        "samples": 5000,
+        "reproduced_seat_energy_score": 4.8819,
+        "legacy_seat_energy_score": 4.8819,
+        "exact_match": true
+      },
+      {
+        "election_year": 2022,
+        "horizon_days": 28,
+        "seed": 12345,
+        "samples": 5000,
+        "reproduced_seat_energy_score": 6.6122,
+        "legacy_seat_energy_score": 6.6122,
+        "exact_match": true
+      },
+      {
+        "election_year": 2022,
+        "horizon_days": 56,
+        "seed": 12345,
+        "samples": 5000,
+        "reproduced_seat_energy_score": 10.2114,
+        "legacy_seat_energy_score": 10.2114,
+        "exact_match": true
+      },
+      {
+        "election_year": 2022,
+        "horizon_days": 84,
+        "seed": 12345,
+        "samples": 5000,
+        "reproduced_seat_energy_score": 14.9203,
+        "legacy_seat_energy_score": 14.9203,
+        "exact_match": true
+      },
+      {
+        "election_year": 2022,
+        "horizon_days": 112,
+        "seed": 12345,
+        "samples": 5000,
+        "reproduced_seat_energy_score": 18.8768,
+        "legacy_seat_energy_score": 18.8768,
+        "exact_match": true
+      }
+    ],
+    "passes": true
+  },
+  "tier1_monte_carlo_error": {
+    "check": "Tier 1 Monte Carlo error vs exact anchor",
+    "draws_per_seed": 20000,
+    "rows": [
+      {
+        "election_year": 2014,
+        "exact_es_9cat": 3.5668141921772873,
+        "mc_es_9cat_five_seed_mean": 3.5671053023332275,
+        "mc_es_9cat_five_seed_sd": 0.0017743434850667954,
+        "es_9cat_abs_mc_error": 0.0002911101559401885,
+        "es_9cat_rel_mc_error_pct": 0.0081616294052729,
+        "exact_crps_8party": 0.9742687746913579,
+        "mc_crps_8party_five_seed_mean": 0.9744144844875968,
+        "crps_8party_rel_mc_error_pct": 0.014955810965523087
+      },
+      {
+        "election_year": 2018,
+        "exact_es_9cat": 3.8661986180305696,
+        "mc_es_9cat_five_seed_mean": 3.8657101829679887,
+        "mc_es_9cat_five_seed_sd": 0.0019734816905059497,
+        "es_9cat_abs_mc_error": 0.0004884350625808942,
+        "es_9cat_rel_mc_error_pct": 0.012633470518121017,
+        "exact_crps_8party": 0.8855907890625001,
+        "mc_crps_8party_five_seed_mean": 0.8854480949313273,
+        "crps_8party_rel_mc_error_pct": 0.01611287435858579
+      },
+      {
+        "election_year": 2022,
+        "exact_es_9cat": 1.9654555624162366,
+        "mc_es_9cat_five_seed_mean": 1.9668768325700525,
+        "mc_es_9cat_five_seed_sd": 0.00790620486381541,
+        "es_9cat_abs_mc_error": 0.001421270153815879,
+        "es_9cat_rel_mc_error_pct": 0.07231250510027495,
+        "exact_crps_8party": 0.4713319966666667,
+        "mc_crps_8party_five_seed_mean": 0.4717561975029416,
+        "crps_8party_rel_mc_error_pct": 0.09000043266210193
+      }
+    ],
+    "note": "CONTROL's Tier-1 law is exactly K equal atoms, so the exact score is the limit of the Monte Carlo score. The deviation below is pure sampling error from drawing K atoms N times; it is not a modelling difference."
+  },
+  "blockers": [],
+  "all_reproduction_checks_pass": true
+}
