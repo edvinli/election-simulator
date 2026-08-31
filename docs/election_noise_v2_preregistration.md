@@ -1,8 +1,8 @@
 # Preregistration — ElectionNoise v2 challenger competition
 
-**PREREGISTRATION STATUS: FROZEN — AMENDMENT 1** (see §J: J.1 records the
-superseded Amendment-0 freeze, J.2 the Amendment-1 rationale, J.3 the operative
-freeze record).
+**PREREGISTRATION STATUS: FROZEN — AMENDMENT 2** (see §J: J.1 records the
+superseded Amendment-0 freeze, J.2 the Amendment-1 rationale, J.3 its superseded
+freeze record, J.4 the Amendment-2 rationale, J.5 the operative freeze record).
 
 **Written before any challenger implementation and before any challenger score
 exists.** No challenger has been implemented, run, or scored. The 2026 forecast
@@ -15,9 +15,9 @@ separate, explicit decision.
 
 | | |
 |---|---|
-| Document version | 2.1 — Amendment 1 (pre-data, pre-challenger ambiguity resolution) |
+| Document version | 2.2 — Amendment 2 (pre-challenger leakage-safety correction of the seat tier) |
 | Written | 2026-08-30 |
-| Frozen | Amendment 0: 2026-08-30T20:08:21Z · Amendment 1: see §J.3 |
+| Frozen | Amendment 0: 2026-08-30T20:08:21Z · Amendment 1: §J.3 · Amendment 2: §J.5 |
 | Author | Diagnostic work on branch `diagnostic/election-noise-mixture` |
 | Motivating evidence | `diagnostics/election_noise_mixture/summary.md` (commit `f55c3c9`) |
 | Component under test | ElectionNoise only |
@@ -82,7 +82,11 @@ read the committed copy.
    §F.3 G5 — satisfied under Amendment 1.
 5. The Part-2 historical-data feasibility search has not been run. It may change
    `N_T1` and `N_seat` **only** through the mechanical eligibility rules frozen
-   here (§E.6).
+   here (§E.6). *(Satisfied and closed: Part 2 `cb39e84`, Part 2B `61d6d3b`.)*
+6. **Amendment 2 only:** the isolated seat/coalition path of §E.2a has passed its
+   leakage and sufficiency audit, recorded at
+   `diagnostics/election_noise_v2/isolated_seat_evaluation/processed/isolated_path_audit.json`
+   — satisfied. No challenger score existed when Amendment 2 was made.
 
 ---
 
@@ -426,7 +430,7 @@ score (REST excluded), since REST never reaches the seat layer.
 
 * **Energy score on the 8-dimensional integer seat vector** via `scripts/seat_hindcasts/metrics.py::calculate_multivariate_energy_score`, unchanged.
 * Every vote draw passes through the **identical** deterministic downstream: geographic IPF projection → exact-margin biproportional controlled rounding → `dispatch_production_allocation` (349-seat Sainte-Laguë with the legal fallback). No part of that path is re-implemented or re-parameterized.
-* Truth: the certified seat vectors in `scripts/seat_hindcasts/config.py::EVALUATION_ELECTIONS`, extended only by elections that pass the Part-2 admission requirements of §E.3.
+* Truth: the certified seat vectors in `scripts/seat_hindcasts/config.py::EVALUATION_ELECTIONS`, extended only by elections that pass the Part-2 admission requirements of §E.3. **(Amendment 2)** For Tier 3-ISO this is 2018 and 2022 from that source plus 2014 from the Part-2B certified artifact `diagnostics/election_noise_v2/historical_seat_extension/processed/certified_mandates_2010_2014.csv`.
 * Supporting: per-party discrete seat CRPS via `calculate_discrete_seat_crps`.
 
 ### D4. Coalition-threshold metric
@@ -461,6 +465,13 @@ exact complement of `{s_{255−m} ≥ 175}`. Therefore `p_{255−m} = 1 − p_m`
 2. Per `(election, horizon)`: mean over the five seeds (with the seed SD reported).
 3. Per election: mean over horizons → the **election-level aggregate coalition Brier**.
 4. Headline: unweighted mean of the election-level aggregates over evaluation elections.
+
+**(Amendment 2)** On **Tier 3-ISO** there is exactly one case per election — the
+isolated path has a single forecast origin and therefore no horizon dimension — so
+step 3 is the identity and steps 1, 2 and 4 apply unchanged: mask mean, then
+five-seed mean, then the unweighted mean over the three elections. Elections remain
+equally weighted and masks are still never treated as independent. The aggregation
+rule itself is not modified.
 
 Per-case, per-seed and per-election values are always reported alongside the
 headline. The number of independent realized outcomes is the number of
@@ -550,17 +561,82 @@ pipeline. Mirrors `docs/election_layer_v2.md` §5 and `scripts/seat_hindcasts`.
 
 > **Frozen Tier-2 case set: 12 cases over 2 elections. No case is excluded by the
 > `K_outer ≥ 3` rule** (2018 has `K_outer = 4`, 2022 has `K_outer = 5`).
+>
+> **AMENDMENT 2 — Tier 2 is retained but leaves the adoption gate.** Its historical
+> Poll-of-Polls state input is not publication-time leakage-safe (§E.5 item 7), so
+> Tier-2 results are computed, preserved and reported as **retrospective
+> diagnostics** and are **not used for adoption**. Existing Tier-2 results are not
+> discarded or rewritten.
 
 **Tier 3 — seat and coalition level.** The same 12 cases as Tier 2, with
 geography baselines 2014→2018 and 2018→2022, through the identical geography +
 exact mandate allocator. Metrics D3, D4, D5.
 
-> **Frozen Tier-3 case set as of this freeze: 12 cases over 2 elections
-> ({2018, 2022}), subject only to the Part-2 backward-extension investigation of
-> §E.3 and the conditional coalition-Brier rule of §F.3 G5.**
+> **Frozen Tier-3 case set: 12 cases over 2 elections ({2018, 2022}).**
+>
+> **AMENDMENT 2 — Tier 3 is likewise retained as a retrospective diagnostic and
+> leaves the adoption gate**, for the same reason as Tier 2: it is defined on
+> Tier-2 cases and therefore inherits their leaky upstream state. Its existing
+> results are preserved, not rewritten. The authoritative seat/coalition
+> evaluation is **Tier 3-ISO** (§E.2a).
 
-Total draw budget per model: (`N_T1` + 12 + 12) cases × 5 seeds × 20 000 draws
-(= (3 + 12 + 12) under the current residual history).
+### E.2a Tier 3-ISO — the authoritative seat/coalition evaluation (Amendment 2)
+
+The isolated ElectionNoise path, with no OpinionState and no Dynamics:
+
+```
+historical final 14-day polling consensus      (publication-date safe)
+  -> ElectionNoise                             (the component under test)
+  -> unchanged bounded simplex transfer         (λ rule, ε = 0.01 pp)
+  -> frozen deterministic geography             (chronological mode only)
+  -> historically correct mandate law
+  -> joint per-draw seat vectors
+```
+
+The consensus is **exactly** the existing
+`scripts/election_residuals/consensus.py::build_election_polling_consensus`, the
+same estimator used to construct the historical ElectionNoise residuals. **No new
+polling estimator is introduced.** It admits a poll only if
+`publication_date <= election_date` **and** `interview_end <= election_date`, so
+every input was published at the forecast origin.
+
+| Target | Residual training years | `K_outer` | Geography baseline | Mandate law | First divisor |
+|---|---|---|---|---|---|
+| **2014** | 2002, 2006, 2010 | 3 | 2010 | **PRE_2018** | 7/5 |
+| **2018** | 2002, 2006, 2010, 2014 | 4 | 2014 | POST_2018 | 6/5 |
+| **2022** | 2002, 2006, 2010, 2014, 2018 | 5 | 2018 | POST_2018 | 6/5 |
+
+> **Frozen Tier 3-ISO case set: 3 cases over 3 elections. `N_seat` = 3.**
+> One case per election: the isolated path has a single forecast origin (the final
+> 14-day consensus) and therefore **no horizon dimension**.
+
+**Geography mode is restricted to `chronological`. `oracle` mode is prohibited on
+this path**, because its row margins come from the target election's realized
+constituency valid votes. In chronological mode with a target year ≤ 2022 the row
+margins are `R = sum(B, axis=1)`, derived entirely from the baseline election, and
+the electorates file is not read into the result at all — proven by perturbation
+test in the Amendment-2 audit.
+
+Metrics: **D3, D4, D5**. Truth is the certified historical seat vector: 2018 and
+2022 from `scripts/seat_hindcasts/config.py::EVALUATION_ELECTIONS`, 2014 from the
+Part-2B certified artifact
+`diagnostics/election_noise_v2/historical_seat_extension/processed/certified_mandates_2010_2014.csv`
+(M 84, L 19, C 22, KD 16, S 113, V 21, MP 25, SD 49 = 349), which passed the seven
+§E.3 admission requirements.
+
+**Why 2014 is admissible here but was not in Tier 2/Tier 3.** Part 2B established
+that 2014 satisfies every §E.3 admission requirement, including exact vote
+reconciliation, an unambiguous PRE_2018 law, a boundary-clean 2010 baseline, and
+zero disagreement with the certified coalition-majority indicator across all 254
+masks. Part 3 nevertheless excluded it because Tier 2 is defined as a
+*full-pipeline* hindcast and OpinionState v1.1 cannot be estimated for any 2014
+`as_of` (the Poll-of-Polls daily series begins 2014-09-15, one day after the
+election). Tier 3-ISO does not use OpinionState, so the §E.3 admission is
+sufficient and 2014 enters.
+
+Total draw budget per model: **adoption** = (`N_T1` + `N_seat`) = 3 + 3 = 6 cases
+× 5 seeds × 20 000 draws; **diagnostics** = a further 12 Tier-2 and 12 Tier-3
+cases on the same seed and draw design.
 
 ### E.3 Backward extension of the seat/coalition evidence — a Part-2 investigation, not a licence (§I item 7)
 
@@ -575,6 +651,9 @@ A 2014 target would need a 2010 constituency baseline, which does not exist here
 > **This restriction is explicitly NOT treated as permanent.** Part 2 must
 > investigate whether official historical constituency vote data and certified
 > seat results can credibly extend the exact end-to-end evaluation backward, for:
+>
+> *(Amendment 2: the seven requirements below now govern admission to **Tier 3-ISO**,
+> the authoritative seat tier, as well as to the full-pipeline diagnostic tiers.)*
 >
 > * **2014 target** — requires a 2010 constituency baseline plus certified 2014 mandates and results;
 > * **2010 target** — requires a 2006 constituency baseline plus certified 2010 mandates and results.
@@ -648,6 +727,13 @@ eligibility rules frozen above** — `K_outer ≥ 3` for Tier-1 targets (§E.2) 
 seven admission requirements for seat-evaluable elections (§E.3). No discretionary
 judgement enters either count.
 
+> **Amendment-2 clarification.** This section bounds **Part 2**, and Part 2 stayed
+> inside it: it left `N_seat` at 2. `N_seat` became 3 under Amendment 2 not through
+> data availability but through an explicit, reviewer-authorised redefinition of
+> which tier carries the seat/coalition evaluation (§E.2a), made before any
+> challenger score existed. §E.3's seven admission requirements continue to govern
+> which elections may enter the seat tier, and 2014 satisfies all seven.
+
 ### E.5 Limitations — to be restated in every report produced under this preregistration
 
 1. The residual pool has at most **six** observations under the current history.
@@ -667,6 +753,57 @@ judgement enters either count.
 5. **Six elections is not large-N evidence and must never be described as such.**
    Any summary that reads as a general claim about Swedish polling error, rather
    than a claim about a handful of observations, is a reporting error.
+6. **(Amendment 2)** The Tier-1 and Tier 3-ISO metrics are **not statistically
+   independent evidence** — see §E.7.
+7. **(Amendment 2) The historical Poll-of-Polls state series is not
+   publication-time leakage-safe.** Part 3B established that it is a
+   fieldwork-dated rolling aggregate which the provider retrospectively completes
+   as later-published polls arrive: two archived snapshots retrieved one day apart
+   differ in 176 of 34 888 cells, and the largest revision (2026-08-22, MP
+   7.5 → 7.3) is explicable only by a poll published 2026-08-27. Across the six
+   `as_of` dates of each full-pipeline election, 19 poll-instances leak for 2018
+   (max lead 37 days) and 13 for 2022 (max 18 days). This is a property of the
+   frozen production input, is common-mode across models, and is **not** repaired
+   here. Its consequence is confined to scope: the full-pipeline Tier-2/Tier-3
+   results are retained as retrospective diagnostics and excluded from the
+   adoption gate, and the authoritative seat/coalition evaluation moves to the
+   leakage-safe Tier 3-ISO path (§E.2a).
+
+### E.7 How the vote and seat evaluations relate (Amendment 2)
+
+Tier 1 and Tier 3-ISO score **the same predictive distribution**. Tier 1 scores it
+directly in vote space; Tier 3-ISO scores deterministic, nonlinear downstream
+functionals of that identical distribution — the geography projection, the
+integerisation and the statutory allocator are a fixed pushforward applied to the
+very same draws.
+
+> **They are therefore related evaluations of one forecast, not independent
+> evidence, and must never be reported or aggregated as if they were.** No
+> statement of the form "the challenger won on two independent tiers" is
+> admissible.
+
+Their purpose is different from adding evidence: it is to check that an
+improvement in marginal and joint *vote* prediction also behaves sensibly for the
+downstream quantities that exposed the six-atom problem in the first place. A
+challenger could improve vote-space scores while degrading a coalition-threshold
+functional, and the seat tier exists to catch exactly that.
+
+Two consequences of the isolated construction must be stated openly, because they
+shape how the seat metrics should be read:
+
+* **CONTROL's predictive law on this path is exactly `K` equal atoms** (`K` = 3, 4,
+  5 for 2014, 2018, 2022). Verified: the path produces exactly `K` distinct vote
+  compositions and exactly `K` distinct seat vectors. So CONTROL's coalition
+  probability `p_m` can only take values in `{0, 1/K, …, 1}` — at 2014, only
+  `{0, ⅓, ⅔, 1}`.
+* A continuous challenger can express intermediate probabilities that CONTROL
+  structurally cannot. The Brier score is strictly proper and the truth is
+  external, so this is a legitimate comparison and not circular — but the
+  coalition-Brier improvement threshold is likely to be **easy** for any
+  well-behaved continuous law to clear. The informative content of the gate
+  therefore sits in the **non-inferiority guards** (G3, G4) and the
+  per-election robustness conditions (G5), not in the headline Brier improvement
+  alone. Readers of the eventual result should weight it accordingly.
 
 ---
 
@@ -689,11 +826,11 @@ almost passes.**
 
 ### F.2 Tier roles (§I item 1) — frozen
 
-| Tier | Role in the gate |
+| Tier | Role in the gate (as amended) |
 |---|---|
-| **Tier 1** (3 cases, ElectionNoise isolated) | **Required improvement** on the primary joint vote energy score |
-| **Tier 2** (12 cases, full pipeline) | **Hard non-inferiority check** on the integrated metrics |
-| **Tier 3** (seat + coalition) | Coalition-majority Brier is a **separate required-improvement criterion**; seat-vector ES is a non-inferiority check |
+| **Tier 1** (3 cases, ElectionNoise isolated, vote level) | **Required improvement** on the primary joint vote energy score, **plus** hard non-inferiority on the marginal and interval metrics |
+| **Tier 3-ISO** (3 cases, ElectionNoise isolated, seat level) | Coalition-majority Brier is a **separate required-improvement criterion**; seat-vector ES is a **hard non-inferiority check** |
+| **Tier 2 and Tier 3** (12 + 12 cases, full pipeline) | **Retrospective diagnostics only — not part of the gate** (§E.5 item 7). Computed, preserved and reported; never used for adoption. |
 
 Rationale for putting the improvement requirement on Tier 1: it isolates
 ElectionNoise, which is the component under test, and it spans **more independent
@@ -703,40 +840,64 @@ uncertainty of OpinionState and Dynamics, so Tier 2 has less power to identify
 whether ElectionNoise itself improved. Case count is not the relevant measure of
 evidence here; the number of independent realized elections is.
 
-> **No compensation.** A Tier-1 improvement may **never** offset a material
-> Tier-2 degradation. The Tier-2 non-inferiority checks are hard gates evaluated
-> independently; failing any of them fails the candidate regardless of how large
-> the Tier-1 improvement is.
+> **No compensation.** A required improvement may **never** offset a material
+> degradation elsewhere. Every non-inferiority check is a hard gate evaluated
+> independently; failing any one of them fails the candidate regardless of how
+> large the improvement is. This principle is unchanged by Amendment 2; only the
+> tiers the checks are evaluated on changed.
+
+**Amendment-2 note on the rationale above.** The argument for putting the
+improvement requirement on Tier 1 rather than the full pipeline was that Tier 1
+isolates the component under test and spans more independent elections. Amendment 2
+strengthens that argument rather than weakening it: both gate tiers are now
+isolated-ElectionNoise evaluations over the same three elections, and the two
+full-pipeline tiers — which carried both the extra OpinionState/Dynamics
+uncertainty *and* the leaky historical state — are out of the gate entirely.
 
 ### F.3 The gate — all criteria must hold
 
-**G1 — Tier-1 joint vote performance improves (required improvement).**
+**G1 — Tier-1 joint vote performance improves (required improvement). Unchanged.**
 Tier-1 five-seed mean 9-category energy score (D1) **improves** (≥ 2.0 % better
 than CONTROL).
 
-**G2 — coalition-majority Brier improves (required improvement).**
-Tier-3 headline coalition Brier (D4), computed after the identical geography and
-exact mandate allocator, **improves** (≥ 2.0 % better than CONTROL). Its
-per-election conditions are in G5.
+**G2 — coalition-majority Brier improves (required improvement). Re-pointed by
+Amendment 2 to Tier 3-ISO.**
+The **Tier 3-ISO** headline coalition Brier (D4), computed after the identical
+frozen geography and the historically correct mandate allocator, **improves**
+(≥ 2.0 % better than CONTROL). Its per-election conditions are in G5, which now
+runs on the `N_seat ≥ 3` branch because `N_seat` = 3.
 
-**G3 — Tier-2 integrated non-inferiority (hard).**
-On the 12 Tier-2 cases, none of the following may materially worsen (each
+**G3 — Tier-1 marginal and interval non-inferiority (hard). Re-pointed by
+Amendment 2 from Tier 2 to Tier 1.**
+On the 3 Tier-1 cases, none of the following may materially worsen (each
 ≤ +1.0 % relative): the 9-category energy score; the 8-party energy score; the
-mean 8-party CRPS. Coverage must not materially worsen at 50/80/90 %.
+mean 8-party CRPS. Coverage must not materially worsen at 50/80/90 % (≤ +3.0 pp
+absolute deviation from nominal).
+*The tolerances are identical to the ones this criterion carried before; only the
+tier it is evaluated on changed, because the previous tier's upstream state is not
+publication-time leakage-safe.*
 
-**G4 — marginal and seat non-inferiority (hard).**
-Tier-1 mean 8-party CRPS does not materially worsen (≤ +1.0 %); Tier-1 coverage
-does not materially worsen; Tier-3 mean 8-dimensional seat-vector energy score
-does not materially worsen (≤ +1.0 %).
+**G4 — seat non-inferiority (hard). Re-pointed by Amendment 2 to Tier 3-ISO.**
+The **Tier 3-ISO** mean 8-dimensional seat-vector energy score does not materially
+worsen (≤ +1.0 % relative).
 
-**G4b — short-horizon operational non-inferiority guard (§I item 8, hard).**
-Aggregate the Tier-2 cases at horizons **14 and 28 days only** (4 cases: 2 elections
-× 2 horizons). Under the same **1.0 %** non-inferiority tolerance, the challenger
-must not materially worsen the 9-category energy score or the mean 8-party CRPS on
-this short-horizon aggregate.
-*This is a non-inferiority guard, not an additional required-improvement target.*
-The **primary Tier-2 summary keeps equal weighting over all six preregistered
-horizons**; primary weights are not changed on the basis of the current 2026 date.
+**G4b — RETIRED FROM THE GATE by Amendment 2; retained as a diagnostic.**
+G4b aggregated the Tier-2 cases at horizons 14 and 28 days. The isolated path has a
+**single forecast origin** and therefore no horizon dimension, so no Tier 3-ISO
+analogue of G4b exists. It is **not** replaced by an invented substitute. G4b
+continues to be **computed and reported on the Tier-2 diagnostic set** under the
+same 1.0 % tolerance, and the primary Tier-2 diagnostic summary keeps equal
+weighting over all six preregistered horizons.
+
+> **Recorded consequence, stated plainly:** retiring G4b removes one hard gate. The
+> partial mitigation is that Tier 1 and Tier 3-ISO are both built on the final
+> 14-day consensus, i.e. the shortest and operationally most relevant origin, so
+> the regime G4b was added to protect is the regime the gate now evaluates
+> throughout. That is a weaker guarantee than G4b provided, because G4b tested the
+> full pipeline at a short horizon whereas the isolated path omits OpinionState and
+> Dynamics entirely. The reviewer should treat this as a known reduction in gate
+> coverage, accepted in exchange for removing a leaky input from the adoption
+> decision.
 
 **G5 — robustness to individual elections (§I item 9; Tier-1 clause replaced by
 Amendment 1).**
@@ -781,7 +942,12 @@ must not be invented.**
 *Coalition Brier — frozen conditional rule, declared before the §E.3 historical-data
 search so that data availability cannot select a favourable rule after the fact.*
 Let `N_elections` (also written `N_seat`) be the number of seat-evaluable
-elections admitted under §E.3. **This rule is unchanged by Amendment 1.**
+elections admitted under §E.3. **This rule is unchanged by Amendment 1 and
+unchanged by Amendment 2.** Under Amendment 2 it is evaluated on Tier 3-ISO with
+`N_seat` = 3, so the **`N_elections ≥ 3` branch is the live one**: aggregate
+improvement ≥ 2 %, improvement in at least `ceil(3/2) = 2` of the 3 elections, and
+removing any one election must not turn the aggregate delta into a degradation of
+more than 1.0 %.
 
 * **If `N_elections == 2`:**
   * aggregate coalition Brier must improve **≥ 2 %**; **and**
@@ -861,7 +1027,12 @@ Every comparison holds these fixed, byte-for-byte, across CONTROL, A and B:
 * Historical as-of construction, the 14-day consensus window, and the strict
   chronological pool rule
 * The frozen Tier-1 **candidate target set** `{2010, 2014, 2018, 2022}` (§E.2),
-  which may never expand, and the frozen Tier-2/Tier-3 case sets
+  which may never expand, and the frozen Tier-2/Tier-3 and Tier-3-ISO case sets
+* **(Amendment 2)** On Tier 3-ISO: the consensus estimator
+  (`build_election_polling_consensus`, 14-day window, unchanged), geography mode
+  restricted to `chronological` with `oracle` prohibited, `total_national_votes`
+  left unset so the scale comes from the baseline election, and the statutory law
+  taken from `mandate_law_for_election_year`
 * The nested pool-size minima `K_outer ≥ 3` and `K_inner ≥ 2`, with `K_inner = 1`
   prohibited, applied identically to all three models (§C, §E.2, §E.4)
 * The tactical-voting decision (rejected; no threshold behaviour is modelled)
@@ -886,7 +1057,11 @@ This preregistration does **not**:
 * claim that multimodality is itself an error;
 * alter the geography or mandate-allocation algorithm for any reason, including to
   admit an older election (§E.3);
-* alter the simplex transfer or λ rule for any reason (§G).
+* alter the simplex transfer or λ rule for any reason (§G);
+* **(Amendment 2)** introduce a new polling estimator, reconstruct a historical
+  Poll-of-Polls state series, treat the retrospective `pofp` series as
+  leakage-safe, alter production polling inputs, or discard or rewrite the existing
+  full-pipeline Tier-2/Tier-3 results.
 
 ---
 
@@ -894,7 +1069,7 @@ This preregistration does **not**:
 
 | # | Decision | Resolution |
 |---|---|---|
-| 1 | Tier roles | **Tier 1 = required improvement** on the primary joint vote ES; **Tier 2 = hard non-inferiority** on integrated metrics; coalition Brier a **separate required-improvement** criterion after the identical geography + exact allocator. **No compensation** of a Tier-2 degradation by a Tier-1 improvement. (§F.2) |
+| 1 | Tier roles | *(Amendment-1 record — **superseded in part by item 12**.)* **Tier 1 = required improvement** on the primary joint vote ES; **Tier 2 = hard non-inferiority** on integrated metrics; coalition Brier a **separate required-improvement** criterion after the identical geography + exact allocator. **No compensation** of a degradation by an improvement — this principle survives Amendment 2 unchanged. Amendment 2 moved the non-inferiority family from Tier 2 to Tier 1 and the seat criteria to Tier 3-ISO; the tolerances did not change. (§F.2) |
 | 2 | Tolerances | Frozen: improve ≥ **2.0 %** relative; non-inferiority ≤ **1.0 %** relative; coverage deviation may not grow by more than **3.0 pp**. Not to be retuned. (§F.1) |
 | 3 | A's grid and small-K rule | Grid `{0.25, 0.50, 0.75, 1.00}` retained; **`h = 0` not added** (CONTROL is the unsmoothed model). **The K = 2 outer fallback is removed.** **Amendment 1 clarification:** outer evaluation eligibility requires **`K_outer ≥ 3`** (applied identically to CONTROL, A and B); inner LOEO-FIT folds may run at **`K_inner = 2`**, which is explicitly allowed and is not the removed fallback; **`K_inner = 1` is prohibited**, which is exactly why an outer `K_outer = 2` target is excluded. (§C, §E.2, §E.4) |
 | 4 | Monte Carlo design | **Five fixed seeds** `12345, 24680, 98765, 54321, 13579`; **N = 20 000 per seed per case per model**; per-seed scores reported with the five-seed mean and SD; **gate applied to the five-seed mean**; no seed selection or favourable pooling. G6 clarified: determinism is per (model, case, seed); different seeds need not match. (§D0, §F.3 G6) |
@@ -903,6 +1078,8 @@ This preregistration does **not**:
 | 7 | Historical seat/geography evidence | The 2018/2022-only Tier-3 set is **not permanently fixed**. Part 2 must investigate backward extension to 2014 (2010 baseline) and 2010 (2006 baseline) under the explicit provenance/inclusion requirements declared in §E.3 **before** the search. The geography algorithm may not be altered to admit an older election; an election that cannot run the identical chronological path with authoritative inputs is rejected from Tier 2. (§E.3) |
 | 8 | Horizon weighting | **Equal weighting over all six preregistered horizons retained** for the primary Tier-2 summary; primary weights not changed on the basis of the current 2026 date. **Added:** a short-horizon operational **non-inferiority guard** on the aggregated 14-day and 28-day Tier-2 cases at the same 1.0 % tolerance (G4b). |
 | 9 | G5 robustness | Frozen **before** the §E.3 data search. **Amendment 1** replaces the non-operative Tier-1 "3 of 4" threshold with the general **`N_T1 − 1`** rule of §F.3 G5: all `N_T1` leave-one-target-out aggregates must favour the challenger directionally, at least `N_T1 − 1` of them by ≥ 1.0 %, and at least `N_T1 − 1` individual targets must favour the challenger. At `N_T1 = 4` this reproduces the original "3 of 4" exactly; at `N_T1 = 3` it yields "2 of 3" by the same formula. `N_T1 < 3` ⇒ STOP. Coalition Brier: the `N_elections` (= `N_seat`) `== 2` / `≥ 3` conditional rule is **unchanged**. |
+| 12 | Leakage-safe seat evaluation (Amendment 2) | The historical PoP state is not publication-time leakage-safe (§E.5 item 7), discovered **before** any challenger implementation or score. The authoritative seat/coalition evaluation moves to the isolated ElectionNoise path **Tier 3-ISO** (§E.2a): final 14-day consensus → ElectionNoise → unchanged transfer → frozen geography (chronological only) → historically correct law. Targets `{2014, 2018, 2022}`, **`N_seat` = 3**. The full-pipeline Tier-2/Tier-3 results are preserved and reported as retrospective diagnostics and excluded from the gate. G2 and G4 re-point to Tier 3-ISO; G3 re-points to Tier 1; G4b is retired from the gate and kept as a diagnostic. **No threshold, seed, sample count, Challenger A/B definition, h grid, λ rule or Tier-1 vote gate changed.** (§E.2a, §E.7, §F.2, §F.3) |
+| 13 | Vote and seat metrics are not independent (Amendment 2) | Tier 1 and Tier 3-ISO score the same predictive distribution — the seat metrics are a deterministic nonlinear pushforward of the identical draws. They may never be reported or aggregated as independent evidence. CONTROL's law on this path is exactly `K` atoms, so its coalition probabilities are confined to multiples of `1/K`; the informative content of the gate therefore sits in the non-inferiority guards and per-election robustness, not the headline Brier improvement. (§E.7) |
 | 11 | Nested-CV K ambiguity (Amendment 1) | Discovered **before** Part 2 and before any challenger implementation or score. `K_outer ≥ 3` governs evaluation eligibility; `K_inner ≥ 2` governs fitting inside the already-preregistered `h` selection; `K_inner = 1` prohibited. Tier-1 candidate targets frozen at `{2010, 2014, 2018, 2022}` and may never expand; `N_T1` is determined mechanically. (§C, §E.2, §E.6, §F.3 G5, §J.2) |
 | 10 | Stale audit file | Documented as a **provenance-maintenance caveat** in §0.2. It does not invalidate residual values. **Its repair is explicitly excluded from this preregistration and from any commit carrying it**; a separate maintenance change is recommended, which must prove the regenerated residual pool is unchanged. |
 
@@ -975,10 +1152,10 @@ a pre-2002 residual election under §E.3, 2010 reaches `K_outer ≥ 3`, `N_T1` b
 4, and the `N_T1 = 4` column of the §F.3 G5 table applies automatically with no
 further decision.
 
-### J.3 Amendment 1 — operative freeze record
+### J.3 Amendment 1 — superseded freeze record (preserved audit trail)
 
 ```
-PREREGISTRATION STATUS: FROZEN — AMENDMENT 1
+PREREGISTRATION STATUS (superseded): FROZEN — AMENDMENT 1
 
 FREEZE TIMESTAMP (UTC): 2026-08-30T20:21:28Z
 AMENDMENT 0 COMMIT:     ef5aaeba02b5a3d43334d5743381d219c2e80c71  (superseded, §J.1)
@@ -986,13 +1163,19 @@ FREEZE BASE COMMIT:     ef5aaeba02b5a3d43334d5743381d219c2e80c71
 FREEZE COMMIT:          the commit that introduces this block on branch
                         diagnostic/election-noise-mixture (reported with the
                         amendment; it cannot be embedded in the file it hashes)
-BODY SHA-256:           recorded after the marker at the end of this file
-WHOLE-FILE SHA-256:     recorded in the amendment commit message (it cannot be
-                        embedded in the file it covers)
+FREEZE COMMIT (actual):  80b1c671c4b6d879a888f28a859ee392e8f59bc5
+BODY SHA-256:           bac3ca06e52cc07fe74ca9e5aa785d94e30934db32193c7f948e95a49a6ae075
+WHOLE-FILE SHA-256:     03dc843bd73d12c51a8deb7f727a7a4a29a198ee8513d0df5dd8c1fd309e5a97
 REVIEWER:               repository owner (Amendment-1 instruction of 2026-08-30)
 SCOPE:                  ambiguity resolution only; pre-data, pre-challenger
 OPEN CLAUSES:           none
 ```
+
+Amendment 1 resolved the non-operative Tier-1 G5 threshold and split the nested
+`K_outer` / `K_inner` minima. Everything it froze remains in force except where
+Amendment 2 explicitly re-points a gate criterion; **no threshold, seed, sample
+count, challenger specification, `h` grid, λ rule or Tier-1 vote gate was changed
+by Amendment 2.**
 
 **BODY SHA-256** — the hash covers every byte of this document **strictly before
 the last occurrence** of the freeze-block start marker, which is the real marker
@@ -1012,17 +1195,86 @@ PY
 ```
 
 The whole-file SHA-256 of the frozen file and the Amendment-1 commit hash are
-recorded in the amendment commit message.
+recorded in the amendment commit message and, for Amendment 1, above.
 
-### J.4 What may happen next
+### J.4 Amendment 2 — rationale and scope
 
-Only the Part-2 historical-data feasibility search, under §E.3 and bounded by
-§E.6. Challenger implementation, challenger scoring, and any 2026 challenger
-forecast remain prohibited until Part 2 has determined `N_T1` and `N_seat` and the
-result has been reviewed.
+**When it was made.** After Part 3B (`89d3408`) and **before any challenger was
+implemented, before any challenger score existed, and before any 2026 challenger
+forecast**. Nothing empirical about challenger performance existed, so nothing
+empirical about challenger performance could have motivated it.
+
+**Why it was made.** Part 3B established that the historical Poll-of-Polls state
+series consumed by the full-pipeline hindcasts is a fieldwork-dated rolling
+aggregate which the provider retrospectively completes as later-published polls
+arrive (§E.5 item 7). The seat and coalition metrics that the adoption gate turns
+on were therefore computed from a state a forecaster could not have observed at the
+forecast origin. That the leakage is common-mode across models makes the
+*comparison* survivable, but it does not make an adoption decision on a
+non-leakage-safe evaluation acceptable, and it was not accepted on that basis.
+
+**What it does.**
+
+* Introduces **Tier 3-ISO** (§E.2a) as the authoritative seat/coalition evaluation:
+  the final 14-day polling consensus — the existing publication-date-safe estimator
+  already used to build the ElectionNoise residuals, with **no new estimator
+  invented** — through ElectionNoise, the unchanged simplex transfer, the frozen
+  geography in `chronological` mode only, and the historically correct mandate law.
+* Sets the seat/coalition targets to `{2014, 2018, 2022}`, **`N_seat` = 3**. 2014
+  becomes admissible because it satisfied every §E.3 requirement in Part 2B and its
+  earlier exclusion was caused solely by Tier 2's dependence on OpinionState.
+* Moves the full-pipeline Tier-2 and Tier-3 evaluations out of the gate and
+  **preserves** them as retrospective diagnostics. Their existing Part-3 results are
+  not discarded or rewritten.
+* Re-points G2 and G4 to Tier 3-ISO, re-points G3 to Tier 1, and retires G4b from
+  the gate while keeping it as a Tier-2 diagnostic — with the resulting reduction in
+  gate coverage recorded openly rather than papered over.
+* Records in §E.7 that the vote and seat evaluations are **not independent
+  evidence**, and that CONTROL's coalition probabilities on this path are confined
+  to multiples of `1/K`.
+
+**What it does not do.** No threshold, tolerance, seed, sample count, mask set,
+aggregation rule, `h` grid, λ rule, simplex-transfer rule, Challenger A or
+Challenger B specification, or Tier-1 vote gate is changed. The coalition-Brier
+conditional rule is untouched; `N_seat` = 3 merely selects the `≥ 3` branch that
+was already frozen in Amendment 1. No new polling estimator, no reconstructed PoP
+series, no production polling input, and no `compute_discrete_energy_score` change.
+
+**Audit evidence.** `diagnostics/election_noise_v2/isolated_seat_evaluation/` —
+geography input classification with an electorates perturbation test, consensus
+publication-safety per target, a poll-archive revision test, and a three-target
+smoke test producing valid 349-seat draws. No predictive score was computed.
+
+### J.5 Amendment 2 — operative freeze record
+
+```
+PREREGISTRATION STATUS: FROZEN — AMENDMENT 2
+
+FREEZE TIMESTAMP (UTC): 2026-08-31T08:54:20Z
+AMENDMENT 0 COMMIT:     ef5aaeba02b5a3d43334d5743381d219c2e80c71  (superseded, §J.1)
+AMENDMENT 1 COMMIT:     80b1c671c4b6d879a888f28a859ee392e8f59bc5  (superseded, §J.3)
+FREEZE BASE COMMIT:     89d340880a4bdb389f94ce61fa3333799b58d81a
+FREEZE COMMIT:          the commit that introduces this block on branch
+                        research/isolated-seat-evaluation (reported with the
+                        amendment; it cannot be embedded in the file it hashes)
+BODY SHA-256:           recorded after the marker at the end of this file
+WHOLE-FILE SHA-256:     recorded in the amendment commit message (it cannot be
+                        embedded in the file it covers)
+REVIEWER:               repository owner (Amendment-2 instruction of 2026-08-31)
+SCOPE:                  leakage-safety correction of the seat/coalition tier;
+                        pre-challenger, pre-score
+OPEN CLAUSES:           none
+```
+
+### J.6 What may happen next
+
+Re-certification of the CONTROL baseline under the amended evaluation (Tier 1
+unchanged, Tier 3-ISO added, full-pipeline results retained as diagnostics), and
+only then Challenger A/B implementation. Challenger scoring and any 2026 challenger
+forecast remain prohibited until that recertified baseline has been reviewed.
 
 <!-- FREEZE-BLOCK-START -->
 All bytes above this marker line are covered by BODY SHA-256.
 
-BODY SHA-256: bac3ca06e52cc07fe74ca9e5aa785d94e30934db32193c7f948e95a49a6ae075
+BODY SHA-256: 5a9a6dc8ef6f26ce3ce152155af0ed288fb8d2d97c81a2606e513cf20e1b058b
 <!-- FREEZE-BLOCK-END -->
