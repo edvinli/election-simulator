@@ -1,0 +1,736 @@
+{
+  "artifact": "ELECTIONNOISE V2 CHALLENGER IMPLEMENTATION FREEZE",
+  "purpose": "Pin the Challenger A and Challenger B implementations and their dependencies before any target-election score is computed. Any changed hash after this point is a hard stop.",
+  "contains_no_target_election_scores": true,
+  "freeze_timestamp_utc": "2026-08-31T12:15:58Z",
+  "git": {
+    "implementation_commit": "0facfe6cf542e650bcdf7fdc2d01a6795366c045",
+    "branch": "research/challenger-implementation",
+    "worktree_clean_at_freeze": true
+  },
+  "preregistration": {
+    "status": "FROZEN - AMENDMENT 2",
+    "commit": "00f7030eda65e64efa3253798eb8cc6c0b8fe9cc",
+    "body_sha256": "5a9a6dc8ef6f26ce3ce152155af0ed288fb8d2d97c81a2606e513cf20e1b058b",
+    "whole_file_sha256": "126a8f4902f8af36f007dca4442f8e41bed5a507b190d30960b38f33c6345572",
+    "freeze_timestamp_utc": "2026-08-31T08:54:20Z",
+    "edited_by_this_task": false
+  },
+  "evaluator": {
+    "refreeze_commit": "a5b8c7a234acf60cac71ef1ab1439343fae88639",
+    "evaluator_freeze_sha256": "3142f81c2494773448f2a48cbe57ccd964fa807891477155cc89e1c3b5f04bae",
+    "evaluation_case_manifest_sha256": "30f3a06604ae6e04a29161c24ee509ffc38d317a32f42a0f8e2d77f9e43c3165",
+    "control_scores_summary_sha256": "0e862edfe12c16743f4b84e752020edb7e94690f936cec3e6966f5d40d990bb6",
+    "exact_control_oracle_sha256": "d82e60d182deaac576f3125168ea304f64ddb8a10cf0da927807528f60a8ec78",
+    "clean_reproduction_comparison_sha256": "fd15d11fe953fa6f962835eb9ddd00716afc8fd174250311a20b4cda3ad3bb69",
+    "evaluator_not_modified_by_part4": true
+  },
+  "monte_carlo_policy": {
+    "seeds": [
+      12345,
+      24680,
+      98765,
+      54321,
+      13579
+    ],
+    "draws_per_seed": 20000,
+    "unchanged_from_the_evaluator_freeze": true
+  },
+  "challenger_a": {
+    "law": "R = (c_k + h*eps)/sqrt(1+h^2);  k ~ U{1..K};  eps = (1/sqrt K) sum_j z_j c_j",
+    "epsilon_law": "eps ~ N(0, S_P)",
+    "covariance_convention": "S_P = C^T C / K  (divisor K, maximum likelihood, NO Bessel)",
+    "theoretical_mean": "0",
+    "theoretical_covariance": "S_P, exactly, for every h on the grid",
+    "variance_correction": "sqrt(1+h^2) denominator, binding",
+    "h_grid": [
+      0.25,
+      0.5,
+      0.75,
+      1.0
+    ],
+    "h_zero_excluded": true,
+    "free_parameters": 1,
+    "prohibited": [
+      "h=0",
+      "additional h values",
+      "interpolation",
+      "continuous optimisation",
+      "party-specific smoothing",
+      "recency weighting",
+      "residual-year weighting",
+      "Student-t noise",
+      "covariance regularization",
+      "2026-dependent tuning"
+    ]
+  },
+  "nested_loocv": {
+    "rule": "score(h) = (1/K_outer) sum_{j in P} ES(F^A(h, P\\{j}), r_j - rbar_{P\\{j}}); h* = argmin_h score(h)",
+    "exact_tie_rule": "on an exact tie choose the SMALLEST h (most conservative)",
+    "seed_aggregation": "five-seed mean per D0, so h* is a deterministic property of the training pool and does not vary with the evaluation seed",
+    "k_outer_minimum": 3,
+    "k_inner_minimum": 2,
+    "k_inner_one": "prohibited; fails loudly",
+    "centering": "the production centering algorithm, re-applied on each inner pool",
+    "held_out_target": "r_j - rbar_{P\\{j}}, expressed in the inner centering",
+    "energy_score": "scripts/vote_share_calibration/energy_score.py::compute_energy_score, unchanged",
+    "leakage": "no outer target residual, no future residual and no 2026 information enters tuning",
+    "bandwidth_selection": {
+      "artifact_sha256": "66116c23a6a8ea87e303ce524e9e1edfe1b1f32b5da2cc578feb0a98a26fb867",
+      "h_star_by_target": {
+        "2014": 0.75,
+        "2018": 0.75,
+        "2022": 0.75
+      },
+      "exact_tie_encountered": {
+        "2014": false,
+        "2018": false,
+        "2022": false
+      },
+      "note": "LOEO-FIT inside the training pools only; not a score. Pinned here so the bandwidth cannot drift between freezing and scoring."
+    }
+  },
+  "challenger_b": {
+    "law": "R ~ N(0, Sigma_tilde)",
+    "s_p": "S_P = C^T C / K",
+    "projector": "P9 = I - 11^T/9 (exact zero-sum projector)",
+    "tau_sq": "tr(S_P)/8",
+    "target": "T = tau^2 * P9",
+    "norm": "||A||^2 = tr(A A^T)/8; the 1/8 cancels in delta",
+    "d_sq": "||S_P - T||^2",
+    "bbar_sq": "(1/K^2) sum_j ||c_j c_j^T - S_P||^2",
+    "b_sq": "min(bbar^2, d^2)",
+    "delta": "b^2/d^2",
+    "d_sq_zero_rule": "delta := 1 if d^2 == 0 (preregistered limit)",
+    "sigma_tilde": "(K/(K-1)) * [delta*T + (1-delta)*S_P]",
+    "bessel_correction": "K/(K-1), applied exactly once, at the final stage only",
+    "free_parameters": 0,
+    "distribution": "Gaussian only",
+    "numerical_policy": "symmetric eigendecomposition; a materially negative eigenvalue raises NonPSDCovariance rather than being clipped; only round-off-level structural zeros are set to exactly 0",
+    "prohibited": [
+      "Student-t",
+      "added ridge",
+      "empirical tail multiplier",
+      "recency weighting",
+      "eigenvalue clipping",
+      "any tunable parameter"
+    ]
+  },
+  "downstream": {
+    "transfer": "scripts/election_layer_v2/transfer.py::apply_batch_simplex_transfer, unchanged",
+    "apply_batch_simplex_transfer_sha256": "12037c720f3650bbe8a38cc89db26bcab2fd1fdde8f97474568e0686de660b3d",
+    "unchanged": [
+      "epsilon/floor behaviour (eps = 0.01 pp)",
+      "lambda computation",
+      "donor attenuation",
+      "simplex constraints"
+    ],
+    "lambda_role": "descriptive only; not a tuning parameter and has no adoption gate",
+    "geography": "chronological only; oracle mode forbidden",
+    "mandate_law": {
+      "2014": "PRE_2018",
+      "2018": "POST_2018",
+      "2022": "POST_2018"
+    }
+  },
+  "rng_contract": {
+    "reserved_tokens": [
+      "election_noise_v2_a_index",
+      "election_noise_v2_a_kernel",
+      "election_noise_v2_a_loeo",
+      "election_noise_v2_b_normal"
+    ],
+    "control_tokens_forbidden": [
+      "residual_index",
+      "sign_draw"
+    ],
+    "derivation": "token = f\"{base_seed}:{origin_date.isoformat()}:{horizon_days}:{label}\"; subseed = int(sha256(token).hexdigest()[:8], 16) % 2_147_483_647",
+    "substreams": "numpy SeedSequence spawn_key on the reserved token; no new tokens",
+    "a_streams": [
+      "election_noise_v2_a_index (atom index)",
+      "election_noise_v2_a_kernel (Gaussian smoothing)",
+      "election_noise_v2_a_loeo (LOEO-FIT)"
+    ],
+    "b_streams": [
+      "election_noise_v2_b_normal (Gaussian residual draw)"
+    ],
+    "common_random_numbers": "none imposed; A's index stream is its own reserved token as the preregistration requires, and no artificial coupling is introduced between A, B or CONTROL",
+    "determinism": "identical (model, case, seed, N) is bit-identical; asserted by tests"
+  },
+  "implementation_hashes": {
+    "challenger_a": {
+      "diagnostics/election_noise_v2/challengers/challenger_a.py": {
+        "working_tree_sha256": "a407394a2733bb60c624e41919ec52706644587085ad47f9f10df14e0b30ad7a",
+        "head_sha256": "a407394a2733bb60c624e41919ec52706644587085ad47f9f10df14e0b30ad7a",
+        "uncommitted_local_edit": false
+      }
+    },
+    "nested_loocv": {
+      "diagnostics/election_noise_v2/challengers/loeo.py": {
+        "working_tree_sha256": "6694632ecc49fbacc45fe319850a6d9cfe928eec1e1b8fe3047b5f89d46ffdad",
+        "head_sha256": "6694632ecc49fbacc45fe319850a6d9cfe928eec1e1b8fe3047b5f89d46ffdad",
+        "uncommitted_local_edit": false
+      },
+      "diagnostics/election_noise_v2/challengers/select_bandwidths.py": {
+        "working_tree_sha256": "9f52139a7bb2e372ac99e2506a9d5b225330ed3c6179c8daf4a8d996b63d0793",
+        "head_sha256": "9f52139a7bb2e372ac99e2506a9d5b225330ed3c6179c8daf4a8d996b63d0793",
+        "uncommitted_local_edit": false
+      }
+    },
+    "challenger_b": {
+      "diagnostics/election_noise_v2/challengers/challenger_b.py": {
+        "working_tree_sha256": "030fea0c51174c42ca807b51f1fdc156deb94b437157e09cf6d3a50b59c808e8",
+        "head_sha256": "030fea0c51174c42ca807b51f1fdc156deb94b437157e09cf6d3a50b59c808e8",
+        "uncommitted_local_edit": false
+      }
+    },
+    "rng": {
+      "diagnostics/election_noise_v2/challengers/rng.py": {
+        "working_tree_sha256": "90bb36dbc083674d6b462c57557fbfa271cc04fb056c0cc514bb4f03b727eab6",
+        "head_sha256": "90bb36dbc083674d6b462c57557fbfa271cc04fb056c0cc514bb4f03b727eab6",
+        "uncommitted_local_edit": false
+      }
+    },
+    "downstream_integration": {
+      "diagnostics/election_noise_v2/challengers/draws.py": {
+        "working_tree_sha256": "9458e35111ab8945119d8e4c5a8c3496cb4da1753e0bf4c9e36619b4ec303a10",
+        "head_sha256": "9458e35111ab8945119d8e4c5a8c3496cb4da1753e0bf4c9e36619b4ec303a10",
+        "uncommitted_local_edit": false
+      }
+    },
+    "package": {
+      "diagnostics/election_noise_v2/challengers/__init__.py": {
+        "working_tree_sha256": "f207d57fe712eb6a2089e0ccff5a298afc67a080e11cee544eaa7cf3a56b5800",
+        "head_sha256": "f207d57fe712eb6a2089e0ccff5a298afc67a080e11cee544eaa7cf3a56b5800",
+        "uncommitted_local_edit": false
+      }
+    },
+    "freeze_mechanism": {
+      "diagnostics/election_noise_v2/challengers/freeze_challengers.py": {
+        "working_tree_sha256": "dd6ec65a34014b31be9c76a08a1706d742ae27e816beeef15a253f310b89c60e",
+        "head_sha256": "dd6ec65a34014b31be9c76a08a1706d742ae27e816beeef15a253f310b89c60e",
+        "uncommitted_local_edit": false
+      }
+    }
+  },
+  "frozen_dependency_hashes": {
+    "scripts/election_layer_v2/transfer.py": {
+      "working_tree_sha256": "12037c720f3650bbe8a38cc89db26bcab2fd1fdde8f97474568e0686de660b3d",
+      "head_sha256": "12037c720f3650bbe8a38cc89db26bcab2fd1fdde8f97474568e0686de660b3d",
+      "uncommitted_local_edit": false
+    },
+    "scripts/election_layer_v2/residuals_pool.py": {
+      "working_tree_sha256": "804003d1d51410e1af8881f07e60e24e63399111ea3ba8100de7b5562361e502",
+      "head_sha256": "804003d1d51410e1af8881f07e60e24e63399111ea3ba8100de7b5562361e502",
+      "uncommitted_local_edit": false
+    },
+    "scripts/election_layer_v2/config.py": {
+      "working_tree_sha256": "a0f31791539e4579694d15f74f7419bd38cdca91a2a1afbf54e7340bcedc72cf",
+      "head_sha256": "a0f31791539e4579694d15f74f7419bd38cdca91a2a1afbf54e7340bcedc72cf",
+      "uncommitted_local_edit": false
+    },
+    "scripts/election_residuals/consensus.py": {
+      "working_tree_sha256": "702f75a2371f08abba521112d7edd3188a6a7b7811b75c33e472f1a421a4f46c",
+      "head_sha256": "702f75a2371f08abba521112d7edd3188a6a7b7811b75c33e472f1a421a4f46c",
+      "uncommitted_local_edit": false
+    },
+    "scripts/vote_share_calibration/energy_score.py": {
+      "working_tree_sha256": "aef07f2b870da4b2bd40d546b17efe9933869e3d58646557d38e8c2f19c6be19",
+      "head_sha256": "aef07f2b870da4b2bd40d546b17efe9933869e3d58646557d38e8c2f19c6be19",
+      "uncommitted_local_edit": false
+    },
+    "scripts/geography/projection.py": {
+      "working_tree_sha256": "2fd634bd82d78de93421b5d14966b118a503ef3d20f5f3e5cf0ebf6d19dccd75",
+      "head_sha256": "2fd634bd82d78de93421b5d14966b118a503ef3d20f5f3e5cf0ebf6d19dccd75",
+      "uncommitted_local_edit": false
+    },
+    "scripts/mandates/allocator.py": {
+      "working_tree_sha256": "b3d7ef68e9d1e2166ad57e3b0a51bfbac9f5ea193f80776e291ab9cc36e0d4a3",
+      "head_sha256": "b3d7ef68e9d1e2166ad57e3b0a51bfbac9f5ea193f80776e291ab9cc36e0d4a3",
+      "uncommitted_local_edit": false
+    },
+    "scripts/mandates/law.py": {
+      "working_tree_sha256": "c784cda3efd5eac325a26fe8bb720abe7f0c2e0f30b78e57e51e5cf79b399a1e",
+      "head_sha256": "c784cda3efd5eac325a26fe8bb720abe7f0c2e0f30b78e57e51e5cf79b399a1e",
+      "uncommitted_local_edit": false
+    },
+    "diagnostics/election_noise_v2/control_baseline/harness/rng.py": {
+      "working_tree_sha256": "d940a7db78fa3904d25befb29f89026049334d924e2da7bfcd09c02dde877848",
+      "head_sha256": "d940a7db78fa3904d25befb29f89026049334d924e2da7bfcd09c02dde877848",
+      "uncommitted_local_edit": false
+    },
+    "diagnostics/election_noise_v2/control_baseline_amendment2/harness2/isolated.py": {
+      "working_tree_sha256": "7ff6d111e5f9c8b76c22178d210d711b06dd9ce69bbea4620b1233242a73f832",
+      "head_sha256": "7ff6d111e5f9c8b76c22178d210d711b06dd9ce69bbea4620b1233242a73f832",
+      "uncommitted_local_edit": false
+    }
+  },
+  "test_file_hashes": {
+    "tests/test_challenger_reference_math.py": {
+      "working_tree_sha256": "2bfc5d82c679b91fa623488cb356c4b3cc7ae0eee91221ea60478c60f0aad8f5",
+      "head_sha256": "2bfc5d82c679b91fa623488cb356c4b3cc7ae0eee91221ea60478c60f0aad8f5",
+      "uncommitted_local_edit": false
+    },
+    "tests/test_challenger_a.py": {
+      "working_tree_sha256": "564c2c12a9724ef7973a6052119c9a6a9380f0581022c72b7192b1990c9c5792",
+      "head_sha256": "564c2c12a9724ef7973a6052119c9a6a9380f0581022c72b7192b1990c9c5792",
+      "uncommitted_local_edit": false
+    },
+    "tests/test_challenger_b.py": {
+      "working_tree_sha256": "14e26d232a30fb655769b67ea28776fe22a99dc94d164f28d9e8b4745a0f060a",
+      "head_sha256": "14e26d232a30fb655769b67ea28776fe22a99dc94d164f28d9e8b4745a0f060a",
+      "uncommitted_local_edit": false
+    },
+    "tests/test_challenger_integration.py": {
+      "working_tree_sha256": "505eb394fc0e0b13ea4c02f2c13f1c857bdea9b1aae2898e34e2c7c433efbf24",
+      "head_sha256": "505eb394fc0e0b13ea4c02f2c13f1c857bdea9b1aae2898e34e2c7c433efbf24",
+      "uncommitted_local_edit": false
+    }
+  },
+  "import_closure_hashes": {
+    "diagnostics/__init__.py": {
+      "working_tree_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "head_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "uncommitted_local_edit": false,
+      "module": "diagnostics"
+    },
+    "diagnostics/election_noise_v2/__init__.py": {
+      "working_tree_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "head_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "uncommitted_local_edit": false,
+      "module": "diagnostics.election_noise_v2"
+    },
+    "diagnostics/election_noise_v2/challengers/__init__.py": {
+      "working_tree_sha256": "f207d57fe712eb6a2089e0ccff5a298afc67a080e11cee544eaa7cf3a56b5800",
+      "head_sha256": "f207d57fe712eb6a2089e0ccff5a298afc67a080e11cee544eaa7cf3a56b5800",
+      "uncommitted_local_edit": false,
+      "module": "diagnostics.election_noise_v2.challengers"
+    },
+    "diagnostics/election_noise_v2/challengers/challenger_a.py": {
+      "working_tree_sha256": "a407394a2733bb60c624e41919ec52706644587085ad47f9f10df14e0b30ad7a",
+      "head_sha256": "a407394a2733bb60c624e41919ec52706644587085ad47f9f10df14e0b30ad7a",
+      "uncommitted_local_edit": false,
+      "module": "diagnostics.election_noise_v2.challengers.challenger_a"
+    },
+    "diagnostics/election_noise_v2/challengers/challenger_b.py": {
+      "working_tree_sha256": "030fea0c51174c42ca807b51f1fdc156deb94b437157e09cf6d3a50b59c808e8",
+      "head_sha256": "030fea0c51174c42ca807b51f1fdc156deb94b437157e09cf6d3a50b59c808e8",
+      "uncommitted_local_edit": false,
+      "module": "diagnostics.election_noise_v2.challengers.challenger_b"
+    },
+    "diagnostics/election_noise_v2/challengers/draws.py": {
+      "working_tree_sha256": "9458e35111ab8945119d8e4c5a8c3496cb4da1753e0bf4c9e36619b4ec303a10",
+      "head_sha256": "9458e35111ab8945119d8e4c5a8c3496cb4da1753e0bf4c9e36619b4ec303a10",
+      "uncommitted_local_edit": false,
+      "module": "diagnostics.election_noise_v2.challengers.draws"
+    },
+    "diagnostics/election_noise_v2/challengers/freeze_challengers.py": {
+      "working_tree_sha256": "dd6ec65a34014b31be9c76a08a1706d742ae27e816beeef15a253f310b89c60e",
+      "head_sha256": "dd6ec65a34014b31be9c76a08a1706d742ae27e816beeef15a253f310b89c60e",
+      "uncommitted_local_edit": false,
+      "module": "diagnostics.election_noise_v2.challengers.freeze_challengers"
+    },
+    "diagnostics/election_noise_v2/challengers/loeo.py": {
+      "working_tree_sha256": "6694632ecc49fbacc45fe319850a6d9cfe928eec1e1b8fe3047b5f89d46ffdad",
+      "head_sha256": "6694632ecc49fbacc45fe319850a6d9cfe928eec1e1b8fe3047b5f89d46ffdad",
+      "uncommitted_local_edit": false,
+      "module": "diagnostics.election_noise_v2.challengers.loeo"
+    },
+    "diagnostics/election_noise_v2/challengers/rng.py": {
+      "working_tree_sha256": "90bb36dbc083674d6b462c57557fbfa271cc04fb056c0cc514bb4f03b727eab6",
+      "head_sha256": "90bb36dbc083674d6b462c57557fbfa271cc04fb056c0cc514bb4f03b727eab6",
+      "uncommitted_local_edit": false,
+      "module": "diagnostics.election_noise_v2.challengers.rng"
+    },
+    "diagnostics/election_noise_v2/challengers/select_bandwidths.py": {
+      "working_tree_sha256": "9f52139a7bb2e372ac99e2506a9d5b225330ed3c6179c8daf4a8d996b63d0793",
+      "head_sha256": "9f52139a7bb2e372ac99e2506a9d5b225330ed3c6179c8daf4a8d996b63d0793",
+      "uncommitted_local_edit": false,
+      "module": "diagnostics.election_noise_v2.challengers.select_bandwidths"
+    },
+    "diagnostics/election_noise_v2/control_baseline/__init__.py": {
+      "working_tree_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "head_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "uncommitted_local_edit": false,
+      "module": "diagnostics.election_noise_v2.control_baseline"
+    },
+    "diagnostics/election_noise_v2/control_baseline/harness/__init__.py": {
+      "working_tree_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "head_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "uncommitted_local_edit": false,
+      "module": "diagnostics.election_noise_v2.control_baseline.harness"
+    },
+    "diagnostics/election_noise_v2/control_baseline/harness/rng.py": {
+      "working_tree_sha256": "d940a7db78fa3904d25befb29f89026049334d924e2da7bfcd09c02dde877848",
+      "head_sha256": "d940a7db78fa3904d25befb29f89026049334d924e2da7bfcd09c02dde877848",
+      "uncommitted_local_edit": false,
+      "module": "diagnostics.election_noise_v2.control_baseline.harness.rng"
+    },
+    "diagnostics/election_noise_v2/control_baseline_amendment2/__init__.py": {
+      "working_tree_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "head_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "uncommitted_local_edit": false,
+      "module": "diagnostics.election_noise_v2.control_baseline_amendment2"
+    },
+    "diagnostics/election_noise_v2/control_baseline_amendment2/harness2/__init__.py": {
+      "working_tree_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "head_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "uncommitted_local_edit": false,
+      "module": "diagnostics.election_noise_v2.control_baseline_amendment2.harness2"
+    },
+    "diagnostics/election_noise_v2/control_baseline_amendment2/harness2/isolated.py": {
+      "working_tree_sha256": "7ff6d111e5f9c8b76c22178d210d711b06dd9ce69bbea4620b1233242a73f832",
+      "head_sha256": "7ff6d111e5f9c8b76c22178d210d711b06dd9ce69bbea4620b1233242a73f832",
+      "uncommitted_local_edit": false,
+      "module": "diagnostics.election_noise_v2.control_baseline_amendment2.harness2.isolated"
+    },
+    "diagnostics/election_noise_v2/control_baseline_amendment2/harness2/manifest.py": {
+      "working_tree_sha256": "56f1074da7db33295fb17efe2d997e5fb0fcf1919a2ae87ff4cc88f007cc00ee",
+      "head_sha256": "56f1074da7db33295fb17efe2d997e5fb0fcf1919a2ae87ff4cc88f007cc00ee",
+      "uncommitted_local_edit": false,
+      "module": "diagnostics.election_noise_v2.control_baseline_amendment2.harness2.manifest"
+    },
+    "scripts/__init__.py": {
+      "working_tree_sha256": "366344d773836eb4083581b8b6c0fe9521f9a5755ac24d99fa0a131f5e0a452c",
+      "head_sha256": "366344d773836eb4083581b8b6c0fe9521f9a5755ac24d99fa0a131f5e0a452c",
+      "uncommitted_local_edit": false,
+      "module": "scripts"
+    },
+    "scripts/election_layer_v2/__init__.py": {
+      "working_tree_sha256": "bdac107f822e0b330b7f23d401fa8c7987ae9e744d7b84d54ceaa619599a8c5d",
+      "head_sha256": "bdac107f822e0b330b7f23d401fa8c7987ae9e744d7b84d54ceaa619599a8c5d",
+      "uncommitted_local_edit": false,
+      "module": "scripts.election_layer_v2"
+    },
+    "scripts/election_layer_v2/config.py": {
+      "working_tree_sha256": "a0f31791539e4579694d15f74f7419bd38cdca91a2a1afbf54e7340bcedc72cf",
+      "head_sha256": "a0f31791539e4579694d15f74f7419bd38cdca91a2a1afbf54e7340bcedc72cf",
+      "uncommitted_local_edit": false,
+      "module": "scripts.election_layer_v2.config"
+    },
+    "scripts/election_layer_v2/forward_eval.py": {
+      "working_tree_sha256": "3850ea6a4d8ddfeaaf21d1918d5a7999b46e01c0f5145042864797a9c2e64770",
+      "head_sha256": "3850ea6a4d8ddfeaaf21d1918d5a7999b46e01c0f5145042864797a9c2e64770",
+      "uncommitted_local_edit": false,
+      "module": "scripts.election_layer_v2.forward_eval"
+    },
+    "scripts/election_layer_v2/hindcast.py": {
+      "working_tree_sha256": "88b9f777ac1a833ba104bcebf9a4209cbbd7b16c3dbea056b6d90bfbf6fc6615",
+      "head_sha256": "88b9f777ac1a833ba104bcebf9a4209cbbd7b16c3dbea056b6d90bfbf6fc6615",
+      "uncommitted_local_edit": false,
+      "module": "scripts.election_layer_v2.hindcast"
+    },
+    "scripts/election_layer_v2/residuals_pool.py": {
+      "working_tree_sha256": "804003d1d51410e1af8881f07e60e24e63399111ea3ba8100de7b5562361e502",
+      "head_sha256": "804003d1d51410e1af8881f07e60e24e63399111ea3ba8100de7b5562361e502",
+      "uncommitted_local_edit": false,
+      "module": "scripts.election_layer_v2.residuals_pool"
+    },
+    "scripts/election_layer_v2/transfer.py": {
+      "working_tree_sha256": "12037c720f3650bbe8a38cc89db26bcab2fd1fdde8f97474568e0686de660b3d",
+      "head_sha256": "12037c720f3650bbe8a38cc89db26bcab2fd1fdde8f97474568e0686de660b3d",
+      "uncommitted_local_edit": false,
+      "module": "scripts.election_layer_v2.transfer"
+    },
+    "scripts/election_residuals/__init__.py": {
+      "working_tree_sha256": "d5f4aa0dccedc6b8c85463d597cb41f37e7450aecb7a3a49ae48b9468fb64c5a",
+      "head_sha256": "d5f4aa0dccedc6b8c85463d597cb41f37e7450aecb7a3a49ae48b9468fb64c5a",
+      "uncommitted_local_edit": false,
+      "module": "scripts.election_residuals"
+    },
+    "scripts/election_residuals/config.py": {
+      "working_tree_sha256": "b117ff7be497c9af46a3557d6b3c3a2a6244d6e0240e852f805d00f9ec2b8c02",
+      "head_sha256": "b117ff7be497c9af46a3557d6b3c3a2a6244d6e0240e852f805d00f9ec2b8c02",
+      "uncommitted_local_edit": false,
+      "module": "scripts.election_residuals.config"
+    },
+    "scripts/election_residuals/consensus.py": {
+      "working_tree_sha256": "702f75a2371f08abba521112d7edd3188a6a7b7811b75c33e472f1a421a4f46c",
+      "head_sha256": "702f75a2371f08abba521112d7edd3188a6a7b7811b75c33e472f1a421a4f46c",
+      "uncommitted_local_edit": false,
+      "module": "scripts.election_residuals.consensus"
+    },
+    "scripts/election_residuals/residuals.py": {
+      "working_tree_sha256": "6e9cb1e6658c7a274521809d4515931efd72dceb900d1819ffe4c10b84d3f971",
+      "head_sha256": "6e9cb1e6658c7a274521809d4515931efd72dceb900d1819ffe4c10b84d3f971",
+      "uncommitted_local_edit": false,
+      "module": "scripts.election_residuals.residuals"
+    },
+    "scripts/elections/config.py": {
+      "working_tree_sha256": "f5dd302c7ecf51bb9fc0573d4510157891ac2564f3d41147310664a8d333de63",
+      "head_sha256": "f5dd302c7ecf51bb9fc0573d4510157891ac2564f3d41147310664a8d333de63",
+      "uncommitted_local_edit": false,
+      "module": "scripts.elections.config"
+    },
+    "scripts/elections/load.py": {
+      "working_tree_sha256": "3749a625ebbc6e81fa5497b6329a063bab99a90537de7ed18f5a05b5d7958898",
+      "head_sha256": "3749a625ebbc6e81fa5497b6329a063bab99a90537de7ed18f5a05b5d7958898",
+      "uncommitted_local_edit": false,
+      "module": "scripts.elections.load"
+    },
+    "scripts/elections/parse.py": {
+      "working_tree_sha256": "7ffc1139bf59467a133674686748269b5dd88b773dca514d38320ac1025ad4c8",
+      "head_sha256": "7ffc1139bf59467a133674686748269b5dd88b773dca514d38320ac1025ad4c8",
+      "uncommitted_local_edit": false,
+      "module": "scripts.elections.parse"
+    },
+    "scripts/geography/__init__.py": {
+      "working_tree_sha256": "a9ba16e7370e49a0866d549b1f20f8613b4effb3b071ee54c9007f9f83043633",
+      "head_sha256": "a9ba16e7370e49a0866d549b1f20f8613b4effb3b071ee54c9007f9f83043633",
+      "uncommitted_local_edit": false,
+      "module": "scripts.geography"
+    },
+    "scripts/geography/config.py": {
+      "working_tree_sha256": "4b4a5a316655ec4473d154f0ac5584a3771d573abe2e2bbd43ef83644a3bef9a",
+      "head_sha256": "4b4a5a316655ec4473d154f0ac5584a3771d573abe2e2bbd43ef83644a3bef9a",
+      "uncommitted_local_edit": false,
+      "module": "scripts.geography.config"
+    },
+    "scripts/geography/evaluate.py": {
+      "working_tree_sha256": "9a5ee96934d0c36ffcc58468fea10ade0887403759ee4ca1a6a36c871638d8fc",
+      "head_sha256": "9a5ee96934d0c36ffcc58468fea10ade0887403759ee4ca1a6a36c871638d8fc",
+      "uncommitted_local_edit": false,
+      "module": "scripts.geography.evaluate"
+    },
+    "scripts/geography/integerization.py": {
+      "working_tree_sha256": "66d936d879a258316a9f8ef7bfcabe00c6ca448e6416671b88a70f817fec7e89",
+      "head_sha256": "66d936d879a258316a9f8ef7bfcabe00c6ca448e6416671b88a70f817fec7e89",
+      "uncommitted_local_edit": false,
+      "module": "scripts.geography.integerization"
+    },
+    "scripts/geography/projection.py": {
+      "working_tree_sha256": "2fd634bd82d78de93421b5d14966b118a503ef3d20f5f3e5cf0ebf6d19dccd75",
+      "head_sha256": "2fd634bd82d78de93421b5d14966b118a503ef3d20f5f3e5cf0ebf6d19dccd75",
+      "uncommitted_local_edit": false,
+      "module": "scripts.geography.projection"
+    },
+    "scripts/geography/raking.py": {
+      "working_tree_sha256": "d47fd0c7b667a576f1870a55f6bc653c627fa7f28554807cac85ccd02f98062a",
+      "head_sha256": "d47fd0c7b667a576f1870a55f6bc653c627fa7f28554807cac85ccd02f98062a",
+      "uncommitted_local_edit": false,
+      "module": "scripts.geography.raking"
+    },
+    "scripts/hindcasts/__init__.py": {
+      "working_tree_sha256": "7738fdf47e7966143131a7a7cd106074157d8857d6b07092644f669e5d678f53",
+      "head_sha256": "7738fdf47e7966143131a7a7cd106074157d8857d6b07092644f669e5d678f53",
+      "uncommitted_local_edit": false,
+      "module": "scripts.hindcasts"
+    },
+    "scripts/hindcasts/hindcast.py": {
+      "working_tree_sha256": "f1a00969d5cfc9b05850725e66e9977d4e62953059973605cc7fde7670a23f3a",
+      "head_sha256": "f1a00969d5cfc9b05850725e66e9977d4e62953059973605cc7fde7670a23f3a",
+      "uncommitted_local_edit": false,
+      "module": "scripts.hindcasts.hindcast"
+    },
+    "scripts/hindcasts/models.py": {
+      "working_tree_sha256": "53c6604aa85c85ce552e786de5682fcbce8372fba933ea4a5c6ef640b7c55d55",
+      "head_sha256": "53c6604aa85c85ce552e786de5682fcbce8372fba933ea4a5c6ef640b7c55d55",
+      "uncommitted_local_edit": false,
+      "module": "scripts.hindcasts.models"
+    },
+    "scripts/mandates/__init__.py": {
+      "working_tree_sha256": "f7b767a403a41000388ba7772aaa5f4041969ccc3f65ac8aa23e30132d9b9476",
+      "head_sha256": "f7b767a403a41000388ba7772aaa5f4041969ccc3f65ac8aa23e30132d9b9476",
+      "uncommitted_local_edit": false,
+      "module": "scripts.mandates"
+    },
+    "scripts/mandates/allocator.py": {
+      "working_tree_sha256": "b3d7ef68e9d1e2166ad57e3b0a51bfbac9f5ea193f80776e291ab9cc36e0d4a3",
+      "head_sha256": "b3d7ef68e9d1e2166ad57e3b0a51bfbac9f5ea193f80776e291ab9cc36e0d4a3",
+      "uncommitted_local_edit": false,
+      "module": "scripts.mandates.allocator"
+    },
+    "scripts/mandates/config.py": {
+      "working_tree_sha256": "8b634c548eb45a1cbf4c8789791ec5be23a14f7cd055fb8068664932e17e3fab",
+      "head_sha256": "8b634c548eb45a1cbf4c8789791ec5be23a14f7cd055fb8068664932e17e3fab",
+      "uncommitted_local_edit": false,
+      "module": "scripts.mandates.config"
+    },
+    "scripts/mandates/law.py": {
+      "working_tree_sha256": "c784cda3efd5eac325a26fe8bb720abe7f0c2e0f30b78e57e51e5cf79b399a1e",
+      "head_sha256": "c784cda3efd5eac325a26fe8bb720abe7f0c2e0f30b78e57e51e5cf79b399a1e",
+      "uncommitted_local_edit": false,
+      "module": "scripts.mandates.law"
+    },
+    "scripts/mandates/tie_breaker.py": {
+      "working_tree_sha256": "4e2e7c20cb4f12e4845668d7ed65d4274d2dc0755f380023549dea589badeb3b",
+      "head_sha256": "4e2e7c20cb4f12e4845668d7ed65d4274d2dc0755f380023549dea589badeb3b",
+      "uncommitted_local_edit": false,
+      "module": "scripts.mandates.tie_breaker"
+    },
+    "scripts/pollofpolls/__init__.py": {
+      "working_tree_sha256": "133533b7379bf58bf503d1461517a34a1003d98429ad6ee925c799520e5f35e6",
+      "head_sha256": "133533b7379bf58bf503d1461517a34a1003d98429ad6ee925c799520e5f35e6",
+      "uncommitted_local_edit": false,
+      "module": "scripts.pollofpolls"
+    },
+    "scripts/pollofpolls/backtest_metrics.py": {
+      "working_tree_sha256": "6c3ce7bf435f5508c7738707b0d5c830f4d1c157f1c31045eeacc9a8e084a6d1",
+      "head_sha256": "6c3ce7bf435f5508c7738707b0d5c830f4d1c157f1c31045eeacc9a8e084a6d1",
+      "uncommitted_local_edit": false,
+      "module": "scripts.pollofpolls.backtest_metrics"
+    },
+    "scripts/pollofpolls/clr.py": {
+      "working_tree_sha256": "3ac9ce0d00aeb5272d69596bec577fbfc7b0c2f96a7070938c592da0fbfbd0e1",
+      "head_sha256": "3ac9ce0d00aeb5272d69596bec577fbfc7b0c2f96a7070938c592da0fbfbd0e1",
+      "uncommitted_local_edit": false,
+      "module": "scripts.pollofpolls.clr"
+    },
+    "scripts/pollofpolls/config.py": {
+      "working_tree_sha256": "2e41fdcb4dc0f29a0b54ba2775c6f844004bee3946e84e872455ef4531b6c3b7",
+      "head_sha256": "2e41fdcb4dc0f29a0b54ba2775c6f844004bee3946e84e872455ef4531b6c3b7",
+      "uncommitted_local_edit": false,
+      "module": "scripts.pollofpolls.config"
+    },
+    "scripts/pollofpolls/normalize.py": {
+      "working_tree_sha256": "437a78560aea68163f425352348ba95e7d944d72350bd48e74e286feeec75b59",
+      "head_sha256": "437a78560aea68163f425352348ba95e7d944d72350bd48e74e286feeec75b59",
+      "uncommitted_local_edit": false,
+      "module": "scripts.pollofpolls.normalize"
+    },
+    "scripts/pollofpolls/state.py": {
+      "working_tree_sha256": "ac95fb7c30285a03fc1841ec23e0e0aec54db6786d83a58c662d111a8f25120a",
+      "head_sha256": "ac95fb7c30285a03fc1841ec23e0e0aec54db6786d83a58c662d111a8f25120a",
+      "uncommitted_local_edit": false,
+      "module": "scripts.pollofpolls.state"
+    },
+    "scripts/pollofpolls/state_config.py": {
+      "working_tree_sha256": "24c7c4430558f154b3d2fa9c12f263da627918d9cf0e9ac2698c537fb001359a",
+      "head_sha256": "24c7c4430558f154b3d2fa9c12f263da627918d9cf0e9ac2698c537fb001359a",
+      "uncommitted_local_edit": false,
+      "module": "scripts.pollofpolls.state_config"
+    },
+    "scripts/pollofpolls/state_math.py": {
+      "working_tree_sha256": "2e5ce349890fdb7924cc6fe893a048b631feeeb44bc868bb8f6f04f863193cbd",
+      "head_sha256": "2e5ce349890fdb7924cc6fe893a048b631feeeb44bc868bb8f6f04f863193cbd",
+      "uncommitted_local_edit": false,
+      "module": "scripts.pollofpolls.state_math"
+    },
+    "scripts/pollofpolls/transitions.py": {
+      "working_tree_sha256": "f46c3b293920c7787ab3b539c0a4770ba8be823eb5f2e2e3b77669d9de05f117",
+      "head_sha256": "f46c3b293920c7787ab3b539c0a4770ba8be823eb5f2e2e3b77669d9de05f117",
+      "uncommitted_local_edit": false,
+      "module": "scripts.pollofpolls.transitions"
+    },
+    "scripts/simulator/__init__.py": {
+      "working_tree_sha256": "88a03ea324e8de03702698f0283380680eeeec32c1358b8bb9ea277a8a7c8729",
+      "head_sha256": "88a03ea324e8de03702698f0283380680eeeec32c1358b8bb9ea277a8a7c8729",
+      "uncommitted_local_edit": false,
+      "module": "scripts.simulator"
+    },
+    "scripts/simulator/config.py": {
+      "working_tree_sha256": "95ac8e3f94f6af1a459f95f84c0dd5897875fae1759a83abfa82fdedf11c3e2b",
+      "head_sha256": "95ac8e3f94f6af1a459f95f84c0dd5897875fae1759a83abfa82fdedf11c3e2b",
+      "uncommitted_local_edit": false,
+      "module": "scripts.simulator.config"
+    },
+    "scripts/simulator/engine.py": {
+      "working_tree_sha256": "b9f0498d7c063c07da44a74daf17f0daf9a6dcf886af4dab37d83bc4395bc198",
+      "head_sha256": "b9f0498d7c063c07da44a74daf17f0daf9a6dcf886af4dab37d83bc4395bc198",
+      "uncommitted_local_edit": false,
+      "module": "scripts.simulator.engine"
+    },
+    "scripts/simulator/fast_allocator.py": {
+      "working_tree_sha256": "616a07af92a8e3408dd10c6f0e1b2358948388a63b3fee2af28fdd8edf3bc2ce",
+      "head_sha256": "616a07af92a8e3408dd10c6f0e1b2358948388a63b3fee2af28fdd8edf3bc2ce",
+      "uncommitted_local_edit": false,
+      "module": "scripts.simulator.fast_allocator"
+    },
+    "scripts/simulator/reproducibility.py": {
+      "working_tree_sha256": "f6f8ece6d2810767018acb74fea2b313821d185c1683eaee44e7882ceed94e1b",
+      "head_sha256": "f6f8ece6d2810767018acb74fea2b313821d185c1683eaee44e7882ceed94e1b",
+      "uncommitted_local_edit": false,
+      "module": "scripts.simulator.reproducibility"
+    },
+    "scripts/simulator/summary.py": {
+      "working_tree_sha256": "3aafc9175678e50eac7a322fe9bc2ed79a2cc1923d3f463ac2524a84a6aff1fa",
+      "head_sha256": "3aafc9175678e50eac7a322fe9bc2ed79a2cc1923d3f463ac2524a84a6aff1fa",
+      "uncommitted_local_edit": false,
+      "module": "scripts.simulator.summary"
+    },
+    "scripts/vote_share_calibration/__init__.py": {
+      "working_tree_sha256": "e4beb876f3f763855ce865c67554bbf0137b62df2fcf707a1aad14e7bb3cb165",
+      "head_sha256": "e4beb876f3f763855ce865c67554bbf0137b62df2fcf707a1aad14e7bb3cb165",
+      "uncommitted_local_edit": false,
+      "module": "scripts.vote_share_calibration"
+    },
+    "scripts/vote_share_calibration/config.py": {
+      "working_tree_sha256": "550e38c93ef0d91de98fcf77130b8db18b425bd7332cd364198a7826a6cb729b",
+      "head_sha256": "550e38c93ef0d91de98fcf77130b8db18b425bd7332cd364198a7826a6cb729b",
+      "uncommitted_local_edit": false,
+      "module": "scripts.vote_share_calibration.config"
+    },
+    "scripts/vote_share_calibration/energy_score.py": {
+      "working_tree_sha256": "aef07f2b870da4b2bd40d546b17efe9933869e3d58646557d38e8c2f19c6be19",
+      "head_sha256": "aef07f2b870da4b2bd40d546b17efe9933869e3d58646557d38e8c2f19c6be19",
+      "uncommitted_local_edit": false,
+      "module": "scripts.vote_share_calibration.energy_score"
+    },
+    "scripts/vote_share_calibration/forward_eval.py": {
+      "working_tree_sha256": "66726205ffbf1d586c75482ac78e72ed0e6f8c3ad7539bed27746f5871b3b8ce",
+      "head_sha256": "66726205ffbf1d586c75482ac78e72ed0e6f8c3ad7539bed27746f5871b3b8ce",
+      "uncommitted_local_edit": false,
+      "module": "scripts.vote_share_calibration.forward_eval"
+    },
+    "scripts/vote_share_calibration/hindcast.py": {
+      "working_tree_sha256": "439be47e0dd7c49c990ff78cb5b202f4804a4c57ecb8b877eb6364c1b4759468",
+      "head_sha256": "439be47e0dd7c49c990ff78cb5b202f4804a4c57ecb8b877eb6364c1b4759468",
+      "uncommitted_local_edit": false,
+      "module": "scripts.vote_share_calibration.hindcast"
+    },
+    "scripts/vote_share_calibration/models.py": {
+      "working_tree_sha256": "6ff27acd2944c888d0d4174296b60b8b8512d84520f8142414cff28abcff6108",
+      "head_sha256": "6ff27acd2944c888d0d4174296b60b8b8512d84520f8142414cff28abcff6108",
+      "uncommitted_local_edit": false,
+      "module": "scripts.vote_share_calibration.models"
+    },
+    "scripts/vote_share_calibration/national_engine.py": {
+      "working_tree_sha256": "7ae13e5e065ff6793b8f6e96ae262e52f888de986c630b3094170abbffd84c24",
+      "head_sha256": "7ae13e5e065ff6793b8f6e96ae262e52f888de986c630b3094170abbffd84c24",
+      "uncommitted_local_edit": false,
+      "module": "scripts.vote_share_calibration.national_engine"
+    },
+    "scripts/vote_share_calibration/stability.py": {
+      "working_tree_sha256": "0d178e42ef4014e6a6a84eeab7d0b5fcd422b3be649771d6efde74ef91ce0dca",
+      "head_sha256": "0d178e42ef4014e6a6a84eeab7d0b5fcd422b3be649771d6efde74ef91ce0dca",
+      "uncommitted_local_edit": false,
+      "module": "scripts.vote_share_calibration.stability"
+    }
+  },
+  "targeted_test_results": {
+    "tests.test_challenger_reference_math": {
+      "tests_run": 13,
+      "failures": 0,
+      "errors": 0,
+      "passed": true
+    },
+    "tests.test_challenger_a": {
+      "tests_run": 20,
+      "failures": 0,
+      "errors": 0,
+      "passed": true
+    },
+    "tests.test_challenger_b": {
+      "tests_run": 19,
+      "failures": 0,
+      "errors": 0,
+      "passed": true
+    },
+    "tests.test_challenger_integration": {
+      "tests_run": 19,
+      "failures": 0,
+      "errors": 0,
+      "passed": true
+    },
+    "total_tests": 71,
+    "all_passed": true,
+    "command": "uv run python -m unittest tests.test_challenger_reference_math tests.test_challenger_a tests.test_challenger_b tests.test_challenger_integration",
+    "no_target_election_scores_computed": true
+  },
+  "reconstructibility": {
+    "every_entry_committed": true,
+    "working_tree_equals_head": true,
+    "no_uncommitted_local_edit": true,
+    "lesson": "Part 3D-R: a freeze recording working-tree-only content is unverifiable"
+  }
+}
