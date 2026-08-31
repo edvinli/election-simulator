@@ -1,0 +1,112 @@
+{
+  "artifact": "PART 5 SCORE AUDIT",
+  "purpose": "Structural integrity of the competition run. May invalidate the run; may NOT be used to retune a challenger.",
+  "audited_utc": "2026-08-31T14:12:30Z",
+  "checks": {
+    "run_count": 90,
+    "models": [
+      "CHALLENGER_A_smoothed_bootstrap",
+      "CHALLENGER_B_lw_gaussian",
+      "CONTROL_pp_centered_noise"
+    ],
+    "identical_case_sets_across_models": true,
+    "nan_or_inf": 0,
+    "seat_total_always_349": true,
+    "compositions_valid": true,
+    "lambda_in_unit_interval": true,
+    "geography_chronological_only": true,
+    "oracle_geography_used": false,
+    "law_dispatch_correct": true,
+    "no_future_residual_leakage": true,
+    "challenger_a_bandwidth_pinned_075": true,
+    "masks_1_to_254_everywhere": true,
+    "mask_rows": 11430,
+    "coalition_probabilities_in_unit_interval": true,
+    "complement_symmetry_holds": true,
+    "determinism": [
+      {
+        "model": "CONTROL_pp_centered_noise",
+        "tier": "tier1",
+        "target_year": 2018,
+        "seed": 12345,
+        "fields_compared": 41,
+        "mismatched_fields": [],
+        "note": "cross-tier empty columns excluded; see audit.py",
+        "bit_identical": true
+      },
+      {
+        "model": "CONTROL_pp_centered_noise",
+        "tier": "tier3_iso",
+        "target_year": 2018,
+        "seed": 12345,
+        "fields_compared": 48,
+        "mismatched_fields": [],
+        "note": "cross-tier empty columns excluded; see audit.py",
+        "bit_identical": true
+      },
+      {
+        "model": "CHALLENGER_A_smoothed_bootstrap",
+        "tier": "tier1",
+        "target_year": 2018,
+        "seed": 12345,
+        "fields_compared": 41,
+        "mismatched_fields": [],
+        "note": "cross-tier empty columns excluded; see audit.py",
+        "bit_identical": true
+      },
+      {
+        "model": "CHALLENGER_A_smoothed_bootstrap",
+        "tier": "tier3_iso",
+        "target_year": 2018,
+        "seed": 12345,
+        "fields_compared": 48,
+        "mismatched_fields": [],
+        "note": "cross-tier empty columns excluded; see audit.py",
+        "bit_identical": true
+      },
+      {
+        "model": "CHALLENGER_B_lw_gaussian",
+        "tier": "tier1",
+        "target_year": 2018,
+        "seed": 12345,
+        "fields_compared": 41,
+        "mismatched_fields": [],
+        "note": "cross-tier empty columns excluded; see audit.py",
+        "bit_identical": true
+      },
+      {
+        "model": "CHALLENGER_B_lw_gaussian",
+        "tier": "tier3_iso",
+        "target_year": 2018,
+        "seed": 12345,
+        "fields_compared": 47,
+        "mismatched_fields": [],
+        "note": "cross-tier empty columns excluded; see audit.py",
+        "bit_identical": true
+      }
+    ],
+    "all_reruns_bit_identical": true,
+    "control_reproduces_certified_baseline": true,
+    "control_metric_values_compared": 135,
+    "evaluator_freeze": {
+      "checks": 112,
+      "drift": [],
+      "unchanged": true
+    },
+    "challenger_freeze": {
+      "checks": 95,
+      "drift": [],
+      "unchanged": true
+    },
+    "competition_code_sha256": {
+      "__init__.py": "232cb80991f5004ea0f280af639606c0a9a5ecc4cb56ab008cb41645a6c3da1a",
+      "audit.py": "97c419e26aebdb024e4cadf859b2e533363c6fc4976326ab691f45a689242945",
+      "gates.py": "dff65edcf505f3ea8d92a530b41c506172295a064138e10975841fa0145b4799",
+      "run_competition.py": "c0bef8463536009e03582a3da68da8c040bba3d7bf262b31c9f9861c0e916467",
+      "runner.py": "5e011422a4765d27050e58c32976f9dd908ae004ad88a927d2cf1526368db8ee",
+      "write_decision.py": "c7f747dbc728c016678f44a11a5643dd439293581e158f99f5fcd3b43de732ee"
+    }
+  },
+  "problems": [],
+  "run_valid": true
+}

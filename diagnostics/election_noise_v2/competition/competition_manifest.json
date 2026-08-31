@@ -1,0 +1,167 @@
+{
+  "artifact": "ELECTIONNOISE V2 COMPETITION RUN MANIFEST",
+  "status": "written BEFORE any target-election score was computed; immutable thereafter",
+  "written_utc": "2026-08-31T13:28:06Z",
+  "git": {
+    "head": "1450e6f301a98d5d6e4af1357113435534b0e7a9",
+    "branch": "research/competition",
+    "worktree_clean": false
+  },
+  "authoritative_commits": {
+    "evaluator_refreeze_base": "a5b8c7a234acf60cac71ef1ab1439343fae88639",
+    "challenger_implementation": "0facfe6cf542e650bcdf7fdc2d01a6795366c045",
+    "challenger_freeze": "1450e6f301a98d5d6e4af1357113435534b0e7a9"
+  },
+  "freeze_hashes": {
+    "challenger_implementation_freeze": "2454ac15309361443656fe1d00abd5cb655d5a8efc8ddaded9e8c7164d8c1c22",
+    "challenger_implementation_freeze_expected": "2454ac15309361443656fe1d00abd5cb655d5a8efc8ddaded9e8c7164d8c1c22",
+    "evaluator_freeze": "3142f81c2494773448f2a48cbe57ccd964fa807891477155cc89e1c3b5f04bae",
+    "evaluation_case_manifest": "30f3a06604ae6e04a29161c24ee509ffc38d317a32f42a0f8e2d77f9e43c3165",
+    "control_scores_summary": "0e862edfe12c16743f4b84e752020edb7e94690f936cec3e6966f5d40d990bb6",
+    "exact_control_oracle": "d82e60d182deaac576f3125168ea304f64ddb8a10cf0da927807528f60a8ec78",
+    "bandwidth_selection": "66116c23a6a8ea87e303ce524e9e1edfe1b1f32b5da2cc578feb0a98a26fb867",
+    "apply_batch_simplex_transfer": "12037c720f3650bbe8a38cc89db26bcab2fd1fdde8f97474568e0686de660b3d"
+  },
+  "preregistration": {
+    "status": "FROZEN - AMENDMENT 2",
+    "commit": "00f7030eda65e64efa3253798eb8cc6c0b8fe9cc",
+    "body_sha256": "5a9a6dc8ef6f26ce3ce152155af0ed288fb8d2d97c81a2606e513cf20e1b058b",
+    "whole_file_sha256": "126a8f4902f8af36f007dca4442f8e41bed5a507b190d30960b38f33c6345572",
+    "freeze_timestamp_utc": "2026-08-31T08:54:20Z",
+    "edited_by_this_task": false
+  },
+  "models": {
+    "CONTROL": "CONTROL_pp_centered_noise",
+    "A": "CHALLENGER_A_smoothed_bootstrap",
+    "B": "CHALLENGER_B_lw_gaussian"
+  },
+  "targets": [
+    2014,
+    2018,
+    2022
+  ],
+  "tier1_cases": [
+    {
+      "target_year": 2014,
+      "election_date": "2014-09-14",
+      "horizon_days": 14,
+      "k_outer": 3,
+      "training_residual_years": [
+        2002,
+        2006,
+        2010
+      ]
+    },
+    {
+      "target_year": 2018,
+      "election_date": "2018-09-09",
+      "horizon_days": 14,
+      "k_outer": 4,
+      "training_residual_years": [
+        2002,
+        2006,
+        2010,
+        2014
+      ]
+    },
+    {
+      "target_year": 2022,
+      "election_date": "2022-09-11",
+      "horizon_days": 14,
+      "k_outer": 5,
+      "training_residual_years": [
+        2002,
+        2006,
+        2010,
+        2014,
+        2018
+      ]
+    }
+  ],
+  "tier3_iso_cases": [
+    {
+      "target_year": 2014,
+      "election_date": "2014-09-14",
+      "mandate_law": "PRE_2018",
+      "first_divisor": "7/5",
+      "geography_mode": "chronological",
+      "geography_baseline_year": 2010,
+      "k_outer": 3,
+      "training_residual_years": [
+        2002,
+        2006,
+        2010
+      ]
+    },
+    {
+      "target_year": 2018,
+      "election_date": "2018-09-09",
+      "mandate_law": "POST_2018",
+      "first_divisor": "6/5",
+      "geography_mode": "chronological",
+      "geography_baseline_year": 2014,
+      "k_outer": 4,
+      "training_residual_years": [
+        2002,
+        2006,
+        2010,
+        2014
+      ]
+    },
+    {
+      "target_year": 2022,
+      "election_date": "2022-09-11",
+      "mandate_law": "POST_2018",
+      "first_divisor": "6/5",
+      "geography_mode": "chronological",
+      "geography_baseline_year": 2018,
+      "k_outer": 5,
+      "training_residual_years": [
+        2002,
+        2006,
+        2010,
+        2014,
+        2018
+      ]
+    }
+  ],
+  "N_T1": 3,
+  "N_seat": 3,
+  "seeds": [
+    12345,
+    24680,
+    98765,
+    54321,
+    13579
+  ],
+  "draws_per_seed": 20000,
+  "challenger_a_bandwidths": {
+    "2014": 0.75,
+    "2018": 0.75,
+    "2022": 0.75
+  },
+  "challenger_b_hyperparameters": 0,
+  "mandate_law": {
+    "2014": "PRE_2018",
+    "2018": "POST_2018",
+    "2022": "POST_2018"
+  },
+  "geography": {
+    "mode": "chronological",
+    "oracle": "forbidden"
+  },
+  "coalition_masks": {
+    "range": "1..254",
+    "majority_threshold": 175,
+    "effective_distinct_events": 127
+  },
+  "gate_thresholds": {
+    "improves_pct": 2.0,
+    "non_inferiority_pct": 1.0,
+    "coverage_pp": 3.0,
+    "loo_improve_pct": 1.0,
+    "brier_loo_degrade_pct": 1.0
+  },
+  "excluded_from_adoption": "full-pipeline Tier 2 and Tier 3 remain retrospective diagnostics only (Amendment 2)",
+  "forecast_2026": "not run; not an adoption input"
+}

@@ -1,0 +1,642 @@
+{
+  "rows": [
+    {
+      "gate": "G1",
+      "metric": "tier1_es_9cat (five-seed mean)",
+      "control": 3.1332307726237563,
+      "challenger": 2.98109500402194,
+      "absolute_difference": -0.15213576860181632,
+      "relative_difference_pct": 4.855555803009632,
+      "required_threshold": ">= 2.0% relative improvement",
+      "result": "PASS",
+      "artifact": "scores_summary.json:tier1.es_9cat",
+      "detail": "",
+      "model": "A"
+    },
+    {
+      "gate": "G3",
+      "metric": "tier1 es_9cat",
+      "control": 3.1332307726237563,
+      "challenger": 2.98109500402194,
+      "absolute_difference": -0.15213576860181632,
+      "relative_difference_pct": 4.855555803009632,
+      "required_threshold": "<= +1.0% relative degradation",
+      "result": "PASS",
+      "artifact": "scores_summary.json:tier1",
+      "detail": "",
+      "model": "A"
+    },
+    {
+      "gate": "G3",
+      "metric": "tier1 es_8party",
+      "control": 3.0225734156585293,
+      "challenger": 2.875321198581124,
+      "absolute_difference": -0.14725221707740532,
+      "relative_difference_pct": 4.871749890823526,
+      "required_threshold": "<= +1.0% relative degradation",
+      "result": "PASS",
+      "artifact": "scores_summary.json:tier1",
+      "detail": "",
+      "model": "A"
+    },
+    {
+      "gate": "G3",
+      "metric": "tier1 mean 8-party CRPS",
+      "control": 0.7772062589739552,
+      "challenger": 0.7608430460997968,
+      "absolute_difference": -0.016363212874158428,
+      "relative_difference_pct": 2.1053887157008564,
+      "required_threshold": "<= +1.0% relative degradation",
+      "result": "PASS",
+      "artifact": "scores_summary.json:tier1",
+      "detail": "",
+      "model": "A"
+    },
+    {
+      "gate": "G3",
+      "metric": "tier1 coverage 50% |dev from nominal|",
+      "control": 21.111111111111114,
+      "challenger": 24.07407407407407,
+      "absolute_difference": 2.962962962962955,
+      "relative_difference_pct": null,
+      "required_threshold": "increase <= 3.0 pp",
+      "result": "PASS",
+      "artifact": "coverage_gate.csv",
+      "detail": "control coverage 0.2889, challenger 0.2593, nominal 0.50",
+      "model": "A"
+    },
+    {
+      "gate": "G3",
+      "metric": "tier1 coverage 80% |dev from nominal|",
+      "control": 31.85185185185186,
+      "challenger": 20.740740740740748,
+      "absolute_difference": -11.11111111111111,
+      "relative_difference_pct": null,
+      "required_threshold": "increase <= 3.0 pp",
+      "result": "PASS",
+      "artifact": "coverage_gate.csv",
+      "detail": "control coverage 0.4815, challenger 0.5926, nominal 0.80",
+      "model": "A"
+    },
+    {
+      "gate": "G3",
+      "metric": "tier1 coverage 90% |dev from nominal|",
+      "control": 41.851851851851855,
+      "challenger": 15.92592592592592,
+      "absolute_difference": -25.925925925925934,
+      "relative_difference_pct": null,
+      "required_threshold": "increase <= 3.0 pp",
+      "result": "PASS",
+      "artifact": "coverage_gate.csv",
+      "detail": "control coverage 0.4815, challenger 0.7407, nominal 0.90",
+      "model": "A"
+    },
+    {
+      "gate": "G4",
+      "metric": "tier3_iso seat-vector ES",
+      "control": 10.920286666666668,
+      "challenger": 10.23476,
+      "absolute_difference": -0.685526666666668,
+      "relative_difference_pct": 6.27755193239739,
+      "required_threshold": "<= +1.0% relative degradation",
+      "result": "PASS",
+      "artifact": "scores_summary.json:tier3_iso.seat_energy_score",
+      "detail": "",
+      "model": "A"
+    },
+    {
+      "gate": "G2",
+      "metric": "tier3_iso coalition Brier (headline)",
+      "control": 0.026677477940944883,
+      "challenger": 0.02512373914041995,
+      "absolute_difference": -0.0015537388005249335,
+      "relative_difference_pct": 5.824159255100492,
+      "required_threshold": ">= 2.0% relative improvement",
+      "result": "PASS",
+      "artifact": "coalition_brier_by_model_election.csv",
+      "detail": "",
+      "model": "A"
+    },
+    {
+      "gate": "G5-C",
+      "metric": "individual Tier-1 elections favouring challenger",
+      "control": null,
+      "challenger": 3,
+      "absolute_difference": null,
+      "relative_difference_pct": null,
+      "required_threshold": ">= 2 of 3",
+      "result": "PASS",
+      "artifact": "scores_by_model_election.csv",
+      "detail": "won: 2014, 2018, 2022",
+      "model": "A"
+    },
+    {
+      "gate": "G5-B1",
+      "metric": "leave-one-target-out aggregates favouring challenger",
+      "control": null,
+      "challenger": 3,
+      "absolute_difference": null,
+      "relative_difference_pct": null,
+      "required_threshold": "all 3 strictly > 0",
+      "result": "PASS",
+      "artifact": "tier1_leave_one_out.csv",
+      "detail": "drop 2014: +5.002%; drop 2018: +5.626%; drop 2022: +4.167%",
+      "model": "A"
+    },
+    {
+      "gate": "G5-B2",
+      "metric": "leave-one-target-out aggregates improving >= 1.0%",
+      "control": null,
+      "challenger": 3,
+      "absolute_difference": null,
+      "relative_difference_pct": null,
+      "required_threshold": ">= 2 of 3",
+      "result": "PASS",
+      "artifact": "tier1_leave_one_out.csv",
+      "detail": "",
+      "model": "A"
+    },
+    {
+      "gate": "G5-Brier-elections",
+      "metric": "elections with lower coalition Brier",
+      "control": null,
+      "challenger": 2,
+      "absolute_difference": null,
+      "relative_difference_pct": null,
+      "required_threshold": ">= ceil(3/2) = 2",
+      "result": "PASS",
+      "artifact": "coalition_brier_by_model_election.csv",
+      "detail": "won: 2018, 2022",
+      "model": "A"
+    },
+    {
+      "gate": "G5-Brier-LOO",
+      "metric": "leave-one-election-out coalition Brier delta",
+      "control": null,
+      "challenger": 1.1107196822432095,
+      "absolute_difference": null,
+      "relative_difference_pct": 1.1107196822432095,
+      "required_threshold": "no LOO delta worse than -1.0% (degradation)",
+      "result": "PASS",
+      "artifact": "coalition_leave_one_out.csv",
+      "detail": "drop 2014: +14.956%; drop 2018: +5.188%; drop 2022: +1.111%",
+      "model": "A"
+    },
+    {
+      "gate": "G1",
+      "metric": "tier1_es_9cat (five-seed mean)",
+      "control": 3.1332307726237563,
+      "challenger": 2.8327962891823066,
+      "absolute_difference": -0.30043448344144963,
+      "relative_difference_pct": 9.588648434914575,
+      "required_threshold": ">= 2.0% relative improvement",
+      "result": "PASS",
+      "artifact": "scores_summary.json:tier1.es_9cat",
+      "detail": "",
+      "model": "B"
+    },
+    {
+      "gate": "G3",
+      "metric": "tier1 es_9cat",
+      "control": 3.1332307726237563,
+      "challenger": 2.8327962891823066,
+      "absolute_difference": -0.30043448344144963,
+      "relative_difference_pct": 9.588648434914575,
+      "required_threshold": "<= +1.0% relative degradation",
+      "result": "PASS",
+      "artifact": "scores_summary.json:tier1",
+      "detail": "",
+      "model": "B"
+    },
+    {
+      "gate": "G3",
+      "metric": "tier1 es_8party",
+      "control": 3.0225734156585293,
+      "challenger": 2.744143088649203,
+      "absolute_difference": -0.27843032700932646,
+      "relative_difference_pct": 9.211697739644968,
+      "required_threshold": "<= +1.0% relative degradation",
+      "result": "PASS",
+      "artifact": "scores_summary.json:tier1",
+      "detail": "",
+      "model": "B"
+    },
+    {
+      "gate": "G3",
+      "metric": "tier1 mean 8-party CRPS",
+      "control": 0.7772062589739552,
+      "challenger": 0.764471709851286,
+      "absolute_difference": -0.012734549122669248,
+      "relative_difference_pct": 1.638503161243326,
+      "required_threshold": "<= +1.0% relative degradation",
+      "result": "PASS",
+      "artifact": "scores_summary.json:tier1",
+      "detail": "",
+      "model": "B"
+    },
+    {
+      "gate": "G3",
+      "metric": "tier1 coverage 50% |dev from nominal|",
+      "control": 21.111111111111114,
+      "challenger": 12.96296296296296,
+      "absolute_difference": -8.148148148148154,
+      "relative_difference_pct": null,
+      "required_threshold": "increase <= 3.0 pp",
+      "result": "PASS",
+      "artifact": "coverage_gate.csv",
+      "detail": "control coverage 0.2889, challenger 0.3704, nominal 0.50",
+      "model": "B"
+    },
+    {
+      "gate": "G3",
+      "metric": "tier1 coverage 80% |dev from nominal|",
+      "control": 31.85185185185186,
+      "challenger": 5.925925925925924,
+      "absolute_difference": -25.925925925925934,
+      "relative_difference_pct": null,
+      "required_threshold": "increase <= 3.0 pp",
+      "result": "PASS",
+      "artifact": "coverage_gate.csv",
+      "detail": "control coverage 0.4815, challenger 0.7407, nominal 0.80",
+      "model": "B"
+    },
+    {
+      "gate": "G3",
+      "metric": "tier1 coverage 90% |dev from nominal|",
+      "control": 41.851851851851855,
+      "challenger": 8.518518518518514,
+      "absolute_difference": -33.33333333333334,
+      "relative_difference_pct": null,
+      "required_threshold": "increase <= 3.0 pp",
+      "result": "PASS",
+      "artifact": "coverage_gate.csv",
+      "detail": "control coverage 0.4815, challenger 0.8148, nominal 0.90",
+      "model": "B"
+    },
+    {
+      "gate": "G4",
+      "metric": "tier3_iso seat-vector ES",
+      "control": 10.920286666666668,
+      "challenger": 9.722859999999999,
+      "absolute_difference": -1.1974266666666686,
+      "relative_difference_pct": 10.965157813317495,
+      "required_threshold": "<= +1.0% relative degradation",
+      "result": "PASS",
+      "artifact": "scores_summary.json:tier3_iso.seat_energy_score",
+      "detail": "",
+      "model": "B"
+    },
+    {
+      "gate": "G2",
+      "metric": "tier3_iso coalition Brier (headline)",
+      "control": 0.026677477940944883,
+      "challenger": 0.022229716665354334,
+      "absolute_difference": -0.004447761275590548,
+      "relative_difference_pct": 16.672345434738702,
+      "required_threshold": ">= 2.0% relative improvement",
+      "result": "PASS",
+      "artifact": "coalition_brier_by_model_election.csv",
+      "detail": "",
+      "model": "B"
+    },
+    {
+      "gate": "G5-C",
+      "metric": "individual Tier-1 elections favouring challenger",
+      "control": null,
+      "challenger": 3,
+      "absolute_difference": null,
+      "relative_difference_pct": null,
+      "required_threshold": ">= 2 of 3",
+      "result": "PASS",
+      "artifact": "scores_by_model_election.csv",
+      "detail": "won: 2014, 2018, 2022",
+      "model": "B"
+    },
+    {
+      "gate": "G5-B1",
+      "metric": "leave-one-target-out aggregates favouring challenger",
+      "control": null,
+      "challenger": 3,
+      "absolute_difference": null,
+      "relative_difference_pct": null,
+      "required_threshold": "all 3 strictly > 0",
+      "result": "PASS",
+      "artifact": "tier1_leave_one_out.csv",
+      "detail": "drop 2014: +9.351%; drop 2018: +9.909%; drop 2022: +9.537%",
+      "model": "B"
+    },
+    {
+      "gate": "G5-B2",
+      "metric": "leave-one-target-out aggregates improving >= 1.0%",
+      "control": null,
+      "challenger": 3,
+      "absolute_difference": null,
+      "relative_difference_pct": null,
+      "required_threshold": ">= 2 of 3",
+      "result": "PASS",
+      "artifact": "tier1_leave_one_out.csv",
+      "detail": "",
+      "model": "B"
+    },
+    {
+      "gate": "G5-Brier-elections",
+      "metric": "elections with lower coalition Brier",
+      "control": null,
+      "challenger": 3,
+      "absolute_difference": null,
+      "relative_difference_pct": null,
+      "required_threshold": ">= ceil(3/2) = 2",
+      "result": "PASS",
+      "artifact": "coalition_brier_by_model_election.csv",
+      "detail": "won: 2014, 2018, 2022",
+      "model": "B"
+    },
+    {
+      "gate": "G5-Brier-LOO",
+      "metric": "leave-one-election-out coalition Brier delta",
+      "control": null,
+      "challenger": 13.71300123761954,
+      "absolute_difference": null,
+      "relative_difference_pct": 13.71300123761954,
+      "required_threshold": "no LOO delta worse than -1.0% (degradation)",
+      "result": "PASS",
+      "artifact": "coalition_leave_one_out.csv",
+      "detail": "drop 2014: +24.941%; drop 2018: +14.887%; drop 2022: +13.713%",
+      "model": "B"
+    }
+  ],
+  "detail": {
+    "A": {
+      "tier1_robustness": {
+        "individual": {
+          "2014": {
+            "control": 3.5671053023332275,
+            "challenger": 3.402428100414607,
+            "challenger_lower": true,
+            "relative_improvement_pct": 4.616550058415883
+          },
+          "2018": {
+            "control": 3.8657101829679887,
+            "challenger": 3.7206536780861628,
+            "challenger_lower": true,
+            "relative_improvement_pct": 3.752389548521599
+          },
+          "2022": {
+            "control": 1.9668768325700525,
+            "challenger": 1.8202032335650498,
+            "challenger_lower": true,
+            "relative_improvement_pct": 7.457182705911953
+          }
+        },
+        "leave_one_out": {
+          "2014": {
+            "dropped": 2014,
+            "kept": [
+              2018,
+              2022
+            ],
+            "control": 2.9162935077690206,
+            "challenger": 2.7704284558256065,
+            "relative_improvement_pct": 5.001727417176252
+          },
+          "2018": {
+            "dropped": 2018,
+            "kept": [
+              2014,
+              2022
+            ],
+            "control": 2.76699106745164,
+            "challenger": 2.611315666989828,
+            "relative_improvement_pct": 5.626162017399883
+          },
+          "2022": {
+            "dropped": 2022,
+            "kept": [
+              2014,
+              2018
+            ],
+            "control": 3.716407742650608,
+            "challenger": 3.561540889250385,
+            "relative_improvement_pct": 4.167111472267285
+          }
+        }
+      },
+      "coalition_robustness": {
+        "individual": {
+          "2014": {
+            "control": 0.04461504137795276,
+            "challenger": 0.04525101253543307,
+            "challenger_lower": false,
+            "relative_improvement_pct": -1.425463560803931
+          },
+          "2018": {
+            "control": 0.015269812460629922,
+            "challenger": 0.013968688444881892,
+            "challenger_lower": true,
+            "relative_improvement_pct": 8.52089060754814
+          },
+          "2022": {
+            "control": 0.020147579984251967,
+            "challenger": 0.01615151644094488,
+            "challenger_lower": true,
+            "relative_improvement_pct": 19.83396291976777
+          }
+        },
+        "leave_one_out": {
+          "2014": {
+            "dropped": 2014,
+            "kept": [
+              2018,
+              2022
+            ],
+            "control": 0.017708696222440944,
+            "challenger": 0.015060102442913385,
+            "relative_improvement_pct": 14.95645837648504
+          },
+          "2018": {
+            "dropped": 2018,
+            "kept": [
+              2014,
+              2022
+            ],
+            "control": 0.032381310681102365,
+            "challenger": 0.030701264488188974,
+            "relative_improvement_pct": 5.188320539149334
+          },
+          "2022": {
+            "dropped": 2022,
+            "kept": [
+              2014,
+              2018
+            ],
+            "control": 0.029942426919291342,
+            "challenger": 0.029609850490157484,
+            "relative_improvement_pct": 1.1107196822432095
+          }
+        }
+      },
+      "tier1_by_election": {
+        "control": {
+          "2014": 3.5671053023332275,
+          "2018": 3.8657101829679887,
+          "2022": 1.9668768325700525
+        },
+        "challenger": {
+          "2014": 3.402428100414607,
+          "2018": 3.7206536780861628,
+          "2022": 1.8202032335650498
+        }
+      },
+      "coalition_by_election": {
+        "control": {
+          "2014": 0.04461504137795276,
+          "2018": 0.015269812460629922,
+          "2022": 0.020147579984251967
+        },
+        "challenger": {
+          "2014": 0.04525101253543307,
+          "2018": 0.013968688444881892,
+          "2022": 0.01615151644094488
+        }
+      }
+    },
+    "B": {
+      "tier1_robustness": {
+        "individual": {
+          "2014": {
+            "control": 3.5671053023332275,
+            "challenger": 3.2111859497868975,
+            "challenger_lower": true,
+            "relative_improvement_pct": 9.977820175746558
+          },
+          "2018": {
+            "control": 3.8657101829679887,
+            "challenger": 3.512769505671816,
+            "challenger_lower": true,
+            "relative_improvement_pct": 9.130034601434978
+          },
+          "2022": {
+            "control": 1.9668768325700525,
+            "challenger": 1.7744334120882066,
+            "challenger_lower": true,
+            "relative_improvement_pct": 9.784213088238298
+          }
+        },
+        "leave_one_out": {
+          "2014": {
+            "dropped": 2014,
+            "kept": [
+              2018,
+              2022
+            ],
+            "control": 2.9162935077690206,
+            "challenger": 2.643601458880011,
+            "relative_improvement_pct": 9.350637998629303
+          },
+          "2018": {
+            "dropped": 2018,
+            "kept": [
+              2014,
+              2022
+            ],
+            "control": 2.76699106745164,
+            "challenger": 2.492809680937552,
+            "relative_improvement_pct": 9.909008732962954
+          },
+          "2022": {
+            "dropped": 2022,
+            "kept": [
+              2014,
+              2018
+            ],
+            "control": 3.716407742650608,
+            "challenger": 3.3619777277293568,
+            "relative_improvement_pct": 9.536897979565218
+          }
+        }
+      },
+      "coalition_robustness": {
+        "individual": {
+          "2014": {
+            "control": 0.04461504137795276,
+            "challenger": 0.04010504874409449,
+            "challenger_lower": true,
+            "relative_improvement_pct": 10.108681947983026
+          },
+          "2018": {
+            "control": 0.015269812460629922,
+            "challenger": 0.011567794346456692,
+            "challenger_lower": true,
+            "relative_improvement_pct": 24.244031311570613
+          },
+          "2022": {
+            "control": 0.020147579984251967,
+            "challenger": 0.015016306905511811,
+            "challenger_lower": true,
+            "relative_improvement_pct": 25.468433840446014
+          }
+        },
+        "leave_one_out": {
+          "2014": {
+            "dropped": 2014,
+            "kept": [
+              2018,
+              2022
+            ],
+            "control": 0.017708696222440944,
+            "challenger": 0.013292050625984252,
+            "relative_improvement_pct": 24.940546390195557
+          },
+          "2018": {
+            "dropped": 2018,
+            "kept": [
+              2014,
+              2022
+            ],
+            "control": 0.032381310681102365,
+            "challenger": 0.02756067782480315,
+            "relative_improvement_pct": 14.887083798965929
+          },
+          "2022": {
+            "dropped": 2022,
+            "kept": [
+              2014,
+              2018
+            ],
+            "control": 0.029942426919291342,
+            "challenger": 0.025836421545275594,
+            "relative_improvement_pct": 13.71300123761954
+          }
+        }
+      },
+      "tier1_by_election": {
+        "control": {
+          "2014": 3.5671053023332275,
+          "2018": 3.8657101829679887,
+          "2022": 1.9668768325700525
+        },
+        "challenger": {
+          "2014": 3.2111859497868975,
+          "2018": 3.512769505671816,
+          "2022": 1.7744334120882066
+        }
+      },
+      "coalition_by_election": {
+        "control": {
+          "2014": 0.04461504137795276,
+          "2018": 0.015269812460629922,
+          "2022": 0.020147579984251967
+        },
+        "challenger": {
+          "2014": 0.04010504874409449,
+          "2018": 0.011567794346456692,
+          "2022": 0.015016306905511811
+        }
+      }
+    }
+  },
+  "all_gates_pass": {
+    "A": true,
+    "B": true
+  }
+}
