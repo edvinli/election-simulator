@@ -1,0 +1,549 @@
+{
+  "status": "AUDIT ONLY - no predictive score against any certified outcome is computed",
+  "path_under_audit": "final 14-day polling consensus -> ElectionNoise -> unchanged simplex transfer -> frozen geography (chronological) -> historically correct mandate law -> joint seat draws",
+  "probe_a_geography_inputs": {
+    "mode_used": "chronological",
+    "oracle_mode_prohibited": true,
+    "inputs": [
+      {
+        "input": "baseline matrix B (29 x 9 constituency party votes)",
+        "source": "constituency_party_votes_*.csv rows for the BASELINE election year",
+        "used_for": "IPF seed structure",
+        "classification": "prior-election information",
+        "target_realized": false,
+        "evidence": "_get_cached_geography_structures selects rows where election_year == baseline_year"
+      },
+      {
+        "input": "target constituency row totals R",
+        "source": "R = np.sum(B, axis=1) in chronological mode when target_year <= 2022",
+        "used_for": "IPF row margins",
+        "classification": "prior-election information",
+        "target_realized": false,
+        "evidence": "projection.py: 'Strictly chronological: row totals are derived entirely from baseline valid votes. Zero information from target election electorate or valid votes is accessed!'"
+      },
+      {
+        "input": "total national valid votes",
+        "source": "sum(R), i.e. the baseline election total, when total_national_votes=None",
+        "used_for": "IPF column margin scale",
+        "classification": "prior-election information",
+        "target_realized": false,
+        "evidence": "project_constituency_votes leaves R unscaled when total_national_votes is None"
+      },
+      {
+        "input": "national vote shares C",
+        "source": "the forecast draw itself (consensus + ElectionNoise)",
+        "used_for": "IPF column margins",
+        "classification": "forecast output, not an observation",
+        "target_realized": false,
+        "evidence": "passed in as national_vote_shares"
+      },
+      {
+        "input": "constituency electorates file",
+        "source": "constituency_electorates_*.csv",
+        "used_for": "nothing in chronological mode with target_year <= 2022",
+        "classification": "read but unused - proven by perturbation test",
+        "target_realized": false,
+        "evidence": "see perturbation_test below"
+      },
+      {
+        "input": "fixed constituency seats for the target year",
+        "source": "Valmyndigheten valkretsmandat workbook",
+        "used_for": "allocator seat quota per constituency",
+        "classification": "fixed historical/legal metadata, decided and published BEFORE the election (Vallagen 4 kap. 3 \u00a7: apportioned from eligible voters as of 1 March of the election year)",
+        "target_realized": false,
+        "evidence": "published pre-election; available at any forecast origin in the election year"
+      },
+      {
+        "input": "mandate law version and first divisor",
+        "source": "mandate_law_for_election_year(target_year)",
+        "used_for": "allocation rules",
+        "classification": "fixed historical/legal metadata",
+        "target_realized": false,
+        "evidence": "statutory; SFS 2014:1384 effective from the 2018 election"
+      },
+      {
+        "input": "4% national and 12% constituency thresholds, 349/310/39 seat split",
+        "source": "Regeringsformen 3 kap. 7 \u00a7, Vallagen 14 kap.",
+        "used_for": "eligibility and allocation",
+        "classification": "fixed historical/legal metadata",
+        "target_realized": false,
+        "evidence": "statutory constants"
+      },
+      {
+        "input": "constituency code set (29 constituencies)",
+        "source": "OFFICIAL_CONSTITUENCY_CODES",
+        "used_for": "matrix indexing",
+        "classification": "fixed historical/legal metadata; unchanged since 1998",
+        "target_realized": false,
+        "evidence": "Valmyndigheten workbook footnotes place changes at 1994, 1998, 2006, 2018 only"
+      },
+      {
+        "input": "deterministic tie-break seed",
+        "source": "DeterministicLotteryTieBreaker(seed=12345)",
+        "used_for": "statutory lottery",
+        "classification": "fixed model convention",
+        "target_realized": false,
+        "evidence": "constant"
+      },
+      {
+        "input": "oracle-mode target valid votes",
+        "source": "constituency_electorates_*.csv rows for the TARGET year",
+        "used_for": "IPF row margins - ONLY in mode='oracle'",
+        "classification": "TARGET-ELECTION REALIZED - therefore oracle mode is prohibited on this path",
+        "target_realized": true,
+        "evidence": "_get_cached_geography_structures branch for mode == 'oracle'"
+      }
+    ],
+    "any_target_realized_input_in_chronological_mode": false
+  },
+  "probe_a_electorates_perturbation": {
+    "perturbation": "eligible_voters and valid_votes multiplied by 7.77 and offset by 12345",
+    "per_target": {
+      "2014": {
+        "identical_under_grossly_perturbed_electorates": true,
+        "constituency_valid_votes_total": 5960408
+      },
+      "2018": {
+        "identical_under_grossly_perturbed_electorates": true,
+        "constituency_valid_votes_total": 6231573
+      },
+      "2022": {
+        "identical_under_grossly_perturbed_electorates": true,
+        "constituency_valid_votes_total": 6476725
+      }
+    },
+    "electorates_file_proven_unused": true
+  },
+  "probe_b_consensus_publication_safety": {
+    "2014": {
+      "election_date": "2014-09-14",
+      "window": [
+        "2014-08-31",
+        "2014-09-14"
+      ],
+      "retained_pollsters": 9,
+      "eligible_polls_in_window": 23,
+      "all_retained_published_on_or_before_election": true,
+      "all_retained_fieldwork_ended_on_or_before_election": true,
+      "consensus_composition": {
+        "M": 21.9586,
+        "L": 6.2894,
+        "C": 6.2698,
+        "KD": 5.2054,
+        "S": 29.9124,
+        "V": 6.8439,
+        "MP": 8.8075,
+        "SD": 9.9722,
+        "REST": 4.7408
+      },
+      "consensus_sums_to_100": true,
+      "excluded_because_published_after_election_day": 0,
+      "excluded_detail": [],
+      "retained": [
+        {
+          "pollster": "SVT",
+          "interview_end": "2014-09-14",
+          "publication_date": "2014-09-14",
+          "published_on_or_before_election": true,
+          "fieldwork_ended_on_or_before_election": true,
+          "sample_size": 12909
+        },
+        {
+          "pollster": "Skop",
+          "interview_end": "2014-09-13",
+          "publication_date": "2014-09-13",
+          "published_on_or_before_election": true,
+          "fieldwork_ended_on_or_before_election": true,
+          "sample_size": 1200
+        },
+        {
+          "pollster": "Novus",
+          "interview_end": "2014-09-12",
+          "publication_date": "2014-09-13",
+          "published_on_or_before_election": true,
+          "fieldwork_ended_on_or_before_election": true,
+          "sample_size": 1550
+        },
+        {
+          "pollster": "Demoskop",
+          "interview_end": "2014-09-12",
+          "publication_date": "2014-09-12",
+          "published_on_or_before_election": true,
+          "fieldwork_ended_on_or_before_election": true,
+          "sample_size": 2001
+        },
+        {
+          "pollster": "Sifo",
+          "interview_end": "2014-09-11",
+          "publication_date": "2014-09-13",
+          "published_on_or_before_election": true,
+          "fieldwork_ended_on_or_before_election": true,
+          "sample_size": 2445
+        },
+        {
+          "pollster": "United Minds",
+          "interview_end": "2014-09-11",
+          "publication_date": "2014-09-12",
+          "published_on_or_before_election": true,
+          "fieldwork_ended_on_or_before_election": true,
+          "sample_size": 1343
+        },
+        {
+          "pollster": "Ipsos",
+          "interview_end": "2014-09-11",
+          "publication_date": "2014-09-12",
+          "published_on_or_before_election": true,
+          "fieldwork_ended_on_or_before_election": true,
+          "sample_size": 1551
+        },
+        {
+          "pollster": "YouGov",
+          "interview_end": "2014-09-10",
+          "publication_date": "2014-09-11",
+          "published_on_or_before_election": true,
+          "fieldwork_ended_on_or_before_election": true,
+          "sample_size": 1517
+        },
+        {
+          "pollster": "Sentio",
+          "interview_end": "2014-09-08",
+          "publication_date": "2014-09-09",
+          "published_on_or_before_election": true,
+          "fieldwork_ended_on_or_before_election": true,
+          "sample_size": 1042
+        }
+      ]
+    },
+    "2018": {
+      "election_date": "2018-09-09",
+      "window": [
+        "2018-08-26",
+        "2018-09-09"
+      ],
+      "retained_pollsters": 10,
+      "eligible_polls_in_window": 35,
+      "all_retained_published_on_or_before_election": true,
+      "all_retained_fieldwork_ended_on_or_before_election": true,
+      "consensus_composition": {
+        "M": 17.7732,
+        "L": 5.9566,
+        "C": 8.5294,
+        "KD": 6.0747,
+        "S": 25.096,
+        "V": 9.8775,
+        "MP": 4.9823,
+        "SD": 18.5856,
+        "REST": 3.1247
+      },
+      "consensus_sums_to_100": true,
+      "excluded_because_published_after_election_day": 0,
+      "excluded_detail": [],
+      "retained": [
+        {
+          "pollster": "SVT",
+          "interview_end": "2018-09-09",
+          "publication_date": "2018-09-09",
+          "published_on_or_before_election": true,
+          "fieldwork_ended_on_or_before_election": true,
+          "sample_size": 11808
+        },
+        {
+          "pollster": "TV4",
+          "interview_end": "2018-09-09",
+          "publication_date": "2018-09-09",
+          "published_on_or_before_election": true,
+          "fieldwork_ended_on_or_before_election": true,
+          "sample_size": 5591
+        },
+        {
+          "pollster": "Skop",
+          "interview_end": "2018-09-07",
+          "publication_date": "2018-09-09",
+          "published_on_or_before_election": true,
+          "fieldwork_ended_on_or_before_election": true,
+          "sample_size": 2487
+        },
+        {
+          "pollster": "Inizio",
+          "interview_end": "2018-09-07",
+          "publication_date": "2018-09-08",
+          "published_on_or_before_election": true,
+          "fieldwork_ended_on_or_before_election": true,
+          "sample_size": 1661
+        },
+        {
+          "pollster": "Sifo",
+          "interview_end": "2018-09-06",
+          "publication_date": "2018-09-07",
+          "published_on_or_before_election": true,
+          "fieldwork_ended_on_or_before_election": true,
+          "sample_size": 3480
+        },
+        {
+          "pollster": "Novus",
+          "interview_end": "2018-09-06",
+          "publication_date": "2018-09-07",
+          "published_on_or_before_election": true,
+          "fieldwork_ended_on_or_before_election": true,
+          "sample_size": 1847
+        },
+        {
+          "pollster": "Demoskop",
+          "interview_end": "2018-09-06",
+          "publication_date": "2018-09-07",
+          "published_on_or_before_election": true,
+          "fieldwork_ended_on_or_before_election": true,
+          "sample_size": 1673
+        },
+        {
+          "pollster": "Ipsos",
+          "interview_end": "2018-09-05",
+          "publication_date": "2018-09-06",
+          "published_on_or_before_election": true,
+          "fieldwork_ended_on_or_before_election": true,
+          "sample_size": 1874
+        },
+        {
+          "pollster": "YouGov",
+          "interview_end": "2018-09-01",
+          "publication_date": "2018-09-05",
+          "published_on_or_before_election": true,
+          "fieldwork_ended_on_or_before_election": true,
+          "sample_size": 1511
+        },
+        {
+          "pollster": "Sentio",
+          "interview_end": "2018-08-28",
+          "publication_date": "2018-08-31",
+          "published_on_or_before_election": true,
+          "fieldwork_ended_on_or_before_election": true,
+          "sample_size": 807
+        }
+      ]
+    },
+    "2022": {
+      "election_date": "2022-09-11",
+      "window": [
+        "2022-08-28",
+        "2022-09-11"
+      ],
+      "retained_pollsters": 7,
+      "eligible_polls_in_window": 47,
+      "all_retained_published_on_or_before_election": true,
+      "all_retained_fieldwork_ended_on_or_before_election": true,
+      "consensus_composition": {
+        "M": 17.6464,
+        "L": 4.8774,
+        "C": 7.4266,
+        "KD": 5.6444,
+        "S": 28.8393,
+        "V": 7.6498,
+        "MP": 5.6374,
+        "SD": 21.0329,
+        "REST": 1.2458
+      },
+      "consensus_sums_to_100": true,
+      "excluded_because_published_after_election_day": 0,
+      "excluded_detail": [],
+      "retained": [
+        {
+          "pollster": "SVT",
+          "interview_end": "2022-09-11",
+          "publication_date": "2022-09-11",
+          "published_on_or_before_election": true,
+          "fieldwork_ended_on_or_before_election": true,
+          "sample_size": 11160
+        },
+        {
+          "pollster": "Sifo",
+          "interview_end": "2022-09-11",
+          "publication_date": "2022-09-11",
+          "published_on_or_before_election": true,
+          "fieldwork_ended_on_or_before_election": true,
+          "sample_size": 4046
+        },
+        {
+          "pollster": "Skop",
+          "interview_end": "2022-09-09",
+          "publication_date": "2022-09-10",
+          "published_on_or_before_election": true,
+          "fieldwork_ended_on_or_before_election": true,
+          "sample_size": 1919
+        },
+        {
+          "pollster": "Demoskop",
+          "interview_end": "2022-09-09",
+          "publication_date": "2022-09-10",
+          "published_on_or_before_election": true,
+          "fieldwork_ended_on_or_before_election": true,
+          "sample_size": 2321
+        },
+        {
+          "pollster": "Ipsos",
+          "interview_end": "2022-09-09",
+          "publication_date": "2022-09-09",
+          "published_on_or_before_election": true,
+          "fieldwork_ended_on_or_before_election": true,
+          "sample_size": 1992
+        },
+        {
+          "pollster": "Novus",
+          "interview_end": "2022-09-08",
+          "publication_date": "2022-09-09",
+          "published_on_or_before_election": true,
+          "fieldwork_ended_on_or_before_election": true,
+          "sample_size": 3903
+        },
+        {
+          "pollster": "Sentio",
+          "interview_end": "2022-08-29",
+          "publication_date": "2022-08-30",
+          "published_on_or_before_election": true,
+          "fieldwork_ended_on_or_before_election": true,
+          "sample_size": 1016
+        }
+      ]
+    },
+    "all_targets_publication_safe": true
+  },
+  "probe_c_poll_archive_revision": {
+    "probes": [
+      {
+        "file": "data/processed/pollofpolls/swedishpolls_individual_polls.csv",
+        "snapshot_a": "f55bf36",
+        "snapshot_b": "f6ae4d1",
+        "restricted_to_publication_date": "<= 2022-12-31",
+        "keys_in_a": 16087,
+        "keys_in_b": 16087,
+        "common_keys": 0,
+        "keys_only_in_a": 16087,
+        "keys_only_in_b": 16087,
+        "revised_support_values": 0
+      },
+      {
+        "file": "data/processed/pollofpolls/swedishpolls_individual_polls.csv",
+        "snapshot_a": "f6ae4d1",
+        "snapshot_b": "34c52d6",
+        "restricted_to_publication_date": "<= 2022-12-31",
+        "keys_in_a": 16087,
+        "keys_in_b": 16087,
+        "common_keys": 16087,
+        "keys_only_in_a": 0,
+        "keys_only_in_b": 0,
+        "revised_support_values": 0
+      }
+    ],
+    "no_historical_support_value_revised": true,
+    "note": "The consensus filters on publication_date <= election_date, so even an archive assembled later cannot inject a poll that was unpublished at the forecast origin. This is the structural difference from the PoP state series, which carries no publication filter."
+  },
+  "probe_d_smoke": {
+    "2014": {
+      "election_date": "2014-09-14",
+      "geography_baseline_year": 2010,
+      "mandate_law": "PRE_2018",
+      "first_divisor": "7/5",
+      "training_residual_years": [
+        2002,
+        2006,
+        2010
+      ],
+      "k_outer": 3,
+      "no_future_year_in_pool": true,
+      "retained_pollsters": 9,
+      "draws": 400,
+      "distinct_support_points_in_votes": 3,
+      "vote_rows_sum_to_100": true,
+      "mean_lambda": 1.0,
+      "all_seat_totals_349": true,
+      "distinct_seat_vectors": 3,
+      "certified_truth_seats": {
+        "M": 84,
+        "L": 19,
+        "C": 22,
+        "KD": 16,
+        "S": 113,
+        "V": 21,
+        "MP": 25,
+        "SD": 49
+      },
+      "certified_sums_to_349": true,
+      "runs": true
+    },
+    "2018": {
+      "election_date": "2018-09-09",
+      "geography_baseline_year": 2014,
+      "mandate_law": "POST_2018",
+      "first_divisor": "6/5",
+      "training_residual_years": [
+        2002,
+        2006,
+        2010,
+        2014
+      ],
+      "k_outer": 4,
+      "no_future_year_in_pool": true,
+      "retained_pollsters": 10,
+      "draws": 400,
+      "distinct_support_points_in_votes": 4,
+      "vote_rows_sum_to_100": true,
+      "mean_lambda": 1.0,
+      "all_seat_totals_349": true,
+      "distinct_seat_vectors": 4,
+      "certified_truth_seats": {
+        "M": 70,
+        "L": 20,
+        "C": 31,
+        "KD": 22,
+        "S": 100,
+        "V": 28,
+        "MP": 16,
+        "SD": 62
+      },
+      "certified_sums_to_349": true,
+      "runs": true
+    },
+    "2022": {
+      "election_date": "2022-09-11",
+      "geography_baseline_year": 2018,
+      "mandate_law": "POST_2018",
+      "first_divisor": "6/5",
+      "training_residual_years": [
+        2002,
+        2006,
+        2010,
+        2014,
+        2018
+      ],
+      "k_outer": 5,
+      "no_future_year_in_pool": true,
+      "retained_pollsters": 7,
+      "draws": 400,
+      "distinct_support_points_in_votes": 5,
+      "vote_rows_sum_to_100": true,
+      "mean_lambda": 1.0,
+      "all_seat_totals_349": true,
+      "distinct_seat_vectors": 5,
+      "certified_truth_seats": {
+        "M": 68,
+        "L": 16,
+        "C": 24,
+        "KD": 19,
+        "S": 107,
+        "V": 24,
+        "MP": 18,
+        "SD": 73
+      },
+      "certified_sums_to_349": true,
+      "runs": true
+    },
+    "all_three_targets_run": true
+  },
+  "verdict": {
+    "no_target_realized_geography_input": true,
+    "electorates_file_proven_unused": true,
+    "consensus_publication_safe": true,
+    "poll_archive_not_retrospectively_revised": true,
+    "all_three_targets_run": true
+  },
+  "isolated_path_valid": true
+}
