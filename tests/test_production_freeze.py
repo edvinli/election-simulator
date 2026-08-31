@@ -39,6 +39,8 @@ INTENTIONALLY_CHANGED = {
 PARTY_CHART_MERGE_CHANGED = {
     "scripts/pollofpolls/normalize.py",
     "scripts/pollofpolls/validate.py",
+    # Its own known-drift set gained the two files above, so this test module drifts too.
+    "tests/test_production_challenger_b.py",
 }
 
 PART7B1_METADATA_CHANGED = {

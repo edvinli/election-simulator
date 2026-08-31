@@ -178,6 +178,12 @@ INTENTIONALLY_CHANGED = {
     "scripts/simulator/engine.py",
     "scripts/simulator/config.py",
     "scripts/simulator/reproducibility.py",
+    # Added by merging main's party-chart commit 2bff422: purely additive parsers
+    # (74 added, 0 removed) that production does not import. The series they read is
+    # retrospectively recomputed and barred from historical-state and production-state
+    # use; see data/README.md.
+    "scripts/pollofpolls/normalize.py",
+    "scripts/pollofpolls/validate.py",
 }
 
 

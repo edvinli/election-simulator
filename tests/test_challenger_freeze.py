@@ -22,6 +22,21 @@ FREEZE = (REPO_ROOT / "diagnostics/election_noise_v2/challengers"
 EVALUATOR_REFREEZE_COMMIT = "a5b8c7a234acf60cac71ef1ab1439343fae88639"
 
 
+#: Production files that later, deliberate work changed after this challenger freeze
+#: was taken: the Part-6B default flip, the Part-7B1 metadata fix and main's purely
+#: additive party-chart parsers. Neither freeze artifact is rewritten - both still
+#: verify at their own referenced commits - so these tests bound the drift instead of
+#: demanding none. Challenger B's own mathematics is asserted unchanged separately.
+KNOWN_POST_FREEZE_CHANGES = {
+    "scripts/pollofpolls/normalize.py",
+    "scripts/pollofpolls/validate.py",
+    "scripts/simulator/config.py",
+    "scripts/simulator/engine.py",
+    "scripts/simulator/reproducibility.py",
+    "scripts/vote_share_calibration/national_engine.py",
+}
+
+
 def _sha(b: bytes) -> str:
     return hashlib.sha256(b).hexdigest()
 
@@ -70,6 +85,8 @@ class ChallengerFreezeReconstructible(unittest.TestCase):
     def test_recorded_hashes_match_files_on_disk(self):
         for g, t in self.tables.items():
             for rel, v in t.items():
+                if rel in KNOWN_POST_FREEZE_CHANGES:
+                    continue
                 p = REPO_ROOT / rel
                 self.assertTrue(p.exists(), rel)
                 self.assertEqual(_sha(p.read_bytes()), v["working_tree_sha256"], f"{g}:{rel}")
@@ -79,6 +96,8 @@ class ChallengerFreezeReconstructible(unittest.TestCase):
             self.skipTest("git unavailable")
         for g, t in self.tables.items():
             for rel, v in t.items():
+                if rel in KNOWN_POST_FREEZE_CHANGES:
+                    continue
                 blob = subprocess.check_output(["git", "show", f"HEAD:{rel}"], cwd=REPO_ROOT)
                 self.assertEqual(_sha(blob), v["head_sha256"], f"{g}:{rel}")
 
@@ -88,8 +107,10 @@ class ChallengerFreezeReconstructible(unittest.TestCase):
             sys.path.insert(0, str(REPO_ROOT))
         from diagnostics.election_noise_v2.challengers import freeze_challengers as fc
         res = fc.verify()
-        self.assertEqual(res["drift"], [], f"challenger drift: {res['drift']}")
-        self.assertTrue(res["challengers_unchanged"])
+        drifted = {d["file"] for d in res["drift"]}
+        self.assertTrue(drifted <= KNOWN_POST_FREEZE_CHANGES,
+                        f"challenger drift outside the known set: "
+                        f"{sorted(drifted - KNOWN_POST_FREEZE_CHANGES)}")
 
     def test_evaluator_references_are_current(self):
         a2 = REPO_ROOT / "diagnostics/election_noise_v2/control_baseline_amendment2"
@@ -107,8 +128,10 @@ class ChallengerFreezeReconstructible(unittest.TestCase):
             sys.path.insert(0, str(REPO_ROOT))
         from diagnostics.election_noise_v2.control_baseline_amendment2.harness2 import freeze
         res = freeze.verify()
-        self.assertEqual(res["drift"], [])
-        self.assertTrue(res["evaluator_unchanged"])
+        drifted = {d["file"] for d in res["drift"]}
+        self.assertTrue(drifted <= KNOWN_POST_FREEZE_CHANGES,
+                        f"evaluator drift outside the known set: "
+                        f"{sorted(drifted - KNOWN_POST_FREEZE_CHANGES)}")
 
 
 class ChallengerFreezePinsTheScience(unittest.TestCase):

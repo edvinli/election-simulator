@@ -266,11 +266,29 @@ class PreservedDiagnosticsTest(unittest.TestCase):
 
 @unittest.skipUnless(_HAS_BASELINE, "Amendment-2 baseline not present")
 class EvaluatorFreezeTest(unittest.TestCase):
+    #: Production files that later, deliberate work changed after this evaluator freeze
+    #: was taken: the Part-6B default flip to ElectionNoise B, the Part-7B1 metadata fix
+    #: and main's purely additive party-chart parsers. The freeze artifact is never
+    #: rewritten - it certifies the evaluator at its own referenced commit, where it
+    #: still verifies cleanly - so this test bounds the drift rather than demanding none.
+    KNOWN_POST_FREEZE_CHANGES = {
+        "scripts/pollofpolls/normalize.py",
+        "scripts/pollofpolls/validate.py",
+        "scripts/simulator/config.py",
+        "scripts/simulator/engine.py",
+        "scripts/simulator/reproducibility.py",
+        "scripts/vote_share_calibration/national_engine.py",
+    }
+
     def test_freeze_self_verifies(self) -> None:
         from diagnostics.election_noise_v2.control_baseline_amendment2.harness2.freeze import verify
 
         res = verify()
-        self.assertTrue(res["evaluator_unchanged"], res["drift"])
+        drifted = {d["file"] for d in res["drift"]}
+        self.assertTrue(
+            drifted <= self.KNOWN_POST_FREEZE_CHANGES,
+            f"evaluator drift outside the known post-freeze set: "
+            f"{sorted(drifted - self.KNOWN_POST_FREEZE_CHANGES)}")
         self.assertGreater(res["checks"], 30)
 
     def test_freeze_records_the_amendment2_hashes(self) -> None:
