@@ -94,6 +94,26 @@ raw snapshot.
 - `pollofpolls_party_chart_timeseries.csv`: `date`, M, L, C, KD, S, V, MP, SD, FI
   extracted from first-party party chart CSVs (2009+), verified to match the canonical
   2014+ timeseries exactly.
+
+  > **Diagnostic and research use only. Not a leakage-safe historical state.**
+  > This series is a *retrospectively recomputed* Poll-of-Polls estimate: the provider
+  > completes and revises earlier dates as later-published polls arrive, so a value
+  > dated `t` is not the value that was observable at `t`. Part 3B of the ElectionNoise
+  > v2 program measured this directly — two snapshots retrieved one day apart differed
+  > in 176 of 34,888 cells, and the largest revision was explicable only by a poll
+  > published five days after the date it changed
+  > (`docs/election_noise_v2_historical_pop_extension.md`, commit `89d3408`).
+  >
+  > It therefore **must not** be used as
+  > (a) the historical state for any hindcast, backtest or reconstruction that claims
+  > publication-time leakage safety, or
+  > (b) a production current-state source.
+  >
+  > The canonical production state remains `pollofpolls_timeseries.csv` together with
+  > `individual_polls.csv`. Nothing in `scripts/forecast_history/`,
+  > `scripts/vote_share_calibration/` or `scripts/simulator/` reads this file; it is
+  > produced by `scripts.pollofpolls` and consumed only by its own extension tests.
+  > That finding is binding and was not revisited by the v1.1/B release.
 - `individual_polls.csv`: deterministic `poll_id`, normalized and original pollster,
   separate interview/publication dates, party, normalized `support`, exact numeric
   `source_value`, reporting status, sample/method, source URL, `retrieved_at`, and

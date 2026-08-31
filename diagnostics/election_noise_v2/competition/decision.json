@@ -1,0 +1,315 @@
+{
+  "artifact": "ELECTIONNOISE V2 ADOPTION DECISION",
+  "decided_utc": "2026-08-31T14:12:51Z",
+  "git_commit_results_produced_from": "1450e6f301a98d5d6e4af1357113435534b0e7a9",
+  "git_commit_containing_results": "ff89621848c95ac9320804ffc4f148454f522284",
+  "authoritative_commits": {
+    "evaluator_refreeze_base": "a5b8c7a234acf60cac71ef1ab1439343fae88639",
+    "challenger_implementation": "0facfe6cf542e650bcdf7fdc2d01a6795366c045",
+    "challenger_freeze": "1450e6f301a98d5d6e4af1357113435534b0e7a9"
+  },
+  "freeze_hashes": {
+    "challenger_implementation_freeze": "2454ac15309361443656fe1d00abd5cb655d5a8efc8ddaded9e8c7164d8c1c22",
+    "challenger_implementation_freeze_expected": "2454ac15309361443656fe1d00abd5cb655d5a8efc8ddaded9e8c7164d8c1c22",
+    "evaluator_freeze": "3142f81c2494773448f2a48cbe57ccd964fa807891477155cc89e1c3b5f04bae",
+    "evaluation_case_manifest": "30f3a06604ae6e04a29161c24ee509ffc38d317a32f42a0f8e2d77f9e43c3165",
+    "control_scores_summary": "0e862edfe12c16743f4b84e752020edb7e94690f936cec3e6966f5d40d990bb6",
+    "exact_control_oracle": "d82e60d182deaac576f3125168ea304f64ddb8a10cf0da927807528f60a8ec78",
+    "bandwidth_selection": "66116c23a6a8ea87e303ce524e9e1edfe1b1f32b5da2cc578feb0a98a26fb867",
+    "apply_batch_simplex_transfer": "12037c720f3650bbe8a38cc89db26bcab2fd1fdde8f97474568e0686de660b3d"
+  },
+  "preregistration": {
+    "status": "FROZEN - AMENDMENT 2",
+    "commit": "00f7030eda65e64efa3253798eb8cc6c0b8fe9cc",
+    "body_sha256": "5a9a6dc8ef6f26ce3ce152155af0ed288fb8d2d97c81a2606e513cf20e1b058b",
+    "whole_file_sha256": "126a8f4902f8af36f007dca4442f8e41bed5a507b190d30960b38f33c6345572",
+    "freeze_timestamp_utc": "2026-08-31T08:54:20Z",
+    "edited_by_this_task": false
+  },
+  "model_versions": {
+    "CONTROL": "CONTROL_pp_centered_noise",
+    "A": "CHALLENGER_A_smoothed_bootstrap",
+    "B": "CHALLENGER_B_lw_gaussian"
+  },
+  "seeds": [
+    12345,
+    24680,
+    98765,
+    54321,
+    13579
+  ],
+  "draws_per_seed": 20000,
+  "challenger_a_bandwidths": {
+    "2014": 0.75,
+    "2018": 0.75,
+    "2022": 0.75
+  },
+  "challenger_b_hyperparameters": 0,
+  "case_set": {
+    "tier1": [
+      2014,
+      2018,
+      2022
+    ],
+    "tier3_iso": [
+      2014,
+      2018,
+      2022
+    ],
+    "N_T1": 3,
+    "N_seat": 3
+  },
+  "headline_metrics": {
+    "CONTROL": {
+      "tier1_es_9cat": 3.1332307726237563,
+      "tier1_es_8party": 3.0225734156585293,
+      "tier1_crps_8party_mean": 0.7772062589739552,
+      "tier3_iso_seat_energy_score": 10.920286666666668,
+      "tier3_iso_coalition_brier": 0.026677477940944883
+    },
+    "A": {
+      "tier1_es_9cat": 2.98109500402194,
+      "tier1_es_8party": 2.875321198581124,
+      "tier1_crps_8party_mean": 0.7608430460997968,
+      "tier3_iso_seat_energy_score": 10.23476,
+      "tier3_iso_coalition_brier": 0.02512373914041995
+    },
+    "B": {
+      "tier1_es_9cat": 2.8327962891823066,
+      "tier1_es_8party": 2.744143088649203,
+      "tier1_crps_8party_mean": 0.764471709851286,
+      "tier3_iso_seat_energy_score": 9.722859999999999,
+      "tier3_iso_coalition_brier": 0.022229716665354334
+    }
+  },
+  "gate_outcomes": {
+    "A": {
+      "all_gates_pass": true,
+      "gates": [
+        {
+          "gate": "G1",
+          "metric": "tier1_es_9cat (five-seed mean)",
+          "result": "PASS",
+          "relative_difference_pct": 4.855555803009632,
+          "required_threshold": ">= 2.0% relative improvement"
+        },
+        {
+          "gate": "G3",
+          "metric": "tier1 es_9cat",
+          "result": "PASS",
+          "relative_difference_pct": 4.855555803009632,
+          "required_threshold": "<= +1.0% relative degradation"
+        },
+        {
+          "gate": "G3",
+          "metric": "tier1 es_8party",
+          "result": "PASS",
+          "relative_difference_pct": 4.871749890823526,
+          "required_threshold": "<= +1.0% relative degradation"
+        },
+        {
+          "gate": "G3",
+          "metric": "tier1 mean 8-party CRPS",
+          "result": "PASS",
+          "relative_difference_pct": 2.1053887157008564,
+          "required_threshold": "<= +1.0% relative degradation"
+        },
+        {
+          "gate": "G3",
+          "metric": "tier1 coverage 50% |dev from nominal|",
+          "result": "PASS",
+          "relative_difference_pct": null,
+          "required_threshold": "increase <= 3.0 pp"
+        },
+        {
+          "gate": "G3",
+          "metric": "tier1 coverage 80% |dev from nominal|",
+          "result": "PASS",
+          "relative_difference_pct": null,
+          "required_threshold": "increase <= 3.0 pp"
+        },
+        {
+          "gate": "G3",
+          "metric": "tier1 coverage 90% |dev from nominal|",
+          "result": "PASS",
+          "relative_difference_pct": null,
+          "required_threshold": "increase <= 3.0 pp"
+        },
+        {
+          "gate": "G4",
+          "metric": "tier3_iso seat-vector ES",
+          "result": "PASS",
+          "relative_difference_pct": 6.27755193239739,
+          "required_threshold": "<= +1.0% relative degradation"
+        },
+        {
+          "gate": "G2",
+          "metric": "tier3_iso coalition Brier (headline)",
+          "result": "PASS",
+          "relative_difference_pct": 5.824159255100492,
+          "required_threshold": ">= 2.0% relative improvement"
+        },
+        {
+          "gate": "G5-C",
+          "metric": "individual Tier-1 elections favouring challenger",
+          "result": "PASS",
+          "relative_difference_pct": null,
+          "required_threshold": ">= 2 of 3"
+        },
+        {
+          "gate": "G5-B1",
+          "metric": "leave-one-target-out aggregates favouring challenger",
+          "result": "PASS",
+          "relative_difference_pct": null,
+          "required_threshold": "all 3 strictly > 0"
+        },
+        {
+          "gate": "G5-B2",
+          "metric": "leave-one-target-out aggregates improving >= 1.0%",
+          "result": "PASS",
+          "relative_difference_pct": null,
+          "required_threshold": ">= 2 of 3"
+        },
+        {
+          "gate": "G5-Brier-elections",
+          "metric": "elections with lower coalition Brier",
+          "result": "PASS",
+          "relative_difference_pct": null,
+          "required_threshold": ">= ceil(3/2) = 2"
+        },
+        {
+          "gate": "G5-Brier-LOO",
+          "metric": "leave-one-election-out coalition Brier delta",
+          "result": "PASS",
+          "relative_difference_pct": 1.1107196822432095,
+          "required_threshold": "no LOO delta worse than -1.0% (degradation)"
+        }
+      ]
+    },
+    "B": {
+      "all_gates_pass": true,
+      "gates": [
+        {
+          "gate": "G1",
+          "metric": "tier1_es_9cat (five-seed mean)",
+          "result": "PASS",
+          "relative_difference_pct": 9.588648434914575,
+          "required_threshold": ">= 2.0% relative improvement"
+        },
+        {
+          "gate": "G3",
+          "metric": "tier1 es_9cat",
+          "result": "PASS",
+          "relative_difference_pct": 9.588648434914575,
+          "required_threshold": "<= +1.0% relative degradation"
+        },
+        {
+          "gate": "G3",
+          "metric": "tier1 es_8party",
+          "result": "PASS",
+          "relative_difference_pct": 9.211697739644968,
+          "required_threshold": "<= +1.0% relative degradation"
+        },
+        {
+          "gate": "G3",
+          "metric": "tier1 mean 8-party CRPS",
+          "result": "PASS",
+          "relative_difference_pct": 1.638503161243326,
+          "required_threshold": "<= +1.0% relative degradation"
+        },
+        {
+          "gate": "G3",
+          "metric": "tier1 coverage 50% |dev from nominal|",
+          "result": "PASS",
+          "relative_difference_pct": null,
+          "required_threshold": "increase <= 3.0 pp"
+        },
+        {
+          "gate": "G3",
+          "metric": "tier1 coverage 80% |dev from nominal|",
+          "result": "PASS",
+          "relative_difference_pct": null,
+          "required_threshold": "increase <= 3.0 pp"
+        },
+        {
+          "gate": "G3",
+          "metric": "tier1 coverage 90% |dev from nominal|",
+          "result": "PASS",
+          "relative_difference_pct": null,
+          "required_threshold": "increase <= 3.0 pp"
+        },
+        {
+          "gate": "G4",
+          "metric": "tier3_iso seat-vector ES",
+          "result": "PASS",
+          "relative_difference_pct": 10.965157813317495,
+          "required_threshold": "<= +1.0% relative degradation"
+        },
+        {
+          "gate": "G2",
+          "metric": "tier3_iso coalition Brier (headline)",
+          "result": "PASS",
+          "relative_difference_pct": 16.672345434738702,
+          "required_threshold": ">= 2.0% relative improvement"
+        },
+        {
+          "gate": "G5-C",
+          "metric": "individual Tier-1 elections favouring challenger",
+          "result": "PASS",
+          "relative_difference_pct": null,
+          "required_threshold": ">= 2 of 3"
+        },
+        {
+          "gate": "G5-B1",
+          "metric": "leave-one-target-out aggregates favouring challenger",
+          "result": "PASS",
+          "relative_difference_pct": null,
+          "required_threshold": "all 3 strictly > 0"
+        },
+        {
+          "gate": "G5-B2",
+          "metric": "leave-one-target-out aggregates improving >= 1.0%",
+          "result": "PASS",
+          "relative_difference_pct": null,
+          "required_threshold": ">= 2 of 3"
+        },
+        {
+          "gate": "G5-Brier-elections",
+          "metric": "elections with lower coalition Brier",
+          "result": "PASS",
+          "relative_difference_pct": null,
+          "required_threshold": ">= ceil(3/2) = 2"
+        },
+        {
+          "gate": "G5-Brier-LOO",
+          "metric": "leave-one-election-out coalition Brier delta",
+          "result": "PASS",
+          "relative_difference_pct": 13.71300123761954,
+          "required_threshold": "no LOO delta worse than -1.0% (degradation)"
+        }
+      ]
+    }
+  },
+  "selected_model": "ADOPT_B",
+  "decision_rule_applied": "both passed; frozen rule selects the lower Tier-1 primary joint vote ES",
+  "decision_detail": {
+    "decision": "ADOPT_B",
+    "rule": "both passed; frozen rule selects the lower Tier-1 primary joint vote ES",
+    "passing_models": [
+      "A",
+      "B"
+    ],
+    "tier1_relative_gap_pct": 5.23506456874243,
+    "rejected": "A"
+  },
+  "discretionary_override": false,
+  "override_statement": "The decision follows the frozen rule mechanically. No qualitative override was applied, no threshold was changed, and no model parameter was altered after scores were observed.",
+  "forecast_2026_statement": "2026 forecast was not an adoption input.",
+  "forecast_2026_run": false,
+  "excluded_from_adoption": "full-pipeline Tier 2 and Tier 3 remain retrospective diagnostics only (Amendment 2)",
+  "score_audit": {
+    "run_valid": true,
+    "problems": []
+  },
+  "brier_interpretation_caveat": "CONTROL's coalition probabilities are structurally coarse - its law on this path has only K = 3/4/5 atoms, so p_m is confined to multiples of 1/K. A continuous challenger may therefore clear the 2% Brier threshold relatively easily. The threshold was NOT changed, and the decision rests on the complete frozen gate, with the Tier-1 joint vote energy score as the primary criterion."
+}

@@ -1,0 +1,159 @@
+{
+  "artifact": "PART 3D-R CLEAN-TREE CONTROL REPRODUCTION vs CERTIFIED BASELINE",
+  "purpose": "Prove the committed clean evaluator reproduces the certified Part-3D scientific results before the evaluator freeze is regenerated. No challenger is involved.",
+  "certified_dir": "diagnostics/election_noise_v2/control_baseline_amendment2",
+  "reproduction": {
+    "base_commit": "aea30bacfa8dfe342198d3d6ff8748e84c9ffd9c",
+    "worktree_state": "clean (git status --porcelain empty)",
+    "normalize_py_sha256": "437a78560aea68163f425352348ba95e7d944d72350bd48e74e286feeec75b59",
+    "normalize_py_provenance": "committed HEAD content, NOT the dirty c6b0480... working-tree variant",
+    "monte_carlo": {
+      "seeds": [
+        12345,
+        24680,
+        98765,
+        54321,
+        13579
+      ],
+      "draws_per_seed": 20000,
+      "jobs": 30
+    },
+    "output_location": "scratch directory; the committed baseline was never opened for writing"
+  },
+  "comparison_rule": "Exact byte equality required. The only exempted field is control_scores_by_case_seed.csv::elapsed_seconds (per-job wall-clock runtime). For that file exact equality is required on the normalised bytes with that column dropped.",
+  "non_scientific_fields_exempted": {
+    "control_scores_by_case_seed.csv": [
+      "elapsed_seconds"
+    ]
+  },
+  "files": {
+    "evaluation_case_manifest.json": {
+      "covers": "case selection, law dispatch, truth vectors, training pools, geography mode",
+      "certified_sha256": "30f3a06604ae6e04a29161c24ee509ffc38d317a32f42a0f8e2d77f9e43c3165",
+      "reproduction_sha256": "30f3a06604ae6e04a29161c24ee509ffc38d317a32f42a0f8e2d77f9e43c3165",
+      "raw_byte_identical": true,
+      "scientific_content_identical": true
+    },
+    "control_scores_summary.json": {
+      "covers": "Tier-1 and Tier-3-ISO aggregation and headline scores",
+      "certified_sha256": "0e862edfe12c16743f4b84e752020edb7e94690f936cec3e6966f5d40d990bb6",
+      "reproduction_sha256": "0e862edfe12c16743f4b84e752020edb7e94690f936cec3e6966f5d40d990bb6",
+      "raw_byte_identical": true,
+      "scientific_content_identical": true
+    },
+    "control_scores_by_case_seed.csv": {
+      "covers": "every per-case per-seed Tier-1 and Tier-3-ISO metric",
+      "certified_sha256": "e7ff68f3f9e128c73483d59f8ccff2e0b351616c7c481915605ce116917f10df",
+      "reproduction_sha256": "5ccbe9594a8cb33507d626b3d566310f9c9d8e23239cbf39b0b690e3acdd2b7c",
+      "raw_byte_identical": false,
+      "normalised_certified_sha256": "4dec36bdbae4549b41f0ceb1550d8730a5880696d0e24b79aa04739cd69f3744",
+      "normalised_reproduction_sha256": "4dec36bdbae4549b41f0ceb1550d8730a5880696d0e24b79aa04739cd69f3744",
+      "scientific_content_identical": true,
+      "dropped_columns": [
+        "elapsed_seconds"
+      ],
+      "scientific_columns_compared": [
+        "model",
+        "tier",
+        "target_year",
+        "horizon_days",
+        "seed",
+        "draws",
+        "k_outer",
+        "training_residual_years",
+        "es_9cat",
+        "es_8party",
+        "crps_8party_mean",
+        "crps_all9_mean",
+        "coverage_50",
+        "coverage_80",
+        "coverage_90",
+        "mean_width_50",
+        "mean_width_80",
+        "mean_width_90",
+        "coverage_50_8party",
+        "coverage_80_8party",
+        "coverage_90_8party",
+        "mean_lambda",
+        "p05_lambda",
+        "fraction_lambda_lt_0_99",
+        "fraction_lambda_lt_0_90",
+        "fraction_lambda_lt_0_75",
+        "min_lambda",
+        "p01_lambda",
+        "p10_lambda",
+        "fraction_lambda_lt_1",
+        "mandate_law",
+        "first_divisor",
+        "geography_mode",
+        "geography_baseline_year",
+        "seat_energy_score",
+        "seat_crps_8party_mean",
+        "seat_coverage_50",
+        "seat_coverage_80",
+        "seat_coverage_90",
+        "coalition_brier_mean_over_masks",
+        "complement_symmetry_max_abs_diff",
+        "complement_symmetry_holds",
+        "seat_total_always_349",
+        "distinct_vote_rows",
+        "distinct_seat_rows",
+        "atom_index_counts",
+        "mc_mean_seats",
+        "mc_mean_vote_pct"
+      ]
+    },
+    "control_scores_by_election.csv": {
+      "covers": "per-election aggregated scores",
+      "certified_sha256": "9802d7cb8023a7543567fe25e8aee1f860f6820f4b5d93b7cef591a5161cca0a",
+      "reproduction_sha256": "9802d7cb8023a7543567fe25e8aee1f860f6820f4b5d93b7cef591a5161cca0a",
+      "raw_byte_identical": true,
+      "scientific_content_identical": true
+    },
+    "coalition_brier_by_election.csv": {
+      "covers": "coalition Brier per election, MC and exact",
+      "certified_sha256": "2aa654b17f481a32bd8fd2d8e792187c0546d138288ec1a27c638537e1ecf6a6",
+      "reproduction_sha256": "2aa654b17f481a32bd8fd2d8e792187c0546d138288ec1a27c638537e1ecf6a6",
+      "raw_byte_identical": true,
+      "scientific_content_identical": true
+    },
+    "mask_level/coalition_brier_by_mask.csv": {
+      "covers": "mask-level coalition majority probabilities (254 masks)",
+      "certified_sha256": "2e9b1206567af5ee896c5fb33fc23ddca70a9c737e3dcccaf24d74e48c568323",
+      "reproduction_sha256": "2e9b1206567af5ee896c5fb33fc23ddca70a9c737e3dcccaf24d74e48c568323",
+      "raw_byte_identical": true,
+      "scientific_content_identical": true
+    },
+    "exact_control_oracle.json": {
+      "covers": "exact finite-support CONTROL oracle",
+      "certified_sha256": "d82e60d182deaac576f3125168ea304f64ddb8a10cf0da927807528f60a8ec78",
+      "reproduction_sha256": "d82e60d182deaac576f3125168ea304f64ddb8a10cf0da927807528f60a8ec78",
+      "raw_byte_identical": true,
+      "scientific_content_identical": true
+    },
+    "exact_control_support.csv": {
+      "covers": "exact CONTROL atom support: votes, seats, coalition sums",
+      "certified_sha256": "39b8b6f82f0013f7b7e85f011d44ed5253a83b1952386b156d390b62b833b246",
+      "reproduction_sha256": "39b8b6f82f0013f7b7e85f011d44ed5253a83b1952386b156d390b62b833b246",
+      "raw_byte_identical": true,
+      "scientific_content_identical": true
+    },
+    "monte_carlo_vs_exact.json": {
+      "covers": "MC-vs-exact convergence check",
+      "certified_sha256": "14b8c0bf515e13bd21ea96715310113d0cb50974b92e2fefab323802c91cffc3",
+      "reproduction_sha256": "14b8c0bf515e13bd21ea96715310113d0cb50974b92e2fefab323802c91cffc3",
+      "raw_byte_identical": true,
+      "scientific_content_identical": true
+    },
+    "lambda_diagnostics.csv": {
+      "covers": "lambda diagnostics",
+      "certified_sha256": "bee8fe0859272be3bf55728718b908946eb0f12b2e03e6f30de65c807f4f5ad2",
+      "reproduction_sha256": "bee8fe0859272be3bf55728718b908946eb0f12b2e03e6f30de65c807f4f5ad2",
+      "raw_byte_identical": true,
+      "scientific_content_identical": true
+    }
+  },
+  "artifacts_compared": 10,
+  "all_scientific_content_identical": true,
+  "verdict": "CLEAN TREE REPRODUCES THE CERTIFIED BASELINE"
+}

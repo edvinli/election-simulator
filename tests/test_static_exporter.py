@@ -25,6 +25,7 @@ from scripts.simulator.reproducibility import (
     resolve_source_repository,
 )
 from scripts.static_exporter import export_static_data, validate_published_directory
+from scripts.static_exporter.exporter import PUBLICATION_SCHEMA_VERSION
 from scripts.static_exporter.exporter import (
     COALITION_BUILDER_ENTRY_FIELDS,
     COALITION_BUILDER_SUMMARY_FIELDS,
@@ -109,8 +110,8 @@ class StaticExporterTests(unittest.TestCase):
             first_groups = json.loads((first_version / "groups.json").read_text())
             second_groups = json.loads((second_version / "groups.json").read_text())
 
-            self.assertEqual(first["schema_version"], "1.3")
-            self.assertEqual(first_groups["schema_version"], "1.3")
+            self.assertEqual(first["schema_version"], PUBLICATION_SCHEMA_VERSION)
+            self.assertEqual(first_groups["schema_version"], PUBLICATION_SCHEMA_VERSION)
             self.assertEqual(first_groups["groups"]["tido"]["parties"], ["M", "SD", "KD", "L"])
             builder = first_groups["coalition_builder"]
             self.assertEqual(builder["party_order"], list(PARLIAMENTARY_PARTIES_8))
@@ -644,8 +645,8 @@ class StaticExporterTests(unittest.TestCase):
             manifest = export_static_data(result, output_dir=output, generated_at_utc="2026-08-27T00:00:00+00:00")
             version = self._version_dir(output)
             metadata = json.loads((version / "metadata.json").read_text())
-            self.assertEqual(manifest["schema_version"], "1.3")
-            self.assertEqual(metadata["schema_version"], "1.3")
+            self.assertEqual(manifest["schema_version"], PUBLICATION_SCHEMA_VERSION)
+            self.assertEqual(metadata["schema_version"], PUBLICATION_SCHEMA_VERSION)
             self.assertEqual(manifest["source_repository"], SOURCE_REPOSITORY)
             self.assertEqual(metadata["source_repository"], SOURCE_REPOSITORY)
 

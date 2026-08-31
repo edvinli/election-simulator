@@ -7,14 +7,14 @@
       "final_url": "http://pollofpolls.se/",
       "http_headers": {
         "content-type": "text/html; charset=UTF-8",
-        "date": "Thu, 27 Aug 2026 20:52:47 GMT"
+        "date": "Mon, 31 Aug 2026 16:12:46 GMT"
       },
       "http_status": 200,
       "raw_filename": "homepage.html",
       "retrieval_method": "first_party_http",
       "retrieval_url": "http://pollofpolls.se/",
-      "retrieved_at": "2026-08-27T20:52:47+00:00",
-      "sha256": "11c840c6bd27081361d48443810627a76d58ebd0949830d53590d14dcc0c1b51",
+      "retrieved_at": "2026-08-31T16:12:46+00:00",
+      "sha256": "a83a577248e5dfa9973c57f35960e86c76722e9870089006cde04c5e123229e6",
       "source_key": "homepage",
       "source_page_url": "http://pollofpolls.se/",
       "source_url": "http://pollofpolls.se/",
@@ -26,7 +26,7 @@
       "http_headers": {
         "content-length": "399789",
         "content-type": "text/csv",
-        "date": "Thu, 27 Aug 2026 20:52:50 GMT",
+        "date": "Mon, 31 Aug 2026 16:12:48 GMT",
         "etag": "\"619ad-65a0071a9d96a\"",
         "last-modified": "Thu, 27 Aug 2026 05:16:53 GMT"
       },
@@ -47,7 +47,7 @@
       "http_headers": {
         "content-length": "267550",
         "content-type": "text/csv",
-        "date": "Thu, 27 Aug 2026 20:52:56 GMT",
+        "date": "Mon, 31 Aug 2026 16:12:54 GMT",
         "etag": "\"4151e-65a0071ce4d8c\"",
         "last-modified": "Thu, 27 Aug 2026 05:16:56 GMT"
       },
@@ -68,7 +68,7 @@
       "http_headers": {
         "content-length": "399193",
         "content-type": "text/csv",
-        "date": "Thu, 27 Aug 2026 20:52:51 GMT",
+        "date": "Mon, 31 Aug 2026 16:12:49 GMT",
         "etag": "\"61759-65a0071afd0c7\"",
         "last-modified": "Thu, 27 Aug 2026 05:16:54 GMT"
       },
@@ -89,7 +89,7 @@
       "http_headers": {
         "content-length": "398131",
         "content-type": "text/csv",
-        "date": "Thu, 27 Aug 2026 20:52:49 GMT",
+        "date": "Mon, 31 Aug 2026 16:12:47 GMT",
         "etag": "\"61333-65a0071a3ab5e\"",
         "last-modified": "Thu, 27 Aug 2026 05:16:53 GMT"
       },
@@ -110,7 +110,7 @@
       "http_headers": {
         "content-length": "424826",
         "content-type": "text/csv",
-        "date": "Thu, 27 Aug 2026 20:52:48 GMT",
+        "date": "Mon, 31 Aug 2026 16:12:46 GMT",
         "etag": "\"67b7a-65a00719c6be1\"",
         "last-modified": "Thu, 27 Aug 2026 05:16:52 GMT"
       },
@@ -131,7 +131,7 @@
       "http_headers": {
         "content-length": "401578",
         "content-type": "text/csv",
-        "date": "Thu, 27 Aug 2026 20:52:54 GMT",
+        "date": "Mon, 31 Aug 2026 16:12:52 GMT",
         "etag": "\"620aa-65a0071c237c4\"",
         "last-modified": "Thu, 27 Aug 2026 05:16:55 GMT"
       },
@@ -152,7 +152,7 @@
       "http_headers": {
         "content-length": "424668",
         "content-type": "text/csv",
-        "date": "Thu, 27 Aug 2026 20:52:52 GMT",
+        "date": "Mon, 31 Aug 2026 16:12:50 GMT",
         "etag": "\"67adc-65a0071b5d7c3\"",
         "last-modified": "Thu, 27 Aug 2026 05:16:54 GMT"
       },
@@ -173,7 +173,7 @@
       "http_headers": {
         "content-length": "414792",
         "content-type": "text/csv",
-        "date": "Thu, 27 Aug 2026 20:52:55 GMT",
+        "date": "Mon, 31 Aug 2026 16:12:53 GMT",
         "etag": "\"65448-65a0071c85a18\"",
         "last-modified": "Thu, 27 Aug 2026 05:16:55 GMT"
       },
@@ -194,7 +194,7 @@
       "http_headers": {
         "content-length": "401304",
         "content-type": "text/csv",
-        "date": "Thu, 27 Aug 2026 20:52:53 GMT",
+        "date": "Mon, 31 Aug 2026 16:12:51 GMT",
         "etag": "\"61f98-65a0071bc156f\"",
         "last-modified": "Thu, 27 Aug 2026 05:16:54 GMT"
       },
@@ -215,7 +215,7 @@
       "http_headers": {
         "content-length": "268340",
         "content-type": "text/plain; charset=utf-8",
-        "date": "Thu, 27 Aug 2026 20:52:57 GMT",
+        "date": "Mon, 31 Aug 2026 16:12:55 GMT",
         "etag": "\"34a971fd3ab29a769fb866ef5248d2fd71af6cc26dd583df0f3762b4d5522b44\""
       },
       "http_status": 200,
@@ -235,7 +235,7 @@
       "http_headers": {
         "content-length": "22599",
         "content-type": "text/plain; charset=utf-8",
-        "date": "Thu, 27 Aug 2026 20:52:58 GMT",
+        "date": "Mon, 31 Aug 2026 16:12:56 GMT",
         "etag": "\"1bb4c2eb50d5e2bd90f9de121812e1b21eaacca9c742918db858eec8bbb86a79\""
       },
       "http_status": 200,
@@ -255,7 +255,7 @@
       "http_headers": {
         "content-length": "205472",
         "content-type": "text/csv",
-        "date": "Thu, 27 Aug 2026 20:52:46 GMT",
+        "date": "Mon, 31 Aug 2026 16:12:45 GMT",
         "etag": "\"322a0-65a0071f438af\"",
         "last-modified": "Thu, 27 Aug 2026 05:16:58 GMT"
       },

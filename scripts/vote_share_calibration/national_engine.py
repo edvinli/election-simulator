@@ -12,6 +12,7 @@ from scripts.election_layer_v2.residuals_pool import (
     ChronologicalPPResidualsPool,
     load_chronological_pp_residuals,
 )
+from scripts.election_layer_v2.transfer import apply_batch_simplex_transfer
 from scripts.hindcasts.models import (
     derive_opinion_state_seed,
     derive_shared_dynamics_seed,
@@ -28,6 +29,13 @@ from scripts.pollofpolls.transitions import (
 )
 
 from .config import DEFAULT_ELECTIONS_FILE, DEFAULT_POLLS_FILE, MIN_SHARE_PCT
+from .election_noise_b import (
+    LEGACY_MODEL_ID,
+    MODEL_ID as ADOPTED_NOISE_MODEL,
+    derive_election_noise_b_seed,
+    draw_election_noise_b,
+    fit_election_noise_b,
+)
 from .models import apply_vote_share_models, derive_vote_share_layer_seeds
 
 
@@ -57,6 +65,7 @@ def generate_national_vote_shares(
     data_dir: Path | str | None = None,
     polls_file: Path | str | None = None,
     elections_file: Path | str | None = None,
+    noise_model: str = ADOPTED_NOISE_MODEL,
 ) -> NationalVoteShareSampleResult:
     """Canonical sampling function for Swedish national party vote shares.
 
@@ -64,13 +73,26 @@ def generate_national_vote_shares(
         1. OpinionState v1.1: Draw ALR uncertainty samples.
         2. Dynamics v2 (symmetric_all_history): Sample joint CLR transition vectors S * Delta_h.
            (Strictly NO sqrt(h) scaling).
-        3. ElectionNoise (pp_centered_noise): Apply bounded simplex-safe transfer from chronological residuals.
+        3. ElectionNoise: Apply bounded simplex-safe transfer of a joint zero-sum
+           residual draw from the chronological training pool.
+
+    ElectionNoise law selection (``noise_model``):
+        ``pp_lw_gaussian``   - DEFAULT. The regularized joint Gaussian law selected by
+                               the preregistered historical evaluation (ADOPT_B). See
+                               ``docs/election_noise_adopted_model.md``.
+        ``pp_centered_noise`` - the superseded empirical discrete bootstrap, retained
+                               unmodified so archived forecasts stay reproducible.
+
+    Only the ElectionNoise draw differs between the two: OpinionState, Dynamics, the
+    seed derivation and ``base_comp_matrix`` are identical, so the two laws are
+    exactly paired at any given ``(as_of, election_date, samples, seed)``.
 
     Parameters:
         as_of: Polling observation cutoff date (None => latest available in timeseries).
         election_date: Target election date.
         samples: Number of Monte Carlo draws N.
         seed: Base random seed for deterministic sub-seed derivation.
+        noise_model: ElectionNoise law; defaults to the adopted ``pp_lw_gaussian``.
         data_dir: Base directory containing processed data.
         polls_file: Path to individual_polls.csv.
         elections_file: Path to riksdag_election_results.csv.
@@ -126,21 +148,44 @@ def generate_national_vote_shares(
     base_clr_matrix = state_clr + sym_deltas
     base_comp_matrix = clr_to_composition_matrix(base_clr_matrix)
 
-    # 5. ElectionNoise (pp_centered_noise)
+    # 5. ElectionNoise
     training_pool = load_chronological_pp_residuals(
         target_election_year=elec_date.year,
         polls_file=p_file,
         elections_file=e_file,
     )
-    model_draws = apply_vote_share_models(
-        base_comp_matrix=base_comp_matrix,
-        training_pool=training_pool,
-        samples_count=samples,
-        index_seed=idx_seed,
-        sign_seed=sign_seed,
-        eps=MIN_SHARE_PCT,
-    )
-    nat_shares_matrix, lambdas = model_draws["pp_centered_noise"]
+    if noise_model == LEGACY_MODEL_ID:
+        model_draws = apply_vote_share_models(
+            base_comp_matrix=base_comp_matrix,
+            training_pool=training_pool,
+            samples_count=samples,
+            index_seed=idx_seed,
+            sign_seed=sign_seed,
+            eps=MIN_SHARE_PCT,
+        )
+        nat_shares_matrix, lambdas = model_draws["pp_centered_noise"]
+        noise_diagnostics: dict[str, Any] = {"election_noise_model": LEGACY_MODEL_ID}
+    elif noise_model == ADOPTED_NOISE_MODEL:
+        fit = fit_election_noise_b(training_pool.centered_residuals_matrix)
+        noise_seed = derive_election_noise_b_seed(seed, as_of_date, horizon_days)
+        residuals = draw_election_noise_b(fit, samples, np.random.default_rng(noise_seed))
+        nat_shares_matrix, lambdas = apply_batch_simplex_transfer(
+            base_comp_matrix, residuals, eps=MIN_SHARE_PCT
+        )
+        noise_diagnostics = {
+            "election_noise_model": ADOPTED_NOISE_MODEL,
+            "election_noise_k": fit.k,
+            "election_noise_delta": fit.delta,
+            "election_noise_tau_sq": fit.tau_sq,
+            "election_noise_bessel_factor": fit.bessel_factor,
+            "election_noise_seed": noise_seed,
+            "election_noise_tunable_parameters": 0,
+        }
+    else:
+        raise ValueError(
+            f"unknown noise_model {noise_model!r}; expected "
+            f"{ADOPTED_NOISE_MODEL!r} (adopted) or {LEGACY_MODEL_ID!r} (historical)"
+        )
     # Re-normalize to strictly exact simplex
     nat_shares_matrix = nat_shares_matrix / np.sum(nat_shares_matrix, axis=1, keepdims=True)
 
@@ -161,5 +206,6 @@ def generate_national_vote_shares(
             "eligible_transitions_count": len(eligible_trans),
             "mean_lambda": float(np.mean(lambdas)),
             "min_lambda": float(np.min(lambdas)),
+            **noise_diagnostics,
         },
     )

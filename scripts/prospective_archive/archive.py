@@ -25,6 +25,7 @@ from scripts.simulator.config import (
     DEFAULT_SIMULATION_SAMPLES,
     DEFAULT_SIMULATIONS_DIR,
     MODEL_PARTIES_9,
+    BENCHMARK_LINEAGE_CANDIDATE,
     MODEL_VERSION,
     PARLIAMENTARY_PARTIES_8,
 )
@@ -38,12 +39,20 @@ from scripts.simulator.reproducibility import (
 )
 
 
+from scripts.vote_share_calibration.election_noise_b import (
+    election_noise_candidate_for_law,
+)
 # 1.0 snapshots are keyed one-per-calendar-day at ``<snapshot_date>/``.  1.1
 # snapshots carry a sortable ``generation_id`` and live at
 # ``<generation_id>/``, which allows several immutable forecasts per day.
 # Both are readable; only 1.1 is written.
-ARCHIVE_SCHEMA_VERSION = "1.1"
-SUPPORTED_ARCHIVE_SCHEMA_VERSIONS: tuple[str, ...] = ("1.0", "1.1")
+ARCHIVE_SCHEMA_VERSION = "1.2"
+SUPPORTED_ARCHIVE_SCHEMA_VERSIONS: tuple[str, ...] = ("1.0", "1.1", "1.2")
+
+#: Archive schema 1.2 adds ``election_noise_law`` and ``election_noise_candidate``
+#: to the snapshot ``model`` block, following the same additive convention as 1.1
+#: (which added ``generation_id``). Existing snapshots stay valid and are never
+#: rewritten. ``model.candidate`` remains the botten-ada benchmark lineage label.
 DEFAULT_ARCHIVE_DIR = Path(__file__).resolve().parents[2] / "data" / "processed" / "prospective_forecasts"
 DEFAULT_CANONICAL_FORECAST = DEFAULT_SIMULATIONS_DIR / "simulation_summary_N100000_seed12345.json"
 DEFAULT_CANONICAL_HASH = DEFAULT_SIMULATIONS_DIR / "deterministic_payload.sha256"
@@ -224,10 +233,21 @@ def build_snapshot(
         "generated_at_utc": generated,
         "as_of": str(manifest["as_of"]),
         "election_date": str(manifest["election_date"]),
+        # ``candidate`` is the botten-ada benchmark / model-lineage label, NOT the
+        # ElectionNoise challenger. The ElectionNoise identity is the two explicit
+        # fields below, sourced from the run manifest so the snapshot reports the law
+        # that actually ran rather than a hard-coded assumption.
         "model": {
             "name": "ElectionSimulator",
             "version": manifest.get("model_version", MODEL_VERSION),
-            "candidate": "A",
+            "candidate": BENCHMARK_LINEAGE_CANDIDATE,
+            "candidate_namespace": (
+                "botten_ada_benchmark_model_lineage; not the ElectionNoise challenger"
+            ),
+            "election_noise_law": (manifest.get("model_config") or {}).get("noise_model"),
+            "election_noise_candidate": election_noise_candidate_for_law(
+                (manifest.get("model_config") or {}).get("noise_model")
+            ),
         },
         "seed": int(manifest["base_seed"]),
         "samples": int(manifest["samples"]),

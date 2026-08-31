@@ -206,7 +206,7 @@ def build_reproducibility_manifest(
     cfg = model_config or {
         "opinion_model": "OpinionState_v1.1",
         "dynamics_model": "symmetric_all_history",
-        "noise_model": "pp_centered_noise",
+        "noise_model": "pp_lw_gaussian",
         "geography_model": "GeographicProjection_v1",
         "mandate_model": "MandateAllocator_v1",
     }

@@ -1,0 +1,44 @@
+{
+  "artifact": "PRODUCTION DEFAULT-PATH CERTIFICATION",
+  "purpose": "prove the ordinary production default reproduces the Part-6A certified Challenger-B forecast exactly, and that explicit CONTROL still reproduces the archived CONTROL forecast",
+  "certified_utc": "2026-08-31T15:47:53Z",
+  "git_commit": "50794c6b86b51fa602f8acad624e97befb7ac274",
+  "configuration": {
+    "as_of": "2026-08-24",
+    "election_date": "2026-09-13",
+    "samples": 100000,
+    "seed": 12345,
+    "noise_model_argument_passed": false,
+    "polling_inputs_refreshed": false
+  },
+  "part6a_reference": {
+    "artifact": "diagnostics/election_noise_b_promotion/same_input_2026.json",
+    "sha256": "16206a6fd890cc08fb7571ba572f29017619458f13e27c3dc1c49fca3277636f",
+    "commit": "b8705e33ba469be29962164edf96a7f558d127ba"
+  },
+  "default_path_equals_explicit_b": {
+    "vote_shares_matrix": true,
+    "seats_matrix": true
+  },
+  "default_vs_certified_B": {
+    "differences": [],
+    "identical": true
+  },
+  "control_vs_certified_CONTROL": {
+    "differences": [],
+    "identical": true
+  },
+  "metadata": {
+    "default_manifest_noise_model": "pp_lw_gaussian",
+    "default_manifest_model_version": "1.1.0-rc1",
+    "control_manifest_noise_model": "pp_centered_noise",
+    "default_is_adopted_b": true
+  },
+  "output_hashes": {
+    "default_vote_shares_sha256": "b6d54e58bd69195778dff6987f959fdd0e393bed882f7eec168f6a2f7f91b78a",
+    "default_seats_sha256": "d9997ac15596a68406679d1f780b37bfa4d2fb19fb9f830a2b367e6d9963c403",
+    "control_vote_shares_sha256": "d4cf6c3739139f6152362b93febf21014e10ec0e5bd51f28778a71de9d302d76",
+    "control_seats_sha256": "b11d6a32dc3a0987cf18feacbf344fd04c4e277aa5250f014fc52d0ac8b80b3a"
+  },
+  "certified": true
+}

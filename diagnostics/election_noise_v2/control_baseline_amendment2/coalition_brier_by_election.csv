@@ -1,0 +1,5 @@
+model,target_year,coalition_brier_election_aggregate,five_seed_sd,exact_coalition_brier,k_atoms,masks,effective_distinct_events
+CONTROL_pp_centered_noise,2014,0.04461504137795276,3.6048169635195516e-05,0.04461942257217848,3,254,127
+CONTROL_pp_centered_noise,2018,0.015269812460629922,5.5704765728417984e-05,0.015255905511811024,4,254,127
+CONTROL_pp_centered_noise,2022,0.020147579984251967,4.567439227791548e-05,0.02015748031496063,5,254,127
+CONTROL_pp_centered_noise,HEADLINE_mean_over_elections,0.026677477940944883,,0.026677602799650046,,254,127

@@ -1,0 +1,29 @@
+model,gate,metric,control,challenger,absolute_difference,relative_difference_pct,required_threshold,result,artifact,detail
+A,G1,tier1_es_9cat (five-seed mean),3.1332307726237563,2.98109500402194,-0.15213576860181632,4.855555803009632,>= 2.0% relative improvement,PASS,scores_summary.json:tier1.es_9cat,
+A,G3,tier1 es_9cat,3.1332307726237563,2.98109500402194,-0.15213576860181632,4.855555803009632,<= +1.0% relative degradation,PASS,scores_summary.json:tier1,
+A,G3,tier1 es_8party,3.0225734156585293,2.875321198581124,-0.14725221707740532,4.871749890823526,<= +1.0% relative degradation,PASS,scores_summary.json:tier1,
+A,G3,tier1 mean 8-party CRPS,0.7772062589739552,0.7608430460997968,-0.016363212874158428,2.1053887157008564,<= +1.0% relative degradation,PASS,scores_summary.json:tier1,
+A,G3,tier1 coverage 50% |dev from nominal|,21.111111111111114,24.07407407407407,2.962962962962955,,increase <= 3.0 pp,PASS,coverage_gate.csv,"control coverage 0.2889, challenger 0.2593, nominal 0.50"
+A,G3,tier1 coverage 80% |dev from nominal|,31.85185185185186,20.740740740740748,-11.11111111111111,,increase <= 3.0 pp,PASS,coverage_gate.csv,"control coverage 0.4815, challenger 0.5926, nominal 0.80"
+A,G3,tier1 coverage 90% |dev from nominal|,41.851851851851855,15.92592592592592,-25.925925925925934,,increase <= 3.0 pp,PASS,coverage_gate.csv,"control coverage 0.4815, challenger 0.7407, nominal 0.90"
+A,G4,tier3_iso seat-vector ES,10.920286666666668,10.23476,-0.685526666666668,6.27755193239739,<= +1.0% relative degradation,PASS,scores_summary.json:tier3_iso.seat_energy_score,
+A,G2,tier3_iso coalition Brier (headline),0.026677477940944883,0.02512373914041995,-0.0015537388005249335,5.824159255100492,>= 2.0% relative improvement,PASS,coalition_brier_by_model_election.csv,
+A,G5-C,individual Tier-1 elections favouring challenger,,3,,,>= 2 of 3,PASS,scores_by_model_election.csv,"won: 2014, 2018, 2022"
+A,G5-B1,leave-one-target-out aggregates favouring challenger,,3,,,all 3 strictly > 0,PASS,tier1_leave_one_out.csv,drop 2014: +5.002%; drop 2018: +5.626%; drop 2022: +4.167%
+A,G5-B2,leave-one-target-out aggregates improving >= 1.0%,,3,,,>= 2 of 3,PASS,tier1_leave_one_out.csv,
+A,G5-Brier-elections,elections with lower coalition Brier,,2,,,>= ceil(3/2) = 2,PASS,coalition_brier_by_model_election.csv,"won: 2018, 2022"
+A,G5-Brier-LOO,leave-one-election-out coalition Brier delta,,1.1107196822432095,,1.1107196822432095,no LOO delta worse than -1.0% (degradation),PASS,coalition_leave_one_out.csv,drop 2014: +14.956%; drop 2018: +5.188%; drop 2022: +1.111%
+B,G1,tier1_es_9cat (five-seed mean),3.1332307726237563,2.8327962891823066,-0.30043448344144963,9.588648434914575,>= 2.0% relative improvement,PASS,scores_summary.json:tier1.es_9cat,
+B,G3,tier1 es_9cat,3.1332307726237563,2.8327962891823066,-0.30043448344144963,9.588648434914575,<= +1.0% relative degradation,PASS,scores_summary.json:tier1,
+B,G3,tier1 es_8party,3.0225734156585293,2.744143088649203,-0.27843032700932646,9.211697739644968,<= +1.0% relative degradation,PASS,scores_summary.json:tier1,
+B,G3,tier1 mean 8-party CRPS,0.7772062589739552,0.764471709851286,-0.012734549122669248,1.638503161243326,<= +1.0% relative degradation,PASS,scores_summary.json:tier1,
+B,G3,tier1 coverage 50% |dev from nominal|,21.111111111111114,12.96296296296296,-8.148148148148154,,increase <= 3.0 pp,PASS,coverage_gate.csv,"control coverage 0.2889, challenger 0.3704, nominal 0.50"
+B,G3,tier1 coverage 80% |dev from nominal|,31.85185185185186,5.925925925925924,-25.925925925925934,,increase <= 3.0 pp,PASS,coverage_gate.csv,"control coverage 0.4815, challenger 0.7407, nominal 0.80"
+B,G3,tier1 coverage 90% |dev from nominal|,41.851851851851855,8.518518518518514,-33.33333333333334,,increase <= 3.0 pp,PASS,coverage_gate.csv,"control coverage 0.4815, challenger 0.8148, nominal 0.90"
+B,G4,tier3_iso seat-vector ES,10.920286666666668,9.722859999999999,-1.1974266666666686,10.965157813317495,<= +1.0% relative degradation,PASS,scores_summary.json:tier3_iso.seat_energy_score,
+B,G2,tier3_iso coalition Brier (headline),0.026677477940944883,0.022229716665354334,-0.004447761275590548,16.672345434738702,>= 2.0% relative improvement,PASS,coalition_brier_by_model_election.csv,
+B,G5-C,individual Tier-1 elections favouring challenger,,3,,,>= 2 of 3,PASS,scores_by_model_election.csv,"won: 2014, 2018, 2022"
+B,G5-B1,leave-one-target-out aggregates favouring challenger,,3,,,all 3 strictly > 0,PASS,tier1_leave_one_out.csv,drop 2014: +9.351%; drop 2018: +9.909%; drop 2022: +9.537%
+B,G5-B2,leave-one-target-out aggregates improving >= 1.0%,,3,,,>= 2 of 3,PASS,tier1_leave_one_out.csv,
+B,G5-Brier-elections,elections with lower coalition Brier,,3,,,>= ceil(3/2) = 2,PASS,coalition_brier_by_model_election.csv,"won: 2014, 2018, 2022"
+B,G5-Brier-LOO,leave-one-election-out coalition Brier delta,,13.71300123761954,,13.71300123761954,no LOO delta worse than -1.0% (degradation),PASS,coalition_leave_one_out.csv,drop 2014: +24.941%; drop 2018: +14.887%; drop 2022: +13.713%
