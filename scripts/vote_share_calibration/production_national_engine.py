@@ -1,19 +1,12 @@
 """Production national vote-share sampler under the adopted ElectionNoise law.
 
-Only the ElectionNoise layer differs from the legacy path. This module does not
-re-implement OpinionState, Dynamics or the seed derivation: it calls the unchanged
-``generate_national_vote_shares`` and reuses the ``base_comp_matrix`` that call
-produced, so the state-plus-dynamics composition entering ElectionNoise is
-**literally the same array** the legacy law received for the same
-``(as_of, election_date, samples, seed)``. Pairing is therefore exact by
-construction rather than by convention, and "the only scientific change is
-ElectionNoise CONTROL -> B" is a property of the code, not a claim.
+Since the production default was flipped to the adopted law, ``generate_national_vote_shares``
+itself dispatches on ``noise_model``. This module is now a thin convenience wrapper
+that selects a law and additionally returns the fitted covariance detail for
+diagnostics, which the national engine does not carry in its result type.
 
-Nothing in the evaluator freeze or the challenger freeze is modified; this module is
-additive, and both freezes still verify.
-
-The legacy law remains fully available: the same call returns its draws too, so
-archived RC1 forecasts stay reproducible.
+It deliberately does not re-implement the law: a second implementation of the same
+dispatch is exactly the divergence risk the promotion exists to avoid.
 """
 
 from __future__ import annotations
@@ -26,15 +19,12 @@ from typing import Any
 import numpy as np
 
 from scripts.election_layer_v2.residuals_pool import load_chronological_pp_residuals
-from scripts.election_layer_v2.transfer import apply_batch_simplex_transfer
 
-from .config import MIN_SHARE_PCT
 from .election_noise_b import (
     LEGACY_MODEL_ID,
     MODEL_ID,
     ElectionNoiseBFit,
     derive_election_noise_b_seed,
-    draw_election_noise_b,
     fit_election_noise_b,
 )
 from .national_engine import NationalVoteShareSampleResult, generate_national_vote_shares
@@ -59,70 +49,44 @@ def generate_production_vote_shares(
     polls_file: Path | str | None = None,
     elections_file: Path | str | None = None,
 ) -> tuple[NationalVoteShareSampleResult, ElectionNoiseBDetail | None]:
-    """Sample national vote shares under ``model_id``.
+    """Sample national vote shares under ``model_id``, plus optional fit detail.
 
-    Returns the **native** ``NationalVoteShareSampleResult`` so the value is a
-    drop-in replacement everywhere the legacy result is consumed, plus optional
-    ElectionNoise detail for diagnostics.
-
-    ``model_id`` is either the adopted ``pp_lw_gaussian`` or the legacy
-    ``pp_centered_noise``; both consume the identical upstream draw.
+    The forecast itself comes from the unchanged production national engine; the
+    detail is recomputed deterministically from the same pool and sub-seed purely
+    for diagnostics.
     """
-    legacy = generate_national_vote_shares(
+    if model_id not in (MODEL_ID, LEGACY_MODEL_ID):
+        raise ValueError(f"unknown ElectionNoise model_id {model_id!r}")
+
+    result = generate_national_vote_shares(
         as_of=as_of, election_date=election_date, samples=samples, seed=seed,
         data_dir=data_dir, polls_file=polls_file, elections_file=elections_file,
+        noise_model=model_id,
     )
-
     if model_id == LEGACY_MODEL_ID:
-        return legacy, None
-    if model_id != MODEL_ID:
-        raise ValueError(f"unknown ElectionNoise model_id {model_id!r}")
+        return result, None
 
     root_data = Path(data_dir) if data_dir else Path(__file__).resolve().parents[2] / "data" / "processed"
     p_file = Path(polls_file) if polls_file else root_data / "pollofpolls" / "swedishpolls_individual_polls.csv"
     e_file = Path(elections_file) if elections_file else root_data / "elections" / "riksdag_election_results.csv"
-
     pool = load_chronological_pp_residuals(
-        target_election_year=legacy.election_date.year,
+        target_election_year=result.election_date.year,
         polls_file=p_file, elections_file=e_file,
     )
-    if tuple(pool.training_years) != tuple(legacy.training_years):
-        raise RuntimeError("training pool differs from the legacy path; inputs are not paired")
-    if any(int(y) >= legacy.election_date.year for y in pool.training_years):
+    if tuple(pool.training_years) != tuple(result.training_years):
+        raise RuntimeError("training pool differs from the forecast path; inputs are not paired")
+    if any(int(y) >= result.election_date.year for y in pool.training_years):
         raise RuntimeError("future residual year in the training pool")
 
     fit = fit_election_noise_b(pool.centered_residuals_matrix)
-    sub_seed = derive_election_noise_b_seed(seed, legacy.as_of, legacy.horizon_days)
-    residuals = draw_election_noise_b(fit, samples, np.random.default_rng(sub_seed))
-
-    shares, lambdas = apply_batch_simplex_transfer(
-        legacy.base_comp_matrix, residuals, eps=MIN_SHARE_PCT
-    )
-    # Identical exact-simplex renormalisation to the legacy path.
-    shares = shares / np.sum(shares, axis=1, keepdims=True)
-
-    diagnostics = dict(legacy.diagnostics)
-    diagnostics.update({
-        "election_noise_model": MODEL_ID,
-        "election_noise_k": fit.k,
-        "election_noise_delta": fit.delta,
-        "election_noise_tau_sq": fit.tau_sq,
-        "election_noise_bessel_factor": fit.bessel_factor,
-        "election_noise_tunable_parameters": 0,
-    })
-    result = NationalVoteShareSampleResult(
-        as_of=legacy.as_of,
-        election_date=legacy.election_date,
-        horizon_days=legacy.horizon_days,
-        samples=legacy.samples,
-        seed=legacy.seed,
-        opinion_state_draws=legacy.opinion_state_draws,
-        dynamics_deltas=legacy.dynamics_deltas,
-        base_comp_matrix=legacy.base_comp_matrix,   # identical array; pairing is exact
-        nat_shares_matrix=shares,
-        lambdas=lambdas,
-        training_years=tuple(int(y) for y in pool.training_years),
-        diagnostics=diagnostics,
-    )
-    detail = ElectionNoiseBDetail(residuals_pp=residuals, fit=fit, election_noise_seed=sub_seed)
+    sub_seed = derive_election_noise_b_seed(seed, result.as_of, result.horizon_days)
+    residuals = np.random.default_rng(sub_seed).standard_normal(
+        (samples, 9)) @ _factor(fit)
+    detail = ElectionNoiseBDetail(residuals_pp=residuals, fit=fit,
+                                  election_noise_seed=sub_seed)
     return result, detail
+
+
+def _factor(fit: ElectionNoiseBFit) -> np.ndarray:
+    from .election_noise_b import symmetric_factor
+    return symmetric_factor(fit.sigma_tilde).T

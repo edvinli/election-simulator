@@ -16,6 +16,9 @@ from scripts.geography.config import (
 from scripts.geography.integerization import biproportional_controlled_rounding
 from scripts.geography.projection import _get_cached_geography_structures
 from scripts.mandates.config import FIXED_SEATS_2018, FIXED_SEATS_2022, FIXED_SEATS_2026
+from scripts.vote_share_calibration.election_noise_b import (
+    MODEL_ID as ADOPTED_NOISE_MODEL,
+)
 from scripts.vote_share_calibration.national_engine import generate_national_vote_shares
 
 from .config import (
@@ -108,13 +111,15 @@ def simulate_election(
     total_national_votes: int = 6_500_000,
     geography_mode: str = "chronological",
     collect_quantization_audit: bool = False,
+    noise_model: str = ADOPTED_NOISE_MODEL,
 ) -> SimulationResult:
     """Execute complete end-to-end Monte Carlo simulation of the Swedish Riksdag election.
 
     Pipeline:
         OpinionState v1.1
         -> Dynamics v2 (symmetric_all_history, strictly NO sqrt(h) scaling)
-        -> pp_centered_noise (ElectionNoise)
+        -> ElectionNoise (default: the adopted pp_lw_gaussian; pp_centered_noise
+           remains selectable for archived-forecast reproduction)
         -> National vote compositions (N, 9)
         -> GeographicProjection v1 (2022 baseline -> 2026 constituencies via IPF)
         -> Exact-Margin Controlled Rounding (Bipartite flow preserving R_c and C_p)
@@ -130,6 +135,7 @@ def simulate_election(
         election_date=elec_date,
         samples=samples,
         seed=seed,
+        noise_model=noise_model,
     )
     as_of_date = nat_sample_res.as_of
     nat_shares_matrix = nat_sample_res.nat_shares_matrix  # shape (N, 9) in fractions [0, 1] summing to 1.0
@@ -305,7 +311,7 @@ def simulate_election(
         model_config={
             "opinion_model": "OpinionState_v1.1",
             "dynamics_model": "symmetric_all_history",
-            "noise_model": "pp_centered_noise",
+            "noise_model": noise_model,
             "geography_baseline_year": baseline_year,
             "total_national_votes": total_national_votes,
             "constituency_vote_unit": 25,

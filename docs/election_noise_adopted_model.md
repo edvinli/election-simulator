@@ -60,12 +60,28 @@ Challenger A — a variance-corrected smoothed empirical bootstrap — also pass
 gate, at +4.86 %. The frozen resolution rule selected B on the lower Tier-1 energy
 score.
 
+## Production status
+
+**Challenger B is the production ElectionNoise law.** The ordinary entry points —
+`generate_national_vote_shares` and `simulate_election` — default to
+`noise_model="pp_lw_gaussian"`, and the reproducibility manifest records it.
+
 ## The former layer is preserved
 
-`pp_centered_noise` is unmodified and remains the default through the ordinary
-production entry point, so **archived RC1 forecasts stay reproducible**. It is
-retained for historical reproduction, regression testing and archived-forecast
-replay, and is still exercised by the test suite.
+`pp_centered_noise` is **unmodified** and remains explicitly selectable:
+
+```python
+simulate_election(as_of=..., noise_model="pp_centered_noise")
+```
+
+so **archived RC1 forecasts stay reproducible**. It is retained for historical
+reproduction, regression testing and archived-forecast replay, and is still
+exercised by the test suite. It was not removed, and it is not a defective
+implementation: it computed exactly what it was specified to compute. What the
+preregistered evaluation found was *model fragility* — a predictive law supported on
+only `K = 3…6` discrete atoms is highly sensitive to individual historical residual
+years, and can place material probability mass on a single atom that happens to sit
+just past a decision threshold.
 
 ## Implementation
 
@@ -99,20 +115,29 @@ candidate      B                (from A)
 These are declared in `scripts/vote_share_calibration/election_noise_b.py` and take
 effect in published artifacts when the production default is flipped.
 
-## Status of the promotion
+## Two freeze scopes — read this before interpreting a verifier
 
-The law is implemented, proven equivalent to the frozen research implementation, and
-runs end-to-end through the unmodified production engine. The remaining step — making
-B the hard-coded default and republishing — touches three files that sit inside the
-evaluator and challenger freeze import closures:
+The default flip intentionally changed four files that sit inside the **historical**
+research freeze closures. That drift is expected and is not a defect, but it means
+the two freezes answer different questions and must not be conflated.
 
-| file | what changes |
+| scope | question it answers | artifact | state |
+|---|---|---|---|
+| **Historical research freeze** | *Is the experiment that selected B still reconstructible?* | `control_baseline_amendment2/evaluator_freeze.json`, `challengers/challenger_implementation_freeze.json` | Verifies at its referenced historical commits. Both artifacts are preserved byte-for-byte and were not regenerated. |
+| **Post-adoption production freeze** | *Is the current production configuration the certified one?* | `production_promotion/production_freeze.json` | Certifies current HEAD. |
+
+Running the historical verifiers against current HEAD reports drift in exactly these
+four files, all changed deliberately:
+
+| file | intentional change |
 |---|---|
-| `scripts/vote_share_calibration/national_engine.py:143` | model selection string |
-| `scripts/simulator/engine.py:308` | `noise_model` manifest field |
-| `scripts/simulator/config.py:14-15` | `MODEL_VERSION`, `RELEASE_TAG` |
+| `scripts/vote_share_calibration/national_engine.py` | `noise_model` dispatch; default is the adopted law |
+| `scripts/simulator/engine.py` | passes `noise_model` through; manifest records the law actually used |
+| `scripts/simulator/config.py` | `MODEL_VERSION`, `RELEASE_TAG`, `ADOPTED_CANDIDATE` |
+| `scripts/simulator/reproducibility.py` | fallback manifest default |
 
-Editing them breaks both freeze verifiers, and with them the drift detection that
-protects the reproducibility of the competition the adoption rests on. The flip
-therefore belongs with a deliberate re-issue of both freezes, recorded as its own
-step, rather than being folded into the promotion silently.
+The mathematical implementations of **both** laws are untouched:
+`challengers/challenger_b.py`, `vote_share_calibration/models.py`,
+`election_layer_v2/transfer.py` and `election_layer_v2/residuals_pool.py` all still
+match their recorded hashes, as do every competition-result artifact and the frozen
+`ADOPT_B` decision.

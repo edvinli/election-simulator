@@ -11,8 +11,15 @@ DEFAULT_SIMULATION_SEED: int = 12345
 DEFAULT_GEOGRAPHY_BASELINE_YEAR: int = 2022
 DEFAULT_MAJORITY_THRESHOLD: int = 175
 
-MODEL_VERSION: str = "1.0.0-rc1"
-RELEASE_TAG: str = "election-simulator-v1.0-rc1"
+# Advanced from 1.0.0-rc1 when the preregistered historical evaluation selected the
+# regularized joint Gaussian ElectionNoise law (Challenger B) as the production
+# default. The ElectionNoise layer changed, which is a model change rather than a
+# fix, so the minor version advances and the candidate letter follows the adopted
+# challenger. RC status is retained: the repository convention has not declared a
+# stable release.
+MODEL_VERSION: str = "1.1.0-rc1"
+RELEASE_TAG: str = "election-simulator-v1.1-rc1"
+ADOPTED_CANDIDATE: str = "B"
 
 PARLIAMENTARY_PARTIES_8: tuple[str, ...] = (
     "M",

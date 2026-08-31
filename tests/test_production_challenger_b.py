@@ -7,7 +7,10 @@ the two agree bit-for-bit on every intermediate quantity, on the generated draws
 and after the downstream simplex transfer — so promotion carries no scientific
 change, only a change of location.
 
-They also assert the promotion is additive: no file inside either freeze changed.
+They also pin the historical-freeze relationship after the Part-6B default flip:
+the freeze artifacts are preserved byte-for-byte, the mathematical implementations
+of both laws are untouched, and drift against current HEAD is confined to exactly
+the files that were changed on purpose.
 """
 
 from __future__ import annotations
@@ -20,6 +23,11 @@ import unittest
 import numpy as np
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _sha(data: bytes) -> str:
+    import hashlib
+    return hashlib.sha256(data).hexdigest()
 
 from diagnostics.election_noise_v2.challengers.challenger_b import (
     draw_challenger_b,
@@ -164,8 +172,24 @@ class LawProperties(unittest.TestCase):
             symmetric_factor(bad)
 
 
-class PromotionIsAdditive(unittest.TestCase):
-    """No frozen file may change. Promotion adds modules; it edits nothing frozen."""
+#: The only files the Part-6B production-default flip was permitted to change.
+INTENTIONALLY_CHANGED = {
+    "scripts/vote_share_calibration/national_engine.py",
+    "scripts/simulator/engine.py",
+    "scripts/simulator/config.py",
+    "scripts/simulator/reproducibility.py",
+}
+
+
+class HistoricalFreezeRelationship(unittest.TestCase):
+    """After the deliberate default flip, drift is expected - but only where intended.
+
+    ``freeze.verify()`` semantics are NOT weakened. The historical freezes answer
+    "is the experiment that selected B still reconstructible?", and they are
+    verified against their referenced historical commits, not against current HEAD.
+    What is asserted here is that current HEAD differs from the historical state in
+    exactly the intended places and nowhere else.
+    """
 
     def _locked(self):
         a2 = REPO_ROOT / "diagnostics/election_noise_v2/control_baseline_amendment2"
@@ -185,16 +209,56 @@ class PromotionIsAdditive(unittest.TestCase):
                     "scripts/simulator/production_runner.py"):
             self.assertNotIn(new, locked, f"{new} must not be a frozen file")
 
-    def test_both_freezes_still_verify(self):
+    def test_head_drift_is_confined_to_the_intentional_flip(self):
         import sys
         if str(REPO_ROOT) not in sys.path:
             sys.path.insert(0, str(REPO_ROOT))
         from diagnostics.election_noise_v2.control_baseline_amendment2.harness2 import freeze as ev
         from diagnostics.election_noise_v2.challengers import freeze_challengers as cf
-        self.assertEqual(ev.verify()["drift"], [])
-        self.assertEqual(cf.verify()["drift"], [])
+        for name, res in (("evaluator", ev.verify()), ("challenger", cf.verify())):
+            drifted = {d["file"] for d in res["drift"]}
+            self.assertTrue(
+                drifted <= INTENTIONALLY_CHANGED,
+                f"{name} freeze drifted outside the intentional flip: "
+                f"{sorted(drifted - INTENTIONALLY_CHANGED)}")
 
-    def test_legacy_control_law_is_preserved(self):
+    def test_freeze_artifacts_are_preserved_byte_for_byte(self):
+        expected = {
+            "diagnostics/election_noise_v2/control_baseline_amendment2/evaluator_freeze.json":
+                "3142f81c2494773448f2a48cbe57ccd964fa807891477155cc89e1c3b5f04bae",
+            "diagnostics/election_noise_v2/challengers/challenger_implementation_freeze.json":
+                "2454ac15309361443656fe1d00abd5cb655d5a8efc8ddaded9e8c7164d8c1c22",
+            "diagnostics/election_noise_v2/competition/decision.json":
+                "f0e534bb6f2a5c83dd32ae53a7dc916ed29ad85d1ea1910143f954b4689116bc",
+            "diagnostics/election_noise_b_promotion/same_input_2026.json":
+                "16206a6fd890cc08fb7571ba572f29017619458f13e27c3dc1c49fca3277636f",
+        }
+        for rel, sha in expected.items():
+            self.assertEqual(_sha((REPO_ROOT / rel).read_bytes()), sha,
+                             f"{rel} must be preserved byte-for-byte")
+
+    def test_mathematical_implementations_are_untouched(self):
+        recorded = self._recorded()
+        for rel in ("diagnostics/election_noise_v2/challengers/challenger_b.py",
+                    "scripts/vote_share_calibration/models.py",
+                    "scripts/election_layer_v2/transfer.py",
+                    "scripts/election_layer_v2/residuals_pool.py",
+                    "scripts/geography/projection.py",
+                    "scripts/mandates/allocator.py"):
+            self.assertEqual(_sha((REPO_ROOT / rel).read_bytes()), recorded[rel],
+                             f"{rel} must not change")
+
+    def _recorded(self):
+        ch = REPO_ROOT / "diagnostics/election_noise_v2/challengers"
+        cf = json.loads((ch / "challenger_implementation_freeze.json").read_text())
+        rec = {}
+        for g in cf["implementation_hashes"].values():
+            rec.update({k: v["working_tree_sha256"] for k, v in g.items()})
+        rec.update({k: v["working_tree_sha256"] for k, v in cf["frozen_dependency_hashes"].items()})
+        rec.update({k: v["working_tree_sha256"] for k, v in cf["import_closure_hashes"].items()})
+        return rec
+
+    def test_legacy_control_law_is_preserved(self):  # noqa: D401
         from scripts.vote_share_calibration.models import apply_vote_share_models
         self.assertEqual(LEGACY_MODEL_ID, "pp_centered_noise")
         self.assertTrue(callable(apply_vote_share_models))

@@ -12,17 +12,10 @@ substitutes a drop-in replacement for that one name for the duration of a single
 call, so the unmodified engine executes with the adopted law's vote shares and
 everything downstream is bit-for-bit the production path.
 
-Why a shim rather than an edit: the permanent promotion is a one-line change at
-``scripts/vote_share_calibration/national_engine.py:143``, but that file — together
-with ``scripts/simulator/engine.py`` and ``scripts/simulator/config.py`` — sits
-inside the evaluator and challenger freeze import closures. Editing them would
-break both freeze verifiers and with them the reproducibility guarantee the
-adoption decision rests on. The default flip therefore belongs with a deliberate
-re-issue of those freezes, not with this promotion work. Until then this runner
-gives the identical numerical result without touching a frozen byte.
-
-The legacy law remains the default here, so archived RC1 forecasts stay
-reproducible through the ordinary entry point.
+Since the production default was flipped, ``simulate_election`` itself accepts
+``noise_model`` and defaults to the adopted law. This runner remains as the
+convenience entry point that also returns the national result and the fitted
+covariance detail, which ``SimulationResult`` does not carry.
 """
 
 from __future__ import annotations
@@ -75,7 +68,8 @@ def simulate_election_with_noise_model(
     try:
         _engine.generate_national_vote_shares = _national
         result = simulate_election(as_of=as_of, election_date=election_date,
-                                   samples=samples, seed=seed, **engine_kwargs)
+                                   samples=samples, seed=seed,
+                                   noise_model=model_id, **engine_kwargs)
     finally:
         _engine.generate_national_vote_shares = original
     return result, captured["national"], captured.get("detail")
