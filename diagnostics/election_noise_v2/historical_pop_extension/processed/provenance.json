@@ -1,0 +1,94 @@
+{
+  "status": "RESEARCH ONLY - derived from already-archived first-party sources; nothing under data/ modified",
+  "canonical_production_series": {
+    "path": "data/processed/pollofpolls/pollofpolls_timeseries.csv",
+    "sha256": "c3db3ae48f457b17372469465b209b5adc747e45c2e2d74194e9d0181de58c21",
+    "modified_by_this_task": false
+  },
+  "sources": [
+    {
+      "party": "M",
+      "file": "data/raw/pollofpolls/party_M.csv",
+      "source_url": "http://pollofpolls.se/poll_img/data_big_2.csv",
+      "retrieved_at": "2026-08-27T20:52:48+00:00",
+      "sha256": "c15a66b3f3f4a25255f5cd63ad0bfe9aab3bdd9c94db3e0d12faf42249374375",
+      "column_used": "pofp"
+    },
+    {
+      "party": "L",
+      "file": "data/raw/pollofpolls/party_L.csv",
+      "source_url": "http://pollofpolls.se/poll_img/data_big_3.csv",
+      "retrieved_at": "2026-08-27T20:52:49+00:00",
+      "sha256": "d2c17edc7e45beabfc9e52f054bfc507e500ef8b93ec2de04d44c17b6f410ce0",
+      "column_used": "pofp"
+    },
+    {
+      "party": "C",
+      "file": "data/raw/pollofpolls/party_C.csv",
+      "source_url": "http://pollofpolls.se/poll_img/data_big_4.csv",
+      "retrieved_at": "2026-08-27T20:52:50+00:00",
+      "sha256": "9670531f5ec15b82ff1ff029287f4774df02764adaf31654cdb44756c3467080",
+      "column_used": "pofp"
+    },
+    {
+      "party": "KD",
+      "file": "data/raw/pollofpolls/party_KD.csv",
+      "source_url": "http://pollofpolls.se/poll_img/data_big_5.csv",
+      "retrieved_at": "2026-08-27T20:52:51+00:00",
+      "sha256": "c3970023be71779a40c667e63da7e1c2bca2d0c3a54bab8d351a87162eedb32a",
+      "column_used": "pofp"
+    },
+    {
+      "party": "S",
+      "file": "data/raw/pollofpolls/party_S.csv",
+      "source_url": "http://pollofpolls.se/poll_img/data_big_6.csv",
+      "retrieved_at": "2026-08-27T20:52:52+00:00",
+      "sha256": "196184eeff0e4af781b03f3f32b7f950f08bbecdaca13c5e4f034675af22cd49",
+      "column_used": "pofp"
+    },
+    {
+      "party": "V",
+      "file": "data/raw/pollofpolls/party_V.csv",
+      "source_url": "http://pollofpolls.se/poll_img/data_big_7.csv",
+      "retrieved_at": "2026-08-27T20:52:53+00:00",
+      "sha256": "9b34d8098df2a3e7369b7d4f3810f82182c599e4e90f7f0497eeff8e9e9bc98d",
+      "column_used": "pofp"
+    },
+    {
+      "party": "MP",
+      "file": "data/raw/pollofpolls/party_MP.csv",
+      "source_url": "http://pollofpolls.se/poll_img/data_big_8.csv",
+      "retrieved_at": "2026-08-27T20:52:54+00:00",
+      "sha256": "a53cb4a0f333cef66f7b1ab7a1de276ca3e19f58e252910ae5c098ac0552b5c9",
+      "column_used": "pofp"
+    },
+    {
+      "party": "SD",
+      "file": "data/raw/pollofpolls/party_SD.csv",
+      "source_url": "http://pollofpolls.se/poll_img/data_big_9.csv",
+      "retrieved_at": "2026-08-27T20:52:55+00:00",
+      "sha256": "2af425668ca2b93672c131d55f117f0ff025b17b60fa52c1f7e70c19085e2018",
+      "column_used": "pofp"
+    },
+    {
+      "party": "FI",
+      "file": "data/raw/pollofpolls/party_FI.csv",
+      "source_url": "http://pollofpolls.se/poll_img/data_big_10.csv",
+      "retrieved_at": "2026-08-27T20:52:56+00:00",
+      "sha256": "c18a30e8f599514589315afd398160e5cc9c819cfbca9b5e7e8cd463c179fdfb",
+      "column_used": "pofp"
+    }
+  ],
+  "canonical_source_for_reconciliation": {
+    "file": "data/raw/pollofpolls/pollofpolls_timeseries_source.dat",
+    "source_url": "http://pollofpolls.se/poll_img/data_table_tot.csv",
+    "retrieved_at": "2026-08-27T20:52:46+00:00",
+    "sha256": "90a543aa914bf564d1d801376916a742b2c842c9e5bcfa85c98e9d815684bdd4"
+  },
+  "construction": [
+    "take the pofp column verbatim from each archived party chart",
+    "keep only dates where all eight parliamentary parties have a value",
+    "derive REST as 100 - sum(eight), the canonical loader's rule",
+    "no interpolation, no forward or backward filling, no manual values"
+  ]
+}

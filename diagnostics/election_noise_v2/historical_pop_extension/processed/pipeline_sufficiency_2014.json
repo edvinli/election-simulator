@@ -1,0 +1,182 @@
+{
+  "status": "SMOKE TEST ONLY - no predictive score against the 2014 outcome is computed",
+  "research_timeseries_rows": 6444,
+  "research_timeseries_range": [
+    "2009-01-02",
+    "2026-08-24"
+  ],
+  "draws_per_case": 300,
+  "seed": 12345,
+  "cases": [
+    {
+      "horizon_days": 112,
+      "as_of": "2014-05-25",
+      "opinion_state_as_of": "2014-05-25",
+      "opinion_state_runs": true,
+      "dynamics_exact_horizon": 112,
+      "dynamics_eligible_transitions": 1858,
+      "dynamics_meets_minimum_30": true,
+      "dynamics_fallback_horizon": null,
+      "dynamics_transitions_used": 1858,
+      "max_transition_end": "2014-05-25",
+      "no_transition_ends_after_as_of": true,
+      "national_engine_runs": true,
+      "draw_rows": 300,
+      "vote_rows_sum_to_one": true,
+      "training_years_used": [
+        2002,
+        2006,
+        2010
+      ],
+      "mean_lambda": 1.0,
+      "seat_draws_checked": 25,
+      "all_seat_totals_349": true,
+      "seat_law_recorded": "PRE_2018",
+      "runs": true
+    },
+    {
+      "horizon_days": 84,
+      "as_of": "2014-06-22",
+      "opinion_state_as_of": "2014-06-22",
+      "opinion_state_runs": true,
+      "dynamics_exact_horizon": 84,
+      "dynamics_eligible_transitions": 1914,
+      "dynamics_meets_minimum_30": true,
+      "dynamics_fallback_horizon": null,
+      "dynamics_transitions_used": 1914,
+      "max_transition_end": "2014-06-22",
+      "no_transition_ends_after_as_of": true,
+      "national_engine_runs": true,
+      "draw_rows": 300,
+      "vote_rows_sum_to_one": true,
+      "training_years_used": [
+        2002,
+        2006,
+        2010
+      ],
+      "mean_lambda": 1.0,
+      "seat_draws_checked": 25,
+      "all_seat_totals_349": true,
+      "seat_law_recorded": "PRE_2018",
+      "runs": true
+    },
+    {
+      "horizon_days": 56,
+      "as_of": "2014-07-20",
+      "opinion_state_as_of": "2014-07-20",
+      "opinion_state_runs": true,
+      "dynamics_exact_horizon": 56,
+      "dynamics_eligible_transitions": 1970,
+      "dynamics_meets_minimum_30": true,
+      "dynamics_fallback_horizon": null,
+      "dynamics_transitions_used": 1970,
+      "max_transition_end": "2014-07-20",
+      "no_transition_ends_after_as_of": true,
+      "national_engine_runs": true,
+      "draw_rows": 300,
+      "vote_rows_sum_to_one": true,
+      "training_years_used": [
+        2002,
+        2006,
+        2010
+      ],
+      "mean_lambda": 1.0,
+      "seat_draws_checked": 25,
+      "all_seat_totals_349": true,
+      "seat_law_recorded": "PRE_2018",
+      "runs": true
+    },
+    {
+      "horizon_days": 28,
+      "as_of": "2014-08-17",
+      "opinion_state_as_of": "2014-08-17",
+      "opinion_state_runs": true,
+      "dynamics_exact_horizon": 28,
+      "dynamics_eligible_transitions": 2026,
+      "dynamics_meets_minimum_30": true,
+      "dynamics_fallback_horizon": null,
+      "dynamics_transitions_used": 2026,
+      "max_transition_end": "2014-08-17",
+      "no_transition_ends_after_as_of": true,
+      "national_engine_runs": true,
+      "draw_rows": 300,
+      "vote_rows_sum_to_one": true,
+      "training_years_used": [
+        2002,
+        2006,
+        2010
+      ],
+      "mean_lambda": 1.0,
+      "seat_draws_checked": 25,
+      "all_seat_totals_349": true,
+      "seat_law_recorded": "PRE_2018",
+      "runs": true
+    },
+    {
+      "horizon_days": 14,
+      "as_of": "2014-08-31",
+      "opinion_state_as_of": "2014-08-31",
+      "opinion_state_runs": true,
+      "dynamics_exact_horizon": 14,
+      "dynamics_eligible_transitions": 2054,
+      "dynamics_meets_minimum_30": true,
+      "dynamics_fallback_horizon": null,
+      "dynamics_transitions_used": 2054,
+      "max_transition_end": "2014-08-31",
+      "no_transition_ends_after_as_of": true,
+      "national_engine_runs": true,
+      "draw_rows": 300,
+      "vote_rows_sum_to_one": true,
+      "training_years_used": [
+        2002,
+        2006,
+        2010
+      ],
+      "mean_lambda": 1.0,
+      "seat_draws_checked": 25,
+      "all_seat_totals_349": true,
+      "seat_law_recorded": "PRE_2018",
+      "runs": true
+    },
+    {
+      "horizon_days": 7,
+      "as_of": "2014-09-07",
+      "opinion_state_as_of": "2014-09-07",
+      "opinion_state_runs": true,
+      "dynamics_exact_horizon": 7,
+      "dynamics_eligible_transitions": 2068,
+      "dynamics_meets_minimum_30": true,
+      "dynamics_fallback_horizon": null,
+      "dynamics_transitions_used": 2068,
+      "max_transition_end": "2014-09-07",
+      "no_transition_ends_after_as_of": true,
+      "national_engine_runs": true,
+      "draw_rows": 300,
+      "vote_rows_sum_to_one": true,
+      "training_years_used": [
+        2002,
+        2006,
+        2010
+      ],
+      "mean_lambda": 1.0,
+      "seat_draws_checked": 25,
+      "all_seat_totals_349": true,
+      "seat_law_recorded": "PRE_2018",
+      "runs": true
+    }
+  ],
+  "residual_pool": {
+    "training_years": [
+      2002,
+      2006,
+      2010
+    ],
+    "k_outer": 3,
+    "no_future_year_in_pool": true
+  },
+  "mandate_law": {
+    "law": "PRE_2018",
+    "first_divisor": "7/5"
+  },
+  "all_six_horizons_run": true
+}

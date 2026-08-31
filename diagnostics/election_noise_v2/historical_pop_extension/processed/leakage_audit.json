@@ -1,0 +1,699 @@
+{
+  "status": "RESEARCH ONLY - read-only audit; nothing under data/ modified",
+  "question": "Can a PoP state value at date t incorporate polling information published after t?",
+  "probe_1_retrospective_revision": [
+    {
+      "file": "data/raw/pollofpolls/pollofpolls_timeseries_source.dat",
+      "snapshot_a": "f55bf36",
+      "snapshot_b": "f6ae4d1",
+      "a_max_date": "2026-08-23",
+      "b_max_date": "2026-08-24",
+      "overlapping_dates": 4361,
+      "cells_compared": 34888,
+      "revised_cells": 176,
+      "revised_fraction": 0.005044714515019491,
+      "max_abs_revision": 0.2,
+      "mean_abs_revision_over_revised": 0.10056818181818182,
+      "revised_distinct_dates": 79,
+      "revised_date_range": [
+        "2026-02-15",
+        "2026-08-23"
+      ],
+      "oldest_unrevised_boundary": "2026-02-15",
+      "largest_revisions": [
+        {
+          "date": "2026-08-22",
+          "party": "MP",
+          "from": 7.5,
+          "to": 7.3,
+          "delta": -0.2
+        },
+        {
+          "date": "2026-02-15",
+          "party": "S",
+          "from": 34.0,
+          "to": 33.9,
+          "delta": -0.1
+        },
+        {
+          "date": "2026-02-19",
+          "party": "S",
+          "from": 33.9,
+          "to": 33.8,
+          "delta": -0.1
+        },
+        {
+          "date": "2026-03-03",
+          "party": "KD",
+          "from": 4.5,
+          "to": 4.6,
+          "delta": 0.1
+        },
+        {
+          "date": "2026-03-05",
+          "party": "SD",
+          "from": 20.9,
+          "to": 20.8,
+          "delta": -0.1
+        },
+        {
+          "date": "2026-03-08",
+          "party": "MP",
+          "from": 5.7,
+          "to": 5.8,
+          "delta": 0.1
+        },
+        {
+          "date": "2026-03-21",
+          "party": "S",
+          "from": 33.0,
+          "to": 32.9,
+          "delta": -0.1
+        },
+        {
+          "date": "2026-03-23",
+          "party": "KD",
+          "from": 4.8,
+          "to": 4.9,
+          "delta": 0.1
+        }
+      ]
+    },
+    {
+      "file": "data/processed/pollofpolls/pollofpolls_timeseries.csv",
+      "snapshot_a": "f55bf36",
+      "snapshot_b": "34c52d6",
+      "a_max_date": "2026-08-23",
+      "b_max_date": "2026-08-24",
+      "overlapping_dates": 4361,
+      "cells_compared": 34888,
+      "revised_cells": 176,
+      "revised_fraction": 0.005044714515019491,
+      "max_abs_revision": 0.2,
+      "mean_abs_revision_over_revised": 0.10056818181818182,
+      "revised_distinct_dates": 79,
+      "revised_date_range": [
+        "2026-02-15",
+        "2026-08-23"
+      ],
+      "oldest_unrevised_boundary": "2026-02-15",
+      "largest_revisions": [
+        {
+          "date": "2026-08-22",
+          "party": "MP",
+          "from": 7.5,
+          "to": 7.3,
+          "delta": -0.2
+        },
+        {
+          "date": "2026-02-15",
+          "party": "S",
+          "from": 34.0,
+          "to": 33.9,
+          "delta": -0.1
+        },
+        {
+          "date": "2026-02-19",
+          "party": "S",
+          "from": 33.9,
+          "to": 33.8,
+          "delta": -0.1
+        },
+        {
+          "date": "2026-03-03",
+          "party": "KD",
+          "from": 4.5,
+          "to": 4.6,
+          "delta": 0.1
+        },
+        {
+          "date": "2026-03-05",
+          "party": "SD",
+          "from": 20.9,
+          "to": 20.8,
+          "delta": -0.1
+        },
+        {
+          "date": "2026-03-08",
+          "party": "MP",
+          "from": 5.7,
+          "to": 5.8,
+          "delta": 0.1
+        },
+        {
+          "date": "2026-03-21",
+          "party": "S",
+          "from": 33.0,
+          "to": 32.9,
+          "delta": -0.1
+        },
+        {
+          "date": "2026-03-23",
+          "party": "KD",
+          "from": 4.8,
+          "to": 4.9,
+          "delta": 0.1
+        }
+      ]
+    }
+  ],
+  "probe_2_mechanism_attribution": {
+    "revised_cell": {
+      "date": "2026-08-22",
+      "party": "MP",
+      "from": 7.5,
+      "to": 7.3,
+      "delta": -0.2
+    },
+    "polls_whose_fieldwork_covers_that_date": [
+      {
+        "pollster": "Ipsos",
+        "interview_start": "2026-08-11",
+        "interview_end": "2026-08-23",
+        "publication_date": "2026-08-25",
+        "published_after_row_date": true
+      },
+      {
+        "pollster": "Indikator",
+        "interview_start": "2026-08-06",
+        "interview_end": "2026-08-23",
+        "publication_date": "2026-08-26",
+        "published_after_row_date": true
+      },
+      {
+        "pollster": "Demoskop",
+        "interview_start": "2026-08-13",
+        "interview_end": "2026-08-24",
+        "publication_date": "2026-08-27",
+        "published_after_row_date": true
+      }
+    ],
+    "all_such_polls_published_after_the_row_date": true,
+    "conclusion": "The historical value for this date changed between two retrievals one day apart, and every poll whose fieldwork covers it was published after it. The series is a fieldwork-dated rolling aggregate retrospectively completed as later-published polls arrive, so pofp(t) incorporates information published after t."
+  },
+  "probe_3_magnitude_per_as_of": {
+    "publication_lag_after_fieldwork_end_days": {
+      "n": 1181,
+      "median": 3.0,
+      "mean": 3.42,
+      "p95": 8.0,
+      "max": 30
+    },
+    "by_election": {
+      "2014": {
+        "in_certified_tier23_set": false,
+        "total_leaking_poll_instances": 15,
+        "max_publication_lead_days": 21,
+        "by_horizon": [
+          {
+            "horizon_days": 112,
+            "as_of": "2014-05-25",
+            "leaking_polls": 4,
+            "max_publication_lead_days": 15,
+            "detail": [
+              {
+                "pollster": "Ipsos",
+                "interview_start": "2014-05-08",
+                "interview_end": "2014-05-25",
+                "publication_date": "2014-05-30",
+                "lead_days": 5
+              },
+              {
+                "pollster": "Novus",
+                "interview_start": "2014-04-28",
+                "interview_end": "2014-05-25",
+                "publication_date": "2014-05-29",
+                "lead_days": 4
+              },
+              {
+                "pollster": "SCB",
+                "interview_start": "2014-05-02",
+                "interview_end": "2014-05-25",
+                "publication_date": "2014-05-27",
+                "lead_days": 2
+              },
+              {
+                "pollster": "United Minds",
+                "interview_start": "2014-05-12",
+                "interview_end": "2014-06-08",
+                "publication_date": "2014-06-09",
+                "lead_days": 15
+              }
+            ]
+          },
+          {
+            "horizon_days": 84,
+            "as_of": "2014-06-22",
+            "leaking_polls": 3,
+            "max_publication_lead_days": 10,
+            "detail": [
+              {
+                "pollster": "Ipsos",
+                "interview_start": "2014-06-02",
+                "interview_end": "2014-06-22",
+                "publication_date": "2014-06-28",
+                "lead_days": 6
+              },
+              {
+                "pollster": "Novus",
+                "interview_start": "2014-05-26",
+                "interview_end": "2014-06-22",
+                "publication_date": "2014-06-28",
+                "lead_days": 6
+              },
+              {
+                "pollster": "United Minds",
+                "interview_start": "2014-06-09",
+                "interview_end": "2014-06-30",
+                "publication_date": "2014-07-02",
+                "lead_days": 10
+              }
+            ]
+          },
+          {
+            "horizon_days": 56,
+            "as_of": "2014-07-20",
+            "leaking_polls": 1,
+            "max_publication_lead_days": 21,
+            "detail": [
+              {
+                "pollster": "YouGov",
+                "interview_start": "2014-07-02",
+                "interview_end": "2014-08-05",
+                "publication_date": "2014-08-10",
+                "lead_days": 21
+              }
+            ]
+          },
+          {
+            "horizon_days": 28,
+            "as_of": "2014-08-17",
+            "leaking_polls": 1,
+            "max_publication_lead_days": 6,
+            "detail": [
+              {
+                "pollster": "Demoskop",
+                "interview_start": "2014-08-15",
+                "interview_end": "2014-08-21",
+                "publication_date": "2014-08-23",
+                "lead_days": 6
+              }
+            ]
+          },
+          {
+            "horizon_days": 14,
+            "as_of": "2014-08-31",
+            "leaking_polls": 3,
+            "max_publication_lead_days": 6,
+            "detail": [
+              {
+                "pollster": "Novus",
+                "interview_start": "2014-08-25",
+                "interview_end": "2014-08-31",
+                "publication_date": "2014-09-01",
+                "lead_days": 1
+              },
+              {
+                "pollster": "Demoskop",
+                "interview_start": "2014-08-25",
+                "interview_end": "2014-09-02",
+                "publication_date": "2014-09-05",
+                "lead_days": 5
+              },
+              {
+                "pollster": "Skop",
+                "interview_start": "2014-08-21",
+                "interview_end": "2014-09-04",
+                "publication_date": "2014-09-06",
+                "lead_days": 6
+              }
+            ]
+          },
+          {
+            "horizon_days": 7,
+            "as_of": "2014-09-07",
+            "leaking_polls": 3,
+            "max_publication_lead_days": 5,
+            "detail": [
+              {
+                "pollster": "Novus",
+                "interview_start": "2014-09-03",
+                "interview_end": "2014-09-07",
+                "publication_date": "2014-09-08",
+                "lead_days": 1
+              },
+              {
+                "pollster": "Sentio",
+                "interview_start": "2014-09-02",
+                "interview_end": "2014-09-08",
+                "publication_date": "2014-09-09",
+                "lead_days": 2
+              },
+              {
+                "pollster": "Ipsos",
+                "interview_start": "2014-09-07",
+                "interview_end": "2014-09-11",
+                "publication_date": "2014-09-12",
+                "lead_days": 5
+              }
+            ]
+          }
+        ]
+      },
+      "2018": {
+        "in_certified_tier23_set": true,
+        "total_leaking_poll_instances": 19,
+        "max_publication_lead_days": 37,
+        "by_horizon": [
+          {
+            "horizon_days": 112,
+            "as_of": "2018-05-20",
+            "leaking_polls": 4,
+            "max_publication_lead_days": 37,
+            "detail": [
+              {
+                "pollster": "Ipsos",
+                "interview_start": "2018-05-10",
+                "interview_end": "2018-05-21",
+                "publication_date": "2018-05-22",
+                "lead_days": 2
+              },
+              {
+                "pollster": "SCB",
+                "interview_start": "2018-04-27",
+                "interview_end": "2018-05-29",
+                "publication_date": "2018-06-05",
+                "lead_days": 16
+              },
+              {
+                "pollster": "Novus",
+                "interview_start": "2018-05-14",
+                "interview_end": "2018-06-06",
+                "publication_date": "2018-06-07",
+                "lead_days": 18
+              },
+              {
+                "pollster": "Skop",
+                "interview_start": "2018-05-08",
+                "interview_end": "2018-06-18",
+                "publication_date": "2018-06-26",
+                "lead_days": 37
+              }
+            ]
+          },
+          {
+            "horizon_days": 84,
+            "as_of": "2018-06-17",
+            "leaking_polls": 4,
+            "max_publication_lead_days": 12,
+            "detail": [
+              {
+                "pollster": "Ipsos",
+                "interview_start": "2018-06-07",
+                "interview_end": "2018-06-18",
+                "publication_date": "2018-06-20",
+                "lead_days": 3
+              },
+              {
+                "pollster": "Skop",
+                "interview_start": "2018-05-08",
+                "interview_end": "2018-06-18",
+                "publication_date": "2018-06-26",
+                "lead_days": 9
+              },
+              {
+                "pollster": "YouGov",
+                "interview_start": "2018-06-15",
+                "interview_end": "2018-06-18",
+                "publication_date": "2018-06-20",
+                "lead_days": 3
+              },
+              {
+                "pollster": "Novus",
+                "interview_start": "2018-06-07",
+                "interview_end": "2018-06-24",
+                "publication_date": "2018-06-29",
+                "lead_days": 12
+              }
+            ]
+          },
+          {
+            "horizon_days": 56,
+            "as_of": "2018-07-15",
+            "leaking_polls": 3,
+            "max_publication_lead_days": 11,
+            "detail": [
+              {
+                "pollster": "YouGov",
+                "interview_start": "2018-07-13",
+                "interview_end": "2018-07-15",
+                "publication_date": "2018-07-18",
+                "lead_days": 3
+              },
+              {
+                "pollster": "Skop",
+                "interview_start": "2018-06-20",
+                "interview_end": "2018-07-21",
+                "publication_date": "2018-07-24",
+                "lead_days": 9
+              },
+              {
+                "pollster": "Novus",
+                "interview_start": "2018-06-25",
+                "interview_end": "2018-07-22",
+                "publication_date": "2018-07-26",
+                "lead_days": 11
+              }
+            ]
+          },
+          {
+            "horizon_days": 28,
+            "as_of": "2018-08-12",
+            "leaking_polls": 4,
+            "max_publication_lead_days": 8,
+            "detail": [
+              {
+                "pollster": "Novus",
+                "interview_start": "2018-07-23",
+                "interview_end": "2018-08-12",
+                "publication_date": "2018-08-16",
+                "lead_days": 4
+              },
+              {
+                "pollster": "Demoskop",
+                "interview_start": "2018-08-08",
+                "interview_end": "2018-08-15",
+                "publication_date": "2018-08-15",
+                "lead_days": 3
+              },
+              {
+                "pollster": "Inizio",
+                "interview_start": "2018-08-10",
+                "interview_end": "2018-08-16",
+                "publication_date": "2018-08-20",
+                "lead_days": 8
+              },
+              {
+                "pollster": "Ipsos",
+                "interview_start": "2018-08-07",
+                "interview_end": "2018-08-16",
+                "publication_date": "2018-08-17",
+                "lead_days": 5
+              }
+            ]
+          },
+          {
+            "horizon_days": 14,
+            "as_of": "2018-08-26",
+            "leaking_polls": 3,
+            "max_publication_lead_days": 5,
+            "detail": [
+              {
+                "pollster": "Inizio",
+                "interview_start": "2018-08-22",
+                "interview_end": "2018-08-26",
+                "publication_date": "2018-08-27",
+                "lead_days": 1
+              },
+              {
+                "pollster": "Novus",
+                "interview_start": "2018-08-22",
+                "interview_end": "2018-08-28",
+                "publication_date": "2018-08-30",
+                "lead_days": 4
+              },
+              {
+                "pollster": "Demoskop",
+                "interview_start": "2018-08-23",
+                "interview_end": "2018-08-30",
+                "publication_date": "2018-08-31",
+                "lead_days": 5
+              }
+            ]
+          },
+          {
+            "horizon_days": 7,
+            "as_of": "2018-09-02",
+            "leaking_polls": 1,
+            "max_publication_lead_days": 1,
+            "detail": [
+              {
+                "pollster": "Ipsos",
+                "interview_start": "2018-08-28",
+                "interview_end": "2018-09-02",
+                "publication_date": "2018-09-03",
+                "lead_days": 1
+              }
+            ]
+          }
+        ]
+      },
+      "2022": {
+        "in_certified_tier23_set": true,
+        "total_leaking_poll_instances": 13,
+        "max_publication_lead_days": 18,
+        "by_horizon": [
+          {
+            "horizon_days": 112,
+            "as_of": "2022-05-22",
+            "leaking_polls": 4,
+            "max_publication_lead_days": 18,
+            "detail": [
+              {
+                "pollster": "Ipsos",
+                "interview_start": "2022-05-10",
+                "interview_end": "2022-05-22",
+                "publication_date": "2022-05-24",
+                "lead_days": 2
+              },
+              {
+                "pollster": "Sentio",
+                "interview_start": "2022-05-19",
+                "interview_end": "2022-05-23",
+                "publication_date": "2022-05-26",
+                "lead_days": 4
+              },
+              {
+                "pollster": "SCB",
+                "interview_start": "2022-04-28",
+                "interview_end": "2022-05-25",
+                "publication_date": "2022-06-02",
+                "lead_days": 11
+              },
+              {
+                "pollster": "Novus",
+                "interview_start": "2022-05-09",
+                "interview_end": "2022-06-05",
+                "publication_date": "2022-06-09",
+                "lead_days": 18
+              }
+            ]
+          },
+          {
+            "horizon_days": 84,
+            "as_of": "2022-06-19",
+            "leaking_polls": 3,
+            "max_publication_lead_days": 11,
+            "detail": [
+              {
+                "pollster": "Ipsos",
+                "interview_start": "2022-06-07",
+                "interview_end": "2022-06-19",
+                "publication_date": "2022-06-21",
+                "lead_days": 2
+              },
+              {
+                "pollster": "Sentio",
+                "interview_start": "2022-06-16",
+                "interview_end": "2022-06-21",
+                "publication_date": "2022-06-26",
+                "lead_days": 7
+              },
+              {
+                "pollster": "Novus",
+                "interview_start": "2022-06-06",
+                "interview_end": "2022-06-26",
+                "publication_date": "2022-06-30",
+                "lead_days": 11
+              }
+            ]
+          },
+          {
+            "horizon_days": 56,
+            "as_of": "2022-07-17",
+            "leaking_polls": 0,
+            "max_publication_lead_days": 0,
+            "detail": []
+          },
+          {
+            "horizon_days": 28,
+            "as_of": "2022-08-14",
+            "leaking_polls": 2,
+            "max_publication_lead_days": 4,
+            "detail": [
+              {
+                "pollster": "Novus",
+                "interview_start": "2022-08-08",
+                "interview_end": "2022-08-14",
+                "publication_date": "2022-08-18",
+                "lead_days": 4
+              },
+              {
+                "pollster": "Sentio",
+                "interview_start": "2022-08-11",
+                "interview_end": "2022-08-17",
+                "publication_date": "2022-08-18",
+                "lead_days": 4
+              }
+            ]
+          },
+          {
+            "horizon_days": 14,
+            "as_of": "2022-08-28",
+            "leaking_polls": 2,
+            "max_publication_lead_days": 3,
+            "detail": [
+              {
+                "pollster": "Sentio",
+                "interview_start": "2022-08-25",
+                "interview_end": "2022-08-29",
+                "publication_date": "2022-08-30",
+                "lead_days": 2
+              },
+              {
+                "pollster": "Ipsos",
+                "interview_start": "2022-08-26",
+                "interview_end": "2022-08-30",
+                "publication_date": "2022-08-31",
+                "lead_days": 3
+              }
+            ]
+          },
+          {
+            "horizon_days": 7,
+            "as_of": "2022-09-04",
+            "leaking_polls": 2,
+            "max_publication_lead_days": 2,
+            "detail": [
+              {
+                "pollster": "Demoskop",
+                "interview_start": "2022-08-31",
+                "interview_end": "2022-09-04",
+                "publication_date": "2022-09-05",
+                "lead_days": 1
+              },
+              {
+                "pollster": "Ipsos",
+                "interview_start": "2022-09-01",
+                "interview_end": "2022-09-06",
+                "publication_date": "2022-09-06",
+                "lead_days": 2
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "leakage_detected": true
+}

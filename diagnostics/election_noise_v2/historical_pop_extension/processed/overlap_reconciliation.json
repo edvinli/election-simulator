@@ -1,0 +1,135 @@
+{
+  "candidate": {
+    "dates": 6444,
+    "min_date": "2009-01-02",
+    "max_date": "2026-08-24",
+    "per_party_coverage": {
+      "M": {
+        "min": "2009-01-02",
+        "max": "2026-08-24",
+        "n": 6444
+      },
+      "L": {
+        "min": "2009-01-02",
+        "max": "2026-08-24",
+        "n": 6444
+      },
+      "C": {
+        "min": "2009-01-02",
+        "max": "2026-08-24",
+        "n": 6444
+      },
+      "KD": {
+        "min": "2009-01-02",
+        "max": "2026-08-24",
+        "n": 6444
+      },
+      "S": {
+        "min": "2009-01-02",
+        "max": "2026-08-24",
+        "n": 6444
+      },
+      "V": {
+        "min": "2009-01-02",
+        "max": "2026-08-24",
+        "n": 6444
+      },
+      "MP": {
+        "min": "2009-01-02",
+        "max": "2026-08-24",
+        "n": 6444
+      },
+      "SD": {
+        "min": "2009-01-02",
+        "max": "2026-08-24",
+        "n": 6444
+      }
+    }
+  },
+  "canonical": {
+    "dates": 4362,
+    "min_date": "2014-09-15",
+    "max_date": "2026-08-24"
+  },
+  "overlap": {
+    "dates": 4362,
+    "min_date": "2014-09-15",
+    "max_date": "2026-08-24"
+  },
+  "by_category": {
+    "M": {
+      "matched_dates": 4362,
+      "exact_matches": 4362,
+      "exact_match_fraction": 1.0,
+      "mean_absolute_difference": 0.0,
+      "max_absolute_difference": 0.0
+    },
+    "L": {
+      "matched_dates": 4362,
+      "exact_matches": 4362,
+      "exact_match_fraction": 1.0,
+      "mean_absolute_difference": 0.0,
+      "max_absolute_difference": 0.0
+    },
+    "C": {
+      "matched_dates": 4362,
+      "exact_matches": 4362,
+      "exact_match_fraction": 1.0,
+      "mean_absolute_difference": 0.0,
+      "max_absolute_difference": 0.0
+    },
+    "KD": {
+      "matched_dates": 4362,
+      "exact_matches": 4362,
+      "exact_match_fraction": 1.0,
+      "mean_absolute_difference": 0.0,
+      "max_absolute_difference": 0.0
+    },
+    "S": {
+      "matched_dates": 4362,
+      "exact_matches": 4362,
+      "exact_match_fraction": 1.0,
+      "mean_absolute_difference": 0.0,
+      "max_absolute_difference": 0.0
+    },
+    "V": {
+      "matched_dates": 4362,
+      "exact_matches": 4362,
+      "exact_match_fraction": 1.0,
+      "mean_absolute_difference": 0.0,
+      "max_absolute_difference": 0.0
+    },
+    "MP": {
+      "matched_dates": 4362,
+      "exact_matches": 4362,
+      "exact_match_fraction": 1.0,
+      "mean_absolute_difference": 0.0,
+      "max_absolute_difference": 0.0
+    },
+    "SD": {
+      "matched_dates": 4362,
+      "exact_matches": 4362,
+      "exact_match_fraction": 1.0,
+      "mean_absolute_difference": 0.0,
+      "max_absolute_difference": 0.0
+    },
+    "FI": {
+      "matched_dates": 4361,
+      "exact_matches": 4361,
+      "exact_match_fraction": 1.0,
+      "mean_absolute_difference": 0.0,
+      "max_absolute_difference": 0.0
+    },
+    "REST": {
+      "matched_dates": 4362,
+      "exact_matches": 4362,
+      "exact_match_fraction": 1.0,
+      "mean_absolute_difference": 0.0,
+      "max_absolute_difference": 0.0,
+      "note": "derived as 100 - sum(eight) on both sides, the canonical loader's rule"
+    }
+  },
+  "rest_derived_negative_dates": [],
+  "rest_derived_negative_count": 0,
+  "all_categories_exact_over_full_overlap": true
+}
