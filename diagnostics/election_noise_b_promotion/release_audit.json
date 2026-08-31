@@ -1,0 +1,82 @@
+{
+  "artifact": "ELECTIONNOISE B PRODUCTION RELEASE-SAFETY AUDIT",
+  "scope": "implementation, data integrity and mathematical validity only; no probability value in the 2026 forecast is a blocker",
+  "audited_utc": "2026-08-31T15:03:51Z",
+  "git_commit": "8c8eaed20292961c8c262d1568b73a9ff1ebd679",
+  "configuration": {
+    "as_of": "2026-08-24",
+    "election_date": "2026-09-13",
+    "samples": 100000,
+    "seed": 12345
+  },
+  "checks": {
+    "deterministic_repeat": {
+      "vote_shares_matrix": true,
+      "seats_matrix": true,
+      "lambdas": true,
+      "election_noise_residuals": true,
+      "sigma_tilde": true,
+      "election_noise_seed": true
+    },
+    "no_nan_or_inf": true,
+    "votes_non_negative": true,
+    "votes_sum_to_100": 4.263256414560601e-14,
+    "seat_totals_all_349": true,
+    "seats_non_negative": true,
+    "lambda_in_unit_interval": true,
+    "upstream_unchanged": {
+      "opinion_state_draws_identical": true,
+      "dynamics_deltas_identical": true,
+      "base_comp_matrix_identical": true,
+      "as_of_identical": true,
+      "horizon_identical": true,
+      "training_years_identical": true
+    },
+    "downstream_and_upstream_code_unchanged": {
+      "files_checked": 10,
+      "drifted": []
+    },
+    "residual_pool": {
+      "training_years": [
+        2002,
+        2006,
+        2010,
+        2014,
+        2018,
+        2022
+      ],
+      "k": 6,
+      "all_strictly_before_2026": true,
+      "centered_sha256": "33db41ddfc1d6b02938f7b3d569d3572a8e08330497aad70157b4ce203f71ed1"
+    },
+    "data_snapshot": {
+      "published": {
+        "poll_data_hash": "288fd17ac035d177fbd98a2c288955e626f1b1fc7cba09bd7e32fb63d1974681",
+        "election_data_hash": "3a99ffb1b0fbef60d61712764a2136982ecf01c4879a43edc6d9a38ddb4ba0fc",
+        "mandate_data_hash": "444c457061abc8c9516f7aad6f35d6e85bb4d720f8244fb029d9b1438d3bd11e",
+        "geography_data_hash": "cb296ab2b1780425a1611649cf8ead030020bb1a7dce9b4ea7e4b136425b1743",
+        "model_config_hash": "ce4ad4b1125a5d5a4b0a9acd1416a0af8364ee88ad335fb87f299d127fc3c64d"
+      },
+      "current_run": {},
+      "as_of_published": "2026-08-24",
+      "as_of_run": "2026-08-24",
+      "data_hashes_match": true,
+      "mismatched": []
+    },
+    "control_reproduces_published_rc1": {
+      "max_abs_median_difference_pp": 0.00047125935687031273,
+      "published_artifact_rounding_pp": 0.001,
+      "within_publication_rounding": true
+    },
+    "evaluator_freeze": {
+      "checks": 112,
+      "drift": []
+    },
+    "challenger_freeze": {
+      "checks": 95,
+      "drift": []
+    }
+  },
+  "problems": [],
+  "promotion_safe": true
+}
