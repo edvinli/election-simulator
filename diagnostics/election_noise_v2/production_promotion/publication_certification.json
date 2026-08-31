@@ -1,0 +1,75 @@
+{
+  "artifact": "PUBLICATION-READY SUCCESSOR EXPORT CERTIFICATION",
+  "purpose": "Certify the schema-1.4 successor export that states the ElectionNoise identity explicitly, and record why it supersedes the Part-7A export.",
+  "certified_utc": "2026-08-31T17:09:03Z",
+  "git_commit": "60a6c755905e67c44f8d299ecb8ba12b765ac96d",
+  "supersession": {
+    "predecessor_generation": "20260831T161556Z-e273ed69",
+    "predecessor_snapshot_id": "e273ed698b1f4a58fb1dfb4be437bdd72cc9d4c3d1df1a8d4e19ae6241f2397a",
+    "successor_generation": "20260831T170410Z-1f5e0506",
+    "reason": "The predecessor is superseded FOR PUBLICATION ONLY because the artifact did not represent the ElectionNoise model identity explicitly; the law had to be reverse-engineered from model_config_hash, and the unrelated benchmark-lineage 'candidate' field invited misreading.",
+    "predecessor_forecast_was_not_wrong": true,
+    "numerical_relationship": "identical; the deterministic payload hash is unchanged",
+    "predecessor_remains_immutable": true
+  },
+  "configuration": {
+    "as_of": "2026-08-24",
+    "election_date": "2026-09-13",
+    "samples": 100000,
+    "seed": 12345,
+    "polling_inputs_refreshed": false
+  },
+  "model_identity": {
+    "model_version": "1.1.0-rc1",
+    "benchmark_lineage_candidate": "A",
+    "election_noise_law": "pp_lw_gaussian",
+    "election_noise_candidate": "B",
+    "namespaces_agree_across_files": true
+  },
+  "schema": {
+    "publication_schema_version": "1.4",
+    "archive_schema_version": "1.2",
+    "convention": "additive fields increment the schema version; older versions stay valid"
+  },
+  "deterministic_payload_sha256": "1f5e0506803e278231508eb25db8730ad0858cfd3a4ae336ebccce7a7b951342",
+  "payload_hash_unchanged_vs_part7a": true,
+  "export_file_sha256": {
+    "calibration.json": "d9a5269d70791caf9ba3e465ca1b5ca4152ead9a072ecd24b0b3049ec2b96676",
+    "forecast.json": "7ca7b65218ab9e1572b262817e4067d74930f69225bdc090e1790ef4e1f0fde4",
+    "groups.json": "c2c53191396cccb2c901c06b8e0483cd97ef2fdb8472d4c30e07e91b16aac178",
+    "manifest.json": "cb9bf88c02310a7076f10e46a37e1d5e1a141eef6547e4b1620b3d0daf4e3c27",
+    "metadata.json": "eb21d367d4265ac32b54ebb1eab7a5c73c1ccafef2886ece6a0dcc196cddde8c",
+    "parties.json": "276761010c9b1a6ba753461cbc7185e03a7c303273854014c9b9d959cdd99bc8",
+    "seats.json": "c239bbbf8c25c4d17c34f1f86665dbf70365536887b55213ef0a28d4cf577987"
+  },
+  "scientific_equality_vs_part7a": {
+    "contracts_compared": [
+      "forecast.json",
+      "parties.json",
+      "seats.json",
+      "groups.json",
+      "metadata.json"
+    ],
+    "scientific_differences": 0,
+    "exempted_fields": [
+      "schema_version",
+      "generated_at_utc",
+      "source_git_commit",
+      "publication_generation",
+      "election_noise_law",
+      "election_noise_candidate",
+      "election_noise_namespace",
+      "candidate_namespace",
+      "manifest_sha256",
+      "path"
+    ]
+  },
+  "prospective_archive": {
+    "append_attempted": true,
+    "result": "SnapshotCollisionError: A forecast with this deterministic payload is already archived",
+    "interpretation": "Correct fail-closed behaviour, and independent mechanical proof that the scientific payload is unchanged. The archive is keyed on the forecast, so one payload keeps exactly one entry; a metadata correction is a re-description, not a new forecast. The archive was left untouched and the duplicate-payload guard was NOT weakened.",
+    "existing_entry_for_this_payload": "20260831T161556Z-e273ed69",
+    "precedent": "scripts.presentation_reexport is the repository's existing boundary for re-describing an already certified publication; it likewise never mutates the prospective forecast archive (docs/static_publication.md)."
+  },
+  "website_published": false
+}
