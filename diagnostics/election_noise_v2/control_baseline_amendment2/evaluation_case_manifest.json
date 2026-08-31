@@ -1,0 +1,785 @@
+{
+  "schema_version": "2.0",
+  "status": "AUTHORITATIVE AMENDMENT-2 EVALUATION MANIFEST - research only; no production artifact modified",
+  "preregistration": {
+    "status": "FROZEN - AMENDMENT 2",
+    "commit": "00f7030eda65e64efa3253798eb8cc6c0b8fe9cc",
+    "body_sha256": "5a9a6dc8ef6f26ce3ce152155af0ed288fb8d2d97c81a2606e513cf20e1b058b",
+    "whole_file_sha256": "126a8f4902f8af36f007dca4442f8e41bed5a507b190d30960b38f33c6345572",
+    "freeze_timestamp_utc": "2026-08-31T08:54:20Z",
+    "edited_by_this_task": false
+  },
+  "predecessors": {
+    "part3_baseline": "998a20047cf9bae1e9b8a59d4ec4888684842fd5",
+    "part3b": "89d340880a4bdb389f94ce61fa3333799b58d81a",
+    "part3c_audit": "7f37e127a81b2bbdccaa26a27b7275ba39e96dec",
+    "amendment2": "00f7030eda65e64efa3253798eb8cc6c0b8fe9cc"
+  },
+  "monte_carlo": {
+    "seeds": [
+      12345,
+      24680,
+      98765,
+      54321,
+      13579
+    ],
+    "draws_per_seed": 20000,
+    "draws_per_case_per_model": 100000
+  },
+  "coalition_masks": {
+    "mask_range": [
+      1,
+      254
+    ],
+    "excluded_masks": [
+      0,
+      255
+    ],
+    "party_order": [
+      "M",
+      "L",
+      "C",
+      "KD",
+      "S",
+      "V",
+      "MP",
+      "SD"
+    ],
+    "majority_threshold": 175,
+    "effective_distinct_events_per_election": 127
+  },
+  "gate_tiers": [
+    "tier1",
+    "tier3_iso"
+  ],
+  "tier1_candidate_targets": [
+    2010,
+    2014,
+    2018,
+    2022
+  ],
+  "tier1_eligibility": [
+    {
+      "target_year": 2010,
+      "training_residual_years": [
+        2002,
+        2006
+      ],
+      "k_outer": 2,
+      "eligible": false,
+      "reason": "K_outer=2 < 3"
+    },
+    {
+      "target_year": 2014,
+      "training_residual_years": [
+        2002,
+        2006,
+        2010
+      ],
+      "k_outer": 3,
+      "eligible": true,
+      "reason": ""
+    },
+    {
+      "target_year": 2018,
+      "training_residual_years": [
+        2002,
+        2006,
+        2010,
+        2014
+      ],
+      "k_outer": 4,
+      "eligible": true,
+      "reason": ""
+    },
+    {
+      "target_year": 2022,
+      "training_residual_years": [
+        2002,
+        2006,
+        2010,
+        2014,
+        2018
+      ],
+      "k_outer": 5,
+      "eligible": true,
+      "reason": ""
+    }
+  ],
+  "counts": {
+    "N_T1": 3,
+    "N_seat": 3,
+    "tier1_elections": [
+      2014,
+      2018,
+      2022
+    ],
+    "tier3_iso_elections": [
+      2014,
+      2018,
+      2022
+    ],
+    "tier1_cases": 3,
+    "tier3_iso_cases": 3
+  },
+  "cases": {
+    "tier1": [
+      {
+        "tier": "tier1",
+        "target_year": 2014,
+        "election_date": "2014-09-14",
+        "base": "14-day publication-safe pre-election polling consensus (deterministic)",
+        "consensus_window_days": 14,
+        "origin_date": "2014-09-14",
+        "horizon_days": 14,
+        "training_residual_years": [
+          2002,
+          2006,
+          2010
+        ],
+        "k_outer": 3,
+        "metrics": [
+          "D1_joint_vote_energy_score",
+          "D2_party_crps",
+          "D2_interval_coverage",
+          "D5_lambda"
+        ],
+        "seeds": [
+          12345,
+          24680,
+          98765,
+          54321,
+          13579
+        ],
+        "draws_per_seed": 20000,
+        "seed_streams": {
+          "12345": {
+            "opinion_state_seed": 1769869542,
+            "dynamics_seed": 166493263,
+            "election_noise_index_seed": 1426582232,
+            "election_noise_sign_seed": 1595259825
+          },
+          "24680": {
+            "opinion_state_seed": 1650663803,
+            "dynamics_seed": 25805875,
+            "election_noise_index_seed": 1074576644,
+            "election_noise_sign_seed": 625892300
+          },
+          "98765": {
+            "opinion_state_seed": 1733164007,
+            "dynamics_seed": 416025944,
+            "election_noise_index_seed": 1032806781,
+            "election_noise_sign_seed": 679943825
+          },
+          "54321": {
+            "opinion_state_seed": 1905887856,
+            "dynamics_seed": 625431909,
+            "election_noise_index_seed": 1666488989,
+            "election_noise_sign_seed": 256969946
+          },
+          "13579": {
+            "opinion_state_seed": 1121751910,
+            "dynamics_seed": 975995105,
+            "election_noise_index_seed": 1982823192,
+            "election_noise_sign_seed": 1986305511
+          }
+        },
+        "truth_vote_pct": {
+          "M": 23.325042,
+          "L": 5.420349,
+          "C": 6.113015,
+          "KD": 4.570371,
+          "S": 31.014818,
+          "V": 5.718155,
+          "MP": 6.88871,
+          "SD": 12.856754,
+          "REST": 4.092787
+        },
+        "truth_seats": null,
+        "geography_baseline_year": null,
+        "geography_mode": null,
+        "forbidden_geography_modes": null,
+        "mandate_law": null,
+        "first_divisor": null,
+        "fixed_seats": null
+      },
+      {
+        "tier": "tier1",
+        "target_year": 2018,
+        "election_date": "2018-09-09",
+        "base": "14-day publication-safe pre-election polling consensus (deterministic)",
+        "consensus_window_days": 14,
+        "origin_date": "2018-09-09",
+        "horizon_days": 14,
+        "training_residual_years": [
+          2002,
+          2006,
+          2010,
+          2014
+        ],
+        "k_outer": 4,
+        "metrics": [
+          "D1_joint_vote_energy_score",
+          "D2_party_crps",
+          "D2_interval_coverage",
+          "D5_lambda"
+        ],
+        "seeds": [
+          12345,
+          24680,
+          98765,
+          54321,
+          13579
+        ],
+        "draws_per_seed": 20000,
+        "seed_streams": {
+          "12345": {
+            "opinion_state_seed": 1480720708,
+            "dynamics_seed": 746253025,
+            "election_noise_index_seed": 2063906132,
+            "election_noise_sign_seed": 459204988
+          },
+          "24680": {
+            "opinion_state_seed": 1838111089,
+            "dynamics_seed": 437314163,
+            "election_noise_index_seed": 1601134514,
+            "election_noise_sign_seed": 1784104295
+          },
+          "98765": {
+            "opinion_state_seed": 354979757,
+            "dynamics_seed": 1885010866,
+            "election_noise_index_seed": 333597751,
+            "election_noise_sign_seed": 2170282
+          },
+          "54321": {
+            "opinion_state_seed": 814193574,
+            "dynamics_seed": 920508490,
+            "election_noise_index_seed": 1362211459,
+            "election_noise_sign_seed": 423585560
+          },
+          "13579": {
+            "opinion_state_seed": 1503026378,
+            "dynamics_seed": 1808327301,
+            "election_noise_index_seed": 1968922185,
+            "election_noise_sign_seed": 2051408854
+          }
+        },
+        "truth_vote_pct": {
+          "M": 19.835611,
+          "L": 5.489595,
+          "C": 8.607745,
+          "KD": 6.3223,
+          "S": 28.260981,
+          "V": 8.004879,
+          "MP": 4.414253,
+          "SD": 17.53397,
+          "REST": 1.530666
+        },
+        "truth_seats": null,
+        "geography_baseline_year": null,
+        "geography_mode": null,
+        "forbidden_geography_modes": null,
+        "mandate_law": null,
+        "first_divisor": null,
+        "fixed_seats": null
+      },
+      {
+        "tier": "tier1",
+        "target_year": 2022,
+        "election_date": "2022-09-11",
+        "base": "14-day publication-safe pre-election polling consensus (deterministic)",
+        "consensus_window_days": 14,
+        "origin_date": "2022-09-11",
+        "horizon_days": 14,
+        "training_residual_years": [
+          2002,
+          2006,
+          2010,
+          2014,
+          2018
+        ],
+        "k_outer": 5,
+        "metrics": [
+          "D1_joint_vote_energy_score",
+          "D2_party_crps",
+          "D2_interval_coverage",
+          "D5_lambda"
+        ],
+        "seeds": [
+          12345,
+          24680,
+          98765,
+          54321,
+          13579
+        ],
+        "draws_per_seed": 20000,
+        "seed_streams": {
+          "12345": {
+            "opinion_state_seed": 1004509143,
+            "dynamics_seed": 866830135,
+            "election_noise_index_seed": 291668617,
+            "election_noise_sign_seed": 1721462835
+          },
+          "24680": {
+            "opinion_state_seed": 388322145,
+            "dynamics_seed": 1154255526,
+            "election_noise_index_seed": 380317639,
+            "election_noise_sign_seed": 1302102778
+          },
+          "98765": {
+            "opinion_state_seed": 740235625,
+            "dynamics_seed": 522162002,
+            "election_noise_index_seed": 44697059,
+            "election_noise_sign_seed": 536249615
+          },
+          "54321": {
+            "opinion_state_seed": 518158077,
+            "dynamics_seed": 1559312437,
+            "election_noise_index_seed": 523698262,
+            "election_noise_sign_seed": 820887651
+          },
+          "13579": {
+            "opinion_state_seed": 1443845110,
+            "dynamics_seed": 1730354912,
+            "election_noise_index_seed": 431055108,
+            "election_noise_sign_seed": 504158561
+          }
+        },
+        "truth_vote_pct": {
+          "M": 19.102095,
+          "L": 4.608573,
+          "C": 6.714218,
+          "KD": 5.336734,
+          "S": 30.325457,
+          "V": 6.746712,
+          "MP": 5.082487,
+          "SD": 20.53614,
+          "REST": 1.547584
+        },
+        "truth_seats": null,
+        "geography_baseline_year": null,
+        "geography_mode": null,
+        "forbidden_geography_modes": null,
+        "mandate_law": null,
+        "first_divisor": null,
+        "fixed_seats": null
+      }
+    ],
+    "tier3_iso": [
+      {
+        "tier": "tier3_iso",
+        "target_year": 2014,
+        "election_date": "2014-09-14",
+        "base": "14-day publication-safe pre-election polling consensus (deterministic; no OpinionState, no Dynamics)",
+        "consensus_window_days": 14,
+        "origin_date": "2014-09-14",
+        "horizon_days": 14,
+        "training_residual_years": [
+          2002,
+          2006,
+          2010
+        ],
+        "k_outer": 3,
+        "metrics": [
+          "D3_seat_vector_energy_score",
+          "D3_seat_crps",
+          "D3_seat_coverage",
+          "D4_coalition_majority_brier",
+          "D5_lambda"
+        ],
+        "seeds": [
+          12345,
+          24680,
+          98765,
+          54321,
+          13579
+        ],
+        "draws_per_seed": 20000,
+        "seed_streams": {
+          "12345": {
+            "opinion_state_seed": 1769869542,
+            "dynamics_seed": 166493263,
+            "election_noise_index_seed": 1426582232,
+            "election_noise_sign_seed": 1595259825
+          },
+          "24680": {
+            "opinion_state_seed": 1650663803,
+            "dynamics_seed": 25805875,
+            "election_noise_index_seed": 1074576644,
+            "election_noise_sign_seed": 625892300
+          },
+          "98765": {
+            "opinion_state_seed": 1733164007,
+            "dynamics_seed": 416025944,
+            "election_noise_index_seed": 1032806781,
+            "election_noise_sign_seed": 679943825
+          },
+          "54321": {
+            "opinion_state_seed": 1905887856,
+            "dynamics_seed": 625431909,
+            "election_noise_index_seed": 1666488989,
+            "election_noise_sign_seed": 256969946
+          },
+          "13579": {
+            "opinion_state_seed": 1121751910,
+            "dynamics_seed": 975995105,
+            "election_noise_index_seed": 1982823192,
+            "election_noise_sign_seed": 1986305511
+          }
+        },
+        "truth_vote_pct": {
+          "M": 23.325042,
+          "L": 5.420349,
+          "C": 6.113015,
+          "KD": 4.570371,
+          "S": 31.014818,
+          "V": 5.718155,
+          "MP": 6.88871,
+          "SD": 12.856754,
+          "REST": 4.092787
+        },
+        "truth_seats": {
+          "M": 84,
+          "L": 19,
+          "C": 22,
+          "KD": 16,
+          "S": 113,
+          "V": 21,
+          "MP": 25,
+          "SD": 49
+        },
+        "geography_baseline_year": 2010,
+        "geography_mode": "chronological",
+        "forbidden_geography_modes": [
+          "oracle"
+        ],
+        "mandate_law": "PRE_2018",
+        "first_divisor": "7/5",
+        "fixed_seats": {
+          "01": 29,
+          "02": 38,
+          "03": 11,
+          "04": 9,
+          "05": 14,
+          "06": 11,
+          "07": 6,
+          "08": 8,
+          "09": 2,
+          "10": 5,
+          "11": 10,
+          "12": 9,
+          "13": 12,
+          "14": 10,
+          "15": 10,
+          "16": 17,
+          "17": 12,
+          "18": 9,
+          "19": 6,
+          "20": 9,
+          "21": 9,
+          "22": 9,
+          "23": 8,
+          "24": 9,
+          "25": 9,
+          "26": 8,
+          "27": 4,
+          "28": 9,
+          "29": 8
+        }
+      },
+      {
+        "tier": "tier3_iso",
+        "target_year": 2018,
+        "election_date": "2018-09-09",
+        "base": "14-day publication-safe pre-election polling consensus (deterministic; no OpinionState, no Dynamics)",
+        "consensus_window_days": 14,
+        "origin_date": "2018-09-09",
+        "horizon_days": 14,
+        "training_residual_years": [
+          2002,
+          2006,
+          2010,
+          2014
+        ],
+        "k_outer": 4,
+        "metrics": [
+          "D3_seat_vector_energy_score",
+          "D3_seat_crps",
+          "D3_seat_coverage",
+          "D4_coalition_majority_brier",
+          "D5_lambda"
+        ],
+        "seeds": [
+          12345,
+          24680,
+          98765,
+          54321,
+          13579
+        ],
+        "draws_per_seed": 20000,
+        "seed_streams": {
+          "12345": {
+            "opinion_state_seed": 1480720708,
+            "dynamics_seed": 746253025,
+            "election_noise_index_seed": 2063906132,
+            "election_noise_sign_seed": 459204988
+          },
+          "24680": {
+            "opinion_state_seed": 1838111089,
+            "dynamics_seed": 437314163,
+            "election_noise_index_seed": 1601134514,
+            "election_noise_sign_seed": 1784104295
+          },
+          "98765": {
+            "opinion_state_seed": 354979757,
+            "dynamics_seed": 1885010866,
+            "election_noise_index_seed": 333597751,
+            "election_noise_sign_seed": 2170282
+          },
+          "54321": {
+            "opinion_state_seed": 814193574,
+            "dynamics_seed": 920508490,
+            "election_noise_index_seed": 1362211459,
+            "election_noise_sign_seed": 423585560
+          },
+          "13579": {
+            "opinion_state_seed": 1503026378,
+            "dynamics_seed": 1808327301,
+            "election_noise_index_seed": 1968922185,
+            "election_noise_sign_seed": 2051408854
+          }
+        },
+        "truth_vote_pct": {
+          "M": 19.835611,
+          "L": 5.489595,
+          "C": 8.607745,
+          "KD": 6.3223,
+          "S": 28.260981,
+          "V": 8.004879,
+          "MP": 4.414253,
+          "SD": 17.53397,
+          "REST": 1.530666
+        },
+        "truth_seats": {
+          "M": 70,
+          "L": 20,
+          "C": 31,
+          "KD": 22,
+          "S": 100,
+          "V": 28,
+          "MP": 16,
+          "SD": 62
+        },
+        "geography_baseline_year": 2014,
+        "geography_mode": "chronological",
+        "forbidden_geography_modes": [
+          "oracle"
+        ],
+        "mandate_law": "POST_2018",
+        "first_divisor": "6/5",
+        "fixed_seats": {
+          "01": 29,
+          "02": 39,
+          "03": 11,
+          "04": 9,
+          "05": 14,
+          "06": 11,
+          "07": 6,
+          "08": 8,
+          "09": 2,
+          "10": 5,
+          "11": 10,
+          "12": 9,
+          "13": 12,
+          "14": 10,
+          "15": 10,
+          "16": 17,
+          "17": 11,
+          "18": 8,
+          "19": 7,
+          "20": 9,
+          "21": 9,
+          "22": 9,
+          "23": 8,
+          "24": 9,
+          "25": 9,
+          "26": 8,
+          "27": 4,
+          "28": 9,
+          "29": 8
+        }
+      },
+      {
+        "tier": "tier3_iso",
+        "target_year": 2022,
+        "election_date": "2022-09-11",
+        "base": "14-day publication-safe pre-election polling consensus (deterministic; no OpinionState, no Dynamics)",
+        "consensus_window_days": 14,
+        "origin_date": "2022-09-11",
+        "horizon_days": 14,
+        "training_residual_years": [
+          2002,
+          2006,
+          2010,
+          2014,
+          2018
+        ],
+        "k_outer": 5,
+        "metrics": [
+          "D3_seat_vector_energy_score",
+          "D3_seat_crps",
+          "D3_seat_coverage",
+          "D4_coalition_majority_brier",
+          "D5_lambda"
+        ],
+        "seeds": [
+          12345,
+          24680,
+          98765,
+          54321,
+          13579
+        ],
+        "draws_per_seed": 20000,
+        "seed_streams": {
+          "12345": {
+            "opinion_state_seed": 1004509143,
+            "dynamics_seed": 866830135,
+            "election_noise_index_seed": 291668617,
+            "election_noise_sign_seed": 1721462835
+          },
+          "24680": {
+            "opinion_state_seed": 388322145,
+            "dynamics_seed": 1154255526,
+            "election_noise_index_seed": 380317639,
+            "election_noise_sign_seed": 1302102778
+          },
+          "98765": {
+            "opinion_state_seed": 740235625,
+            "dynamics_seed": 522162002,
+            "election_noise_index_seed": 44697059,
+            "election_noise_sign_seed": 536249615
+          },
+          "54321": {
+            "opinion_state_seed": 518158077,
+            "dynamics_seed": 1559312437,
+            "election_noise_index_seed": 523698262,
+            "election_noise_sign_seed": 820887651
+          },
+          "13579": {
+            "opinion_state_seed": 1443845110,
+            "dynamics_seed": 1730354912,
+            "election_noise_index_seed": 431055108,
+            "election_noise_sign_seed": 504158561
+          }
+        },
+        "truth_vote_pct": {
+          "M": 19.102095,
+          "L": 4.608573,
+          "C": 6.714218,
+          "KD": 5.336734,
+          "S": 30.325457,
+          "V": 6.746712,
+          "MP": 5.082487,
+          "SD": 20.53614,
+          "REST": 1.547584
+        },
+        "truth_seats": {
+          "M": 68,
+          "L": 16,
+          "C": 24,
+          "KD": 19,
+          "S": 107,
+          "V": 24,
+          "MP": 18,
+          "SD": 73
+        },
+        "geography_baseline_year": 2018,
+        "geography_mode": "chronological",
+        "forbidden_geography_modes": [
+          "oracle"
+        ],
+        "mandate_law": "POST_2018",
+        "first_divisor": "6/5",
+        "fixed_seats": {
+          "01": 29,
+          "02": 40,
+          "03": 12,
+          "04": 9,
+          "05": 14,
+          "06": 11,
+          "07": 6,
+          "08": 8,
+          "09": 2,
+          "10": 5,
+          "11": 10,
+          "12": 9,
+          "13": 12,
+          "14": 10,
+          "15": 10,
+          "16": 17,
+          "17": 11,
+          "18": 8,
+          "19": 7,
+          "20": 8,
+          "21": 9,
+          "22": 9,
+          "23": 8,
+          "24": 9,
+          "25": 9,
+          "26": 8,
+          "27": 4,
+          "28": 8,
+          "29": 8
+        }
+      }
+    ]
+  },
+  "truth_input_provenance": {
+    "elections": {
+      "path": "data/processed/elections/riksdag_election_results.csv",
+      "sha256": "3a99ffb1b0fbef60d61712764a2136982ecf01c4879a43edc6d9a38ddb4ba0fc"
+    },
+    "certified_mandates_2018_2022": {
+      "path": "data/processed/mandates/historical_certified_mandates.csv",
+      "sha256": "444c457061abc8c9516f7aad6f35d6e85bb4d720f8244fb029d9b1438d3bd11e"
+    },
+    "certified_mandates_2010_2014": {
+      "path": "diagnostics/election_noise_v2/historical_seat_extension/processed/certified_mandates_2010_2014.csv",
+      "sha256": "3af0c56f0a94724242c39da205b86f121b8b8f2d64d2aaefefd86c70541c8fcc"
+    },
+    "fixed_seats_by_year": {
+      "path": "diagnostics/election_noise_v2/historical_seat_extension/processed/fixed_seats_by_year.json",
+      "sha256": "f5fbeff5a691f28364930b66e47bf6738651aa8c00afc1c1d594136020781d5a"
+    },
+    "polls": {
+      "path": "data/processed/pollofpolls/swedishpolls_individual_polls.csv",
+      "sha256": "1e799233d97efdb382fe8a78311aff636502c1f736ce99b71913bc181a46868b"
+    },
+    "geography_votes_prod": {
+      "path": "data/processed/geography/constituency_party_votes_2014_2022.csv",
+      "sha256": "cb296ab2b1780425a1611649cf8ead030020bb1a7dce9b4ea7e4b136425b1743"
+    },
+    "geography_votes_research": {
+      "path": "diagnostics/election_noise_v2/historical_seat_extension/processed/research_geography/constituency_party_votes_2014_2022.csv",
+      "sha256": "65d3eababd467794df5155b276f4322d326fce34c54a60c6e48acd691f341448"
+    }
+  },
+  "preserved_full_pipeline_diagnostics": {
+    "role": "RETROSPECTIVE DIAGNOSTICS ONLY - excluded from the adoption gate (Amendment 2 \u00a7E.2, \u00a7F.2)",
+    "reason": "their historical Poll-of-Polls state input is not publication-time leakage-safe (Amendment 2 \u00a7E.5 item 7)",
+    "source_commit": "998a20047cf9bae1e9b8a59d4ec4888684842fd5",
+    "location": "diagnostics/election_noise_v2/control_baseline/",
+    "never_recomputed_or_deleted": true,
+    "files": {
+      "evaluation_case_manifest.json": "856d3bafc48f38ab94084364383036ca94b6fbc0ffbed61ccbdc7df2886ab92a",
+      "control_scores_by_case_seed.csv": "9e548eb7e22abefed18acd1be91876cd959c1a84dbd987996f2d5af074a7255d",
+      "control_scores_by_election.csv": "fbf77766ee96d26a05e23f5e40697ccde6ab63d4bc0050cf8213554702375f23",
+      "control_scores_summary.json": "9baf43b36a8da49db4eca1e1993e393b50d2d9b5b5a209b85bb7f945ac4e7081",
+      "coalition_brier_by_election.csv": "ff776f902ec3c54ac0ad204d755655b5ae34760c6720a29cc5298de29e79d9ba",
+      "monte_carlo_stability.csv": "e40d43b0bee3d3aa0b40b2221f44fcd12869c9691d3a4b39e92506e1b2649a91",
+      "lambda_diagnostics.csv": "d90bd116225f5912989b3d49fb44613c22569bfdaa6828ce4a0018aa0265c452",
+      "harness_validation.json": "4806734f9bb5b4a0369a2f9eb385f3ca4a516d2f80b3ff42f1212a8eea75ea32",
+      "mask_level/coalition_brier_by_mask.csv": "5523d5400c697a43491187a0140f9c4fcaf3a169221eeb14d833f04be5919466"
+    }
+  }
+}

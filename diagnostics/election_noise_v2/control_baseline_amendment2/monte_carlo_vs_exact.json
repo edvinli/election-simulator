@@ -1,0 +1,226 @@
+{
+  "note": "CONTROL's law on this path is exactly K atoms, so the exact oracle is the limit of the Monte Carlo run. Residuals below are pure sampling error in the atom frequencies; the expected scale is sqrt(p(1-p)/N) ~ 0.0033 at p=1/3, N=20000.",
+  "by_election": {
+    "2014": {
+      "k": 3,
+      "atom_frequency_sigma": 0.0033333333333333335,
+      "five_sigma_tolerance": 0.016666666666666666,
+      "worst_max_abs_coalition_probability_error": 0.005733333333333368,
+      "consistent_with_sampling_error": true,
+      "five_seed": {
+        "coalition_brier_five_seed_mean": 0.04461504137795276,
+        "exact_coalition_brier": 0.04461942257217848,
+        "seat_es_five_seed_mean": 14.17598,
+        "exact_seat_es": 14.175406114948007,
+        "coalition_brier_five_seed_error": -4.381194225716589e-06,
+        "seat_es_five_seed_error": 0.0005738850519918515,
+        "coalition_brier_relative_error_pct": -0.009819029411753062,
+        "seat_es_relative_error_pct": 0.004048455806755956
+      },
+      "per_seed": [
+        {
+          "seed": 12345,
+          "max_abs_coalition_probability_error": 0.005216666666666703,
+          "mean_abs_coalition_probability_error": 0.00012309711286089282,
+          "coalition_brier_error": -5.445119422572281e-05,
+          "max_abs_seat_mean_error": 0.02779999999999916,
+          "max_abs_vote_mean_error_pp": 0.007103770000000509,
+          "seat_energy_score_error": 0.0011938850519932487,
+          "max_abs_atom_frequency_error": 0.005216666666666703
+        },
+        {
+          "seed": 24680,
+          "max_abs_coalition_probability_error": 0.005733333333333368,
+          "mean_abs_coalition_probability_error": 0.00017099737532808352,
+          "coalition_brier_error": 3.71516994750673e-05,
+          "max_abs_seat_mean_error": 0.0386833333333243,
+          "max_abs_vote_mean_error_pp": 0.009322179999999847,
+          "seat_energy_score_error": -0.002306114948007476,
+          "max_abs_atom_frequency_error": 0.0057333333333333125
+        },
+        {
+          "seed": 98765,
+          "max_abs_coalition_probability_error": 0.001483333333333392,
+          "mean_abs_coalition_probability_error": 5.839895013123459e-05,
+          "coalition_brier_error": 5.067683727037753e-06,
+          "max_abs_seat_mean_error": 0.01811666666667122,
+          "max_abs_vote_mean_error_pp": 0.004612160000000642,
+          "seat_energy_score_error": 0.0013938850519927826,
+          "max_abs_atom_frequency_error": 0.0014833333333333365
+        },
+        {
+          "seed": 54321,
+          "max_abs_coalition_probability_error": 0.0021333333333333204,
+          "mean_abs_coalition_probability_error": 5.997375328084028e-05,
+          "coalition_brier_error": 1.6093746719160473e-05,
+          "max_abs_seat_mean_error": 0.013000000000001677,
+          "max_abs_vote_mean_error_pp": 0.003313739999999399,
+          "seat_energy_score_error": -0.0008061149480074192,
+          "max_abs_atom_frequency_error": 0.0021333333333333204
+        },
+        {
+          "seed": 13579,
+          "max_abs_coalition_probability_error": 0.005566666666666664,
+          "mean_abs_coalition_probability_error": 0.00017939632545931706,
+          "coalition_brier_error": -2.576790682414648e-05,
+          "max_abs_seat_mean_error": 0.044916666666665606,
+          "max_abs_vote_mean_error_pp": 0.010946510000000131,
+          "seat_energy_score_error": 0.0033938850519934505,
+          "max_abs_atom_frequency_error": 0.005566666666666664
+        }
+      ],
+      "definitional_differences": [
+        "Interval coverage: quantiles of a discrete K-atom law are step functions of the empirical atom weights, so coverage is not a continuous functional of the atom probabilities and is reported rather than numerically compared.",
+        "Energy score: the exact value uses the 1/K^2 dispersion normalisation, which is the limit of compute_energy_score on Monte Carlo draws. compute_discrete_energy_score normalises by K(K-1) and is deliberately unused."
+      ]
+    },
+    "2018": {
+      "k": 4,
+      "atom_frequency_sigma": 0.0030618621784789723,
+      "five_sigma_tolerance": 0.015309310892394862,
+      "worst_max_abs_coalition_probability_error": 0.005650000000000044,
+      "consistent_with_sampling_error": true,
+      "five_seed": {
+        "coalition_brier_five_seed_mean": 0.015269812460629922,
+        "exact_coalition_brier": 0.015255905511811024,
+        "seat_es_five_seed_mean": 11.9815,
+        "exact_seat_es": 11.982006360177868,
+        "coalition_brier_five_seed_error": 1.3906948818897744e-05,
+        "seat_es_five_seed_error": -0.0005063601778676485,
+        "coalition_brier_relative_error_pct": 0.09115780645161359,
+        "seat_es_relative_error_pct": -0.004226004916426466
+      },
+      "per_seed": [
+        {
+          "seed": 12345,
+          "max_abs_coalition_probability_error": 0.004400000000000015,
+          "mean_abs_coalition_probability_error": 0.0001999999999999996,
+          "coalition_brier_error": 7.284874015747907e-05,
+          "max_abs_seat_mean_error": 0.03820000000000334,
+          "max_abs_vote_mean_error_pp": 0.010915159999999702,
+          "seat_energy_score_error": -0.0033063601778682283,
+          "max_abs_atom_frequency_error": 0.004400000000000015
+        },
+        {
+          "seed": 24680,
+          "max_abs_coalition_probability_error": 0.0029000000000000137,
+          "mean_abs_coalition_probability_error": 0.0001649606299212609,
+          "coalition_brier_error": -3.4293602362206466e-05,
+          "max_abs_seat_mean_error": 0.019850000000005252,
+          "max_abs_vote_mean_error_pp": 0.004591730000001348,
+          "seat_energy_score_error": 0.003993639822132522,
+          "max_abs_atom_frequency_error": 0.0029000000000000137
+        },
+        {
+          "seed": 98765,
+          "max_abs_coalition_probability_error": 0.005650000000000044,
+          "mean_abs_coalition_probability_error": 0.0004019685039370084,
+          "coalition_brier_error": -5.442793307086462e-05,
+          "max_abs_seat_mean_error": 0.07184999999999775,
+          "max_abs_vote_mean_error_pp": 0.020118740000000912,
+          "seat_energy_score_error": -0.006506360177867876,
+          "max_abs_atom_frequency_error": 0.005649999999999988
+        },
+        {
+          "seed": 54321,
+          "max_abs_coalition_probability_error": 0.004850000000000021,
+          "mean_abs_coalition_probability_error": 0.0001618110236220467,
+          "coalition_brier_error": 5.4672185039369645e-05,
+          "max_abs_seat_mean_error": 0.020299999999998875,
+          "max_abs_vote_mean_error_pp": 0.005267380000001154,
+          "seat_energy_score_error": -0.0008063601778687257,
+          "max_abs_atom_frequency_error": 0.0050000000000000044
+        },
+        {
+          "seed": 13579,
+          "max_abs_coalition_probability_error": 0.003300000000000025,
+          "mean_abs_coalition_probability_error": 0.00023149606299212704,
+          "coalition_brier_error": 3.0735354330709355e-05,
+          "max_abs_seat_mean_error": 0.0400499999999937,
+          "max_abs_vote_mean_error_pp": 0.011205920000001868,
+          "seat_energy_score_error": 0.004093639822132289,
+          "max_abs_atom_frequency_error": 0.003300000000000025
+        }
+      ],
+      "definitional_differences": [
+        "Interval coverage: quantiles of a discrete K-atom law are step functions of the empirical atom weights, so coverage is not a continuous functional of the atom probabilities and is reported rather than numerically compared.",
+        "Energy score: the exact value uses the 1/K^2 dispersion normalisation, which is the limit of compute_energy_score on Monte Carlo draws. compute_discrete_energy_score normalises by K(K-1) and is deliberately unused."
+      ]
+    },
+    "2022": {
+      "k": 5,
+      "atom_frequency_sigma": 0.0028284271247461905,
+      "five_sigma_tolerance": 0.014142135623730952,
+      "worst_max_abs_coalition_probability_error": 0.006850000000000023,
+      "consistent_with_sampling_error": true,
+      "five_seed": {
+        "coalition_brier_five_seed_mean": 0.020147579984251967,
+        "exact_coalition_brier": 0.02015748031496063,
+        "seat_es_five_seed_mean": 6.60338,
+        "exact_seat_es": 6.598408294095958,
+        "coalition_brier_five_seed_error": -9.90033070866203e-06,
+        "seat_es_five_seed_error": 0.004971705904041279,
+        "coalition_brier_relative_error_pct": -0.04911492187500305,
+        "seat_es_relative_error_pct": 0.07534704859791415
+      },
+      "per_seed": [
+        {
+          "seed": 12345,
+          "max_abs_coalition_probability_error": 0.002599999999999991,
+          "mean_abs_coalition_probability_error": 8.661417322834587e-05,
+          "coalition_brier_error": -6.599885826771498e-05,
+          "max_abs_seat_mean_error": 0.03354999999999819,
+          "max_abs_vote_mean_error_pp": 0.010957330000000098,
+          "seat_energy_score_error": -0.022508294095958448,
+          "max_abs_atom_frequency_error": 0.00360000000000002
+        },
+        {
+          "seed": 24680,
+          "max_abs_coalition_probability_error": 0.0008000000000000229,
+          "mean_abs_coalition_probability_error": 2.1259842519684665e-05,
+          "coalition_brier_error": 1.481330708661549e-05,
+          "max_abs_seat_mean_error": 0.007500000000000284,
+          "max_abs_vote_mean_error_pp": 0.002067599999999281,
+          "seat_energy_score_error": 0.005791705904041322,
+          "max_abs_atom_frequency_error": 0.0012500000000000011
+        },
+        {
+          "seed": 98765,
+          "max_abs_coalition_probability_error": 0.006850000000000023,
+          "mean_abs_coalition_probability_error": 0.00030157480314960654,
+          "coalition_brier_error": -3.310169291338705e-05,
+          "max_abs_seat_mean_error": 0.0688999999999993,
+          "max_abs_vote_mean_error_pp": 0.01886074000000093,
+          "seat_energy_score_error": -0.02270829409595798,
+          "max_abs_atom_frequency_error": 0.006699999999999984
+        },
+        {
+          "seed": 54321,
+          "max_abs_coalition_probability_error": 0.00495000000000001,
+          "mean_abs_coalition_probability_error": 0.00017322834645669405,
+          "coalition_brier_error": -1.8374921259840804e-05,
+          "max_abs_seat_mean_error": 0.061549999999996885,
+          "max_abs_vote_mean_error_pp": 0.016405800000001136,
+          "seat_energy_score_error": 0.04039170590404151,
+          "max_abs_atom_frequency_error": 0.005049999999999999
+        },
+        {
+          "seed": 13579,
+          "max_abs_coalition_probability_error": 0.003049999999999997,
+          "mean_abs_coalition_probability_error": 0.00014724409448818872,
+          "coalition_brier_error": 5.316051181102413e-05,
+          "max_abs_seat_mean_error": 0.052199999999999136,
+          "max_abs_vote_mean_error_pp": 0.015264200000000727,
+          "seat_energy_score_error": 0.02389170590404177,
+          "max_abs_atom_frequency_error": 0.003049999999999997
+        }
+      ],
+      "definitional_differences": [
+        "Interval coverage: quantiles of a discrete K-atom law are step functions of the empirical atom weights, so coverage is not a continuous functional of the atom probabilities and is reported rather than numerically compared.",
+        "Energy score: the exact value uses the 1/K^2 dispersion normalisation, which is the limit of compute_energy_score on Monte Carlo draws. compute_discrete_energy_score normalises by K(K-1) and is deliberately unused."
+      ]
+    }
+  },
+  "blockers": [],
+  "all_consistent_with_sampling_error": true
+}
