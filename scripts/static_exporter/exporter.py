@@ -22,9 +22,13 @@ import uuid
 import numpy as np
 
 from scripts.simulator.config import (
+    BENCHMARK_LINEAGE_CANDIDATE,
     DEFAULT_MAJORITY_THRESHOLD,
     MODEL_PARTIES_9,
     PARLIAMENTARY_PARTIES_8,
+)
+from scripts.vote_share_calibration.election_noise_b import (
+    election_noise_candidate_for_law,
 )
 from scripts.simulator.pipeline import build_canonical_summary_dict
 from scripts.simulator.reproducibility import (
@@ -43,8 +47,20 @@ from scripts.simulator.reproducibility import (
 # histograms for those coalitions.  Validators accept every historical version
 # so existing immutable publications stay readable and are never rewritten;
 # only 1.3 is written by this exporter.
-PUBLICATION_SCHEMA_VERSION = "1.3"
-SUPPORTED_PUBLICATION_SCHEMA_VERSIONS: tuple[str, ...] = ("1.0", "1.1", "1.2", "1.3")
+PUBLICATION_SCHEMA_VERSION = "1.4"
+SUPPORTED_PUBLICATION_SCHEMA_VERSIONS: tuple[str, ...] = ("1.0", "1.1", "1.2", "1.3", "1.4")
+
+#: Schema 1.4 adds ``election_noise_law`` and ``election_noise_candidate`` to
+#: ``metadata.json`` and ``forecast.json``, following the additive-field convention
+#: already used by 1.1 (``source_repository``), 1.2 (``coalition_builder``) and 1.3
+#: (coalition ``seat_histogram``). Earlier versions stay valid and are never
+#: rewritten. Before 1.4 the scientific ElectionNoise identity was recoverable only
+#: by reverse-engineering ``model_config_hash``.
+#:
+#: NAMESPACE WARNING. The ``model.candidate`` field is the botten-ada
+#: benchmark/model-lineage label ("A" = this simulator; see
+#: docs/election_simulator_rc1.md). It is NOT the ElectionNoise challenger name and
+#: does not change when an ElectionNoise challenger is adopted.
 PUBLICATION_FILES: tuple[str, ...] = (
     "forecast.json",
     "parties.json",
@@ -673,11 +689,25 @@ def _build_contracts(
         calibration["status"] = "NOT_AVAILABLE"
         calibration["reason"] = "No validation summary artifacts were found"
 
+    election_noise_law = (manifest.get("model_config") or {}).get("noise_model")
+    election_noise_candidate = election_noise_candidate_for_law(election_noise_law)
+
     forecast = {
         "schema_version": PUBLICATION_SCHEMA_VERSION,
         "as_of": summary["as_of"],
         "election_date": summary["election_date"],
-        "model": {"name": "ElectionSimulator", "version": manifest.get("model_version"), "candidate": "A"},
+        # ``candidate`` is the benchmark/model-lineage label, NOT the ElectionNoise
+        # challenger; the ElectionNoise identity is the two explicit fields below.
+        "model": {
+            "name": "ElectionSimulator",
+            "version": manifest.get("model_version"),
+            "candidate": BENCHMARK_LINEAGE_CANDIDATE,
+            "candidate_namespace": (
+                "botten_ada_benchmark_model_lineage; not the ElectionNoise challenger"
+            ),
+        },
+        "election_noise_law": election_noise_law,
+        "election_noise_candidate": election_noise_candidate,
         "total_samples": int(summary["total_samples"]),
         "parties": parties,
         "threshold_probabilities_4pct": {
@@ -727,7 +757,20 @@ def _build_contracts(
         "generated_at_utc": generated_at_utc,
         "as_of": summary["as_of"],
         "election_date": summary["election_date"],
-        "model": {"name": "ElectionSimulator", "version": manifest.get("model_version"), "candidate": "A"},
+        "model": {
+            "name": "ElectionSimulator",
+            "version": manifest.get("model_version"),
+            "candidate": BENCHMARK_LINEAGE_CANDIDATE,
+            "candidate_namespace": (
+                "botten_ada_benchmark_model_lineage; not the ElectionNoise challenger"
+            ),
+        },
+        "election_noise_law": election_noise_law,
+        "election_noise_candidate": election_noise_candidate,
+        "election_noise_namespace": (
+            "ElectionNoise v2 competition; B is the adopted challenger, CONTROL the "
+            "superseded empirical bootstrap. Unrelated to model.candidate."
+        ),
         "source_repository": SOURCE_REPOSITORY,
         "source_git_commit": manifest.get("source_git_commit", manifest.get("git_commit")),
         "source_worktree_clean": manifest.get("source_worktree_clean"),
@@ -757,6 +800,28 @@ def validate_publication_contract(contracts: Mapping[str, Mapping[str, Any]]) ->
     for name, value in contracts.items():
         if value.get("schema_version") not in SUPPORTED_PUBLICATION_SCHEMA_VERSIONS:
             raise ValueError(f"{name} has unsupported schema version")
+    # Schema 1.4 onward must state the ElectionNoise identity explicitly and
+    # consistently, so a reader never has to reverse-engineer model_config_hash and
+    # can never be misled by the unrelated benchmark-lineage ``candidate`` label.
+    meta = contracts["metadata.json"]
+    fc = contracts["forecast.json"]
+    if str(meta.get("schema_version")) >= "1.4":
+        for name, value in (("metadata.json", meta), ("forecast.json", fc)):
+            if not value.get("election_noise_law"):
+                raise ValueError(f"{name} is missing election_noise_law")
+            if not value.get("election_noise_candidate"):
+                raise ValueError(f"{name} is missing election_noise_candidate")
+        if meta["election_noise_law"] != fc["election_noise_law"]:
+            raise ValueError("election_noise_law disagrees between metadata.json and forecast.json")
+        if meta["election_noise_candidate"] != fc["election_noise_candidate"]:
+            raise ValueError("election_noise_candidate disagrees between metadata.json and forecast.json")
+        for name, value in (("metadata.json", meta), ("forecast.json", fc)):
+            if value["model"].get("candidate") != BENCHMARK_LINEAGE_CANDIDATE:
+                raise ValueError(
+                    f"{name} model.candidate must remain the benchmark-lineage label "
+                    f"{BENCHMARK_LINEAGE_CANDIDATE!r}; it is not the ElectionNoise challenger"
+                )
+
     forecast = contracts["forecast.json"]
     parties = contracts["parties.json"]
     seats = contracts["seats.json"]
@@ -784,24 +849,27 @@ def validate_publication_contract(contracts: Mapping[str, Mapping[str, Any]]) ->
         if not isinstance(coalition_builder, Mapping):
             raise ValueError("Schema 1.2 groups.json must include coalition_builder")
         _validate_coalition_builder(coalition_builder)
-    elif groups.get("schema_version") == "1.3":
+    elif groups.get("schema_version") in ("1.3", "1.4"):
+        # 1.4 is additive over 1.3 on metadata only; groups.json keeps the 1.3
+        # coalition-builder contract, including the exact seat histograms.
+        version = groups.get("schema_version")
         coalition_builder = groups.get("coalition_builder")
         if not isinstance(coalition_builder, Mapping):
-            raise ValueError("Schema 1.3 groups.json must include coalition_builder")
+            raise ValueError(f"Schema {version} groups.json must include coalition_builder")
         total_samples = forecast.get("total_samples")
         if (
             not isinstance(total_samples, int)
             or isinstance(total_samples, bool)
             or total_samples <= 0
         ):
-            raise ValueError("Schema 1.3 forecast.json must include a positive total_samples")
+            raise ValueError(f"Schema {version} forecast.json must include a positive total_samples")
         _validate_coalition_builder(
             coalition_builder,
             expected_samples=total_samples,
             require_histogram=True,
         )
     elif "coalition_builder" in groups:
-        raise ValueError("coalition_builder is only valid in schema 1.2 or 1.3 groups.json")
+        raise ValueError("coalition_builder is only valid in schema 1.2, 1.3 or 1.4 groups.json")
     metadata = contracts["metadata.json"]
     if not metadata.get("deterministic_payload_sha256"):
         raise ValueError("metadata.json must link the deterministic simulation payload")

@@ -36,9 +36,16 @@ from scripts.simulator.reproducibility import (
     get_git_commit_hash,
     is_git_worktree_clean,
 )
+#: This module is the documented one-off 1.2 -> 1.3 representation migration
+#: (docs/static_publication.md). It must write 1.3 and NOT follow
+#: PUBLICATION_SCHEMA_VERSION forward: it performs no simulation and has no run
+#: manifest, so it cannot supply the ElectionNoise identity that schema 1.4
+#: requires. Historical publications are never rewritten to add newer fields.
+REEXPORT_TARGET_SCHEMA_VERSION = "1.3"
+
 from scripts.static_exporter.exporter import (
     PUBLICATION_FILES,
-    PUBLICATION_SCHEMA_VERSION,
+    PUBLICATION_SCHEMA_VERSION,  # noqa: F401  (kept for the supported-version check)
     _canonical_bytes,
     _coalition_draws,
     _compact_integer_seat_histogram,
@@ -381,7 +388,7 @@ def _read_pointer(publication_dir: Path) -> dict[str, Any] | None:
 
 def _write_pointer(publication_dir: Path, *, generation: str, manifest_sha256: str) -> dict[str, Any]:
     pointer = {
-        "schema_version": PUBLICATION_SCHEMA_VERSION,
+        "schema_version": REEXPORT_TARGET_SCHEMA_VERSION,
         "publication_state": "COMPLETE",
         "publication_generation": generation,
         "path": f"versions/{generation}",
@@ -416,7 +423,7 @@ def _build_manifest(
         for filename in PUBLICATION_FILES
     }
     return {
-        "schema_version": PUBLICATION_SCHEMA_VERSION,
+        "schema_version": REEXPORT_TARGET_SCHEMA_VERSION,
         "publication_state": "COMPLETE",
         "publication_generation": generation,
         "generated_at_utc": generated_at_utc,
@@ -483,7 +490,7 @@ def migrate_publication(
 
     contracts = deepcopy(source_contracts)
     for contract in contracts.values():
-        contract["schema_version"] = PUBLICATION_SCHEMA_VERSION
+        contract["schema_version"] = REEXPORT_TARGET_SCHEMA_VERSION
     contracts["metadata.json"]["generated_at_utc"] = generated
     contracts["metadata.json"]["source_git_commit"] = source_git_commit
 
@@ -549,7 +556,7 @@ def migrate_publication(
 
         source_pointer = _read_pointer(output_root)
         new_pointer = {
-            "schema_version": PUBLICATION_SCHEMA_VERSION,
+            "schema_version": REEXPORT_TARGET_SCHEMA_VERSION,
             "publication_state": "COMPLETE",
             "publication_generation": generation,
             "path": f"versions/{generation}",

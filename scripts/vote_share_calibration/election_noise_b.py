@@ -68,7 +68,33 @@ LEGACY_MODEL_ID = "pp_centered_noise"
 #: default flip, which also re-issues the evaluator and challenger freezes.
 ADOPTED_MODEL_VERSION = "1.1.0-rc1"
 ADOPTED_RELEASE_TAG = "election-simulator-v1.1-rc1"
-ADOPTED_CANDIDATE = "B"
+
+#: The adopted challenger in the ELECTIONNOISE COMPETITION namespace.
+#:
+#: This is NOT the artifact's ``candidate`` field. That field lives in the
+#: botten-ada benchmark / model-lineage namespace, where "Candidate A" is this
+#: simulator as a whole and "Candidate B" would be a rival external model. The two
+#: namespaces collide on the letter B by coincidence and must never be merged; see
+#: ``docs/election_simulator_rc1.md`` for the benchmark meaning.
+ADOPTED_ELECTION_NOISE_CANDIDATE = "B"
+
+#: ElectionNoise law -> its name in the ElectionNoise competition namespace.
+#:
+#: The superseded law maps to "CONTROL", not "A". ElectionNoise Challenger A was the
+#: variance-corrected smoothed empirical bootstrap, which was evaluated and not
+#: adopted; it is a different model from the CONTROL empirical bootstrap, and
+#: labelling the legacy law "A" would be false.
+ELECTION_NOISE_CANDIDATE_BY_LAW = {
+    MODEL_ID: ADOPTED_ELECTION_NOISE_CANDIDATE,
+    LEGACY_MODEL_ID: "CONTROL",
+}
+
+
+def election_noise_candidate_for_law(law: str | None) -> str | None:
+    """Competition-namespace name for an ElectionNoise law, or None if unknown."""
+    if law is None:
+        return None
+    return ELECTION_NOISE_CANDIDATE_BY_LAW.get(law)
 
 N_CATEGORIES = 9
 ZERO_SUM_RANK = 8

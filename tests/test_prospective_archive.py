@@ -11,6 +11,7 @@ from unittest.mock import patch
 import numpy as np
 
 from scripts.prospective_archive.archive import SnapshotCollisionError, write_snapshot
+from scripts.prospective_archive.archive import ARCHIVE_SCHEMA_VERSION
 from scripts.simulator.engine import simulate_election
 from scripts.simulator.pipeline import build_canonical_summary_dict
 from scripts.simulator.reproducibility import UNRESOLVED_GIT_COMMIT
@@ -44,7 +45,7 @@ class TestProspectiveArchive(unittest.TestCase):
             )
             self.assertTrue(snapshot_path.exists())
             self.assertTrue(index_path.exists())
-            self.assertEqual(snapshot["schema_version"], "1.1")
+            self.assertEqual(snapshot["schema_version"], ARCHIVE_SCHEMA_VERSION)
             self.assertTrue(snapshot["deterministic_payload_sha256"])
             self.assertEqual(snapshot["hashes"]["canonical_artifact_sha256"], snapshot["canonical_artifact_sha256"])
             self.assertEqual(set(snapshot["threshold_probabilities_4pct"]), {"M", "L", "C", "KD", "S", "V", "MP", "SD"})
@@ -210,7 +211,7 @@ class TestProspectiveArchive(unittest.TestCase):
             self.assertEqual(index["snapshots"][0], historical_entry)
             self.assertNotIn("generation_id", index["snapshots"][0])
             # The header declares the newest schema the index now contains.
-            self.assertEqual(index["schema_version"], "1.1")
+            self.assertEqual(index["schema_version"], ARCHIVE_SCHEMA_VERSION)
             self.assertIn("generation_id", index["snapshots"][1])
 
     def test_unresolvable_source_commit_is_a_hard_archive_failure(self) -> None:

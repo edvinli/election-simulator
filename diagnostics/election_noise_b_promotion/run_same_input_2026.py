@@ -29,7 +29,7 @@ if str(REPO_ROOT) not in sys.path:
 from scripts.simulator.config import MODEL_PARTIES_9, PARLIAMENTARY_PARTIES_8
 from scripts.simulator.production_runner import simulate_election_with_noise_model
 from scripts.vote_share_calibration.election_noise_b import (
-    ADOPTED_CANDIDATE,
+    ADOPTED_ELECTION_NOISE_CANDIDATE,
     ADOPTED_MODEL_VERSION,
     LEGACY_MODEL_ID,
     MODEL_ID,
@@ -173,7 +173,7 @@ def main() -> int:
         "configuration": {"as_of": AS_OF, "election_date": ELECTION, "samples": SAMPLES,
                           "seed": SEED, "polling_inputs_refreshed": False},
         "adopted_version": {"model_version": ADOPTED_MODEL_VERSION,
-                            "candidate": ADOPTED_CANDIDATE,
+                            "candidate": ADOPTED_ELECTION_NOISE_CANDIDATE,
                             "applies_when": "the production default flip is finalised"},
         "upstream_pairing": {
             "base_comp_matrix_identical": paired,

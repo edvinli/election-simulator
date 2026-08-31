@@ -24,6 +24,22 @@ INTENTIONALLY_CHANGED = {
     "scripts/simulator/reproducibility.py",
 }
 
+#: Part 7B1 metadata/schema namespace fix. These files changed deliberately after the
+#: Part-6B production freeze was taken, so that freeze is now HISTORICAL: it certifies
+#: the production state at its own commit and is preserved byte-for-byte. The current
+#: publication-ready state is certified by publication_freeze.json instead.
+PART7B1_METADATA_CHANGED = {
+    "scripts/static_exporter/exporter.py",
+    "scripts/prospective_archive/archive.py",
+    "scripts/simulator/config.py",
+    "scripts/vote_share_calibration/election_noise_b.py",
+    "scripts/presentation_reexport/reexport.py",
+    "diagnostics/election_noise_v2/production_promotion/production_freeze.py",
+    "tests/test_production_default_is_b.py",
+    "tests/test_prospective_archive.py",
+    "tests/test_static_exporter.py",
+}
+
 
 def _sha(b: bytes) -> str:
     return hashlib.sha256(b).hexdigest()
@@ -52,35 +68,46 @@ class ProductionFreeze(unittest.TestCase):
         self.assertGreaterEqual(len(self.f["production_import_closure_hashes"]), 60)
         self.assertGreaterEqual(len(self.f["production_file_hashes"]), 4)
 
-    def test_every_entry_is_committed_and_clean(self):
+    def test_every_recorded_entry_was_committed_when_frozen(self):
         for g, t in self.tables.items():
             for rel, rec in t.items():
                 self.assertIsNotNone(rec["head_sha256"], f"{g}:{rel} has no committed blob")
                 self.assertEqual(rec["working_tree_sha256"], rec["head_sha256"], f"{g}:{rel}")
                 self.assertFalse(rec["uncommitted_local_edit"], f"{g}:{rel}")
 
-    def test_recorded_hashes_match_disk(self):
+    def test_drift_is_confined_to_the_part7b1_metadata_fix(self):
+        """This freeze is historical after Part 7B1; drift must stay in the known set."""
+        drifted = set()
         for g, t in self.tables.items():
             for rel, rec in t.items():
-                self.assertEqual(_sha((REPO_ROOT / rel).read_bytes()),
-                                 rec["working_tree_sha256"], f"{g}:{rel}")
+                if _sha((REPO_ROOT / rel).read_bytes()) != rec["working_tree_sha256"]:
+                    drifted.add(rel)
+        self.assertTrue(
+            drifted <= PART7B1_METADATA_CHANGED,
+            f"unexpected drift outside the Part-7B1 metadata fix: "
+            f"{sorted(drifted - PART7B1_METADATA_CHANGED)}")
 
-    def test_recorded_head_hashes_match_committed_blobs(self):
+    def test_unchanged_entries_still_match_their_committed_blobs(self):
         if not _git_available():
             self.skipTest("git unavailable")
         for g, t in self.tables.items():
             for rel, rec in t.items():
+                if rel in PART7B1_METADATA_CHANGED:
+                    continue
                 blob = subprocess.check_output(["git", "show", f"HEAD:{rel}"], cwd=REPO_ROOT)
                 self.assertEqual(_sha(blob), rec["head_sha256"], f"{g}:{rel}")
 
-    def test_verifier_reports_no_drift(self):
+    def test_verifier_drift_is_confined_and_reported(self):
+        """verify() semantics are unchanged; the drift it reports is the intended fix."""
         import sys
         if str(REPO_ROOT) not in sys.path:
             sys.path.insert(0, str(REPO_ROOT))
         from diagnostics.election_noise_v2.production_promotion import production_freeze as pf
         res = pf.verify()
-        self.assertEqual(res["drift"], [])
-        self.assertTrue(res["production_unchanged"])
+        drifted = {d["file"] for d in res["drift"]}
+        self.assertTrue(
+            drifted <= PART7B1_METADATA_CHANGED,
+            f"unexpected drift: {sorted(drifted - PART7B1_METADATA_CHANGED)}")
 
     def test_records_the_adopted_model_and_version(self):
         a = self.f["adopted_model"]

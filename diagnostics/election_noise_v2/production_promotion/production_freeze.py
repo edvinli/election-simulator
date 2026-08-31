@@ -35,7 +35,12 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from scripts.simulator.config import ADOPTED_CANDIDATE, MODEL_VERSION, RELEASE_TAG
+from scripts.simulator.config import (
+    ADOPTED_ELECTION_NOISE_CANDIDATE,
+    BENCHMARK_LINEAGE_CANDIDATE,
+    MODEL_VERSION,
+    RELEASE_TAG,
+)
 from scripts.vote_share_calibration.election_noise_b import LEGACY_MODEL_ID, MODEL_ID
 
 HERE = Path(__file__).resolve().parent
@@ -224,7 +229,12 @@ def build(test_results: dict | None = None) -> dict:
         "references": REFERENCES,
         "adopted_model": {
             "election_noise_law": MODEL_ID,
-            "candidate": ADOPTED_CANDIDATE,
+            "election_noise_candidate": ADOPTED_ELECTION_NOISE_CANDIDATE,
+            "benchmark_lineage_candidate": BENCHMARK_LINEAGE_CANDIDATE,
+            "namespace_note": (
+                "model.candidate in published artifacts is the botten-ada benchmark "
+                "lineage label and is unrelated to the ElectionNoise challenger"
+            ),
             "superseded_law": LEGACY_MODEL_ID,
             "superseded_law_still_selectable": True,
             "selection_basis": ("preregistered historical evaluation over 2014/2018/2022; "

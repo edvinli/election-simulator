@@ -18,7 +18,12 @@ import numpy as np
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PROMO = REPO_ROOT / "diagnostics/election_noise_v2/production_promotion"
 
-from scripts.simulator.config import ADOPTED_CANDIDATE, MODEL_VERSION, RELEASE_TAG
+from scripts.simulator.config import (
+    ADOPTED_ELECTION_NOISE_CANDIDATE,
+    BENCHMARK_LINEAGE_CANDIDATE,
+    MODEL_VERSION,
+    RELEASE_TAG,
+)
 from scripts.simulator.engine import simulate_election
 from scripts.vote_share_calibration.election_noise_b import (
     LEGACY_MODEL_ID,
@@ -43,7 +48,8 @@ class Defaults(unittest.TestCase):
     def test_version_follows_the_repository_convention(self):
         self.assertEqual(MODEL_VERSION, "1.1.0-rc1")
         self.assertEqual(RELEASE_TAG, "election-simulator-v1.1-rc1")
-        self.assertEqual(ADOPTED_CANDIDATE, "B")
+        self.assertEqual(ADOPTED_ELECTION_NOISE_CANDIDATE, "B")
+        self.assertEqual(BENCHMARK_LINEAGE_CANDIDATE, "A")
         self.assertTrue(MODEL_VERSION.endswith("-rc1"),
                         "the repository convention has not declared a stable release")
 

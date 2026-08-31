@@ -147,12 +147,36 @@ Publication schema `1.1` adds `source_repository` to `metadata.json` and
 subsets of the canonical parliamentary party order and no raw draws. Publication
 schema `1.3` extends each coalition with an exact contiguous integer
 `seat_histogram` (`min_seats` plus counts for each seat value through the
-observed maximum). Archive schema `1.1` adds `generation_id` to snapshots and
-index entries and moves snapshots to `<generation_id>/snapshot.json`.
+observed maximum). Publication schema `1.4` adds `election_noise_law` and
+`election_noise_candidate` to `metadata.json` and `forecast.json`. Archive schema
+`1.1` adds `generation_id` to snapshots and index entries and moves snapshots to
+`<generation_id>/snapshot.json`; archive schema `1.2` adds the same two
+ElectionNoise fields to the snapshot `model` block.
 
-Only `1.3` is written by the current exporter. Validators accept `1.0`, `1.1`,
-`1.2`, and `1.3` so every historical publication stays readable and valid
-without modification. Coalition summaries and histograms are computed from
+Only `1.4` is written by the current exporter. Validators accept `1.0`, `1.1`,
+`1.2`, `1.3`, and `1.4` so every historical publication stays readable and valid
+without modification.
+
+### Two candidate namespaces — do not conflate them
+
+`model.candidate` is the **botten-ada benchmark / model-lineage** label. `"A"`
+identifies this simulator as Candidate A in that comparative benchmark, where
+Candidate B would be a rival external model (`docs/election_simulator_rc1.md`). It
+is unrelated to ElectionNoise and **does not change when an ElectionNoise
+challenger is adopted**.
+
+`election_noise_candidate` is the challenger selected by the preregistered
+ElectionNoise v2 competition (`docs/election_noise_v2_preregistration.md`): `"B"`
+for the adopted `pp_lw_gaussian` law, `"CONTROL"` for the superseded
+`pp_centered_noise` empirical bootstrap. Note that CONTROL is *not* ElectionNoise
+Challenger A — Challenger A was the variance-corrected smoothed bootstrap, which
+was evaluated and not adopted.
+
+The two namespaces collide on the letter `B` only by coincidence. Schema `1.4`
+exists so a reader can identify the scientific model directly instead of
+reverse-engineering `model_config_hash`, and the exporter validator refuses to
+publish a 1.4 artifact whose two namespaces disagree or whose ElectionNoise fields
+are absent. Coalition summaries and histograms are computed from
 the same joint `seats_matrix` draws as the existing group summaries; the
 builder's majority probability means the chance that the selected parties
 jointly reach 175 seats, not the probability that they form a government.
