@@ -41,6 +41,17 @@ DEFAULT_PROCESSED = REPOSITORY_ROOT / "data" / "processed" / "pollofpolls"
 DEFAULT_README = REPOSITORY_ROOT / "data" / "README.md"
 
 
+class PollingValidationError(RuntimeError):
+    """Raised when a normalized polling snapshot is not safe to install."""
+
+    def __init__(self, report: dict[str, Any]) -> None:
+        self.report = report
+        super().__init__(
+            "Normalized polling snapshot failed validation with "
+            f"{report.get('error_count', '?')} error(s)"
+        )
+
+
 def _atomic_text(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f"{path.name}.{os.getpid()}.tmp")
@@ -357,11 +368,103 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def refresh_snapshot(
+    raw_dir: Path = DEFAULT_RAW,
+    processed_dir: Path = DEFAULT_PROCESSED,
+    *,
+    readme_path: Path = DEFAULT_README,
+    offline: bool = False,
+    allow_archive_fallback: bool = True,
+    timeout: float = 45.0,
+) -> dict[str, Any]:
+    """Acquire, normalize, validate, then install one polling snapshot.
+
+    The caller may point ``raw_dir`` and ``processed_dir`` at a temporary
+    staging tree.  No processed output is written until all normalizers and
+    validators have completed successfully.  This is the single acquisition
+    entry point used by the scheduled production orchestrator.
+    """
+
+    raw_dir = Path(raw_dir)
+    processed_dir = Path(processed_dir)
+    readme_path = Path(readme_path)
+
+    manifest, messages = acquire_all(
+        raw_dir,
+        offline=offline,
+        allow_archive_fallback=allow_archive_fallback,
+        timeout=timeout,
+    )
+    timeseries, individual, metadata = normalize_raw_dataset(raw_dir, manifest)
+    swedishpolls_wide, swedishpolls = parse_swedishpolls_payloads(
+        (raw_dir / SOURCE_BY_KEY["swedishpolls"].raw_filename).read_bytes(),
+        (raw_dir / SOURCE_BY_KEY["swedishpolls_sources"].raw_filename).read_bytes(),
+    )
+    crosswalk = enrich_with_swedishpolls(
+        individual,
+        swedishpolls_wide,
+    )
+    report = validation_report(timeseries, individual, swedishpolls)
+    if not report["valid"]:
+        raise PollingValidationError(report)
+    summary = _summary(timeseries, individual, swedishpolls, crosswalk, manifest)
+    party_chart_timeseries = extract_party_chart_pop_timeseries(
+        raw_dir,
+        canonical_timeseries=timeseries,
+    )
+
+    _write_csv(processed_dir / "pollofpolls_timeseries.csv", TIMESERIES_FIELDS, timeseries)
+    _write_csv(
+        processed_dir / "pollofpolls_party_chart_timeseries.csv",
+        PARTY_CHART_TIMESERIES_FIELDS,
+        party_chart_timeseries,
+    )
+    _write_csv(processed_dir / "individual_polls.csv", INDIVIDUAL_FIELDS, individual)
+    _write_csv(
+        processed_dir / "swedishpolls_individual_polls.csv",
+        SWEDISHPOLLS_FIELDS,
+        swedishpolls,
+    )
+    _write_csv(
+        processed_dir / "pollofpolls_swedishpolls_crosswalk.csv",
+        CROSSWALK_FIELDS,
+        crosswalk,
+    )
+    _atomic_text(
+        processed_dir / "validation_report.json",
+        json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+    )
+    _atomic_text(
+        processed_dir / "dataset_summary.json",
+        json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+    )
+    _atomic_text(
+        processed_dir / "normalization_metadata.json",
+        json.dumps(metadata, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+    )
+    _atomic_text(readme_path, _render_readme(summary, metadata))
+
+    return {
+        "manifest": manifest,
+        "messages": messages,
+        "timeseries": timeseries,
+        "individual": individual,
+        "swedishpolls": swedishpolls,
+        "crosswalk": crosswalk,
+        "party_chart_timeseries": party_chart_timeseries,
+        "validation_report": report,
+        "summary": summary,
+        "metadata": metadata,
+    }
+
+
 def main() -> int:
     args = build_parser().parse_args()
     try:
-        manifest, messages = acquire_all(
+        result = refresh_snapshot(
             args.raw_dir,
+            args.processed_dir,
+            readme_path=DEFAULT_README,
             offline=args.offline,
             allow_archive_fallback=not args.no_archive_fallback,
             timeout=args.timeout,
@@ -369,55 +472,14 @@ def main() -> int:
     except AcquisitionError as exc:
         print(f"Pollofpolls acquisition failed: {exc}")
         return 2
-    for message in messages:
+    except PollingValidationError as exc:
+        print(f"Pollofpolls validation failed: {exc}")
+        return 1
+
+    for message in result["messages"]:
         print(f"- {message}")
-
-    timeseries, individual, metadata = normalize_raw_dataset(args.raw_dir, manifest)
-    swedishpolls_wide, swedishpolls = parse_swedishpolls_payloads(
-        (args.raw_dir / SOURCE_BY_KEY["swedishpolls"].raw_filename).read_bytes(),
-        (args.raw_dir / SOURCE_BY_KEY["swedishpolls_sources"].raw_filename).read_bytes(),
-    )
-    crosswalk = enrich_with_swedishpolls(
-        individual,
-        swedishpolls_wide,
-    )
-    report = validation_report(timeseries, individual, swedishpolls)
-    summary = _summary(timeseries, individual, swedishpolls, crosswalk, manifest)
-    party_chart_timeseries = extract_party_chart_pop_timeseries(
-        args.raw_dir,
-        canonical_timeseries=timeseries,
-    )
-
-    _write_csv(args.processed_dir / "pollofpolls_timeseries.csv", TIMESERIES_FIELDS, timeseries)
-    _write_csv(
-        args.processed_dir / "pollofpolls_party_chart_timeseries.csv",
-        PARTY_CHART_TIMESERIES_FIELDS,
-        party_chart_timeseries,
-    )
-    _write_csv(args.processed_dir / "individual_polls.csv", INDIVIDUAL_FIELDS, individual)
-    _write_csv(
-        args.processed_dir / "swedishpolls_individual_polls.csv",
-        SWEDISHPOLLS_FIELDS,
-        swedishpolls,
-    )
-    _write_csv(
-        args.processed_dir / "pollofpolls_swedishpolls_crosswalk.csv",
-        CROSSWALK_FIELDS,
-        crosswalk,
-    )
-    _atomic_text(
-        args.processed_dir / "validation_report.json",
-        json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-    )
-    _atomic_text(
-        args.processed_dir / "dataset_summary.json",
-        json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-    )
-    _atomic_text(
-        args.processed_dir / "normalization_metadata.json",
-        json.dumps(metadata, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-    )
-    _atomic_text(DEFAULT_README, _render_readme(summary, metadata))
+    summary = result["summary"]
+    report = result["validation_report"]
 
     print(
         "Pollofpolls: "

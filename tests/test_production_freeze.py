@@ -55,6 +55,17 @@ PART7B1_METADATA_CHANGED = {
     "tests/test_static_exporter.py",
 }
 
+# The scheduled publication work intentionally extends the frozen production
+# boundary: the pipeline retains the certified SimulationResult so the static
+# publication, prospective archive, and history chart share one 100k draw set.
+# This drift is explicit and bounded; the historical freeze verifier still
+# reports it rather than hiding it.
+AUTOMATION_CHANGED = {
+    "scripts/publication_pipeline/pipeline.py",
+    "scripts/simulator/engine.py",
+}
+KNOWN_POST_FREEZE_CHANGES = PART7B1_METADATA_CHANGED | AUTOMATION_CHANGED
+
 
 def _sha(b: bytes) -> str:
     return hashlib.sha256(b).hexdigest()
@@ -98,16 +109,16 @@ class ProductionFreeze(unittest.TestCase):
                 if _sha((REPO_ROOT / rel).read_bytes()) != rec["working_tree_sha256"]:
                     drifted.add(rel)
         self.assertTrue(
-            drifted <= PART7B1_METADATA_CHANGED | PARTY_CHART_MERGE_CHANGED,
+            drifted <= KNOWN_POST_FREEZE_CHANGES | PARTY_CHART_MERGE_CHANGED,
             f"unexpected drift outside the known intentional set: "
-            f"{sorted(drifted - PART7B1_METADATA_CHANGED - PARTY_CHART_MERGE_CHANGED)}")
+            f"{sorted(drifted - KNOWN_POST_FREEZE_CHANGES - PARTY_CHART_MERGE_CHANGED)}")
 
     def test_unchanged_entries_still_match_their_committed_blobs(self):
         if not _git_available():
             self.skipTest("git unavailable")
         for g, t in self.tables.items():
             for rel, rec in t.items():
-                if rel in PART7B1_METADATA_CHANGED | PARTY_CHART_MERGE_CHANGED:
+                if rel in KNOWN_POST_FREEZE_CHANGES | PARTY_CHART_MERGE_CHANGED:
                     continue
                 blob = subprocess.check_output(["git", "show", f"HEAD:{rel}"], cwd=REPO_ROOT)
                 self.assertEqual(_sha(blob), rec["head_sha256"], f"{g}:{rel}")
@@ -121,9 +132,9 @@ class ProductionFreeze(unittest.TestCase):
         res = pf.verify()
         drifted = {d["file"] for d in res["drift"]}
         self.assertTrue(
-            drifted <= PART7B1_METADATA_CHANGED | PARTY_CHART_MERGE_CHANGED,
+            drifted <= KNOWN_POST_FREEZE_CHANGES | PARTY_CHART_MERGE_CHANGED,
             f"unexpected drift: "
-            f"{sorted(drifted - PART7B1_METADATA_CHANGED - PARTY_CHART_MERGE_CHANGED)}")
+            f"{sorted(drifted - KNOWN_POST_FREEZE_CHANGES - PARTY_CHART_MERGE_CHANGED)}")
 
     def test_records_the_adopted_model_and_version(self):
         a = self.f["adopted_model"]

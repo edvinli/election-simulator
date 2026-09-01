@@ -126,6 +126,38 @@ class TestProspectiveArchive(unittest.TestCase):
                 [first["generation_id"], second["generation_id"]],
             )
 
+    def test_explicit_force_duplicate_retains_distinct_immutable_generation(self) -> None:
+        """A seeded daily/force rerun can be archived without overwriting history."""
+
+        result = self._result()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            archive = root / "archive"
+            canonical, sidecar = self._canonical_pair(root, result)
+            first_path, index_path, first = write_snapshot(
+                result,
+                archive_dir=archive,
+                generated_at_utc="2026-08-27T12:00:00+00:00",
+                canonical_artifact_path=canonical,
+                canonical_payload_hash_path=sidecar,
+                allow_duplicate_payload=True,
+            )
+            second_path, _, second = write_snapshot(
+                result,
+                archive_dir=archive,
+                generated_at_utc="2026-08-27T12:00:00+00:00",
+                canonical_artifact_path=canonical,
+                canonical_payload_hash_path=sidecar,
+                allow_duplicate_payload=True,
+            )
+            self.assertEqual(first["deterministic_payload_sha256"], second["deterministic_payload_sha256"])
+            self.assertNotEqual(first["snapshot_id"], second["snapshot_id"])
+            self.assertNotEqual(first["generation_id"], second["generation_id"])
+            self.assertTrue(first_path.is_file() and second_path.is_file())
+            index = json.loads(index_path.read_text(encoding="utf-8"))
+            self.assertEqual(len(index["snapshots"]), 2)
+            self.assertTrue(all(row["duplicate_payload_allowed"] for row in index["snapshots"]))
+
     def test_generation_id_collision_is_refused(self) -> None:
         result = self._result()
         other = simulate_election(as_of="2026-08-23", election_date="2026-09-13", samples=8, seed=54321)

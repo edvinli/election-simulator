@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date, timedelta
 from pathlib import Path
+import tempfile
 import unittest
 import numpy as np
 import pandas as pd
@@ -103,10 +104,15 @@ class ResidualCalculationAndStudyTests(unittest.TestCase):
 
     def test_full_residual_study_all_six_elections(self) -> None:
         """Run complete residual study across all 6 elections (2002-2022)."""
-        res = calculate_residuals_study(
-            polls_file=DEFAULT_POLLS_FILE,
-            elections_file=DEFAULT_ELECTIONS_FILE,
-        )
+        # The study is an exporting pipeline.  Keep this test hermetic so its
+        # generated audit/report files cannot dirty the checkout before the
+        # scheduled source-clean publication gate runs.
+        with tempfile.TemporaryDirectory() as output_dir:
+            res = calculate_residuals_study(
+                polls_file=DEFAULT_POLLS_FILE,
+                elections_file=DEFAULT_ELECTIONS_FILE,
+                output_dir=output_dir,
+            )
 
         # 1. Total rows = 6 elections * 9 categories = 54
         self.assertEqual(len(res["residuals_df"]), 54)

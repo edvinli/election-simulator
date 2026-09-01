@@ -31,6 +31,7 @@ __all__ = [
     "HISTORY_START_DATE",
     "build_groups_from_matrices",
     "build_history",
+    "update_history_with_production_result",
     "build_history_dates",
     "coalition_seat_draws",
     "coalition_vote_draws",

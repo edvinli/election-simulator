@@ -1,0 +1,356 @@
+name: Election Simulator publication
+
+on:
+  # Stockholm is UTC+2 through the 2026 election date. Keep these fixed UTC
+  # schedules explicit and let the date guard stop the workflow afterwards.
+  schedule:
+    - cron: "0 4 * * *" # 06:00 Europe/Stockholm: always publish
+    - cron: "0 6,8,10,12,14,16,18,20 * * *" # 08:00–22:00: poll-change checks
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "probe = acquire/validate only; dry_run = full gates without writes; publish = commit/push"
+        required: true
+        default: dry_run
+        type: choice
+        options:
+          - probe
+          - dry_run
+          - publish
+
+permissions:
+  contents: read
+
+concurrency:
+  group: election-simulator-production
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'probe'
+    permissions:
+      contents: read
+    runs-on: ${{ vars.ELECTION_SIMULATOR_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 45
+    steps:
+      - name: Check out simulator without persisted credentials
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: simulator
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install simulator dependencies
+        working-directory: simulator
+        run: uv sync --frozen
+
+      - name: Probe polling sources without repository writes
+        working-directory: simulator
+        shell: bash
+        env:
+          ELECTION_AUTOMATION_ENABLED: ${{ vars.ELECTION_AUTOMATION_ENABLED || 'false' }}
+        run: |
+          uv run python -m scripts.election_automation \
+            --repo-root "$GITHUB_WORKSPACE/simulator" \
+            --site-repo "$RUNNER_TEMP/election-probe-no-website" \
+            --event-name workflow_dispatch \
+            --mode probe \
+            --automation-enabled "$ELECTION_AUTOMATION_ENABLED" \
+            --summary-path "$GITHUB_STEP_SUMMARY"
+
+  dry_run:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'dry_run'
+    permissions:
+      contents: read
+    runs-on: ${{ vars.ELECTION_SIMULATOR_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 45
+    steps:
+      - name: Check out simulator without persisted credentials
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: simulator
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Clone public website without credentials
+        shell: bash
+        env:
+          DRY_RUN_WEBSITE: ${{ runner.temp }}/election-website-dry-run-${{ github.run_id }}-${{ github.run_attempt }}
+          GIT_CONFIG_GLOBAL: /dev/null
+          GIT_CONFIG_NOSYSTEM: "1"
+          GIT_TERMINAL_PROMPT: "0"
+        run: |
+          test ! -e "$DRY_RUN_WEBSITE"
+          git clone --depth=1 --branch master \
+            https://github.com/edvinli/edvinli.github.io.git \
+            "$DRY_RUN_WEBSITE"
+          test "$(git -C "$DRY_RUN_WEBSITE" remote get-url origin)" = \
+            "https://github.com/edvinli/edvinli.github.io.git"
+          test -z "$(git -C "$DRY_RUN_WEBSITE" config --local --get credential.helper || true)"
+          test -z "$(git -C "$DRY_RUN_WEBSITE" config --local --get-regexp '^http\..*\.extraheader$' || true)"
+          echo "DRY_RUN_WEBSITE=$DRY_RUN_WEBSITE" >> "$GITHUB_ENV"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install simulator dependencies
+        working-directory: simulator
+        run: uv sync --frozen
+
+      - name: Verify isolated read-only repository layout
+        shell: bash
+        run: |
+          test "$(git -C simulator rev-parse --show-toplevel)" = "$GITHUB_WORKSPACE/simulator"
+          test "$(git -C "$DRY_RUN_WEBSITE" rev-parse --show-toplevel)" = "$DRY_RUN_WEBSITE"
+          test -z "$(git -C simulator status --porcelain --untracked-files=all)"
+          test -z "$(git -C "$DRY_RUN_WEBSITE" status --porcelain --untracked-files=all)"
+
+      - name: Run backend and history contract tests
+        working-directory: simulator
+        run: |
+          uv run python -m unittest \
+            tests.test_publication_pipeline \
+            tests.test_prospective_archive \
+            tests.test_forecast_history_contract \
+            tests.test_forecast_history \
+            tests.test_site_publisher \
+            tests.test_production_freeze \
+            tests.test_publication_freeze \
+            tests.test_election_automation
+
+      - name: Set up Node and Jekyll
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+
+      - name: Install Jekyll and Chromium when needed
+        shell: bash
+        run: |
+          gem install \
+            jekyll \
+            jekyll-paginate \
+            jekyll-sitemap \
+            jekyll-gist \
+            jekyll-feed \
+            jekyll-redirect-from \
+            --no-document
+          if command -v chromium >/dev/null 2>&1; then
+            CHROME_BIN_PATH="$(command -v chromium)"
+          elif command -v chromium-browser >/dev/null 2>&1; then
+            CHROME_BIN_PATH="$(command -v chromium-browser)"
+          elif command -v google-chrome >/dev/null 2>&1; then
+            CHROME_BIN_PATH="$(command -v google-chrome)"
+          else
+            sudo apt-get update
+            sudo apt-get install -y chromium
+            CHROME_BIN_PATH="$(command -v chromium)"
+          fi
+          echo "CHROME_BIN=$CHROME_BIN_PATH" >> "$GITHUB_ENV"
+
+      - name: Run full dry-run without commits or pushes
+        working-directory: simulator
+        shell: bash
+        env:
+          ELECTION_AUTOMATION_ENABLED: ${{ vars.ELECTION_AUTOMATION_ENABLED || 'false' }}
+        run: |
+          uv run python -m scripts.election_automation \
+            --repo-root "$GITHUB_WORKSPACE/simulator" \
+            --site-repo "$DRY_RUN_WEBSITE" \
+            --event-name workflow_dispatch \
+            --mode dry_run \
+            --automation-enabled "$ELECTION_AUTOMATION_ENABLED" \
+            --summary-path "$GITHUB_STEP_SUMMARY"
+
+  publish:
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'publish')
+    permissions:
+      contents: write
+    # Set repository variable ELECTION_SIMULATOR_RUNNER to a self-hosted label
+    # when pollofpolls.se refuses GitHub-hosted runner traffic.
+    runs-on: ${{ vars.ELECTION_SIMULATOR_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 45
+    steps:
+      - name: Check out simulator
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: simulator
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Check repository automation kill switch
+        id: automation_gate
+        shell: bash
+        env:
+          AUTOMATION_ENABLED: ${{ vars.ELECTION_AUTOMATION_ENABLED || 'false' }}
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_SCHEDULE: ${{ github.event.schedule }}
+          MODE: publish
+        run: |
+          if [[ "$EVENT_NAME" != "workflow_dispatch" && "${AUTOMATION_ENABLED,,}" == "false" ]]; then
+            echo "disabled=true" >> "$GITHUB_OUTPUT"
+            {
+              if [[ "$EVENT_SCHEDULE" == "0 4 * * *" ]]; then RUN_TYPE="DAILY"; else RUN_TYPE="POLL_CHANGE"; fi
+              echo "Run type: $RUN_TYPE"
+              echo "Mode: ${MODE^^}"
+              echo "Forecast as_of: NOT_RUN"
+              echo "PoP estimate date: NOT_RUN"
+              echo "Polling source status: DISABLED_BY_REPOSITORY_KILL_SWITCH"
+              echo "Polling source provenance: NOT_ACQUIRED"
+              echo "Model-relevant inputs changed: no"
+              echo "Simulation samples: 0"
+              echo "Publication generation: NONE"
+              echo "History current point: NONE"
+              echo "Simulator commit: $(git -C simulator rev-parse HEAD)"
+              echo "Website commit: NOT_CHECKED_OUT"
+              echo "Deployment status: DISABLED_BY_REPOSITORY_KILL_SWITCH"
+              echo "Recovery status: NONE"
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "ELECTION_AUTOMATION_ENABLED=false; scheduled run exits before acquisition."
+            exit 0
+          fi
+          echo "disabled=false" >> "$GITHUB_OUTPUT"
+          echo "Automation enabled for ${EVENT_NAME}; mode=${MODE}."
+
+      - name: Check out website artifacts repository
+        if: steps.automation_gate.outputs.disabled != 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: edvinli/edvinli.github.io
+          ref: master
+          path: website
+          fetch-depth: 0
+          token: ${{ secrets.WEBSITE_REPO_TOKEN }}
+          persist-credentials: true
+
+      - name: Set up Python
+        if: steps.automation_gate.outputs.disabled != 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Node
+        if: steps.automation_gate.outputs.disabled != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Set up uv
+        if: steps.automation_gate.outputs.disabled != 'true'
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install simulator dependencies
+        if: steps.automation_gate.outputs.disabled != 'true'
+        working-directory: simulator
+        run: uv sync --frozen
+
+      - name: Verify isolated repository layout
+        if: steps.automation_gate.outputs.disabled != 'true'
+        shell: bash
+        run: |
+          test "$(git -C simulator rev-parse --show-toplevel)" = "$GITHUB_WORKSPACE/simulator"
+          test "$(git -C website rev-parse --show-toplevel)" = "$GITHUB_WORKSPACE/website"
+          test -z "$(git -C simulator status --porcelain --untracked-files=all)"
+          test -z "$(git -C website status --porcelain --untracked-files=all)"
+
+      - name: Configure non-secret Git bot identity
+        if: steps.automation_gate.outputs.disabled != 'true'
+        shell: bash
+        run: |
+          for repo in simulator website; do
+            git -C "$repo" config user.name "github-actions[bot]"
+            git -C "$repo" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          done
+          test "$(git -C simulator config user.name)" = "github-actions[bot]"
+          test "$(git -C simulator config user.email)" = "41898282+github-actions[bot]@users.noreply.github.com"
+          test "$(git -C website config user.name)" = "github-actions[bot]"
+          test "$(git -C website config user.email)" = "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Run backend and history contract tests
+        if: steps.automation_gate.outputs.disabled != 'true'
+        working-directory: simulator
+        run: |
+          uv run python -m unittest \
+            tests.test_publication_pipeline \
+            tests.test_prospective_archive \
+            tests.test_forecast_history_contract \
+            tests.test_forecast_history \
+            tests.test_site_publisher \
+            tests.test_production_freeze \
+            tests.test_publication_freeze \
+            tests.test_election_automation
+
+      - name: Set up Node and Jekyll
+        if: steps.automation_gate.outputs.disabled != 'true'
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+
+      - name: Install Jekyll and Chromium when needed
+        if: steps.automation_gate.outputs.disabled != 'true'
+        shell: bash
+        run: |
+          gem install \
+            jekyll \
+            jekyll-paginate \
+            jekyll-sitemap \
+            jekyll-gist \
+            jekyll-feed \
+            jekyll-redirect-from \
+            --no-document
+          if command -v chromium >/dev/null 2>&1; then
+            CHROME_BIN_PATH="$(command -v chromium)"
+          elif command -v chromium-browser >/dev/null 2>&1; then
+            CHROME_BIN_PATH="$(command -v chromium-browser)"
+          elif command -v google-chrome >/dev/null 2>&1; then
+            CHROME_BIN_PATH="$(command -v google-chrome)"
+          else
+            sudo apt-get update
+            sudo apt-get install -y chromium
+            CHROME_BIN_PATH="$(command -v chromium)"
+          fi
+          echo "CHROME_BIN=$CHROME_BIN_PATH" >> "$GITHUB_ENV"
+
+      - name: Acquire, validate, publish, test, and sync
+        if: steps.automation_gate.outputs.disabled != 'true'
+        working-directory: simulator
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_SCHEDULE: ${{ github.event.schedule }}
+          ELECTION_AUTOMATION_ENABLED: ${{ vars.ELECTION_AUTOMATION_ENABLED || 'false' }}
+        run: |
+          uv run python -m scripts.election_automation \
+            --repo-root "$GITHUB_WORKSPACE/simulator" \
+            --site-repo "$GITHUB_WORKSPACE/website" \
+            --event-name "$EVENT_NAME" \
+            --schedule "$EVENT_SCHEDULE" \
+            --mode publish \
+            --automation-enabled "$ELECTION_AUTOMATION_ENABLED" \
+            --summary-path "$GITHUB_STEP_SUMMARY"

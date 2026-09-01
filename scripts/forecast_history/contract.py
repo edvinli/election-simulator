@@ -14,7 +14,7 @@ quantiles are ever added together and the vote denominator never includes
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 import hashlib
 import json
 import math
@@ -358,7 +358,11 @@ def validate_history_contract(payload: Mapping[str, Any]) -> None:
     if not isinstance(series, list) or not series:
         raise ValueError("series must be a non-empty list")
     prior_key: tuple[str, str] | None = None
-    seen_point_keys: set[tuple[str, str]] = set()
+    # The chart has exactly one point for each calendar date.  Provenance is
+    # still carried on that point so a genuine production point can roll from
+    # ``current_production`` to ``prospective_archived`` without introducing
+    # a second visual point for the same day.
+    seen_point_dates: set[str] = set()
     latest_series_date: date | None = None
     for index, point in enumerate(series):
         if not isinstance(point, Mapping):
@@ -420,13 +424,48 @@ def validate_history_contract(payload: Mapping[str, Any]) -> None:
                 upper=349.0,
             )
         ordering_key = (point["date"], str(point["provenance"]))
-        if ordering_key in seen_point_keys:
-            raise ValueError("series contains duplicate (date, provenance) points")
-        seen_point_keys.add(ordering_key)
+        if point["date"] in seen_point_dates:
+            raise ValueError("series contains duplicate calendar dates")
+        seen_point_dates.add(point["date"])
         if prior_key is not None and ordering_key < prior_key:
             raise ValueError("series must be ordered by date and provenance")
         prior_key = ordering_key
         latest_series_date = point_date if latest_series_date is None else max(latest_series_date, point_date)
+
+        # Audit metadata is additive and therefore optional for historical
+        # reconstructed points and pre-automation artifacts.  When present it
+        # is validated strictly; production automation always supplies all
+        # four fields for current/archived genuine points.
+        source_commit = point.get("source_git_commit")
+        if source_commit is not None and (
+            not isinstance(source_commit, str)
+            or not re.fullmatch(r"[0-9a-fA-F]{40}|[0-9a-fA-F]{64}", source_commit)
+        ):
+            raise ValueError(f"series[{index}].source_git_commit must be a Git commit hash")
+        generation = point.get("publication_generation")
+        if generation is not None and (
+            not isinstance(generation, str)
+            or not generation
+            or not re.fullmatch(r"[A-Za-z0-9_-]+", generation)
+        ):
+            raise ValueError(f"series[{index}].publication_generation must be web-safe")
+        payload_hash = point.get("deterministic_payload_sha256")
+        if payload_hash is not None and not _valid_sha256(payload_hash):
+            raise ValueError(
+                f"series[{index}].deterministic_payload_sha256 must be a SHA-256 hash"
+            )
+        generated_at = point.get("generated_at_utc")
+        if generated_at is not None:
+            if not isinstance(generated_at, str):
+                raise ValueError(f"series[{index}].generated_at_utc must be an ISO timestamp")
+            try:
+                parsed_generated = datetime.fromisoformat(generated_at.replace("Z", "+00:00"))
+            except ValueError as exc:
+                raise ValueError(
+                    f"series[{index}].generated_at_utc must be an ISO timestamp"
+                ) from exc
+            if parsed_generated.tzinfo is None:
+                raise ValueError(f"series[{index}].generated_at_utc must include a timezone")
 
     poll_of_polls = payload["poll_of_polls"]
     if not isinstance(poll_of_polls, list) or not poll_of_polls:

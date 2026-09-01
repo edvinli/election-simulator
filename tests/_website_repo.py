@@ -14,7 +14,10 @@ from pathlib import Path
 
 
 ENV_OVERRIDE = "ELECTION_SIMULATOR_WEBSITE_REPO"
-DEFAULT_WEBSITE_REPO = Path.home() / "Documents" / "Git" / "edvinli.github.io"
+# Never infer a sibling checkout from the developer's home directory.  That
+# made portable CI accidentally exercise whichever website happened to be
+# present on the runner.  Cross-repository tests must opt in explicitly.
+DEFAULT_WEBSITE_REPO = Path("__website_checkout_not_opted_in__")
 
 
 def website_repo() -> Path:

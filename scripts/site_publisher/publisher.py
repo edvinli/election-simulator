@@ -28,6 +28,7 @@ import tempfile
 from typing import Any
 import uuid
 
+from scripts.forecast_history.contract import validate_history_contract
 from scripts.simulator.reproducibility import GENERATION_ID_PATTERN, compute_file_sha256
 from scripts.static_exporter.exporter import (
     PUBLICATION_FILES,
@@ -37,6 +38,7 @@ from scripts.static_exporter.exporter import (
 
 
 SITE_PUBLICATION_RELATIVE = Path("files") / "election-simulator"
+SITE_HISTORY_RELATIVE = SITE_PUBLICATION_RELATIVE / "history" / "coalition-timeseries.json"
 
 # The seven real files that constitute one immutable published generation.
 GENERATION_FILES: tuple[str, ...] = (*PUBLICATION_FILES, "manifest.json")
@@ -100,6 +102,7 @@ def publish_generation_to_site(
     source_publication_dir: Path | str,
     generation: str | None = None,
     update_pointer: bool = True,
+    allow_existing: bool = False,
 ) -> dict[str, Any]:
     """Copy one certified generation into a website repository.
 
@@ -129,34 +132,57 @@ def publish_generation_to_site(
     destination_publication = site_root / SITE_PUBLICATION_RELATIVE
     destination_versions = destination_publication / "versions"
     destination_version = destination_versions / generation_name
-    if os.path.lexists(destination_version):
+    existing_destination = os.path.lexists(destination_version)
+    if existing_destination and not allow_existing:
         raise SitePublishError(
             f"Refusing to overwrite an existing published generation: {destination_version}"
         )
 
-    destination_versions.mkdir(parents=True, exist_ok=True)
-    staging = Path(tempfile.mkdtemp(prefix=f".{generation_name}.staging-", dir=destination_versions))
-    installed = False
-    try:
+    if existing_destination:
+        if not destination_version.is_dir():
+            raise SitePublishError(f"Existing published generation is not a directory: {destination_version}")
+        try:
+            existing_manifest = validate_publication_version(
+                destination_version,
+                expected_generation=generation_name,
+            )
+        except (OSError, ValueError) as exc:
+            raise SitePublishError(
+                f"Existing published generation is not a valid immutable version: {destination_version}"
+            ) from exc
+        if existing_manifest.get("deterministic_content_sha256") != source_manifest.get(
+            "deterministic_content_sha256"
+        ):
+            raise SitePublishError(f"Existing published generation differs: {destination_version}")
         for filename in GENERATION_FILES:
-            source_file = source_version / filename
-            if source_file.is_symlink() or not source_file.is_file():
-                raise SitePublishError(f"Source generation file must be a real file: {source_file}")
-            # copyfile follows the source and always creates a regular file,
-            # so a published generation can never contain a symlink.
-            shutil.copyfile(source_file, staging / filename)
-            if compute_file_sha256(staging / filename) != compute_file_sha256(source_file):
-                raise SitePublishError(f"Copied publication file does not match its source: {filename}")
-        extra = {path.name for path in staging.iterdir()} - set(GENERATION_FILES)
-        if extra:
-            raise SitePublishError(f"Staged generation contains unexpected files: {sorted(extra)}")
+            if (destination_version / filename).read_bytes() != (source_version / filename).read_bytes():
+                raise SitePublishError(f"Existing published generation differs: {filename}")
+        pointer_status = "ALREADY_MIRRORED"
+    else:
+        destination_versions.mkdir(parents=True, exist_ok=True)
+        staging = Path(tempfile.mkdtemp(prefix=f".{generation_name}.staging-", dir=destination_versions))
+        installed = False
+        try:
+            for filename in GENERATION_FILES:
+                source_file = source_version / filename
+                if source_file.is_symlink() or not source_file.is_file():
+                    raise SitePublishError(f"Source generation file must be a real file: {source_file}")
+                # copyfile follows the source and always creates a regular file,
+                # so a published generation can never contain a symlink.
+                shutil.copyfile(source_file, staging / filename)
+                if compute_file_sha256(staging / filename) != compute_file_sha256(source_file):
+                    raise SitePublishError(f"Copied publication file does not match its source: {filename}")
+            extra = {path.name for path in staging.iterdir()} - set(GENERATION_FILES)
+            if extra:
+                raise SitePublishError(f"Staged generation contains unexpected files: {sorted(extra)}")
 
-        os.replace(staging, destination_version)
-        installed = True
-        _fsync_directory(destination_versions)
-    finally:
-        if not installed and staging.exists():
-            shutil.rmtree(staging, ignore_errors=True)
+            os.replace(staging, destination_version)
+            installed = True
+            _fsync_directory(destination_versions)
+            pointer_status = "MIRRORED"
+        finally:
+            if not installed and staging.exists():
+                shutil.rmtree(staging, ignore_errors=True)
 
     # Validate what actually landed on the website side, independently of the
     # source.  Only a destination that passes on its own may be pointed at.
@@ -188,7 +214,7 @@ def publish_generation_to_site(
         pointer_written = True
 
     return {
-        "status": "MIRRORED",
+        "status": pointer_status,
         "generation": generation_name,
         "source_version": str(source_version),
         "destination_version": str(destination_version),
@@ -201,4 +227,58 @@ def publish_generation_to_site(
         "source_git_commit": destination_manifest.get("source_git_commit"),
         "committed": False,
         "pushed": False,
+    }
+
+
+def sync_history_to_site(
+    *,
+    site_repo: Path | str,
+    source_history_path: Path | str,
+    destination_relative: Path | str = SITE_HISTORY_RELATIVE,
+) -> dict[str, Any]:
+    """Validate and atomically mirror the canonical history artifact.
+
+    The publication generation and the history file are installed by separate
+    helpers because the former has an immutable-version/pointer contract.  A
+    history copy is still staged and validated before its destination is
+    replaced, and equal bytes are left untouched so a no-op sync creates no
+    website commit.
+    """
+
+    site_root = Path(site_repo).resolve()
+    source = Path(source_history_path)
+    destination = site_root / Path(destination_relative)
+    if not site_root.is_dir():
+        raise SitePublishError(f"--site-repo must be an existing directory: {site_root}")
+    if not source.is_file() or source.is_symlink():
+        raise SitePublishError(f"Source history must be a regular file: {source}")
+    source = source.resolve()
+    try:
+        with source.open(encoding="utf-8") as handle:
+            payload = json.load(handle)
+    except (OSError, json.JSONDecodeError) as exc:
+        raise SitePublishError(f"Source history is not readable JSON: {source}") from exc
+    try:
+        validate_history_contract(payload)
+    except ValueError as exc:
+        raise SitePublishError(f"Source history failed contract validation: {exc}") from exc
+
+    source_bytes = source.read_bytes()
+    changed = not destination.is_file() or destination.read_bytes() != source_bytes
+    if changed:
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        temporary = destination.parent / f".{destination.name}.{uuid.uuid4().hex}.tmp"
+        try:
+            temporary.write_bytes(source_bytes)
+            os.replace(temporary, destination)
+            _fsync_directory(destination.parent)
+        finally:
+            if os.path.lexists(temporary):
+                os.unlink(temporary)
+    return {
+        "status": "SYNCED" if changed else "UNCHANGED",
+        "source": str(source),
+        "destination": str(destination),
+        "sha256": compute_file_sha256(destination),
+        "changed": changed,
     }
