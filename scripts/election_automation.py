@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import argparse
 import csv
-from contextlib import nullcontext
+from contextlib import contextmanager, nullcontext
 from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
 import hashlib
@@ -28,6 +28,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import tempfile
+from time import monotonic
 from typing import Any, Callable, Mapping, Sequence
 from zoneinfo import ZoneInfo
 
@@ -71,6 +72,7 @@ VALID_MODES = ("probe", "dry_run", "publish")
 AUTOMATION_ENABLED_ENV = "ELECTION_AUTOMATION_ENABLED"
 SOURCE_PROVENANCE_DIRECT_LIVE = "DIRECT_LIVE_FETCH"
 SOURCE_PROVENANCE_VERIFIED_FALLBACK = "VERIFIED_STALE_FALLBACK"
+StageCallback = Callable[[str, str, float | None], None]
 
 MODEL_RELEVANT_INPUTS: tuple[Path, ...] = (
     Path("data/processed/pollofpolls/pollofpolls_timeseries.csv"),
@@ -87,6 +89,30 @@ POLLING_STATUS_VALUES = {
 
 class AutomationError(RuntimeError):
     """A fail-closed automation stage failed."""
+
+
+def _log_stage(stage: str, event: str, elapsed: float | None = None) -> None:
+    """Emit one immediately visible Actions log line without buffered output."""
+
+    suffix = f" elapsed={elapsed:.3f}s" if elapsed is not None else ""
+    print(f"[election-automation] {stage} {event}{suffix}", flush=True)
+
+
+@contextmanager
+def _timed_stage(stage: str, callback: StageCallback | None):
+    """Report a stage boundary while leaving its implementation untouched."""
+
+    if callback is None:
+        yield
+        return
+    started = monotonic()
+    callback(stage, "START", None)
+    try:
+        yield
+    except Exception:
+        callback(stage, "FAIL", monotonic() - started)
+        raise
+    callback(stage, "DONE", monotonic() - started)
 
 
 class AfterElectionDay(AutomationError):
@@ -513,6 +539,7 @@ def refresh_polling_snapshot(
     refresh_fn: Callable[..., dict[str, Any]] = refresh_snapshot,
     install: bool | None = None,
     staging_directory: Path | str | None = None,
+    stage_callback: StageCallback | None = None,
 ) -> PollingRefresh:
     """Acquire into a temporary tree, validate, then conditionally install.
 
@@ -570,6 +597,7 @@ def refresh_polling_snapshot(
                 offline=False,
                 allow_archive_fallback=allow_archive_fallback,
                 timeout=timeout,
+                stage_callback=stage_callback,
             )
         except PollingValidationError:
             # The original checkout has not been touched.  Do not turn an
@@ -882,19 +910,22 @@ def _stage_site(
     staged_history: Path,
     generation: str,
     website_check_fn: Callable[[Path], dict[str, Any]],
+    stage_callback: StageCallback | None = None,
 ) -> dict[str, Any]:
     """Mirror publication/history into a disposable website tree and test it."""
 
-    publish_generation_to_site(
-        site_repo=site_root,
-        source_publication_dir=staged_publication,
-        generation=generation,
-        update_pointer=True,
-    )
-    sync_history_to_site(site_repo=site_root, source_history_path=staged_history)
-    validate_published_directory(site_root / SITE_PUBLICATION_RELATIVE)
-    validate_history_contract(_load_json_object(site_root / SITE_HISTORY_RELATIVE))
-    checks = website_check_fn(site_root)
+    with _timed_stage("website sync/validation", stage_callback):
+        publish_generation_to_site(
+            site_repo=site_root,
+            source_publication_dir=staged_publication,
+            generation=generation,
+            update_pointer=True,
+        )
+        sync_history_to_site(site_repo=site_root, source_history_path=staged_history)
+        validate_published_directory(site_root / SITE_PUBLICATION_RELATIVE)
+        validate_history_contract(_load_json_object(site_root / SITE_HISTORY_RELATIVE))
+    with _timed_stage("Jekyll/browser tests", stage_callback):
+        checks = website_check_fn(site_root)
     if not isinstance(checks, Mapping) or checks.get("status") != "PASS":
         raise AutomationError("Website checks did not return PASS")
     return dict(checks)
@@ -1195,6 +1226,7 @@ def run_production_event(
     allow_custom_processed_root: bool = False,
     source_push_ref: str = "main",
     website_push_ref: str = "master",
+    stage_callback: StageCallback | None = None,
 ) -> tuple[PipelineRun, dict[str, Any], dict[str, Any] | None]:
     """Run exactly one production simulation and stage all consumers.
 
@@ -1254,6 +1286,7 @@ def run_production_event(
             allow_duplicate_payload=allow_duplicate_payload,
             allow_custom_processed_root=allow_custom_processed_root,
             simulation_repo_root=root,
+            stage_callback=stage_callback,
         )
         if run.status != "PUBLISHED" or run.simulation_result is None:
             detail = run.error.get("message") if run.error else run.status
@@ -1276,26 +1309,27 @@ def run_production_event(
         result = run.simulation_result
         payload_hash = str(run.snapshot["deterministic_payload_sha256"])
         source_commit = str(result.manifest.get("source_git_commit", ""))
-        history = update_history_with_production_result(
-            existing_history,
-            result,
-            poll_file=processed_root / "pollofpolls" / "swedishpolls_individual_polls.csv",
-            timeseries_file=processed_root / "pollofpolls" / "pollofpolls_timeseries.csv",
-            archive_dir=staged_archive,
-            election_date=election,
-            publication_generation=generation,
-            deterministic_payload_sha256=payload_hash,
-            generated_at_utc=generated,
-            model_commit=source_commit,
-            source_worktree_clean=True,
-        )
-        write_history_json(staged_history, history)
-        validate_history_contract(_load_json_object(staged_history))
-        # The self-hash in the history payload is checked once more at the
-        # production boundary so a future writer cannot accidentally mutate it
-        # between construction and staging.
-        if history["deterministic_content_sha256"] != deterministic_history_sha256(history):
-            raise AutomationError("History deterministic hash is not self-consistent")
+        with _timed_stage("history update", stage_callback):
+            history = update_history_with_production_result(
+                existing_history,
+                result,
+                poll_file=processed_root / "pollofpolls" / "swedishpolls_individual_polls.csv",
+                timeseries_file=processed_root / "pollofpolls" / "pollofpolls_timeseries.csv",
+                archive_dir=staged_archive,
+                election_date=election,
+                publication_generation=generation,
+                deterministic_payload_sha256=payload_hash,
+                generated_at_utc=generated,
+                model_commit=source_commit,
+                source_worktree_clean=True,
+            )
+            write_history_json(staged_history, history)
+            validate_history_contract(_load_json_object(staged_history))
+            # The self-hash in the history payload is checked once more at the
+            # production boundary so a future writer cannot accidentally mutate it
+            # between construction and staging.
+            if history["deterministic_content_sha256"] != deterministic_history_sha256(history):
+                raise AutomationError("History deterministic hash is not self-consistent")
 
         website_check = website_check_fn or run_website_checks
         staged_site = temporary / "website"
@@ -1306,6 +1340,7 @@ def run_production_event(
             staged_history=staged_history,
             generation=generation,
             website_check_fn=website_check,
+            stage_callback=stage_callback,
         )
 
         if not commit:
@@ -1403,6 +1438,7 @@ def run_automation(
     refresh_fn: Callable[..., dict[str, Any]] = refresh_snapshot,
     simulation_runner: Callable[..., Any] | None = None,
     generated_at_utc: str | None = None,
+    stage_callback: StageCallback | None = None,
 ) -> AutomationResult:
     """Execute one explicit probe, dry-run, or publish event.
 
@@ -1463,6 +1499,7 @@ def run_automation(
                 refresh_fn=refresh_fn,
                 install=effective_commit,
                 staging_directory=acquisition_staging,
+                stage_callback=stage_callback,
             )
             summary.polling_source_status = polling.status
             summary.polling_source_provenance = polling.source_provenance
@@ -1578,6 +1615,7 @@ def run_automation(
                         allow_duplicate_payload=True,
                         processed_root=staged_processed,
                         allow_custom_processed_root=True,
+                        stage_callback=stage_callback,
                     )
             else:
                 _assert_clean(root, label="simulator before production")
@@ -1595,6 +1633,7 @@ def run_automation(
                     # immutable generation when its seeded draw payload is
                     # unchanged.  The archive marker preserves that event.
                     allow_duplicate_payload=True,
+                    stage_callback=stage_callback,
                 )
         summary.simulation_samples = int(run.simulation_validation["samples"]) if run.simulation_validation else 0
         summary.publication_generation = str(run.snapshot["generation_id"]) if run.snapshot else "NONE"
@@ -1678,6 +1717,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         election_date=args.election_date,
         commit=commit,
         push=push,
+        stage_callback=_log_stage,
     )
     rendered = result.summary.render()
     if args.summary_path:

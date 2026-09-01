@@ -74,7 +74,7 @@ jobs:
     permissions:
       contents: read
     runs-on: ${{ vars.ELECTION_SIMULATOR_RUNNER || 'ubuntu-latest' }}
-    timeout-minutes: 45
+    timeout-minutes: 120
     steps:
       - name: Check out simulator without persisted credentials
         uses: actions/checkout@v4
@@ -193,7 +193,7 @@ jobs:
     # Set repository variable ELECTION_SIMULATOR_RUNNER to a self-hosted label
     # when pollofpolls.se refuses GitHub-hosted runner traffic.
     runs-on: ${{ vars.ELECTION_SIMULATOR_RUNNER || 'ubuntu-latest' }}
-    timeout-minutes: 45
+    timeout-minutes: 120
     steps:
       - name: Check out simulator
         uses: actions/checkout@v4
