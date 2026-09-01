@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import argparse
 import csv
+from contextlib import contextmanager
 import json
 import os
 from pathlib import Path
-from typing import Any, Iterable
+from time import monotonic
+from typing import Any, Callable, Iterable
 
 from .acquire import AcquisitionError, acquire_all
 from .config import (
@@ -39,6 +41,7 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_RAW = REPOSITORY_ROOT / "data" / "raw" / "pollofpolls"
 DEFAULT_PROCESSED = REPOSITORY_ROOT / "data" / "processed" / "pollofpolls"
 DEFAULT_README = REPOSITORY_ROOT / "data" / "README.md"
+StageCallback = Callable[[str, str, float | None], None]
 
 
 class PollingValidationError(RuntimeError):
@@ -50,6 +53,21 @@ class PollingValidationError(RuntimeError):
             "Normalized polling snapshot failed validation with "
             f"{report.get('error_count', '?')} error(s)"
         )
+
+
+@contextmanager
+def _timed_stage(stage: str, callback: StageCallback | None):
+    if callback is None:
+        yield
+        return
+    started = monotonic()
+    callback(stage, "START", None)
+    try:
+        yield
+    except Exception:
+        callback(stage, "FAIL", monotonic() - started)
+        raise
+    callback(stage, "DONE", monotonic() - started)
 
 
 def _atomic_text(path: Path, content: str) -> None:
@@ -376,6 +394,7 @@ def refresh_snapshot(
     offline: bool = False,
     allow_archive_fallback: bool = True,
     timeout: float = 45.0,
+    stage_callback: StageCallback | None = None,
 ) -> dict[str, Any]:
     """Acquire, normalize, validate, then install one polling snapshot.
 
@@ -389,60 +408,62 @@ def refresh_snapshot(
     processed_dir = Path(processed_dir)
     readme_path = Path(readme_path)
 
-    manifest, messages = acquire_all(
-        raw_dir,
-        offline=offline,
-        allow_archive_fallback=allow_archive_fallback,
-        timeout=timeout,
-    )
-    timeseries, individual, metadata = normalize_raw_dataset(raw_dir, manifest)
-    swedishpolls_wide, swedishpolls = parse_swedishpolls_payloads(
-        (raw_dir / SOURCE_BY_KEY["swedishpolls"].raw_filename).read_bytes(),
-        (raw_dir / SOURCE_BY_KEY["swedishpolls_sources"].raw_filename).read_bytes(),
-    )
-    crosswalk = enrich_with_swedishpolls(
-        individual,
-        swedishpolls_wide,
-    )
-    report = validation_report(timeseries, individual, swedishpolls)
-    if not report["valid"]:
-        raise PollingValidationError(report)
-    summary = _summary(timeseries, individual, swedishpolls, crosswalk, manifest)
-    party_chart_timeseries = extract_party_chart_pop_timeseries(
-        raw_dir,
-        canonical_timeseries=timeseries,
-    )
+    with _timed_stage("acquisition", stage_callback):
+        manifest, messages = acquire_all(
+            raw_dir,
+            offline=offline,
+            allow_archive_fallback=allow_archive_fallback,
+            timeout=timeout,
+        )
+    with _timed_stage("normalization/validation", stage_callback):
+        timeseries, individual, metadata = normalize_raw_dataset(raw_dir, manifest)
+        swedishpolls_wide, swedishpolls = parse_swedishpolls_payloads(
+            (raw_dir / SOURCE_BY_KEY["swedishpolls"].raw_filename).read_bytes(),
+            (raw_dir / SOURCE_BY_KEY["swedishpolls_sources"].raw_filename).read_bytes(),
+        )
+        crosswalk = enrich_with_swedishpolls(
+            individual,
+            swedishpolls_wide,
+        )
+        report = validation_report(timeseries, individual, swedishpolls)
+        if not report["valid"]:
+            raise PollingValidationError(report)
+        summary = _summary(timeseries, individual, swedishpolls, crosswalk, manifest)
+        party_chart_timeseries = extract_party_chart_pop_timeseries(
+            raw_dir,
+            canonical_timeseries=timeseries,
+        )
 
-    _write_csv(processed_dir / "pollofpolls_timeseries.csv", TIMESERIES_FIELDS, timeseries)
-    _write_csv(
-        processed_dir / "pollofpolls_party_chart_timeseries.csv",
-        PARTY_CHART_TIMESERIES_FIELDS,
-        party_chart_timeseries,
-    )
-    _write_csv(processed_dir / "individual_polls.csv", INDIVIDUAL_FIELDS, individual)
-    _write_csv(
-        processed_dir / "swedishpolls_individual_polls.csv",
-        SWEDISHPOLLS_FIELDS,
-        swedishpolls,
-    )
-    _write_csv(
-        processed_dir / "pollofpolls_swedishpolls_crosswalk.csv",
-        CROSSWALK_FIELDS,
-        crosswalk,
-    )
-    _atomic_text(
-        processed_dir / "validation_report.json",
-        json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-    )
-    _atomic_text(
-        processed_dir / "dataset_summary.json",
-        json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-    )
-    _atomic_text(
-        processed_dir / "normalization_metadata.json",
-        json.dumps(metadata, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-    )
-    _atomic_text(readme_path, _render_readme(summary, metadata))
+        _write_csv(processed_dir / "pollofpolls_timeseries.csv", TIMESERIES_FIELDS, timeseries)
+        _write_csv(
+            processed_dir / "pollofpolls_party_chart_timeseries.csv",
+            PARTY_CHART_TIMESERIES_FIELDS,
+            party_chart_timeseries,
+        )
+        _write_csv(processed_dir / "individual_polls.csv", INDIVIDUAL_FIELDS, individual)
+        _write_csv(
+            processed_dir / "swedishpolls_individual_polls.csv",
+            SWEDISHPOLLS_FIELDS,
+            swedishpolls,
+        )
+        _write_csv(
+            processed_dir / "pollofpolls_swedishpolls_crosswalk.csv",
+            CROSSWALK_FIELDS,
+            crosswalk,
+        )
+        _atomic_text(
+            processed_dir / "validation_report.json",
+            json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        )
+        _atomic_text(
+            processed_dir / "dataset_summary.json",
+            json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        )
+        _atomic_text(
+            processed_dir / "normalization_metadata.json",
+            json.dumps(metadata, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        )
+        _atomic_text(readme_path, _render_readme(summary, metadata))
 
     return {
         "manifest": manifest,

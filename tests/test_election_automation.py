@@ -27,6 +27,7 @@ from scripts.election_automation import (
     classify_run_type,
     current_stockholm_date,
     guard_election_date,
+    _log_stage,
     latest_pop_observation_date,
     model_relevant_snapshot_sha256,
     refresh_polling_snapshot,
@@ -843,9 +844,24 @@ class ElectionAutomationTests(unittest.TestCase):
         self.assertIn("--mode probe", probe)
         self.assertIn("--mode dry_run", dry_run)
         self.assertIn("--mode publish", publish)
+        self.assertIn("timeout-minutes: 45", probe)
+        self.assertIn("timeout-minutes: 120", dry_run)
+        self.assertIn("timeout-minutes: 120", publish)
+        self.assertEqual(workflow.count("timeout-minutes: 120"), 2)
         self.assertNotIn("git push", probe)
         self.assertNotIn("git push", dry_run)
         self.assertIn("token: ${{ secrets.WEBSITE_REPO_TOKEN }}", publish)
+
+    def test_stage_logger_flushes_start_and_elapsed_completion(self) -> None:
+        with patch("builtins.print") as mocked_print:
+            _log_stage("acquisition", "START")
+            _log_stage("acquisition", "DONE", 1.25)
+
+        mocked_print.assert_any_call("[election-automation] acquisition START", flush=True)
+        mocked_print.assert_any_call(
+            "[election-automation] acquisition DONE elapsed=1.250s",
+            flush=True,
+        )
 
     def test_cross_repository_consumer_testing_is_explicitly_opt_in(self) -> None:
         from tests._website_repo import DEFAULT_WEBSITE_REPO, ENV_OVERRIDE, website_repo

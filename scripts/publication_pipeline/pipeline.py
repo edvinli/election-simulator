@@ -22,11 +22,13 @@ from __future__ import annotations
 
 import argparse
 import csv
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 import json
 from pathlib import Path
 import tempfile
+from time import monotonic
 from typing import Any, Callable, Mapping
 
 import numpy as np
@@ -46,6 +48,7 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_PROCESSED_ROOT = REPOSITORY_ROOT / "data" / "processed"
 DEFAULT_ARCHIVE_DIR = DEFAULT_PROCESSED_ROOT / "prospective_forecasts"
 DEFAULT_PUBLICATION_DIR = REPOSITORY_ROOT / "files" / "election-simulator"
+StageCallback = Callable[[str, str, float | None], None]
 
 TIMESERIES_FIELDS = ("date", "M", "L", "C", "KD", "S", "V", "MP", "SD", "FI", "other")
 REQUIRED_INPUTS = {
@@ -60,6 +63,21 @@ REQUIRED_INPUTS = {
 
 class PipelineInputError(ValueError):
     """Raised when a source snapshot is absent or fails validation."""
+
+
+@contextmanager
+def _timed_stage(stage: str, callback: StageCallback | None):
+    if callback is None:
+        yield
+        return
+    started = monotonic()
+    callback(stage, "START", None)
+    try:
+        yield
+    except Exception:
+        callback(stage, "FAIL", monotonic() - started)
+        raise
+    callback(stage, "DONE", monotonic() - started)
 
 
 @dataclass
@@ -328,6 +346,7 @@ def run_publication_pipeline(
     allow_duplicate_payload: bool = False,
     allow_custom_processed_root: bool = False,
     simulation_repo_root: Path | str | None = None,
+    stage_callback: StageCallback | None = None,
 ) -> PipelineRun:
     """Run the offline-first production contract and return stage evidence."""
 
@@ -369,8 +388,9 @@ def run_publication_pipeline(
                     else canonical_processed_root.parent.parent,
                 }
             )
-        result = runner(**simulation_kwargs)
-        run.simulation_validation = validate_simulation_result(result)
+        with _timed_stage(f"simulation {samples}", stage_callback):
+            result = runner(**simulation_kwargs)
+            run.simulation_validation = validate_simulation_result(result)
         run.simulation_result = result
         run.stages.append({"name": "frozen_simulation", "status": "PASS", "detail": run.simulation_validation})
 
@@ -413,14 +433,15 @@ def run_publication_pipeline(
             run.stages.append({"name": "prospective_archive_append", "status": "SKIPPED"})
 
         if export_publication:
-            manifest = export_static_data(
-                result,
-                output_dir=publication_dir,
-                generated_at_utc=generated,
-                calibration_dir=Path(processed_root),
-                prior_snapshot=prior_snapshot,
-                generation_id=generation_id,
-            )
+            with _timed_stage("static publication", stage_callback):
+                manifest = export_static_data(
+                    result,
+                    output_dir=publication_dir,
+                    generated_at_utc=generated,
+                    calibration_dir=Path(processed_root),
+                    prior_snapshot=prior_snapshot,
+                    generation_id=generation_id,
+                )
             run.publication_manifest = manifest
             run.stages.append({"name": "static_publication", "status": "PASS", "detail": manifest})
         else:
