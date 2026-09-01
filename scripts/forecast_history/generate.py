@@ -31,6 +31,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 from types import SimpleNamespace
 from typing import Any, Callable, Iterable, Mapping, Sequence
 
@@ -425,6 +426,9 @@ def _point_from_result(
     election_date: date,
     coalitions: Mapping[str, Sequence[str]],
     provenance: str = "reconstructed_current_model",
+    publication_generation: str | None = None,
+    deterministic_payload_sha256: str | None = None,
+    generated_at_utc: str | None = None,
 ) -> dict[str, Any]:
     votes = _extract_matrix(result, "vote_shares_matrix")
     seats = _extract_matrix(result, "seats_matrix")
@@ -473,7 +477,7 @@ def _point_from_result(
         if isinstance(configured, int) and not isinstance(configured, bool):
             dynamics_horizon = max(0, min(actual_horizon, HISTORY_DYNAMICS_CAP_DAYS, configured))
             break
-    return {
+    point: dict[str, Any] = {
         "date": point_date.isoformat(),
         "samples": int(votes.shape[0]),
         "horizon_days": actual_horizon,
@@ -481,6 +485,18 @@ def _point_from_result(
         "provenance": provenance,
         "groups": groups,
     }
+    if provenance != "reconstructed_current_model":
+        manifest = manifest if isinstance(manifest, Mapping) else {}
+        source_commit = manifest.get("source_git_commit", manifest.get("git_commit"))
+        if isinstance(source_commit, str) and source_commit:
+            point["source_git_commit"] = source_commit
+        if publication_generation is not None:
+            point["publication_generation"] = str(publication_generation)
+        if deterministic_payload_sha256 is not None:
+            point["deterministic_payload_sha256"] = str(deterministic_payload_sha256)
+        if generated_at_utc is not None:
+            point["generated_at_utc"] = str(generated_at_utc)
+    return point
 
 
 def _archive_point_from_record(
@@ -534,6 +550,13 @@ def _archive_point_from_record(
         "groups": normalized_groups,
         "generated_at_utc": source.get("generated_at_utc", record.get("generated_at_utc")),
         "source_git_commit": source.get("source_git_commit", record.get("source_git_commit")),
+        "publication_generation": source.get(
+            "publication_generation",
+            source.get("generation_id", record.get("generation_id")),
+        ),
+        "deterministic_payload_sha256": source.get(
+            "deterministic_payload_sha256", record.get("deterministic_payload_sha256")
+        ),
     }
 
 
@@ -639,6 +662,7 @@ def build_history(
     model_commit: str | None = None,
     generated_at_utc: str | None = None,
     source_worktree_clean: bool | None = None,
+    production_metadata: Mapping[str, Any] | None = None,
     workers: int = 1,
     progress_callback: Callable[[int, int, str], None] | None = None,
 ) -> dict[str, Any]:
@@ -762,11 +786,13 @@ def build_history(
     dates_to_simulate: list[tuple[date, int]] = []
     for point_date in observation_dates:
         if (
-            latest_result is None
-            and point_date in existing_points
+            point_date in existing_points
             and (
                 point_date != official_latest_date
-                or int(existing_points[point_date]["samples"]) == production_latest_samples
+                or (
+                    latest_result is None
+                    and int(existing_points[point_date]["samples"]) == production_latest_samples
+                )
             )
         ):
             continue
@@ -808,11 +834,13 @@ def build_history(
 
     for point_date in observation_dates:
         if (
-            latest_result is None
-            and point_date in existing_points
+            point_date in existing_points
             and (
                 point_date != official_latest_date
-                or int(existing_points[point_date]["samples"]) == production_latest_samples
+                or (
+                    latest_result is None
+                    and int(existing_points[point_date]["samples"]) == production_latest_samples
+                )
             )
         ):
             series.append(existing_points[point_date])
@@ -824,6 +852,21 @@ def build_history(
                 election_date=election,
                 coalitions=coalition_config,
                 provenance="current_production",
+                publication_generation=(
+                    production_metadata.get("publication_generation")
+                    if production_metadata
+                    else None
+                ),
+                deterministic_payload_sha256=(
+                    production_metadata.get("deterministic_payload_sha256")
+                    if production_metadata
+                    else None
+                ),
+                generated_at_utc=(
+                    production_metadata.get("generated_at_utc")
+                    if production_metadata
+                    else None
+                ),
             )
             if point["samples"] != production_latest_samples:
                 raise ValueError(
@@ -838,11 +881,26 @@ def build_history(
         if archived is not None and (
             point_date != official_latest_date or archived["samples"] == production_latest_samples
         ):
-            series.append({
-                key: value
-                for key, value in archived.items()
-                if key in {"date", "samples", "horizon_days", "dynamics_horizon_days", "provenance", "groups"}
-            })
+            series.append(
+                {
+                    key: value
+                    for key, value in archived.items()
+                    if key
+                    in {
+                        "date",
+                        "samples",
+                        "horizon_days",
+                        "dynamics_horizon_days",
+                        "provenance",
+                        "groups",
+                        "source_git_commit",
+                        "publication_generation",
+                        "deterministic_payload_sha256",
+                        "generated_at_utc",
+                    }
+                    and value is not None
+                }
+            )
             if not model_commit:
                 model_commit_value = str(archived.get("source_git_commit") or model_commit_value)
             continue
@@ -902,11 +960,26 @@ def build_history(
     # archived on a Thursday between weekly reconstructed points).
     for point_date, archived in archived_by_date.items():
         if point_date not in {date.fromisoformat(point["date"]) for point in series}:
-            series.append({
-                key: value
-                for key, value in archived.items()
-                if key in {"date", "samples", "horizon_days", "dynamics_horizon_days", "provenance", "groups"}
-            })
+            series.append(
+                {
+                    key: value
+                    for key, value in archived.items()
+                    if key
+                    in {
+                        "date",
+                        "samples",
+                        "horizon_days",
+                        "dynamics_horizon_days",
+                        "provenance",
+                        "groups",
+                        "source_git_commit",
+                        "publication_generation",
+                        "deterministic_payload_sha256",
+                        "generated_at_utc",
+                    }
+                    and value is not None
+                }
+            )
     # Preserve points already present in a resumable artifact, including dates
     # from an earlier chunk that are not part of this invocation's requested
     # date window.
@@ -983,6 +1056,186 @@ def build_history(
         if source_worktree_clean is not None
         else is_git_worktree_clean(REPOSITORY_ROOT)
     )
+    payload["deterministic_content_sha256"] = deterministic_history_sha256(payload)
+    validate_history_contract(payload)
+    return payload
+
+
+def update_history_with_production_result(
+    existing_payload: Mapping[str, Any],
+    production_result: Any,
+    *,
+    poll_file: Path | str = DEFAULT_POLL_FILE,
+    timeseries_file: Path | str = DEFAULT_TIMESERIES_FILE,
+    archive_dir: Path | str | None = DEFAULT_ARCHIVE_DIR,
+    election_date: str | date = DEFAULT_ELECTION_DATE,
+    coalitions: Mapping[str, Sequence[str]] = DEFAULT_COALITIONS,
+    publication_generation: str | None = None,
+    deterministic_payload_sha256: str | None = None,
+    generated_at_utc: str | None = None,
+    model_commit: str | None = None,
+    source_worktree_clean: bool | None = None,
+) -> dict[str, Any]:
+    """Roll one certified production result into the history artifact.
+
+    This is the production-history boundary.  It deliberately accepts an
+    already-computed ``SimulationResult`` and never invokes the simulator.
+    Existing reconstructed points are copied as-is; the prior official point
+    is relabelled ``prospective_archived`` on a later day, while a same-day
+    rerun replaces the one point for that date.  Coalition summaries for the
+    new point are derived from the result's original joint matrices.
+    """
+
+    validate_history_contract(existing_payload)
+    election = _coerce_date(election_date, name="election_date")
+    if existing_payload["election_date"] != election.isoformat():
+        raise ValueError("existing_payload uses a different election_date")
+    coalition_config = {
+        str(key): [str(party) for party in members]
+        for key, members in coalitions.items()
+    }
+    if existing_payload["coalitions"] != coalition_config:
+        raise ValueError("existing_payload uses a different coalition configuration")
+
+    current_date = _result_as_of(production_result)
+    if current_date is None:
+        raise ValueError("production_result must carry an as_of date")
+    if current_date > election:
+        raise ValueError("production_result as_of cannot occur after election_date")
+    manifest = getattr(production_result, "manifest", None)
+    manifest_map = manifest if isinstance(manifest, Mapping) else {}
+    source_commit = model_commit or _model_commit_from(
+        production_result, str(existing_payload["model_commit"])
+    )
+    if not isinstance(source_commit, str) or not re.fullmatch(
+        r"[0-9a-fA-F]{40}|[0-9a-fA-F]{64}", source_commit
+    ):
+        raise ValueError("production_result does not carry a resolvable source Git commit")
+
+    # Locate archive metadata for an earlier official point.  Legacy current
+    # points may predate the audit fields, but their corresponding immutable
+    # archive entry can still supply the exact generation/provenance linkage.
+    archive_metadata: dict[date, Mapping[str, Any]] = {}
+    for record in _load_archive_records(archive_dir):
+        raw_date = record.get("as_of", record.get("snapshot_date"))
+        try:
+            record_date = _coerce_date(raw_date, name="archive snapshot date")
+        except (TypeError, ValueError):
+            continue
+        previous = archive_metadata.get(record_date)
+        previous_key = str(previous.get("generated_at_utc") or "") if previous else ""
+        current_key = str(record.get("generated_at_utc") or "")
+        if previous is None or current_key >= previous_key:
+            archive_metadata[record_date] = record
+
+    series: list[dict[str, Any]] = []
+    for original in existing_payload["series"]:
+        point = dict(original)
+        point_date = date.fromisoformat(str(point["date"]))
+        if point_date == current_date:
+            # The new official result is authoritative for this calendar day,
+            # regardless of whether the prior point was reconstructed/current.
+            continue
+        if point.get("provenance") == "current_production":
+            point["provenance"] = "prospective_archived"
+            archive_record = archive_metadata.get(point_date)
+            if archive_record is not None:
+                for field in (
+                    "source_git_commit",
+                    "publication_generation",
+                    "generation_id",
+                    "deterministic_payload_sha256",
+                    "generated_at_utc",
+                ):
+                    if field not in point and archive_record.get(field) is not None:
+                        target = "publication_generation" if field == "generation_id" else field
+                        point[target] = archive_record[field]
+        series.append(point)
+
+    new_point = _point_from_result(
+        production_result,
+        point_date=current_date,
+        election_date=election,
+        coalitions=coalition_config,
+        provenance="current_production",
+        publication_generation=publication_generation,
+        deterministic_payload_sha256=deterministic_payload_sha256,
+        generated_at_utc=generated_at_utc,
+    )
+    # Keep the object construction explicit above, then validate the audit
+    # values against the result manifest instead of allowing a caller to put a
+    # false commit on the chart point.
+    new_point["source_git_commit"] = str(manifest_map.get("source_git_commit", source_commit))
+    if not re.fullmatch(
+        r"[0-9a-fA-F]{40}|[0-9a-fA-F]{64}", new_point["source_git_commit"]
+    ):
+        raise ValueError("production_result source_git_commit is not a Git commit hash")
+    series.append(new_point)
+    series.sort(key=lambda point: (point["date"], str(point["provenance"])))
+    if len({point["date"] for point in series}) != len(series):
+        raise ValueError("production history update would create duplicate calendar dates")
+    if sum(point.get("provenance") == "current_production" for point in series) != 1:
+        raise ValueError("production history must contain exactly one current_production point")
+
+    poll_path = Path(poll_file)
+    timeseries_path = Path(timeseries_file)
+    all_polls = serialize_swedishpolls(poll_path)
+    poll_hash = compute_file_sha256(poll_path)
+    timeseries_hash = compute_file_sha256(timeseries_path)
+    if len(poll_hash) != 64 or len(timeseries_hash) != 64:
+        raise FileNotFoundError("History inputs must be present and hashable")
+    series_dates = [date.fromisoformat(str(point["date"])) for point in series]
+    chart_start = min(series_dates)
+    publication_dates = [
+        date.fromisoformat(str(poll["publication_date"]))
+        for poll in all_polls
+        if poll.get("publication_date") is not None
+    ]
+    chart_end = min(election, max([*series_dates, *publication_dates]))
+    polls = filter_swedishpolls_period(all_polls, chart_start, chart_end)
+    poll_of_polls = serialize_poll_of_polls_timeseries(
+        timeseries_path, start_date=chart_start, end_date=chart_end
+    )
+
+    payload: dict[str, Any] = {
+        "schema_version": existing_payload["schema_version"],
+        "election_date": election.isoformat(),
+        "model_commit": source_commit,
+        "poll_source_sha256": poll_hash,
+        "party_order": list(HISTORY_PARTY_ORDER),
+        "coalitions": coalition_config,
+        "series": series,
+        "poll_of_polls": poll_of_polls,
+        "polls": polls,
+        "source_hashes": {
+            "poll_source_sha256": poll_hash,
+            "timeseries_source_sha256": timeseries_hash,
+        },
+        "model": dict(existing_payload.get("model") or {}),
+        "schedule": dict(existing_payload.get("schedule") or {}),
+        "poll_date_range": {
+            "start_date": chart_start.isoformat(),
+            "end_date": chart_end.isoformat(),
+        },
+        "provenance_note": existing_payload.get("provenance_note"),
+        "archive_diagnostics": dict(existing_payload.get("archive_diagnostics") or {}),
+        "source_worktree_clean": (
+            bool(source_worktree_clean)
+            if source_worktree_clean is not None
+            else bool(manifest_map.get("source_worktree_clean"))
+        ),
+    }
+    payload["model"].update(
+        {
+            "name": "ElectionSimulator",
+            "history_samples": payload["model"].get("history_samples", DEFAULT_HISTORY_SAMPLES),
+            "seed": manifest_map.get("base_seed", payload["model"].get("seed")),
+            "production_samples": int(getattr(getattr(production_result, "summary", None), "total_samples", 0)),
+        }
+    )
+    payload["schedule"].update({"observation_count": len(series)})
+    if generated_at_utc is not None:
+        payload["generated_at_utc"] = str(generated_at_utc)
     payload["deterministic_content_sha256"] = deterministic_history_sha256(payload)
     validate_history_contract(payload)
     return payload

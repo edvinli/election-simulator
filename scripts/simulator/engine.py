@@ -108,6 +108,8 @@ def simulate_election(
     seed: int = DEFAULT_SIMULATION_SEED,
     baseline_year: int = DEFAULT_GEOGRAPHY_BASELINE_YEAR,
     processed_geo_dir: Path | str | None = None,
+    data_dir: Path | str | None = None,
+    repo_dir: Path | str | None = None,
     total_national_votes: int = 6_500_000,
     geography_mode: str = "chronological",
     collect_quantization_audit: bool = False,
@@ -127,7 +129,14 @@ def simulate_election(
         -> Summary statistics & probabilities
     """
     elec_date = date.fromisoformat(str(election_date)) if isinstance(election_date, str) else election_date
-    p_geo_dir = Path(processed_geo_dir) if processed_geo_dir else DEFAULT_PROCESSED_GEOGRAPHY_DIR
+    data_root = Path(data_dir) if data_dir else None
+    p_geo_dir = (
+        Path(processed_geo_dir)
+        if processed_geo_dir
+        else data_root / "geography"
+        if data_root
+        else DEFAULT_PROCESSED_GEOGRAPHY_DIR
+    )
 
     # 1. Canonical National Vote-Share Simulation
     nat_sample_res = generate_national_vote_shares(
@@ -135,6 +144,7 @@ def simulate_election(
         election_date=elec_date,
         samples=samples,
         seed=seed,
+        data_dir=data_root,
         noise_model=noise_model,
     )
     as_of_date = nat_sample_res.as_of
@@ -316,6 +326,11 @@ def simulate_election(
             "total_national_votes": total_national_votes,
             "constituency_vote_unit": 25,
         },
+        poll_data_path=(data_root / "pollofpolls" / "swedishpolls_individual_polls.csv") if data_root else None,
+        election_data_path=(data_root / "elections" / "riksdag_election_results.csv") if data_root else None,
+        mandate_data_path=(data_root / "mandates" / "historical_certified_mandates.csv") if data_root else None,
+        geography_data_path=(data_root / "geography" / "constituency_party_votes_2014_2022.csv") if data_root else None,
+        repo_dir=repo_dir,
     )
 
     # 5. Compute Summary Statistics

@@ -70,6 +70,11 @@ class PipelineRun:
     stages: list[dict[str, Any]] = field(default_factory=list)
     input_manifest: dict[str, Any] | None = None
     simulation_validation: dict[str, Any] | None = None
+    # The exact certified result is intentionally retained for callers that
+    # must derive additional artifacts (history and archive metadata) from the
+    # same joint draws.  It is not serialized by ``to_dict`` because numpy
+    # matrices are not a public JSON contract.
+    simulation_result: SimulationResult | None = field(default=None, repr=False)
     snapshot: dict[str, Any] | None = None
     publication_manifest: dict[str, Any] | None = None
     error: dict[str, str] | None = None
@@ -320,6 +325,9 @@ def run_publication_pipeline(
     export_publication: bool = True,
     include_supplementary: bool = True,
     simulation_runner: Callable[..., SimulationResult] | None = None,
+    allow_duplicate_payload: bool = False,
+    allow_custom_processed_root: bool = False,
+    simulation_repo_root: Path | str | None = None,
 ) -> PipelineRun:
     """Run the offline-first production contract and return stage evidence."""
 
@@ -329,7 +337,7 @@ def run_publication_pipeline(
     try:
         selected_processed_root = Path(processed_root).resolve()
         canonical_processed_root = DEFAULT_PROCESSED_ROOT.resolve()
-        if selected_processed_root != canonical_processed_root:
+        if selected_processed_root != canonical_processed_root and not allow_custom_processed_root:
             raise PipelineInputError(
                 "Custom processed_root is not supported by the frozen simulator; "
                 f"use {canonical_processed_root} so validated inputs and simulation inputs cannot diverge"
@@ -340,14 +348,30 @@ def run_publication_pipeline(
         )
         run.stages.append({"name": "input_validation", "status": "PASS", "detail": run.input_manifest["status"]})
 
-        result = runner(
-            as_of=as_of,
-            election_date=election_date,
-            samples=samples,
-            seed=seed,
-            baseline_year=baseline_year,
-        )
+        simulation_kwargs: dict[str, Any] = {
+            "as_of": as_of,
+            "election_date": election_date,
+            "samples": samples,
+            "seed": seed,
+            "baseline_year": baseline_year,
+        }
+        if allow_custom_processed_root:
+            # This explicit opt-in is used only by the automation dry-run,
+            # whose disposable processed tree is validated and passed to both
+            # the simulator and the input validator.  The default production
+            # path remains pinned to DEFAULT_PROCESSED_ROOT.
+            simulation_kwargs.update(
+                {
+                    "data_dir": selected_processed_root,
+                    "processed_geo_dir": selected_processed_root / "geography",
+                    "repo_dir": Path(simulation_repo_root).resolve()
+                    if simulation_repo_root is not None
+                    else canonical_processed_root.parent.parent,
+                }
+            )
+        result = runner(**simulation_kwargs)
         run.simulation_validation = validate_simulation_result(result)
+        run.simulation_result = result
         run.stages.append({"name": "frozen_simulation", "status": "PASS", "detail": run.simulation_validation})
 
         requires_source_certification = append_archive or export_publication
@@ -373,6 +397,7 @@ def run_publication_pipeline(
                     generated_at_utc=generated,
                     canonical_artifact_path=canonical,
                     canonical_payload_hash_path=sidecar,
+                    allow_duplicate_payload=allow_duplicate_payload,
                 )
             generation_id = snapshot["generation_id"]
             run.snapshot = {

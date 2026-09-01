@@ -95,6 +95,51 @@ class StubElement {
     return child;
   }
 
+  insertBefore(child, reference) {
+    const index = this.children.indexOf(reference);
+    child.parentNode = this;
+    if (index === -1) this.children.push(child);
+    else this.children.splice(index, 0, child);
+    return child;
+  }
+
+  removeChild(child) {
+    const index = this.children.indexOf(child);
+    if (index === -1) throw new Error("child is not present");
+    this.children.splice(index, 1);
+    child.parentNode = null;
+    return child;
+  }
+
+  cloneNode(deep = false) {
+    const copy = new StubElement(this.tagName, this.id);
+    copy.className = this.className;
+    copy.hidden = this.hidden;
+    copy.disabled = this.disabled;
+    copy.type = this.type;
+    copy.style = { ...this.style };
+    copy.attributes = { ...this.attributes };
+    copy._textContent = this._textContent;
+    copy._innerHTML = this._innerHTML;
+    if (deep) this.children.forEach((child) => copy.appendChild(child.cloneNode(true)));
+    return copy;
+  }
+
+  getBoundingClientRect() {
+    return {
+      left: 0,
+      top: 0,
+      width: 100,
+      height: this.className.indexOf("eg-bar__segment--zero") !== -1 ? 10 : 20,
+      right: 100,
+      bottom: 20,
+    };
+  }
+
+  setPointerCapture() {}
+
+  releasePointerCapture() {}
+
   addEventListener(type, handler) {
     (this._listeners[type] = this._listeners[type] || []).push(handler);
   }
@@ -196,10 +241,19 @@ function buildDocument(publicationBase, statusSettled) {
     "election-government-note",
     "election-government-announcement",
     "election-government-bar",
+    "election-opposition-bar",
+    "election-builder-presets",
     "election-union-bar",
     "election-government-column",
     "election-union-column",
     "election-government-total",
+    "election-opposition-total",
+    "election-opposition-column",
+    "election-government-histogram-heading",
+    "election-government-histogram-majority",
+    "election-government-histogram-majority-share",
+    "election-government-histogram-majority-detail",
+    "election-government-histogram-stats",
     "election-union-total",
     "election-government-histogram",
     "election-government-histogram-context",
@@ -244,7 +298,22 @@ function buildDocument(publicationBase, statusSettled) {
     },
   });
 
-  return {
+  const body = new StubElement("body");
+  const governmentBar = elements.get("election-government-bar");
+  const oppositionBar = elements.get("election-opposition-bar");
+  governmentBar.setAttribute("data-zone", "government");
+  governmentBar.className = "eg-bar";
+  oppositionBar.setAttribute("data-zone", "opposition");
+  oppositionBar.className = "eg-bar";
+  body.appendChild(governmentBar);
+  body.appendChild(oppositionBar);
+
+  const api = {
+    body,
+    elementFromPoint() {
+      const target = api._dropZone || "government";
+      return target === "opposition" ? oppositionBar : governmentBar;
+    },
     getElementById(id) {
       return elements.has(id) ? elements.get(id) : null;
     },
@@ -256,6 +325,8 @@ function buildDocument(publicationBase, statusSettled) {
     },
     _elements: elements,
   };
+  api._dropZone = null;
+  return api;
 }
 
 function findPartyAction(host, party, action) {
@@ -266,20 +337,51 @@ function findPartyAction(host, party, action) {
   if (nested) return nested;
   // Compatibility with the first builder implementation, whose controls
   // were direct children of each zone and had no data-action attribute.
-  return host.children.find((child) => child.getAttribute("data-party") === party) || null;
+  const direct = host.children.find((child) => child.getAttribute("data-party") === party) || null;
+  if (direct) return direct;
+  // Current production UI uses the coloured bar segment itself as the
+  // pointer-draggable control.  The old button path above remains available
+  // when an explicitly supplied website checkout still exposes it.
+  return host.querySelector('.eg-bar__segment[data-party="' + party + '"]');
 }
 
-function clickPartyAction(host, party, action) {
+function clickPartyAction(document, host, party, action) {
   const button = findPartyAction(host, party, action);
   if (!button) throw new Error("Could not find coalition button for " + party + " (" + action + ")");
   if (button.disabled) throw new Error("Coalition button is unexpectedly disabled for " + party);
-  if (!(button._listeners.click || []).length) throw new Error("Coalition button has no click handler for " + party);
-  button.dispatchEvent({ type: "click", target: button });
+  if ((button._listeners.click || []).length) {
+    button.dispatchEvent({ type: "click", target: button });
+    return;
+  }
+  if (!(button._listeners.pointerdown || []).length) {
+    throw new Error("Coalition button has no click or pointer handler for " + party);
+  }
+  const destination = action === "pool" ? "opposition" : "government";
+  // The deployed builder has one pointer-drag path.  A deterministic hit-test
+  // target lets this harness exercise that path without jsdom or a substitute
+  // website implementation.
+  button.dispatchEvent({
+    type: "pointerdown", target: button, button: 0, pointerType: "mouse",
+    pointerId: 1, clientX: 10, clientY: 10, cancelable: false,
+  });
+  document._dropZone = destination;
+  button.dispatchEvent({
+    type: "pointermove", target: button, button: 0, pointerType: "mouse",
+    pointerId: 1, clientX: 90, clientY: 10, cancelable: false,
+  });
+  button.dispatchEvent({
+    type: "pointerup", target: button, button: 0, pointerType: "mouse",
+    pointerId: 1, clientX: 90, clientY: 10, cancelable: false,
+  });
+  document._dropZone = null;
 }
 
 function coalitionSnapshot(document) {
   const section = document._elements.get("election-government-builder");
-  const government = document._elements.get("election-government-parties");
+  const legacyGovernment = document._elements.get("election-government-parties");
+  const government = legacyGovernment && legacyGovernment.children.length
+    ? legacyGovernment
+    : document._elements.get("election-government-bar");
   const support = document._elements.get("election-support-parties");
   const empty = document._elements.get("election-government-empty");
   const results = document._elements.get("election-government-results");
@@ -316,7 +418,11 @@ function coalitionSnapshot(document) {
     support_hidden: Boolean(!withSupport || withSupport.hidden),
     government_buttons: describeLegacyButtons(government),
     support_buttons: describeLegacyButtons(support),
-    pool_tiles: describeZone(document._elements.get("election-available-parties")),
+    pool_tiles: describeZone(
+      document._elements.get("election-available-parties")?.children.length
+        ? document._elements.get("election-available-parties")
+        : document._elements.get("election-opposition-bar")
+    ),
     government_tiles: describeZone(government),
     support_tiles: describeZone(support),
     alone_mask: alone ? alone.getAttribute("data-coalition-mask") : null,
@@ -330,7 +436,9 @@ function coalitionSnapshot(document) {
     histogram_hidden: Boolean(!histogram || histogram.hidden),
     histogram_mask: histogram ? histogram.getAttribute("data-coalition-mask") : null,
     histogram_total_count: histogram ? histogram.getAttribute("data-total-count") : null,
-    histogram_sample_count: histogram ? histogram.getAttribute("data-sample-count") : null,
+    histogram_sample_count: histogram
+      ? (histogram.getAttribute("data-sample-count") || histogram.getAttribute("data-total-count"))
+      : null,
     histogram_min_seats: histogram ? histogram.getAttribute("data-min-seats") : null,
     histogram_max_seats: histogram ? histogram.getAttribute("data-max-seats") : null,
     histogram_context: document._elements.get("election-government-histogram-context")?.textContent || "",
@@ -425,6 +533,10 @@ async function main() {
     String,
     Math,
     console,
+    setTimeout,
+    clearTimeout,
+    requestAnimationFrame: (callback) => { callback(); return 1; },
+    cancelAnimationFrame: () => {},
   };
   sandbox.globalThis = sandbox;
   sandbox.window = sandbox;
@@ -445,11 +557,15 @@ async function main() {
   let builderGovernment = null;
   let builderWithSupport = null;
   if (builderInitial.available) {
+    const currentPartyHost = () => {
+      const available = document._elements.get("election-available-parties");
+      return available.children.length ? available : document._elements.get("election-opposition-bar");
+    };
     for (const party of ["M", "KD", "SD"]) {
-      clickPartyAction(document._elements.get("election-available-parties"), party, "government");
+      clickPartyAction(document, currentPartyHost(), party, "government");
     }
     builderGovernment = coalitionSnapshot(document);
-    clickPartyAction(document._elements.get("election-available-parties"), "L", "support");
+    clickPartyAction(document, currentPartyHost(), "L", "support");
     builderWithSupport = coalitionSnapshot(document);
   }
 

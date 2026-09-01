@@ -384,6 +384,58 @@ class ForecastHistoryTests(unittest.TestCase):
         self.assertEqual(current["samples"], 4)
         self.assertEqual(current["provenance"], "current_production")
 
+    def test_latest_result_replaces_cached_official_point(self) -> None:
+        """A certified rerun must replace, rather than reuse, the cached latest point."""
+        votes, seats = self._matrices()
+
+        def runner(*, as_of: str, election_date: str, samples: int, seed: int):
+            return SimpleNamespace(
+                vote_shares_matrix=votes,
+                seats_matrix=seats,
+                manifest={"source_git_commit": "f" * 40},
+            )
+
+        latest = SimpleNamespace(
+            vote_shares_matrix=votes,
+            seats_matrix=seats,
+            summary=SimpleNamespace(as_of="2026-05-24"),
+            manifest={"source_git_commit": "f" * 40},
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "polls.csv"
+            self._poll_csv(path)
+            initial = build_history(
+                dates=["2026-05-23", "2026-05-24"],
+                poll_file=path,
+                samples=4,
+                production_latest_samples=4,
+                simulation_runner=runner,
+                model_commit="f" * 40,
+                source_worktree_clean=True,
+            )
+            replaced = build_history(
+                dates=["2026-05-23", "2026-05-24"],
+                poll_file=path,
+                samples=4,
+                existing_payload=initial,
+                latest_result=latest,
+                production_latest_samples=4,
+                simulation_runner=lambda **kwargs: self.fail("cached point must not be rerun"),
+                production_metadata={
+                    "publication_generation": "latest-generation",
+                    "deterministic_payload_sha256": "a" * 64,
+                    "generated_at_utc": "2026-05-24T12:00:00+00:00",
+                },
+                model_commit="f" * 40,
+                source_worktree_clean=True,
+            )
+        current = next(point for point in replaced["series"] if point["date"] == "2026-05-24")
+        self.assertEqual(current["publication_generation"], "latest-generation")
+        self.assertEqual(
+            current["groups"],
+            build_groups_from_matrices(votes, seats),
+        )
+
     def test_default_runner_requests_production_draw_count_only_for_latest_date(self) -> None:
         votes, seats = self._matrices()
         calls: list[tuple[str, int]] = []

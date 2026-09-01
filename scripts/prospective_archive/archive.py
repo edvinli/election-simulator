@@ -37,6 +37,7 @@ from scripts.simulator.reproducibility import (
     compute_dict_sha256,
     require_resolvable_source_commit,
 )
+from scripts.forecast_history.contract import build_groups_from_matrices
 
 
 from scripts.vote_share_calibration.election_noise_b import (
@@ -195,6 +196,8 @@ def build_snapshot(
     generated_at_utc: str | None = None,
     canonical_artifact_path: Path | str | None = None,
     canonical_payload_hash_path: Path | str | None = None,
+    allow_duplicate_payload: bool = False,
+    duplicate_payload_sequence: int = 0,
 ) -> dict[str, Any]:
     """Build a versioned compact snapshot from an already-run simulation."""
     summary = _summary_from_result(result)
@@ -222,10 +225,32 @@ def build_snapshot(
     require_resolvable_source_commit(manifest)
 
     vote_dists, seat_dists = _party_distribution_payload(result)
-    identity = _archive_identity(manifest, payload_hash)
+    information_set_identity = _archive_identity(manifest, payload_hash)
+    # A scheduled daily publication or an explicitly forced rerun may produce
+    # bit-identical draws (the seed and inputs are intentionally frozen).  The
+    # default archive API still refuses duplicate identities, while the
+    # production boundary opts in to retaining that immutable generation by
+    # salting only the archive identity with its publication timestamp.  The
+    # deterministic payload itself remains unchanged and is still linked in
+    # every artifact.
+    if duplicate_payload_sequence < 0:
+        raise ValueError("duplicate_payload_sequence must be non-negative")
+    identity = (
+        _canonical_json_hash(
+            {
+                "information_set_identity": information_set_identity,
+                "generated_at_utc": generated,
+                "duplicate_payload_sequence": int(duplicate_payload_sequence),
+            }
+        )
+        if allow_duplicate_payload
+        else information_set_identity
+    )
     snapshot = {
         "schema_version": ARCHIVE_SCHEMA_VERSION,
         "snapshot_id": identity,
+        "information_set_id": information_set_identity,
+        "duplicate_payload_allowed": bool(allow_duplicate_payload),
         # One canonical generation id, shared verbatim with the static
         # publication version directory built from this snapshot.
         "generation_id": build_generation_id(generated, identity),
@@ -284,13 +309,20 @@ def build_snapshot(
             for party in PARLIAMENTARY_PARTIES_8
         },
         "group_probabilities": summary["blocs"],
+        # Preserve compact coalition summaries computed from the original
+        # draw matrices.  This is the only safe input for a prospective chart
+        # point; marginal party quantiles cannot recover coalition intervals.
+        "groups": build_groups_from_matrices(
+            result.vote_shares_matrix,
+            result.seats_matrix,
+        ),
         "deterministic_payload_sha256": payload_hash,
         "canonical_artifact_sha256": canonical_hash,
         "canonical_artifact_path": str(canonical_path),
         "rest_semantics": "REST is aggregate vote mass for modeled-as-ineligible parties; it cannot independently qualify or receive seats.",
     }
     # Ensure identity does not silently change when the schema evolves.
-    snapshot["snapshot_id"] = _archive_identity(manifest, payload_hash)
+    snapshot["snapshot_id"] = identity
     return snapshot
 
 
@@ -308,9 +340,11 @@ def _load_index(path: Path) -> dict[str, Any]:
 def _validate_index(index: Mapping[str, Any]) -> None:
     """Validate append-only index integrity.
 
-    Snapshot identity, deterministic payload, generation id, and stored path
-    must each be unique.  ``snapshot_date`` is deliberately *not* unique: the
-    archive supports several immutable forecasts on the same calendar day.
+    Snapshot identity, generation id, and stored path must each be unique.
+    Deterministic payload hashes are unique for ordinary entries; a production
+    entry may explicitly mark a retained duplicate payload.  ``snapshot_date``
+    is deliberately *not* unique: the archive supports several immutable
+    forecasts on the same calendar day.
     """
 
     seen_id: set[str] = set()
@@ -326,7 +360,12 @@ def _validate_index(index: Mapping[str, Any]) -> None:
         stored_path = str(row.get("path", ""))
         if not identity or identity in seen_id:
             raise ValueError("Archive index contains duplicate or missing snapshot identity")
-        if not payload_hash or payload_hash in seen_hash:
+        if not payload_hash:
+            raise ValueError("Archive index contains duplicate or missing payload hash")
+        # Legacy/default entries remain unique.  A production entry may carry
+        # an explicit opt-in marker because an unchanged seeded simulation is
+        # still a real immutable publication generation (daily/force runs).
+        if payload_hash in seen_hash and row.get("duplicate_payload_allowed") is not True:
             raise ValueError("Archive index contains duplicate or missing payload hash")
         if not snapshot_date:
             raise ValueError("Archive index contains a missing snapshot date")
@@ -352,18 +391,33 @@ def write_snapshot(
     generated_at_utc: str | None = None,
     canonical_artifact_path: Path | str | None = None,
     canonical_payload_hash_path: Path | str | None = None,
+    allow_duplicate_payload: bool = False,
 ) -> tuple[Path, Path, dict[str, Any]]:
     """Atomically write one snapshot and append its validated manifest entry."""
     root = Path(archive_dir)
+    index_path = root / "index.json"
+    index = _load_index(index_path)
+    _validate_index(index)
+    duplicate_sequence = 0
+    if allow_duplicate_payload:
+        # The sequence is derived solely from the append-only index, so even
+        # same-second manual retries receive a distinct deterministic identity
+        # and generation while generation/path collisions remain impossible to
+        # overwrite silently.
+        duplicate_sequence = sum(
+            1
+            for row in index["snapshots"]
+            if row.get("deterministic_payload_sha256")
+            == build_canonical_summary_dict(result)["deterministic_payload_sha256"]
+        )
     snapshot = build_snapshot(
         result,
         generated_at_utc=generated_at_utc,
         canonical_artifact_path=canonical_artifact_path,
         canonical_payload_hash_path=canonical_payload_hash_path,
+        allow_duplicate_payload=allow_duplicate_payload,
+        duplicate_payload_sequence=duplicate_sequence,
     )
-    index_path = root / "index.json"
-    index = _load_index(index_path)
-    _validate_index(index)
     existing_ids = {row["snapshot_id"] for row in index["snapshots"]}
     existing_hashes = {row["deterministic_payload_sha256"] for row in index["snapshots"]}
     existing_generations = {
@@ -371,7 +425,10 @@ def write_snapshot(
     }
     if snapshot["snapshot_id"] in existing_ids:
         raise SnapshotCollisionError("A forecast with this information-set identity is already archived")
-    if snapshot["deterministic_payload_sha256"] in existing_hashes:
+    if (
+        snapshot["deterministic_payload_sha256"] in existing_hashes
+        and not allow_duplicate_payload
+    ):
         raise SnapshotCollisionError("A forecast with this deterministic payload is already archived")
     if snapshot["generation_id"] in existing_generations:
         raise SnapshotCollisionError("A forecast with this generation id is already archived")
@@ -391,6 +448,7 @@ def write_snapshot(
         "model_version": snapshot["model"]["version"],
         "seed": snapshot["seed"],
         "deterministic_payload_sha256": snapshot["deterministic_payload_sha256"],
+        "duplicate_payload_allowed": bool(allow_duplicate_payload),
         "canonical_artifact_sha256": snapshot["canonical_artifact_sha256"],
         "snapshot_file_sha256": compute_file_sha256(snapshot_path),
         "path": str(snapshot_path.relative_to(root)),
