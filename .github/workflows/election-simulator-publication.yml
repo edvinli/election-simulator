@@ -140,6 +140,7 @@ jobs:
             tests.test_site_publisher \
             tests.test_production_freeze \
             tests.test_publication_freeze \
+            tests.test_polling_acquisition \
             tests.test_election_automation
 
       - name: Set up Node and Jekyll
@@ -304,6 +305,7 @@ jobs:
             tests.test_site_publisher \
             tests.test_production_freeze \
             tests.test_publication_freeze \
+            tests.test_polling_acquisition \
             tests.test_election_automation
 
       - name: Set up Node and Jekyll

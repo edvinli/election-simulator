@@ -41,6 +41,7 @@ from scripts.pollofpolls.__main__ import (
     PollingValidationError,
     refresh_snapshot,
 )
+from scripts.pollofpolls.acquire import AcquisitionError
 from scripts.publication_pipeline.pipeline import (
     PipelineRun,
     run_publication_pipeline,
@@ -106,6 +107,7 @@ class PollingRefresh:
     installed: bool = False
     source_provenance: str = SOURCE_PROVENANCE_DIRECT_LIVE
     staged_root: str | None = None
+    acquisition_diagnostics: list[dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -119,6 +121,7 @@ class PollingRefresh:
             "installed": self.installed,
             "source_provenance": self.source_provenance,
             "staged_root": self.staged_root,
+            "acquisition_diagnostics": list(self.acquisition_diagnostics),
         }
 
 
@@ -174,12 +177,15 @@ class AutomationResult:
     pipeline: PipelineRun | None = None
     history: dict[str, Any] | None = None
     website: dict[str, Any] | None = None
+    acquisition_diagnostics: list[dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "status": self.status,
             "summary": self.summary.render(),
             "polling": self.polling.to_dict() if self.polling else None,
+            "acquisition_diagnostics": list(self.acquisition_diagnostics)
+            or (self.polling.to_dict().get("acquisition_diagnostics", []) if self.polling else []),
             "pipeline": self.pipeline.to_dict() if self.pipeline else None,
             "history": {
                 "deterministic_content_sha256": self.history.get("deterministic_content_sha256"),
@@ -463,6 +469,17 @@ def _source_provenance(
         for message in lowered
     ):
         return SOURCE_PROVENANCE_VERIFIED_FALLBACK
+    diagnostics = refreshed.get("acquisition_diagnostics")
+    if isinstance(diagnostics, Sequence):
+        methods = {
+            str(diagnostic.get("retrieval_method", "")).lower()
+            for diagnostic in diagnostics
+            if isinstance(diagnostic, Mapping)
+        }
+        if any("wayback" in method or "archive" in method for method in methods):
+            return SOURCE_PROVENANCE_VERIFIED_FALLBACK
+        if any(bool(diagnostic.get("retained_previous")) for diagnostic in diagnostics if isinstance(diagnostic, Mapping)):
+            return SOURCE_PROVENANCE_VERIFIED_FALLBACK
     manifest = refreshed.get("manifest")
     if isinstance(manifest, Mapping):
         sources = manifest.get("sources")
@@ -560,11 +577,15 @@ def refresh_polling_snapshot(
             raise
         new_hash = model_relevant_snapshot_sha256(staging_root)
         messages = list(refreshed.get("messages", []))
+        acquisition_diagnostics = list(refreshed.get("acquisition_diagnostics", []))
         source_provenance = _source_provenance(refreshed, messages)
         unavailable = any(
             "retained verified raw file" in message
-            or "first-party host unavailable" in message
             for message in messages
+        ) or any(
+            bool(diagnostic.get("retained_previous"))
+            for diagnostic in acquisition_diagnostics
+            if isinstance(diagnostic, Mapping)
         )
         status = (
             "SOURCE_UNAVAILABLE_USING_VERIFIED_SNAPSHOT"
@@ -617,6 +638,7 @@ def refresh_polling_snapshot(
             installed=installed,
             source_provenance=source_provenance,
             staged_root=str(staging_root) if staging_directory is not None else None,
+            acquisition_diagnostics=acquisition_diagnostics,
         )
 
 
@@ -1607,7 +1629,13 @@ def run_automation(
     except Exception as exc:  # noqa: BLE001 - CLI converts all gates to one summary
         summary.deployment_status = "FAILED"
         summary.failure = str(exc)
-        return AutomationResult(status="FAILED", summary=summary, polling=polling)
+        diagnostics = exc.diagnostics if isinstance(exc, AcquisitionError) else []
+        return AutomationResult(
+            status="FAILED",
+            summary=summary,
+            polling=polling,
+            acquisition_diagnostics=list(diagnostics),
+        )
 
 
 def build_parser() -> argparse.ArgumentParser:

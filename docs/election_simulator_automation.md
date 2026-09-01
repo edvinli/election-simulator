@@ -45,6 +45,23 @@ relevant Git roots and clean statuses before acquisition. The publishing job
 also configures both fresh checkouts with the non-secret `github-actions[bot]`
 identity before any polling or publication commit is possible.
 
+Before a response is accepted, acquisition performs a source-kind semantic
+probe. The homepage must contain a parseable latest-polls table; the canonical
+timeseries must contain all required party columns; and every party chart must
+contain parseable `date` and `pofp` observations (and parseable displayed chart
+values). The two SwedishPolls CSVs are also checked for their required headers
+and at least one row. A 200 response that is a block or error page therefore
+fails the same gate as a transport error and is tried against the configured
+preserved response before any raw file is written. If both attempts fail, a
+hash-verified and semantically rechecked previous raw file is retained. The
+refresh result and raw retrieval manifest expose payload-free
+`acquisition_diagnostics` for each attempt: source key, method, status, final
+host/path, content type, byte length, semantic PASS/FAIL, and whether the
+previous file was retained. These diagnostics are safe to print in a probe run
+and never include response bodies. A semantic failure is scoped to that source;
+the Pollofpolls host circuit breaker remains reserved for transport/HTTP
+failures, so later source keys still receive their own live attempt.
+
 ## Required GitHub setup
 
 Enable Actions for the simulator repository and leave the workflow disabled
