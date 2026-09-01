@@ -446,6 +446,10 @@ def refresh_snapshot(
 
     return {
         "manifest": manifest,
+        # Probe callers can inspect response shape and parser outcomes without
+        # reading or logging any source body.  The same records are persisted
+        # in the raw retrieval manifest for a successful staged refresh.
+        "acquisition_diagnostics": manifest.get("acquisition_diagnostics", []),
         "messages": messages,
         "timeseries": timeseries,
         "individual": individual,
@@ -471,6 +475,11 @@ def main() -> int:
         )
     except AcquisitionError as exc:
         print(f"Pollofpolls acquisition failed: {exc}")
+        for diagnostic in exc.diagnostics:
+            print(
+                "- acquisition diagnostic: "
+                + json.dumps(diagnostic, ensure_ascii=False, sort_keys=True)
+            )
         return 2
     except PollingValidationError as exc:
         print(f"Pollofpolls validation failed: {exc}")
@@ -478,6 +487,11 @@ def main() -> int:
 
     for message in result["messages"]:
         print(f"- {message}")
+    for diagnostic in result.get("acquisition_diagnostics", []):
+        print(
+            "- acquisition diagnostic: "
+            + json.dumps(diagnostic, ensure_ascii=False, sort_keys=True)
+        )
     summary = result["summary"]
     report = result["validation_report"]
 
