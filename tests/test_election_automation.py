@@ -110,6 +110,19 @@ class ElectionAutomationTests(unittest.TestCase):
             },
         )
 
+    @classmethod
+    def _projection_runner(cls, **kwargs) -> SimpleNamespace:
+        """Return cheap joint draws through the dedicated projection seam."""
+
+        votes, seats = cls._matrices()
+        samples = int(kwargs["samples"])
+        repeats = (samples + len(votes) - 1) // len(votes)
+        return SimpleNamespace(
+            summary=SimpleNamespace(as_of=kwargs["as_of"]),
+            vote_shares_matrix=np.tile(votes, (repeats, 1))[:samples],
+            seats_matrix=np.tile(seats, (repeats, 1))[:samples],
+        )
+
     @staticmethod
     def _init_git(root: Path) -> None:
         subprocess.run(["git", "init", "-q"], cwd=root, check=True)
@@ -386,6 +399,12 @@ class ElectionAutomationTests(unittest.TestCase):
                 production_result.manifest["git_commit"] = commit
                 return production_result
 
+            projection_calls: list[int] = []
+
+            def projection_runner(**kwargs):
+                projection_calls.append(int(kwargs["dynamics_horizon_days"]))
+                return self._projection_runner(**kwargs)
+
             with patch(
                 "scripts.publication_pipeline.pipeline.DEFAULT_PROCESSED_ROOT",
                 source / "data/processed",
@@ -399,6 +418,7 @@ class ElectionAutomationTests(unittest.TestCase):
                     commit=True,
                     refresh_fn=refresh,
                     simulation_runner=runner,
+                    projection_runner=projection_runner,
                     website_check_fn=lambda _: {"status": "PASS"},
                     generated_at_utc="2026-09-05T06:00:00+00:00",
                 )
@@ -407,6 +427,7 @@ class ElectionAutomationTests(unittest.TestCase):
             self.assertEqual(result.summary.run_type, "POLL_CHANGE")
             self.assertEqual(result.summary.simulation_samples, 100_000)
             self.assertEqual(calls, [100_000])
+            self.assertEqual(projection_calls, list(range(7, -1, -1)))
             current = next(
                 point for point in result.history["series"]
                 if point["provenance"] == "current_production"
@@ -435,6 +456,18 @@ class ElectionAutomationTests(unittest.TestCase):
                 (source / "files/election-simulator/current.json").read_bytes(),
                 (site / "files/election-simulator/current.json").read_bytes(),
             )
+            source_history_path = (
+                source / "files/election-simulator/history/coalition-timeseries.json"
+            )
+            site_history_path = (
+                site / "files/election-simulator/history/coalition-timeseries.json"
+            )
+            source_history = json.loads(source_history_path.read_text(encoding="utf-8"))
+            site_history = json.loads(site_history_path.read_text(encoding="utf-8"))
+            self.assertIn("future_projection", result.history)
+            self.assertEqual(source_history["future_projection"], result.history["future_projection"])
+            self.assertEqual(site_history["future_projection"], result.history["future_projection"])
+            self.assertEqual(source_history_path.read_bytes(), site_history_path.read_bytes())
 
     def test_changed_dry_run_runs_full_pipeline_once_without_dirtying_live_repos(self) -> None:
         """Dry-run consumes staged changed inputs and leaves both live repos clean."""
@@ -463,6 +496,7 @@ class ElectionAutomationTests(unittest.TestCase):
                 automation_enabled="true",
                 refresh_fn=refresh,
                 simulation_runner=runner,
+                projection_runner=self._projection_runner,
                 website_check_fn=lambda _: {"status": "PASS"},
                 mode="dry_run",
                 generated_at_utc="2026-09-05T08:00:00+00:00",
@@ -528,6 +562,7 @@ class ElectionAutomationTests(unittest.TestCase):
                 mode="dry_run",
                 refresh_fn=lambda raw, processed, **kwargs: {"messages": []},
                 simulation_runner=runner,
+                projection_runner=self._projection_runner,
                 website_check_fn=lambda _: {"status": "PASS"},
                 generated_at_utc="2026-09-05T04:00:00+00:00",
             )
@@ -589,6 +624,7 @@ class ElectionAutomationTests(unittest.TestCase):
                     commit=True,
                     refresh_fn=refresh,
                     simulation_runner=runner,
+                    projection_runner=self._projection_runner,
                     website_check_fn=failed_website_check,
                     generated_at_utc="2026-09-05T06:00:00+00:00",
                 )
@@ -639,6 +675,7 @@ class ElectionAutomationTests(unittest.TestCase):
                     automation_enabled="true",
                     refresh_fn=refresh,
                     simulation_runner=runner,
+                    projection_runner=self._projection_runner,
                     website_check_fn=lambda _: {"status": "PASS"},
                     generated_at_utc="2026-09-05T04:00:00+00:00",
                 )
@@ -1158,6 +1195,7 @@ time.sleep(60)
                     commit=True,
                     refresh_fn=refresh,
                     simulation_runner=succeeding_runner,
+                    projection_runner=self._projection_runner,
                     website_check_fn=lambda _: {"status": "PASS"},
                     generated_at_utc="2026-09-05T08:05:00+00:00",
                 )
@@ -1193,6 +1231,7 @@ time.sleep(60)
                     site_repo=site,
                     forecast_as_of="2026-09-05",
                     simulation_runner=runner,
+                    projection_runner=self._projection_runner,
                     website_check_fn=lambda _: {"status": "PASS"},
                     generated_at_utc="2026-09-05T09:00:00+00:00",
                     commit=True,
