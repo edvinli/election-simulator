@@ -19,7 +19,9 @@ from .contract import (
 
 _FUTURE_PROJECTION_EXPORTS = {
     "DEFAULT_PROJECTION_SAMPLES",
+    "ELECTION_NOISE_RNG_POLICY",
     "build_future_projection",
+    "election_day_label_sv",
     "projection_tooltip_sv",
     "update_history_with_future_projection",
     "validate_future_projection_contract",
@@ -48,6 +50,7 @@ __all__ = [
     "DEFAULT_HISTORY_OUTPUT",
     "DEFAULT_HISTORY_SAMPLES",
     "DEFAULT_PROJECTION_SAMPLES",
+    "ELECTION_NOISE_RNG_POLICY",
     "HISTORY_CAP_DATE",
     "HISTORY_DYNAMICS_CAP_DAYS",
     "HISTORY_PARTY_ORDER",
@@ -62,6 +65,7 @@ __all__ = [
     "coalition_seat_draws",
     "coalition_vote_draws",
     "deterministic_history_sha256",
+    "election_day_label_sv",
     "generate_history",
     "generate_history_artifact",
     "filter_swedishpolls_as_of",

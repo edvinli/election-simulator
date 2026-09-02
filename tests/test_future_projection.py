@@ -12,13 +12,16 @@ import numpy as np
 
 from scripts.forecast_history.contract import DEFAULT_COALITIONS, build_groups_from_matrices
 from scripts.forecast_history.future_projection import (
+    ELECTION_NOISE_RNG_POLICY,
     PROJECTION_ASSUMPTION,
     build_future_projection,
+    election_day_label_sv,
     projection_tooltip_sv,
     validate_future_projection_contract,
 )
 from scripts.forecast_history.projection_simulator import simulate_conditional_projection
 from scripts.simulator.engine import simulate_election
+from scripts.vote_share_calibration.national_engine import generate_national_vote_shares
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -76,7 +79,7 @@ class FutureProjectionContractTests(unittest.TestCase):
             samples=4,
             seed=7,
             coalitions=DEFAULT_COALITIONS,
-            simulation_runner=runner,
+            projection_runner=runner,
         )
         history = {
             "election_date": "2026-09-13",
@@ -97,6 +100,7 @@ class FutureProjectionContractTests(unittest.TestCase):
         )
         self.assertTrue(all(call["election_date"] == "2026-09-13" for call in calls))
         self.assertEqual(projection["assumption"], PROJECTION_ASSUMPTION)
+        self.assertEqual(projection["election_noise_rng_policy"], ELECTION_NOISE_RNG_POLICY)
         self.assertFalse(projection["future_measurements_known"])
 
     def test_projection_dates_are_strictly_future_daily_and_end_on_election_day(self) -> None:
@@ -139,6 +143,7 @@ class FutureProjectionContractTests(unittest.TestCase):
         self.assertEqual(rendering["future_region"]["end"], "2026-09-13")
         self.assertEqual(rendering["latest_forecast_label"], "Senaste prognos")
         self.assertEqual(rendering["election_day_label"], "Valdag 13 sep")
+        self.assertEqual(rendering["election_day_label"], election_day_label_sv("2026-09-13"))
         self.assertEqual(rendering["legend_label"], "Framåtblickande projektion")
         self.assertEqual(rendering["units"], ["vote", "seats"])
         self.assertFalse(rendering["poll_observations_in_future"])
@@ -169,6 +174,39 @@ class FutureProjectionContractTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "remaining horizon"):
             validate_future_projection_contract(bad_horizon)
 
+    def test_validator_rejects_historical_poll_after_projection_origin(self) -> None:
+        history, _, _, _, _ = self._fixture()
+        history["polls"] = [{"publication_date": "2026-09-03"}]
+        with self.assertRaisesRegex(ValueError, r"history\.polls.*after"):
+            validate_future_projection_contract(history)
+
+    def test_validator_rejects_poll_of_polls_after_projection_origin(self) -> None:
+        history, _, _, _, _ = self._fixture()
+        history["poll_of_polls"] = [{"date": "2026-09-03"}]
+        with self.assertRaisesRegex(ValueError, r"history\.poll_of_polls.*after"):
+            validate_future_projection_contract(history)
+
+    def test_election_day_label_is_derived_from_contract_date(self) -> None:
+        votes, seats = self._matrices()
+        anchor = {
+            "date": "2026-10-03",
+            "samples": 100_000,
+            "provenance": "current_production",
+            "groups": build_groups_from_matrices(votes, seats),
+        }
+        projection = build_future_projection(
+            origin_date="2026-10-03",
+            election_date="2026-10-04",
+            anchor_point=anchor,
+            samples=4,
+            projection_runner=lambda **kwargs: SimpleNamespace(
+                summary=SimpleNamespace(as_of=kwargs["as_of"]),
+                vote_shares_matrix=votes,
+                seats_matrix=seats,
+            ),
+        )
+        self.assertEqual(projection["rendering"]["election_day_label"], "Valdag 4 okt")
+
     def test_election_day_origin_has_no_hypothetical_future_points(self) -> None:
         votes, seats = self._matrices()
         groups = build_groups_from_matrices(votes, seats)
@@ -185,7 +223,7 @@ class FutureProjectionContractTests(unittest.TestCase):
             election_date="2026-09-13",
             anchor_point=anchor,
             samples=4,
-            simulation_runner=lambda **_: self.fail("election day should need no future simulation"),
+            projection_runner=lambda **_: self.fail("election day should need no future simulation"),
         )
         history = {
             "election_date": "2026-09-13",
@@ -230,6 +268,44 @@ class ProjectionScientificParityTests(unittest.TestCase):
             atol=1e-12,
         )
         np.testing.assert_array_equal(projected.seats_matrix, production.seats_matrix)
+        self.assertEqual(
+            projected.diagnostics["election_noise_seed_horizon_days"],
+            horizon,
+        )
+        self.assertEqual(
+            projected.diagnostics["election_noise_rng_policy"],
+            ELECTION_NOISE_RNG_POLICY,
+        )
+
+    def test_election_noise_draws_are_common_across_projection_horizons(self) -> None:
+        natural = simulate_conditional_projection(
+            as_of="2026-09-02",
+            election_date="2026-09-13",
+            dynamics_horizon_days=11,
+            samples=2,
+            seed=12345,
+            data_dir=PROCESSED,
+        )
+        election_day = simulate_conditional_projection(
+            as_of="2026-09-02",
+            election_date="2026-09-13",
+            dynamics_horizon_days=0,
+            samples=2,
+            seed=12345,
+            data_dir=PROCESSED,
+        )
+        self.assertEqual(
+            natural.diagnostics["election_noise_seed"],
+            election_day.diagnostics["election_noise_seed"],
+        )
+        self.assertEqual(
+            natural.diagnostics["election_noise_seed_horizon_days"],
+            11,
+        )
+        self.assertEqual(
+            election_day.diagnostics["election_noise_seed_horizon_days"],
+            11,
+        )
 
     def test_election_day_projection_has_exactly_zero_dynamics(self) -> None:
         projected = simulate_conditional_projection(
@@ -244,6 +320,16 @@ class ProjectionScientificParityTests(unittest.TestCase):
         self.assertEqual(projected.diagnostics["dynamics_eval_horizon"], 0)
         self.assertEqual(projected.diagnostics["eligible_transitions_count"], 0)
         self.assertTrue(np.all(projected.seats_matrix.sum(axis=1) == 349))
+
+        production = generate_national_vote_shares(
+            as_of="2026-09-13",
+            election_date="2026-09-13",
+            samples=2,
+            seed=12345,
+            data_dir=PROCESSED,
+        )
+        self.assertEqual(production.horizon_days, 1)
+        self.assertEqual(projected.diagnostics["dynamics_horizon_days"], 0)
 
 
 if __name__ == "__main__":

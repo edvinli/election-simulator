@@ -1315,6 +1315,8 @@ def run_production_event(
     generated_at_utc: str | None = None,
     seed: int = DEFAULT_SIMULATION_SEED,
     simulation_runner: Callable[..., Any] | None = None,
+    projection_runner: Callable[..., Any] | None = None,
+    history_updater: Callable[..., dict[str, Any]] | None = None,
     website_check_fn: Callable[[Path], dict[str, Any]] | None = None,
     commit: bool = False,
     push: bool = False,
@@ -1410,19 +1412,21 @@ def run_production_event(
         payload_hash = str(run.snapshot["deterministic_payload_sha256"])
         source_commit = str(result.manifest.get("source_git_commit", ""))
         with _timed_stage("history update", stage_callback):
-            history = update_history_with_production_result(
-                existing_history,
-                result,
-                poll_file=processed_root / "pollofpolls" / "swedishpolls_individual_polls.csv",
-                timeseries_file=processed_root / "pollofpolls" / "pollofpolls_timeseries.csv",
-                archive_dir=staged_archive,
-                election_date=election,
-                publication_generation=generation,
-                deterministic_payload_sha256=payload_hash,
-                generated_at_utc=generated,
-                model_commit=source_commit,
-                source_worktree_clean=True,
-            )
+            selected_history_updater = history_updater or update_history_with_production_result
+            history_kwargs = {
+                "poll_file": processed_root / "pollofpolls" / "swedishpolls_individual_polls.csv",
+                "timeseries_file": processed_root / "pollofpolls" / "pollofpolls_timeseries.csv",
+                "archive_dir": staged_archive,
+                "election_date": election,
+                "publication_generation": generation,
+                "deterministic_payload_sha256": payload_hash,
+                "generated_at_utc": generated,
+                "model_commit": source_commit,
+                "source_worktree_clean": True,
+            }
+            if history_updater is not None:
+                history_kwargs["projection_runner"] = projection_runner
+            history = selected_history_updater(existing_history, result, **history_kwargs)
             write_history_json(staged_history, history)
             validate_history_contract(_load_json_object(staged_history))
             # The self-hash in the history payload is checked once more at the
@@ -1537,6 +1541,7 @@ def run_automation(
     website_check_fn: Callable[[Path], dict[str, Any]] | None = None,
     refresh_fn: Callable[..., dict[str, Any]] = refresh_snapshot,
     simulation_runner: Callable[..., Any] | None = None,
+    projection_runner: Callable[..., Any] | None = None,
     generated_at_utc: str | None = None,
     stage_callback: StageCallback | None = None,
 ) -> AutomationResult:
@@ -1714,6 +1719,7 @@ def run_automation(
                         election_date=election,
                         generated_at_utc=generated_at_utc,
                         simulation_runner=simulation_runner,
+                        projection_runner=projection_runner,
                         website_check_fn=website_check_fn,
                         commit=False,
                         push=False,
@@ -1732,6 +1738,7 @@ def run_automation(
                     election_date=election,
                     generated_at_utc=generated_at_utc,
                     simulation_runner=simulation_runner,
+                    projection_runner=projection_runner,
                     website_check_fn=website_check_fn,
                     commit=effective_commit,
                     push=effective_push,

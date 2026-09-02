@@ -17,7 +17,13 @@ For every projected calendar date:
 - the normal geographic projection, exact controlled rounding and mandate allocation remain active;
 - coalition vote and seat quantiles are computed from the same joint draw matrices.
 
-The election-day point therefore has **zero Dynamics v2 horizon**, but still contains current polling-state uncertainty and ElectionNoise. It is not a deterministic point estimate.
+The election-day point therefore has **zero Dynamics v2 horizon**, but still contains current polling-state uncertainty and ElectionNoise. It is not a deterministic point estimate. This is a deliberate projection-only boundary condition: canonical production uses `max(1, election_date - as_of)` and therefore floors its natural horizon at one day, including on election day. The frozen `simulate_election()` entrypoint is unchanged.
+
+### ElectionNoise random-number policy
+
+All dates in one fan use **common ElectionNoise draws**. The ElectionNoise seed is derived from the frozen origin and its natural production horizon, not from each projected date's shrinking Dynamics horizon. OpinionState draws are already common for the frozen origin; only Dynamics changes with the displayed remaining horizon. This prevents day-to-day fan movement from being dominated by independently reseeded election-error Monte Carlo draws.
+
+At the natural horizon, the seed and complete projection path remain exactly equal to canonical production. The published `election_noise_rng_policy` value is `common_natural_horizon_seed`, and contract/scientific-parity tests guard both the common-draw policy and natural-horizon parity.
 
 ## Contract
 
@@ -46,7 +52,7 @@ A consumer should render the future region separately from historical observatio
 - x-axis maximum: election day;
 - future background: very light neutral shading;
 - vertical boundary at the origin labelled **Senaste prognos**;
-- election-day line labelled **Valdag 13 sep**;
+- election-day line labelled dynamically from `election_date` (for example **Valdag 13 sep**);
 - historical forecast medians remain solid;
 - future medians are dashed/lighter;
 - future 50% and 90% bands are visually lighter than historical bands;
@@ -73,5 +79,6 @@ This makes the new path a presentation-oriented conditional re-evaluation of the
 - non-monotone or invalid vote/seat quantiles;
 - an anchor that differs from the certified current history point;
 - future poll/PoP rendering flags set to true;
+- any actual `polls` or `poll_of_polls` observation dated after the projection origin;
 - missing vote or seat rendering support;
 - changed disclosure or boundary labels.

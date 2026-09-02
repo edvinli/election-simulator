@@ -42,6 +42,9 @@ from scripts.vote_share_calibration.election_noise_b import (
 )
 
 
+ELECTION_NOISE_RNG_POLICY = "common_natural_horizon_seed"
+
+
 @dataclass(frozen=True)
 class ProjectionSimulationResult:
     """Only the joint matrices needed by the history publication."""
@@ -120,7 +123,14 @@ def _sample_national_shares(
         elections_file=data_dir / "elections" / "riksdag_election_results.csv",
     )
     fit = fit_election_noise_b(training_pool.centered_residuals_matrix)
-    noise_seed = derive_election_noise_b_seed(seed, as_of_date, dynamics_horizon_days)
+    # ElectionNoise is a single election-day error for the frozen state, not a
+    # new shock to redraw for every displayed calendar date.  Seed it from the
+    # natural production horizon for every point in one fan.  At that natural
+    # horizon this is byte-for-byte the canonical production seed, while the
+    # common draws make movement across projected dates attributable to the
+    # shrinking Dynamics component rather than ElectionNoise reseeding.
+    natural_horizon_days = max(1, (election_date - as_of_date).days)
+    noise_seed = derive_election_noise_b_seed(seed, as_of_date, natural_horizon_days)
     residuals = draw_election_noise_b(fit, samples, np.random.default_rng(noise_seed))
     national, lambdas = apply_batch_simplex_transfer(base_comp, residuals, eps=MIN_SHARE_PCT)
     national = national / np.sum(national, axis=1, keepdims=True)
@@ -130,6 +140,8 @@ def _sample_national_shares(
         "dynamics_eval_horizon": eval_h,
         "eligible_transitions_count": eligible_count,
         "election_noise_model": "pp_lw_gaussian",
+        "election_noise_rng_policy": ELECTION_NOISE_RNG_POLICY,
+        "election_noise_seed_horizon_days": natural_horizon_days,
         "election_noise_seed": noise_seed,
         "mean_lambda": float(np.mean(lambdas)),
     }
@@ -232,4 +244,8 @@ def simulate_conditional_projection(
     )
 
 
-__all__ = ["ProjectionSimulationResult", "simulate_conditional_projection"]
+__all__ = [
+    "ELECTION_NOISE_RNG_POLICY",
+    "ProjectionSimulationResult",
+    "simulate_conditional_projection",
+]

@@ -1,17 +1,17 @@
 """Compatibility facade for scheduled ElectionSimulator publication orchestration.
 
-The historical automation implementation is preserved byte-for-byte in
+The historical automation implementation lives in
 ``scripts.election_automation_base``. This facade changes exactly one production
-boundary: real simulator runs use the additive future-projection history updater.
-Injected simulation runners retain the historical updater so the existing
-orchestration test harness remains isolated from extra Monte Carlo work.
+boundary: every publication uses the additive future-projection history updater.
+Production simulation and projection simulation have independent injectable
+runners so tests do not change publication behavior when they replace either.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
 import sys
-from typing import Any
+from typing import Any, Callable
 
 from scripts import election_automation_base as _base
 from scripts.forecast_history.future_projection import (
@@ -19,13 +19,14 @@ from scripts.forecast_history.future_projection import (
 )
 
 
-_original_history_update = _base.update_history_with_production_result
 _original_run_production_event = _base.run_production_event
 
 
 def _history_update_with_projection(
     existing_payload: Any,
     production_result: Any,
+    *,
+    projection_runner: Callable[..., Any] | None = None,
     **kwargs: Any,
 ):
     """Attach the conditional fan using the exact processed input root in use."""
@@ -39,24 +40,16 @@ def _history_update_with_projection(
         existing_payload,
         production_result,
         projection_data_dir=projection_data_dir,
+        projection_runner=projection_runner,
         **kwargs,
     )
 
 
 def _run_production_event_with_projection(*args: Any, **kwargs: Any):
-    """Use the fan for real runs while preserving injected-runner test semantics."""
+    """Attach the fan regardless of how the production simulation is supplied."""
 
-    selected = (
-        _history_update_with_projection
-        if kwargs.get("simulation_runner") is None
-        else _original_history_update
-    )
-    previous = _base.update_history_with_production_result
-    _base.update_history_with_production_result = selected
-    try:
-        return _original_run_production_event(*args, **kwargs)
-    finally:
-        _base.update_history_with_production_result = previous
+    kwargs["history_updater"] = _history_update_with_projection
+    return _original_run_production_event(*args, **kwargs)
 
 
 # Functions defined in election_automation_base resolve globals from that module,

@@ -28,14 +28,13 @@ from .contract import (
     validate_history_contract,
 )
 from .generate import update_history_with_production_result as _update_history_with_production_result
-from .projection_simulator import simulate_conditional_projection
+from .projection_simulator import ELECTION_NOISE_RNG_POLICY, simulate_conditional_projection
 
 
 DEFAULT_PROJECTION_SAMPLES = 10_000
 PROJECTION_ASSUMPTION = "frozen_opinion_state_shrinking_dynamics_horizon"
 PROJECTION_LEGEND_SV = "Framåtblickande projektion"
 LATEST_FORECAST_LABEL_SV = "Senaste prognos"
-ELECTION_DAY_LABEL_SV = "Valdag 13 sep"
 
 _MONTHS_SV = (
     "jan",
@@ -121,6 +120,13 @@ def projection_tooltip_sv(origin_date: str | date) -> str:
     )
 
 
+def election_day_label_sv(election_date: str | date) -> str:
+    """Return the rendering label derived from the artifact's election date."""
+
+    election = _coerce_date(election_date, name="election_date")
+    return f"Valdag {_short_date_sv(election)}"
+
+
 def validate_future_projection_contract(
     history: Mapping[str, Any],
     projection: Mapping[str, Any] | None = None,
@@ -153,6 +159,8 @@ def validate_future_projection_contract(
         raise ValueError("future_projection must freeze the underlying opinion state")
     if value.get("dynamics_horizon_rule") != "election_date_minus_projection_date":
         raise ValueError("future_projection has an unknown dynamics horizon rule")
+    if value.get("election_noise_rng_policy") != ELECTION_NOISE_RNG_POLICY:
+        raise ValueError("future_projection has an unknown ElectionNoise RNG policy")
     if value.get("tooltip_sv") != projection_tooltip_sv(origin):
         raise ValueError("future_projection tooltip disclosure is missing or changed")
 
@@ -166,6 +174,29 @@ def validate_future_projection_contract(
     current_point = current[0]
     if current_point.get("date") != origin.isoformat():
         raise ValueError("future_projection origin must equal the current production date")
+
+    for index, poll in enumerate(history.get("polls", [])):
+        if not isinstance(poll, Mapping):
+            continue
+        publication = _coerce_date(
+            poll.get("publication_date"),
+            name=f"history.polls[{index}].publication_date",
+        )
+        if publication > origin:
+            raise ValueError(
+                "history.polls contains an observation after future_projection.origin_date"
+            )
+    for index, observation in enumerate(history.get("poll_of_polls", [])):
+        if not isinstance(observation, Mapping):
+            continue
+        observation_date = _coerce_date(
+            observation.get("date"),
+            name=f"history.poll_of_polls[{index}].date",
+        )
+        if observation_date > origin:
+            raise ValueError(
+                "history.poll_of_polls contains an observation after future_projection.origin_date"
+            )
     anchor = value.get("anchor")
     if not isinstance(anchor, Mapping):
         raise ValueError("future_projection.anchor must be an object")
@@ -229,7 +260,7 @@ def validate_future_projection_contract(
         raise ValueError("future_projection rendering boundaries must span origin to election day")
     if rendering.get("latest_forecast_label") != LATEST_FORECAST_LABEL_SV:
         raise ValueError("future_projection latest forecast label changed")
-    if rendering.get("election_day_label") != ELECTION_DAY_LABEL_SV:
+    if rendering.get("election_day_label") != election_day_label_sv(election):
         raise ValueError("future_projection election-day label changed")
     if rendering.get("legend_label") != PROJECTION_LEGEND_SV:
         raise ValueError("future_projection legend label changed")
@@ -250,7 +281,7 @@ def build_future_projection(
     seed: int = DEFAULT_SIMULATION_SEED,
     data_dir: Path | str | None = None,
     coalitions: Mapping[str, Sequence[str]] = DEFAULT_COALITIONS,
-    simulation_runner: Callable[..., Any] | None = None,
+    projection_runner: Callable[..., Any] | None = None,
 ) -> dict[str, Any]:
     """Build daily conditional points strictly after ``origin_date``.
 
@@ -278,7 +309,7 @@ def build_future_projection(
     if not isinstance(anchor_point.get("groups"), Mapping):
         raise ValueError("anchor_point must contain joint coalition groups")
 
-    runner = simulation_runner or simulate_conditional_projection
+    runner = projection_runner or simulate_conditional_projection
     coalition_config = {
         str(key): tuple(str(party) for party in members)
         for key, members in coalitions.items()
@@ -325,6 +356,7 @@ def build_future_projection(
         "future_measurements_known": False,
         "state_condition": "underlying_opinion_unchanged_from_origin",
         "dynamics_horizon_rule": "election_date_minus_projection_date",
+        "election_noise_rng_policy": ELECTION_NOISE_RNG_POLICY,
         "election_noise": "canonical_adopted_law",
         "mandate_allocation": "canonical_production_path",
         "tooltip_sv": projection_tooltip_sv(origin),
@@ -343,7 +375,7 @@ def build_future_projection(
                 "background": "light_neutral",
             },
             "latest_forecast_label": LATEST_FORECAST_LABEL_SV,
-            "election_day_label": ELECTION_DAY_LABEL_SV,
+            "election_day_label": election_day_label_sv(election),
             "legend_label": PROJECTION_LEGEND_SV,
             "median_line": "dashed_lighter",
             "interval_bands": ["p25_p75", "p05_p95"],
@@ -393,7 +425,7 @@ def update_history_with_production_result(
         seed=seed,
         data_dir=projection_data_dir,
         coalitions=history["coalitions"],
-        simulation_runner=projection_runner,
+        projection_runner=projection_runner,
     )
     validate_future_projection_contract(history)
     history["deterministic_content_sha256"] = deterministic_history_sha256(history)
@@ -404,11 +436,12 @@ def update_history_with_production_result(
 
 __all__ = [
     "DEFAULT_PROJECTION_SAMPLES",
-    "ELECTION_DAY_LABEL_SV",
+    "ELECTION_NOISE_RNG_POLICY",
     "LATEST_FORECAST_LABEL_SV",
     "PROJECTION_ASSUMPTION",
     "PROJECTION_LEGEND_SV",
     "build_future_projection",
+    "election_day_label_sv",
     "projection_tooltip_sv",
     "update_history_with_production_result",
     "validate_future_projection_contract",
