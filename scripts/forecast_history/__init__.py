@@ -1,5 +1,7 @@
 """Offline coalition forecast history publication helpers."""
 
+from importlib import import_module
+
 from .contract import (
     DEFAULT_COALITIONS,
     HISTORY_DYNAMICS_CAP_DAYS,
@@ -13,17 +15,27 @@ from .contract import (
     validate_history_contract,
     write_history_json,
 )
-from .future_projection import (
-    DEFAULT_PROJECTION_SAMPLES,
-    build_future_projection,
-    projection_tooltip_sv,
-    update_history_with_production_result as update_history_with_future_projection,
-    validate_future_projection_contract,
-)
-from .projection_simulator import simulate_conditional_projection
+
+
+_FUTURE_PROJECTION_EXPORTS = {
+    "DEFAULT_PROJECTION_SAMPLES",
+    "build_future_projection",
+    "projection_tooltip_sv",
+    "update_history_with_future_projection",
+    "validate_future_projection_contract",
+}
+_PROJECTION_SIMULATOR_EXPORTS = {"simulate_conditional_projection"}
 
 
 def __getattr__(name: str):
+    if name in _FUTURE_PROJECTION_EXPORTS:
+        module = import_module(".future_projection", __name__)
+        if name == "update_history_with_future_projection":
+            return module.update_history_with_production_result
+        return getattr(module, name)
+    if name in _PROJECTION_SIMULATOR_EXPORTS:
+        module = import_module(".projection_simulator", __name__)
+        return getattr(module, name)
     from . import generate
     if hasattr(generate, name):
         return getattr(generate, name)
