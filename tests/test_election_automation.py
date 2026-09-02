@@ -9,20 +9,25 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import signal
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import Mock, call, patch
 
 import numpy as np
 
 from scripts.election_automation import (
     DAILY_SCHEDULE_UTC,
     ELECTION_DAY,
+    BROWSER_SMOKE_TIMEOUT_SECONDS,
+    JEKYLL_BUILD_TIMEOUT_SECONDS,
     INTRADAY_SCHEDULE_UTC,
     AutomationError,
+    _run_command,
     automation_enabled_for_event,
     classify_run_type,
     current_stockholm_date,
@@ -34,6 +39,7 @@ from scripts.election_automation import (
     resolve_mode,
     run_automation,
     run_production_event,
+    run_website_checks,
     should_publish,
 )
 from scripts.forecast_history.contract import DEFAULT_COALITIONS, build_groups_from_matrices, validate_history_contract
@@ -862,6 +868,164 @@ class ElectionAutomationTests(unittest.TestCase):
             "[election-automation] acquisition DONE elapsed=1.250s",
             flush=True,
         )
+
+    def test_website_checks_log_and_bound_each_required_command(self) -> None:
+        events: list[tuple[str, str, float | None]] = []
+        with patch("scripts.election_automation._run_command") as command:
+            result = run_website_checks(
+                Path("/website"),
+                chrome_bin="/test/chromium",
+                stage_callback=lambda stage, event, elapsed: events.append((stage, event, elapsed)),
+            )
+
+        self.assertEqual(result["status"], "PASS")
+        self.assertEqual(
+            [(item.args[0], item.kwargs["name"], item.kwargs["timeout_seconds"]) for item in command.call_args_list],
+            [
+                (
+                    ["jekyll", "build", "--config", "_config.yml,_config.dev.yml"],
+                    "jekyll build",
+                    JEKYLL_BUILD_TIMEOUT_SECONDS,
+                ),
+                (
+                    ["node", "browser-tests/forecast-timeseries.smoke.mjs", "_site"],
+                    "forecast-timeseries.smoke.mjs",
+                    BROWSER_SMOKE_TIMEOUT_SECONDS,
+                ),
+                (
+                    ["node", "browser-tests/government-builder.smoke.mjs", "_site"],
+                    "government-builder.smoke.mjs",
+                    BROWSER_SMOKE_TIMEOUT_SECONDS,
+                ),
+            ],
+        )
+        self.assertEqual(
+            [(stage, event) for stage, event, _ in events],
+            [
+                ("jekyll build", "START"),
+                ("jekyll build", "DONE"),
+                ("forecast-timeseries.smoke.mjs", "START"),
+                ("forecast-timeseries.smoke.mjs", "DONE"),
+                ("government-builder.smoke.mjs", "START"),
+                ("government-builder.smoke.mjs", "DONE"),
+            ],
+        )
+        self.assertTrue(all(elapsed is not None for _, event, elapsed in events if event == "DONE"))
+
+    def test_website_command_timeout_names_command_elapsed_and_terminates_group(self) -> None:
+        process = Mock(pid=4321, returncode=None)
+        process.communicate.side_effect = [
+            subprocess.TimeoutExpired(["node", "fixture"], 900),
+            ("", ""),
+        ]
+        with (
+            patch("scripts.election_automation.subprocess.Popen", return_value=process),
+            patch("scripts.election_automation.os.killpg") as killpg,
+            patch("scripts.election_automation.monotonic", side_effect=[10.0, 11.25]),
+        ):
+            with self.assertRaisesRegex(
+                AutomationError,
+                r"^website command timed out: forecast-timeseries\.smoke\.mjs after 1\.250s$",
+            ):
+                _run_command(
+                    ["node", "browser-tests/forecast-timeseries.smoke.mjs", "_site"],
+                    name="forecast-timeseries.smoke.mjs",
+                    timeout_seconds=900,
+                    cwd=Path("/website"),
+                )
+
+        self.assertEqual(
+            killpg.call_args_list,
+            [call(4321, signal.SIGTERM), call(4321, signal.SIGKILL)],
+        )
+        self.assertEqual(process.communicate.call_count, 2)
+
+    def test_website_command_timeout_escalates_to_kill_for_stuck_children(self) -> None:
+        process = Mock(pid=4321, returncode=None)
+        process.communicate.side_effect = [
+            subprocess.TimeoutExpired(["node", "fixture"], 900),
+            subprocess.TimeoutExpired(["node", "fixture"], 5),
+            ("", ""),
+        ]
+        with (
+            patch("scripts.election_automation.subprocess.Popen", return_value=process),
+            patch("scripts.election_automation.os.killpg") as killpg,
+            patch("scripts.election_automation.monotonic", side_effect=[20.0, 21.0]),
+        ):
+            with self.assertRaisesRegex(AutomationError, r"government-builder\.smoke\.mjs after 1\.000s"):
+                _run_command(
+                    ["node", "browser-tests/government-builder.smoke.mjs", "_site"],
+                    name="government-builder.smoke.mjs",
+                    timeout_seconds=900,
+                    cwd=Path("/website"),
+                )
+
+        self.assertEqual(
+            killpg.call_args_list,
+            [call(4321, signal.SIGTERM), call(4321, signal.SIGKILL)],
+        )
+        self.assertEqual(process.communicate.call_count, 3)
+
+    def test_website_command_failure_names_command_elapsed_and_cleans_children(self) -> None:
+        process = Mock(pid=4321, returncode=7)
+        process.communicate.side_effect = [("", ""), ("", "")]
+        with (
+            patch("scripts.election_automation.subprocess.Popen", return_value=process),
+            patch("scripts.election_automation.os.killpg") as killpg,
+            patch("scripts.election_automation.monotonic", side_effect=[30.0, 30.5]),
+        ):
+            with self.assertRaisesRegex(
+                AutomationError,
+                r"^website command failed: jekyll build \(exit code 7\) after 0\.500s$",
+            ):
+                _run_command(
+                    ["jekyll", "build"],
+                    name="jekyll build",
+                    timeout_seconds=300,
+                    cwd=Path("/website"),
+                )
+
+        self.assertEqual(
+            killpg.call_args_list,
+            [call(4321, signal.SIGTERM), call(4321, signal.SIGKILL)],
+        )
+
+    @unittest.skipUnless(os.name == "posix", "process-group cleanup is a POSIX runner contract")
+    def test_website_command_timeout_reaps_a_real_child_process(self) -> None:
+        parent_source = """
+import signal
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"])
+Path(sys.argv[1]).write_text(str(child.pid), encoding="utf-8")
+
+def stop(_signum, _frame):
+    try:
+        child.wait(timeout=2)
+    except subprocess.TimeoutExpired:
+        child.kill()
+        child.wait()
+    raise SystemExit(143)
+
+signal.signal(signal.SIGTERM, stop)
+time.sleep(60)
+"""
+        with tempfile.TemporaryDirectory() as tmp:
+            child_pid_path = Path(tmp) / "child.pid"
+            with self.assertRaisesRegex(AutomationError, r"real child fixture after [0-9.]+s"):
+                _run_command(
+                    [sys.executable, "-c", parent_source, str(child_pid_path)],
+                    name="real child fixture",
+                    timeout_seconds=1,
+                    cwd=Path(tmp),
+                )
+
+            child_pid = int(child_pid_path.read_text(encoding="utf-8"))
+            with self.assertRaises(ProcessLookupError):
+                os.kill(child_pid, 0)
 
     def test_cross_repository_consumer_testing_is_explicitly_opt_in(self) -> None:
         from tests._website_repo import DEFAULT_WEBSITE_REPO, ENV_OVERRIDE, website_repo

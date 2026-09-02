@@ -25,6 +25,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import signal
 import shutil
 import subprocess
 import tempfile
@@ -73,6 +74,9 @@ AUTOMATION_ENABLED_ENV = "ELECTION_AUTOMATION_ENABLED"
 SOURCE_PROVENANCE_DIRECT_LIVE = "DIRECT_LIVE_FETCH"
 SOURCE_PROVENANCE_VERIFIED_FALLBACK = "VERIFIED_STALE_FALLBACK"
 StageCallback = Callable[[str, str, float | None], None]
+JEKYLL_BUILD_TIMEOUT_SECONDS = 5 * 60
+BROWSER_SMOKE_TIMEOUT_SECONDS = 15 * 60
+COMMAND_TERMINATION_GRACE_SECONDS = 5.0
 
 MODEL_RELEVANT_INPUTS: tuple[Path, ...] = (
     Path("data/processed/pollofpolls/pollofpolls_timeseries.csv"),
@@ -856,42 +860,114 @@ def _copy_site_tree(source: Path, destination: Path) -> None:
     shutil.copytree(source, destination, ignore=ignored)
 
 
-def _run_command(command: Sequence[str], *, cwd: Path, env: Mapping[str, str] | None = None) -> None:
+def _terminate_process_group(
+    process: subprocess.Popen[str],
+    *,
+    grace_seconds: float = COMMAND_TERMINATION_GRACE_SECONDS,
+) -> None:
+    """Terminate the command and every child it created, then reap its pipes."""
+
+    def send(sig: signal.Signals) -> None:
+        try:
+            if os.name == "posix":
+                # _run_command starts a new session, so the leader PID is also
+                # the process-group ID shared by Node and Chromium descendants.
+                os.killpg(process.pid, sig)
+            elif sig == signal.SIGTERM:
+                process.terminate()
+            else:
+                process.kill()
+        except (ProcessLookupError, OSError):
+            pass
+
+    send(signal.SIGTERM)
     try:
-        subprocess.run(
+        process.communicate(timeout=grace_seconds)
+    except subprocess.TimeoutExpired:
+        send(signal.SIGKILL)
+        process.communicate()
+    else:
+        # The leader can exit while a detached Chromium child in the same
+        # group ignores SIGTERM.  Kill any remaining group members even after
+        # the leader and its captured pipes have been reaped.
+        send(signal.SIGKILL)
+
+
+def _run_command(
+    command: Sequence[str],
+    *,
+    name: str,
+    timeout_seconds: float,
+    cwd: Path,
+    env: Mapping[str, str] | None = None,
+) -> None:
+    started = monotonic()
+    try:
+        process = subprocess.Popen(
             list(command),
             cwd=cwd,
             env=dict(env) if env is not None else None,
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             text=True,
-            check=True,
+            start_new_session=os.name == "posix",
         )
-    except (OSError, subprocess.CalledProcessError) as exc:
+    except OSError as exc:
+        elapsed = monotonic() - started
+        raise AutomationError(
+            f"website command failed to start: {name} after {elapsed:.3f}s"
+        ) from exc
+
+    try:
+        process.communicate(timeout=timeout_seconds)
+    except subprocess.TimeoutExpired as exc:
+        _terminate_process_group(process)
+        elapsed = monotonic() - started
+        raise AutomationError(
+            f"website command timed out: {name} after {elapsed:.3f}s"
+        ) from exc
+
+    elapsed = monotonic() - started
+    if process.returncode != 0:
+        # A failed Node parent may still have a live Chromium child.  Always
+        # clean the whole isolated group before surfacing the command failure.
+        _terminate_process_group(process)
         # Never include captured stderr: a misconfigured credential helper can
         # print a remote URL containing a token.
-        raise AutomationError(f"website command failed: {command[0]}") from exc
+        raise AutomationError(
+            f"website command failed: {name} (exit code {process.returncode}) "
+            f"after {elapsed:.3f}s"
+        )
 
 
-def run_website_checks(site_root: Path, *, chrome_bin: str | None = None) -> dict[str, Any]:
+def run_website_checks(
+    site_root: Path,
+    *,
+    chrome_bin: str | None = None,
+    stage_callback: StageCallback | None = _log_stage,
+) -> dict[str, Any]:
     """Build Jekyll and run both real-browser smoke tests."""
 
     env = os.environ.copy()
     if chrome_bin:
         env["CHROME_BIN"] = chrome_bin
-    _run_command(
-        ["jekyll", "build", "--config", "_config.yml,_config.dev.yml"],
-        cwd=site_root,
-        env=env,
-    )
-    for test_name in (
-        "forecast-timeseries.smoke.mjs",
-        "government-builder.smoke.mjs",
-    ):
+    with _timed_stage("jekyll build", stage_callback):
         _run_command(
-            ["node", f"browser-tests/{test_name}", "_site"],
+            ["jekyll", "build", "--config", "_config.yml,_config.dev.yml"],
+            name="jekyll build",
+            timeout_seconds=JEKYLL_BUILD_TIMEOUT_SECONDS,
             cwd=site_root,
             env=env,
         )
+    for test_name in ("forecast-timeseries.smoke.mjs", "government-builder.smoke.mjs"):
+        with _timed_stage(test_name, stage_callback):
+            _run_command(
+                ["node", f"browser-tests/{test_name}", "_site"],
+                name=test_name,
+                timeout_seconds=BROWSER_SMOKE_TIMEOUT_SECONDS,
+                cwd=site_root,
+                env=env,
+            )
     return {
         "status": "PASS",
         "checks": [
