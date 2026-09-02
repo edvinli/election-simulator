@@ -77,6 +77,15 @@ StageCallback = Callable[[str, str, float | None], None]
 JEKYLL_BUILD_TIMEOUT_SECONDS = 5 * 60
 BROWSER_SMOKE_TIMEOUT_SECONDS = 15 * 60
 COMMAND_TERMINATION_GRACE_SECONDS = 5.0
+SENSITIVE_ENV_NAME_FRAGMENTS = (
+    "ACCESS_KEY",
+    "AUTHORIZATION",
+    "CREDENTIAL",
+    "PASSWORD",
+    "PRIVATE_KEY",
+    "SECRET",
+    "TOKEN",
+)
 
 MODEL_RELEVANT_INPUTS: tuple[Path, ...] = (
     Path("data/processed/pollofpolls/pollofpolls_timeseries.csv"),
@@ -902,13 +911,25 @@ def _run_command(
     env: Mapping[str, str] | None = None,
 ) -> None:
     started = monotonic()
+    command_env = (
+        {
+            key: value
+            for key, value in env.items()
+            if not any(fragment in key.upper() for fragment in SENSITIVE_ENV_NAME_FRAGMENTS)
+        }
+        if env is not None
+        else None
+    )
     try:
         process = subprocess.Popen(
             list(command),
             cwd=cwd,
-            env=dict(env) if env is not None else None,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            env=command_env,
+            # These are fixed, allowlisted website commands. Their sanitized
+            # environment contains no token/secret/password variables, so
+            # inherit the Actions streams and expose browser progress live.
+            stdout=None,
+            stderr=None,
             text=True,
             start_new_session=os.name == "posix",
         )
@@ -1303,6 +1324,7 @@ def run_production_event(
     source_push_ref: str = "main",
     website_push_ref: str = "master",
     stage_callback: StageCallback | None = None,
+    pipeline_observer: Callable[[PipelineRun], None] | None = None,
 ) -> tuple[PipelineRun, dict[str, Any], dict[str, Any] | None]:
     """Run exactly one production simulation and stage all consumers.
 
@@ -1364,6 +1386,8 @@ def run_production_event(
             simulation_repo_root=root,
             stage_callback=stage_callback,
         )
+        if pipeline_observer is not None:
+            pipeline_observer(run)
         if run.status != "PUBLISHED" or run.simulation_result is None:
             detail = run.error.get("message") if run.error else run.status
             raise AutomationError(f"production pipeline failed: {detail}")
@@ -1536,6 +1560,11 @@ def run_automation(
         mode=resolved_mode,
     )
     polling: PollingRefresh | None = None
+
+    def observe_pipeline(run: PipelineRun) -> None:
+        if run.simulation_validation is not None:
+            summary.simulation_samples = int(run.simulation_validation.get("samples", 0))
+
     try:
         guard_election_date(today, election)
         resolved_mode = resolve_mode(
@@ -1692,6 +1721,7 @@ def run_automation(
                         processed_root=staged_processed,
                         allow_custom_processed_root=True,
                         stage_callback=stage_callback,
+                        pipeline_observer=observe_pipeline,
                     )
             else:
                 _assert_clean(root, label="simulator before production")
@@ -1710,6 +1740,7 @@ def run_automation(
                     # unchanged.  The archive marker preserves that event.
                     allow_duplicate_payload=True,
                     stage_callback=stage_callback,
+                    pipeline_observer=observe_pipeline,
                 )
         summary.simulation_samples = int(run.simulation_validation["samples"]) if run.simulation_validation else 0
         summary.publication_generation = str(run.snapshot["generation_id"]) if run.snapshot else "NONE"

@@ -9,14 +9,20 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "probe = acquire/validate only; dry_run = full gates without writes; publish = commit/push"
+        description: "probe, browser_diagnostic, dry_run, or publish"
         required: true
         default: dry_run
         type: choice
         options:
           - probe
+          - browser_diagnostic
           - dry_run
           - publish
+      website_ref:
+        description: "Public website branch/ref used by browser_diagnostic"
+        required: false
+        default: master
+        type: string
 
 permissions:
   contents: read
@@ -185,6 +191,80 @@ jobs:
             --mode dry_run \
             --automation-enabled "$ELECTION_AUTOMATION_ENABLED" \
             --summary-path "$GITHUB_STEP_SUMMARY"
+
+  browser_diagnostic:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'browser_diagnostic'
+    permissions:
+      contents: read
+    runs-on: ${{ vars.ELECTION_SIMULATOR_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 45
+    steps:
+      - name: Check out public website without persisted credentials
+        uses: actions/checkout@v4
+        with:
+          repository: edvinli/edvinli.github.io
+          ref: ${{ github.event.inputs.website_ref || 'master' }}
+          path: website
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Report resolved website revision
+        shell: bash
+        run: |
+          WEBSITE_COMMIT="$(git -C website rev-parse HEAD)"
+          test "${#WEBSITE_COMMIT}" -eq 40
+          echo "Website commit: $WEBSITE_COMMIT" >> "$GITHUB_STEP_SUMMARY"
+          echo "Testing resolved website commit $WEBSITE_COMMIT"
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+
+      - name: Install Jekyll and Chromium when needed
+        shell: bash
+        run: |
+          gem install \
+            jekyll \
+            jekyll-paginate \
+            jekyll-sitemap \
+            jekyll-gist \
+            jekyll-feed \
+            jekyll-redirect-from \
+            --no-document
+          if command -v chromium >/dev/null 2>&1; then
+            CHROME_BIN_PATH="$(command -v chromium)"
+          elif command -v chromium-browser >/dev/null 2>&1; then
+            CHROME_BIN_PATH="$(command -v chromium-browser)"
+          elif command -v google-chrome >/dev/null 2>&1; then
+            CHROME_BIN_PATH="$(command -v google-chrome)"
+          else
+            sudo apt-get update
+            sudo apt-get install -y chromium
+            CHROME_BIN_PATH="$(command -v chromium)"
+          fi
+          echo "CHROME_BIN=$CHROME_BIN_PATH" >> "$GITHUB_ENV"
+
+      - name: Jekyll build diagnostic
+        working-directory: website
+        run: timeout --signal=TERM --kill-after=5s 5m jekyll build --config _config.yml,_config.dev.yml
+
+      - name: Forecast timeseries browser diagnostic
+        working-directory: website
+        run: >-
+          timeout --signal=TERM --kill-after=5s 15m
+          node browser-tests/forecast-timeseries.smoke.mjs _site
+
+      - name: Government builder browser diagnostic
+        working-directory: website
+        run: >-
+          timeout --signal=TERM --kill-after=5s 15m
+          node browser-tests/government-builder.smoke.mjs _site
 
   publish:
     if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'publish')

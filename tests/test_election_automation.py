@@ -595,6 +595,8 @@ class ElectionAutomationTests(unittest.TestCase):
 
             self.assertEqual(result.status, "FAILED")
             self.assertIn("browser smoke failed", result.summary.failure or "")
+            self.assertEqual(result.summary.simulation_samples, 100_000)
+            self.assertIn("Simulation samples: 100000", result.summary.render())
             self.assertEqual(calls, [100_000])
             self.assertEqual(source_current.read_bytes(), source_before)
             self.assertEqual(site_current.read_bytes(), site_before)
@@ -810,12 +812,14 @@ class ElectionAutomationTests(unittest.TestCase):
         workflow_defaults = workflow.split("\njobs:\n", 1)[0]
         probe = self._workflow_job(workflow, "probe")
         dry_run = self._workflow_job(workflow, "dry_run")
+        browser_diagnostic = self._workflow_job(workflow, "browser_diagnostic")
         publish = self._workflow_job(workflow, "publish")
 
         self.assertIn("permissions:\n  contents: read", workflow_defaults)
         self.assertNotIn("contents: write", workflow_defaults)
         self.assertIn("permissions:\n      contents: read", probe)
         self.assertIn("permissions:\n      contents: read", dry_run)
+        self.assertIn("permissions:\n      contents: read", browser_diagnostic)
         self.assertIn("permissions:\n      contents: write", publish)
         self.assertEqual(workflow.count("contents: write"), 1)
 
@@ -837,6 +841,7 @@ class ElectionAutomationTests(unittest.TestCase):
 
         self.assertNotIn("WEBSITE_REPO_TOKEN", probe)
         self.assertNotIn("WEBSITE_REPO_TOKEN", dry_run)
+        self.assertNotIn("WEBSITE_REPO_TOKEN", browser_diagnostic)
         self.assertEqual(publish.count("WEBSITE_REPO_TOKEN"), 1)
         self.assertEqual(workflow.count("WEBSITE_REPO_TOKEN"), 1)
         self.assertIn("persist-credentials: false", probe)
@@ -850,6 +855,18 @@ class ElectionAutomationTests(unittest.TestCase):
         self.assertIn("--mode probe", probe)
         self.assertIn("--mode dry_run", dry_run)
         self.assertIn("--mode publish", publish)
+        self.assertIn("github.event.inputs.mode == 'browser_diagnostic'", browser_diagnostic)
+        self.assertIn("persist-credentials: false", browser_diagnostic)
+        self.assertIn("forecast-timeseries.smoke.mjs", browser_diagnostic)
+        self.assertIn("government-builder.smoke.mjs", browser_diagnostic)
+        self.assertIn("--kill-after=5s 5m", browser_diagnostic)
+        self.assertEqual(browser_diagnostic.count("--kill-after=5s 15m"), 2)
+        self.assertIn("github.event.inputs.website_ref || 'master'", browser_diagnostic)
+        self.assertIn("git -C website rev-parse HEAD", browser_diagnostic)
+        self.assertIn('echo "Website commit: $WEBSITE_COMMIT" >> "$GITHUB_STEP_SUMMARY"', browser_diagnostic)
+        self.assertNotIn("scripts.election_automation", browser_diagnostic)
+        self.assertNotIn("100000", browser_diagnostic)
+        self.assertNotIn("ELECTION_AUTOMATION_ENABLED", browser_diagnostic)
         self.assertIn("timeout-minutes: 45", probe)
         self.assertIn("timeout-minutes: 120", dry_run)
         self.assertIn("timeout-minutes: 120", publish)
@@ -911,6 +928,33 @@ class ElectionAutomationTests(unittest.TestCase):
             ],
         )
         self.assertTrue(all(elapsed is not None for _, event, elapsed in events if event == "DONE"))
+
+    def test_website_command_streams_output_with_a_sanitized_environment(self) -> None:
+        process = Mock(pid=4321, returncode=0)
+        process.communicate.return_value = (None, None)
+        with patch("scripts.election_automation.subprocess.Popen", return_value=process) as popen:
+            _run_command(
+                ["node", "browser-tests/forecast-timeseries.smoke.mjs", "_site"],
+                name="forecast-timeseries.smoke.mjs",
+                timeout_seconds=900,
+                cwd=Path("/website"),
+                env={
+                    "PATH": "/bin",
+                    "CHROME_BIN": "/test/chromium",
+                    "WEBSITE_REPO_TOKEN": "must-not-reach-child",
+                    "AWS_ACCESS_KEY_ID": "must-not-reach-child",
+                    "SAFE_VALUE": "visible",
+                },
+            )
+
+        child_env = popen.call_args.kwargs["env"]
+        self.assertEqual(child_env["PATH"], "/bin")
+        self.assertEqual(child_env["CHROME_BIN"], "/test/chromium")
+        self.assertEqual(child_env["SAFE_VALUE"], "visible")
+        self.assertNotIn("WEBSITE_REPO_TOKEN", child_env)
+        self.assertNotIn("AWS_ACCESS_KEY_ID", child_env)
+        self.assertIsNone(popen.call_args.kwargs["stdout"])
+        self.assertIsNone(popen.call_args.kwargs["stderr"])
 
     def test_website_command_timeout_names_command_elapsed_and_terminates_group(self) -> None:
         process = Mock(pid=4321, returncode=None)
