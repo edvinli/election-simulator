@@ -29,16 +29,16 @@ _PROJECTION_SIMULATOR_EXPORTS = {"simulate_conditional_projection"}
 
 def __getattr__(name: str):
     if name in _FUTURE_PROJECTION_EXPORTS:
-        module = import_module(".future_projection", __name__)
+        module = import_module("scripts.forecast_history.future_projection")
         if name == "update_history_with_future_projection":
             return module.update_history_with_production_result
         return getattr(module, name)
     if name in _PROJECTION_SIMULATOR_EXPORTS:
-        module = import_module(".projection_simulator", __name__)
+        module = import_module("scripts.forecast_history.projection_simulator")
         return getattr(module, name)
-    from . import generate
-    if hasattr(generate, name):
-        return getattr(generate, name)
+    module = import_module("scripts.forecast_history.generate")
+    if hasattr(module, name):
+        return getattr(module, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
