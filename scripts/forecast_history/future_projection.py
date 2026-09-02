@@ -1,32 +1,34 @@
 """Conditional forward projection for the coalition forecast history chart.
 
 This module deliberately keeps hypothetical future chart points separate from
-``history["series"]``.  Every projection point freezes the polling cutoff at
-the latest certified production date and changes only the remaining Dynamics
-v2 horizon.  Future polls are therefore never synthesized or admitted.
+``history["series"]``. Every projection point freezes the polling cutoff at the
+latest certified production date and changes only the remaining Dynamics v2
+horizon. Future polls are therefore never synthesized or admitted.
 
-The projection uses the ordinary ElectionSimulator path, including the adopted
-ElectionNoise law, geographic projection, controlled rounding, and statutory
-mandate allocator.  It is a conditional visualization, not a forecast of
-future polling observations.
+The projection reuses the frozen production scientific components, including
+the adopted ElectionNoise law, geographic projection, controlled rounding, and
+statutory mandate allocator. It is a conditional visualization, not a forecast
+of future polling observations.
 """
 
 from __future__ import annotations
 
 from datetime import date, timedelta
+import math
 from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
 
 from scripts.simulator.config import DEFAULT_SIMULATION_SEED
-from scripts.simulator.engine import simulate_election
 
 from .contract import (
     DEFAULT_COALITIONS,
+    QUANTILE_LEVELS,
     build_groups_from_matrices,
     deterministic_history_sha256,
     validate_history_contract,
 )
 from .generate import update_history_with_production_result as _update_history_with_production_result
+from .projection_simulator import simulate_conditional_projection
 
 
 DEFAULT_PROJECTION_SAMPLES = 10_000
@@ -64,6 +66,51 @@ def _short_date_sv(value: date) -> str:
     return f"{value.day} {_MONTHS_SV[value.month - 1]}"
 
 
+def _validate_quantiles(value: Any, *, name: str, integer: bool, upper: float) -> None:
+    expected = [key for key, _ in QUANTILE_LEVELS]
+    if not isinstance(value, Mapping) or list(value) != expected:
+        raise ValueError(f"{name} must contain p05, p25, p50, p75, p95 in order")
+    numbers: list[float] = []
+    for key in expected:
+        current = value[key]
+        if not isinstance(current, (int, float)) or isinstance(current, bool):
+            raise ValueError(f"{name}.{key} must be numeric")
+        if integer and not isinstance(current, int):
+            raise ValueError(f"{name}.{key} must be an integer")
+        number = float(current)
+        if not math.isfinite(number) or number < 0 or number > upper:
+            raise ValueError(f"{name}.{key} is outside the allowed range")
+        numbers.append(number)
+    if numbers != sorted(numbers):
+        raise ValueError(f"{name} quantiles must be monotone")
+
+
+def _validate_groups(
+    groups: Any,
+    *,
+    coalitions: Mapping[str, Sequence[str]],
+    name: str,
+) -> None:
+    if not isinstance(groups, Mapping) or list(groups) != list(coalitions):
+        raise ValueError(f"{name} must cover the configured coalitions in order")
+    for coalition in coalitions:
+        group = groups[coalition]
+        if not isinstance(group, Mapping) or list(group) != ["vote", "seats"]:
+            raise ValueError(f"{name}.{coalition} must contain vote and seats")
+        _validate_quantiles(
+            group["vote"],
+            name=f"{name}.{coalition}.vote",
+            integer=False,
+            upper=100.0,
+        )
+        _validate_quantiles(
+            group["seats"],
+            name=f"{name}.{coalition}.seats",
+            integer=True,
+            upper=349.0,
+        )
+
+
 def projection_tooltip_sv(origin_date: str | date) -> str:
     """Return the explicit conditional-projection disclosure shown by consumers."""
 
@@ -72,6 +119,126 @@ def projection_tooltip_sv(origin_date: str | date) -> str:
         f"Framåtblickande projektion från opinionsläget {_short_date_sv(origin)}. "
         "Antar oförändrat underliggande opinionsläge; framtida mätningar är okända."
     )
+
+
+def validate_future_projection_contract(
+    history: Mapping[str, Any],
+    projection: Mapping[str, Any] | None = None,
+) -> None:
+    """Validate the additive conditional projection against its history anchor."""
+
+    if not isinstance(history, Mapping):
+        raise ValueError("history must be an object")
+    value = projection if projection is not None else history.get("future_projection")
+    if not isinstance(value, Mapping):
+        raise ValueError("future_projection must be an object")
+    election = _coerce_date(history.get("election_date"), name="history.election_date")
+    origin = _coerce_date(value.get("origin_date"), name="future_projection.origin_date")
+    projection_election = _coerce_date(
+        value.get("election_date"), name="future_projection.election_date"
+    )
+    if projection_election != election:
+        raise ValueError("future_projection.election_date must match history.election_date")
+    if origin > election:
+        raise ValueError("future_projection origin cannot occur after election day")
+    if value.get("projection_type") != "conditional_forward_projection":
+        raise ValueError("future_projection has an unknown projection_type")
+    if value.get("assumption") != PROJECTION_ASSUMPTION:
+        raise ValueError("future_projection has an unknown assumption")
+    if value.get("state_cutoff_date") != origin.isoformat():
+        raise ValueError("future_projection state cutoff must equal its origin")
+    if value.get("future_measurements_known") is not False:
+        raise ValueError("future_projection must explicitly state that future measurements are unknown")
+    if value.get("state_condition") != "underlying_opinion_unchanged_from_origin":
+        raise ValueError("future_projection must freeze the underlying opinion state")
+    if value.get("dynamics_horizon_rule") != "election_date_minus_projection_date":
+        raise ValueError("future_projection has an unknown dynamics horizon rule")
+    if value.get("tooltip_sv") != projection_tooltip_sv(origin):
+        raise ValueError("future_projection tooltip disclosure is missing or changed")
+
+    current = [
+        point
+        for point in history.get("series", [])
+        if isinstance(point, Mapping) and point.get("provenance") == "current_production"
+    ]
+    if len(current) != 1:
+        raise ValueError("history must contain exactly one current_production point")
+    current_point = current[0]
+    if current_point.get("date") != origin.isoformat():
+        raise ValueError("future_projection origin must equal the current production date")
+    anchor = value.get("anchor")
+    if not isinstance(anchor, Mapping):
+        raise ValueError("future_projection.anchor must be an object")
+    if anchor.get("date") != origin.isoformat() or anchor.get("provenance") != "current_production":
+        raise ValueError("future_projection anchor identity is invalid")
+    if anchor.get("samples") != current_point.get("samples"):
+        raise ValueError("future_projection anchor sample count must equal the official current point")
+    if anchor.get("groups") != current_point.get("groups"):
+        raise ValueError("future_projection anchor must exactly reproduce current joint coalition summaries")
+
+    coalitions = history.get("coalitions")
+    if not isinstance(coalitions, Mapping) or not coalitions:
+        raise ValueError("history coalitions are required for future projection validation")
+    _validate_groups(anchor.get("groups"), coalitions=coalitions, name="future_projection.anchor.groups")
+
+    future_series = value.get("series")
+    if not isinstance(future_series, list):
+        raise ValueError("future_projection.series must be a list")
+    expected_dates = [
+        origin + timedelta(days=offset)
+        for offset in range(1, (election - origin).days + 1)
+    ]
+    if len(future_series) != len(expected_dates):
+        raise ValueError("future_projection must contain exactly one point per future calendar day")
+    historical_dates = {
+        str(point.get("date"))
+        for point in history.get("series", [])
+        if isinstance(point, Mapping)
+    }
+    for index, (point, expected_date) in enumerate(zip(future_series, expected_dates)):
+        if not isinstance(point, Mapping):
+            raise ValueError(f"future_projection.series[{index}] must be an object")
+        if point.get("date") != expected_date.isoformat():
+            raise ValueError("future_projection dates must be strictly daily and end on election day")
+        if point.get("date") in historical_dates:
+            raise ValueError("future_projection points must never be mixed into historical series")
+        remaining = (election - expected_date).days
+        if point.get("remaining_horizon_days") != remaining:
+            raise ValueError("future_projection remaining horizon disagrees with projection date")
+        samples = point.get("samples")
+        if not isinstance(samples, int) or isinstance(samples, bool) or samples <= 0:
+            raise ValueError("future_projection samples must be positive integers")
+        _validate_groups(
+            point.get("groups"),
+            coalitions=coalitions,
+            name=f"future_projection.series[{index}].groups",
+        )
+    if future_series and future_series[-1].get("remaining_horizon_days") != 0:
+        raise ValueError("future_projection election-day point must have zero dynamics horizon")
+
+    rendering = value.get("rendering")
+    if not isinstance(rendering, Mapping):
+        raise ValueError("future_projection.rendering must be an object")
+    region = rendering.get("future_region")
+    if (
+        rendering.get("x_axis_max") != election.isoformat()
+        or not isinstance(region, Mapping)
+        or region.get("start") != origin.isoformat()
+        or region.get("end") != election.isoformat()
+    ):
+        raise ValueError("future_projection rendering boundaries must span origin to election day")
+    if rendering.get("latest_forecast_label") != LATEST_FORECAST_LABEL_SV:
+        raise ValueError("future_projection latest forecast label changed")
+    if rendering.get("election_day_label") != ELECTION_DAY_LABEL_SV:
+        raise ValueError("future_projection election-day label changed")
+    if rendering.get("legend_label") != PROJECTION_LEGEND_SV:
+        raise ValueError("future_projection legend label changed")
+    if rendering.get("units") != ["vote", "seats"]:
+        raise ValueError("future_projection must support both vote and seat views")
+    if rendering.get("poll_observations_in_future") is not False:
+        raise ValueError("future_projection must prohibit future poll observations")
+    if rendering.get("poll_of_polls_observations_in_future") is not False:
+        raise ValueError("future_projection must prohibit future Poll of Polls observations")
 
 
 def build_future_projection(
@@ -87,13 +254,11 @@ def build_future_projection(
 ) -> dict[str, Any]:
     """Build daily conditional points strictly after ``origin_date``.
 
-    ``as_of`` is held fixed at ``origin_date`` for every call.  The explicit
-    ``dynamics_horizon_days`` argument alone decreases from the natural
-    remaining horizon to zero on election day.  The canonical simulator then
-    applies ElectionNoise, geography and mandates exactly as usual.
-
-    ``simulation_runner`` is injectable for focused contract tests.  Production
-    callers leave it unset so the canonical :func:`simulate_election` is used.
+    ``as_of`` is held fixed at ``origin_date`` for every call. The explicit
+    ``dynamics_horizon_days`` argument alone decreases to zero on election day.
+    Production callers use the projection-only simulator that composes the same
+    scientific and mandate components without modifying the frozen production
+    entrypoint.
     """
 
     origin = _coerce_date(origin_date, name="origin_date")
@@ -113,7 +278,7 @@ def build_future_projection(
     if not isinstance(anchor_point.get("groups"), Mapping):
         raise ValueError("anchor_point must contain joint coalition groups")
 
-    runner = simulation_runner or simulate_election
+    runner = simulation_runner or simulate_conditional_projection
     coalition_config = {
         str(key): tuple(str(party) for party in members)
         for key, members in coalitions.items()
@@ -136,11 +301,13 @@ def build_future_projection(
         result_as_of = getattr(getattr(result, "summary", None), "as_of", None)
         if result_as_of is not None and str(result_as_of) != origin.isoformat():
             raise ValueError("projection runner changed the frozen opinion-state cutoff")
+        if len(result.vote_shares_matrix) != samples or len(result.seats_matrix) != samples:
+            raise ValueError("projection runner returned a different draw count than requested")
         points.append(
             {
                 "date": projection_date.isoformat(),
                 "remaining_horizon_days": remaining,
-                "samples": int(len(result.vote_shares_matrix)),
+                "samples": samples,
                 "groups": build_groups_from_matrices(
                     result.vote_shares_matrix,
                     result.seats_matrix,
@@ -197,12 +364,7 @@ def update_history_with_production_result(
     projection_runner: Callable[..., Any] | None = None,
     **history_kwargs: Any,
 ) -> dict[str, Any]:
-    """Roll in the certified point and attach a separate conditional fan.
-
-    The underlying history updater remains the authority for historical and
-    current points.  This wrapper adds only ``future_projection`` and then
-    recomputes the history artifact's deterministic self-hash.
-    """
+    """Roll in the certified point and attach a separate conditional fan."""
 
     history = _update_history_with_production_result(
         existing_payload,
@@ -233,8 +395,10 @@ def update_history_with_production_result(
         coalitions=history["coalitions"],
         simulation_runner=projection_runner,
     )
+    validate_future_projection_contract(history)
     history["deterministic_content_sha256"] = deterministic_history_sha256(history)
     validate_history_contract(history)
+    validate_future_projection_contract(history)
     return history
 
 
@@ -247,4 +411,5 @@ __all__ = [
     "build_future_projection",
     "projection_tooltip_sv",
     "update_history_with_production_result",
+    "validate_future_projection_contract",
 ]
