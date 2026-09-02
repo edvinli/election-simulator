@@ -5,24 +5,24 @@ Swedish election project. It does **not** contain forecasting or simulation code
 
 ## Snapshot summary
 
-- Poll of Polls estimates: **4,362** daily observations,
-  2014-09-15 through 2026-08-24.
-- Reconstructed individual polls: **1,438** polls
-  (14,380 long-format rows), with interview spans from
+- Poll of Polls estimates: **4,368** daily observations,
+  2014-09-15 through 2026-08-30.
+- Reconstructed individual polls: **1,439** polls
+  (14,390 long-format rows), with interview spans from
   2009-01-02 through
-  2026-08-24.
-- Supplementary SwedishPolls dataset: **2,640** polls
-  (26,400 long-format rows), published from
+  2026-08-30.
+- Supplementary SwedishPolls dataset: **2,641** polls
+  (26,410 long-format rows), published from
   1980-11-30 through
-  2026-08-27; available interview spans run from
+  2026-09-01; available interview spans run from
   1973-01-29 through
-  2026-08-26.
-- Unique pollster/interview-span metadata matches: **1,184**;
+  2026-08-30.
+- Unique pollster/interview-span metadata matches: **1,185**;
   unmatched or ambiguous Pollofpolls polls: **254**.
 - Supplementary field coverage: publication date on
-  **2,291** polls, interview span on
-  **2,299**, sample size on
-  **2,483**, and row source references on
+  **2,292** polls, interview span on
+  **2,300**, sample size on
+  **2,484**, and row source references on
   **461**.
 - Parties/categories present in source values: `C`, `FI`, `KD`, `L`, `M`, `MP`, `S`, `SD`, `V`, `other`.
 - Pollsters present: Demoskop, Indikator, Inizio, Ipsos, Novus, SCB, Sentio, Sifo, Skop, United Minds, YouGov.
@@ -94,26 +94,6 @@ raw snapshot.
 - `pollofpolls_party_chart_timeseries.csv`: `date`, M, L, C, KD, S, V, MP, SD, FI
   extracted from first-party party chart CSVs (2009+), verified to match the canonical
   2014+ timeseries exactly.
-
-  > **Diagnostic and research use only. Not a leakage-safe historical state.**
-  > This series is a *retrospectively recomputed* Poll-of-Polls estimate: the provider
-  > completes and revises earlier dates as later-published polls arrive, so a value
-  > dated `t` is not the value that was observable at `t`. Part 3B of the ElectionNoise
-  > v2 program measured this directly — two snapshots retrieved one day apart differed
-  > in 176 of 34,888 cells, and the largest revision was explicable only by a poll
-  > published five days after the date it changed
-  > (`docs/election_noise_v2_historical_pop_extension.md`, commit `89d3408`).
-  >
-  > It therefore **must not** be used as
-  > (a) the historical state for any hindcast, backtest or reconstruction that claims
-  > publication-time leakage safety, or
-  > (b) a production current-state source.
-  >
-  > The canonical production state remains `pollofpolls_timeseries.csv` together with
-  > `individual_polls.csv`. Nothing in `scripts/forecast_history/`,
-  > `scripts/vote_share_calibration/` or `scripts/simulator/` reads this file; it is
-  > produced by `scripts.pollofpolls` and consumed only by its own extension tests.
-  > That finding is binding and was not revisited by the v1.1/B release.
 - `individual_polls.csv`: deterministic `poll_id`, normalized and original pollster,
   separate interview/publication dates, party, normalized `support`, exact numeric
   `source_value`, reporting status, sample/method, source URL, `retrieved_at`, and
