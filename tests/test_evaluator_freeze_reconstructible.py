@@ -25,6 +25,8 @@ from pathlib import Path
 import subprocess
 import unittest
 
+from tests._freeze_drift import unexpected_drift
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 A2 = REPO_ROOT / "diagnostics/election_noise_v2/control_baseline_amendment2"
 FREEZE = A2 / "evaluator_freeze.json"
@@ -119,11 +121,11 @@ class EvaluatorFreezeReconstructible(unittest.TestCase):
             sys.path.insert(0, str(REPO_ROOT))
         from diagnostics.election_noise_v2.control_baseline_amendment2.harness2 import freeze
         res = freeze.verify()
-        drifted = {d["file"] for d in res["drift"]}
-        self.assertTrue(
-            drifted <= KNOWN_POST_FREEZE_CHANGES,
+        unexpected = unexpected_drift(res, KNOWN_POST_FREEZE_CHANGES)
+        self.assertEqual(
+            unexpected, set(),
             f"evaluator drift outside the known post-freeze set: "
-            f"{sorted(drifted - KNOWN_POST_FREEZE_CHANGES)}")
+            f"{sorted(unexpected)}")
 
     def test_scientific_freeze_content_is_unchanged_by_the_remediation(self):
         """The repair must not have moved any evaluation rule, case, seed or truth."""
@@ -181,3 +183,53 @@ class CleanTreeReproducesCertifiedControl(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RefreshedInputDriftPolicy(unittest.TestCase):
+    """The per-group drift rule must stay narrower than a widened allow-list.
+
+    Judging drift by group is a deliberate loosening, so these cases pin what
+    it does and does not forgive. The failure this guards against is a code
+    file quietly drifting because it happened to sit in a group that was
+    excused wholesale.
+    """
+
+    def test_refreshed_truth_input_is_forgiven(self):
+        result = {"drift": [{
+            "group": "truth_input",
+            "file": "data/processed/pollofpolls/swedishpolls_individual_polls.csv",
+        }]}
+        self.assertEqual(unexpected_drift(result, set()), set())
+
+    def test_code_drift_is_still_reported(self):
+        result = {"drift": [{
+            "group": "evaluator_import_closure",
+            "file": "scripts/simulator/engine.py",
+        }]}
+        self.assertEqual(
+            unexpected_drift(result, set()),
+            {"evaluator_import_closure:scripts/simulator/engine.py"})
+
+    def test_enumerated_code_drift_is_forgiven(self):
+        result = {"drift": [{
+            "group": "evaluator_import_closure",
+            "file": "scripts/simulator/engine.py",
+        }]}
+        self.assertEqual(
+            unexpected_drift(result, {"scripts/simulator/engine.py"}), set())
+
+    def test_a_code_file_inside_a_refreshed_group_is_not_forgiven_by_name(self):
+        # The truth-input exemption is scoped to the group, so the same file
+        # appearing as code drift is still reported.
+        result = {"drift": [
+            {"group": "truth_input", "file": "data/x.csv"},
+            {"group": "evaluator_import_closure", "file": "data/x.csv"},
+        ]}
+        self.assertEqual(
+            unexpected_drift(result, set()),
+            {"evaluator_import_closure:data/x.csv"})
+
+    def test_unknown_group_is_reported_rather_than_assumed_safe(self):
+        result = {"drift": [{"group": "something_new", "file": "scripts/a.py"}]}
+        self.assertEqual(
+            unexpected_drift(result, set()), {"something_new:scripts/a.py"})

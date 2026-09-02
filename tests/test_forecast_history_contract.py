@@ -47,6 +47,12 @@ class ForecastHistoryContractTests(unittest.TestCase):
                 encoding="utf-8",
             )
             return build_history(
+                # Hermetic: the default archive_dir is the repository's
+                # prospective-forecast archive, and build_history folds every
+                # date it finds there into the observation dates. This test
+                # pins a single date and its own runner, so reading production
+                # archives would only make it fail as the archive grows.
+                archive_dir=None,
                 dates=["2026-05-24"],
                 poll_file=poll_path,
                 simulation_runner=runner,

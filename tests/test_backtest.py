@@ -211,13 +211,34 @@ class BacktestExecutionAndLogicTests(unittest.TestCase):
         # Different base seed produces different seed
         self.assertNotEqual(seed1, seed4)
 
+    @staticmethod
+    def _last_timeseries_date() -> date:
+        """The final observation date in the processed poll-of-polls series."""
+        path = (
+            Path(__file__).resolve().parents[1]
+            / "data" / "processed" / "pollofpolls" / "pollofpolls_timeseries.csv"
+        )
+        with path.open(encoding="utf-8") as handle:
+            dates = [row["date"] for row in csv.DictReader(handle)]
+        return date.fromisoformat(max(dates))
+
     def test_missing_target_observation_skipped_cleanly(self) -> None:
-        # Origin = 2026-08-23 (the maximum date in dataset)
-        # Horizon 7d -> Target 2026-08-30 (which does not exist)
+        # A case whose target observation lies past the end of the dataset must
+        # be skipped, not evaluated against nothing.
+        #
+        # The origin is read from the dataset rather than written in. It used to
+        # be the literal 2026-08-23, described in a comment as "the maximum date
+        # in dataset"; once the polling refresh carried the series to 2026-08-30
+        # the 7-day target existed after all, one case was legitimately
+        # evaluated, and the test failed while the property it names still held.
+        # Anchoring to the last observation keeps the case genuinely
+        # out-of-range however far the data advances.
+        last_observed = self._last_timeseries_date()
+        origin = last_observed.isoformat()
         res = run_backtest(
             model="no_change",
-            start_date="2026-08-23",
-            end_date="2026-08-23",
+            start_date=origin,
+            end_date=origin,
             horizons=(7, 14),
             samples=500,
         )

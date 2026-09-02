@@ -16,6 +16,8 @@ from pathlib import Path
 import subprocess
 import unittest
 
+from tests._freeze_drift import unexpected_drift
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 FREEZE = (REPO_ROOT / "diagnostics/election_noise_v2/challengers"
           / "challenger_implementation_freeze.json")
@@ -107,10 +109,10 @@ class ChallengerFreezeReconstructible(unittest.TestCase):
             sys.path.insert(0, str(REPO_ROOT))
         from diagnostics.election_noise_v2.challengers import freeze_challengers as fc
         res = fc.verify()
-        drifted = {d["file"] for d in res["drift"]}
-        self.assertTrue(drifted <= KNOWN_POST_FREEZE_CHANGES,
-                        f"challenger drift outside the known set: "
-                        f"{sorted(drifted - KNOWN_POST_FREEZE_CHANGES)}")
+        unexpected = unexpected_drift(res, KNOWN_POST_FREEZE_CHANGES)
+        self.assertEqual(unexpected, set(),
+                         f"challenger drift outside the known set: "
+                         f"{sorted(unexpected)}")
 
     def test_evaluator_references_are_current(self):
         a2 = REPO_ROOT / "diagnostics/election_noise_v2/control_baseline_amendment2"
@@ -128,10 +130,10 @@ class ChallengerFreezeReconstructible(unittest.TestCase):
             sys.path.insert(0, str(REPO_ROOT))
         from diagnostics.election_noise_v2.control_baseline_amendment2.harness2 import freeze
         res = freeze.verify()
-        drifted = {d["file"] for d in res["drift"]}
-        self.assertTrue(drifted <= KNOWN_POST_FREEZE_CHANGES,
-                        f"evaluator drift outside the known set: "
-                        f"{sorted(drifted - KNOWN_POST_FREEZE_CHANGES)}")
+        unexpected = unexpected_drift(res, KNOWN_POST_FREEZE_CHANGES)
+        self.assertEqual(unexpected, set(),
+                         f"evaluator drift outside the known set: "
+                         f"{sorted(unexpected)}")
 
 
 class ChallengerFreezePinsTheScience(unittest.TestCase):
