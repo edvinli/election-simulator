@@ -1,0 +1,159 @@
+# Full layer: the complete per-change unit suite, sharded, on every push to main.
+#
+# "Complete" here means every test module except the ones test_topology.py
+# declares NIGHTLY_ONLY -- today just the exhaustive 20,000-case allocator
+# audit, whose reduced form still runs here. The tiers are asserted to
+# partition the suite by tests.test_ci_topology, so a module cannot fall
+# between this workflow and nightly.yml without that test failing.
+name: Full CI
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: full-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    name: Plan shards
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - name: Set up Python
+        run: uv python install 3.12
+      - name: Install the locked dependency set
+        run: uv sync --locked
+      - name: Test the CI topology tooling
+        run: uv run python -m unittest tests.test_ci_topology
+      - name: Build the shard matrix
+        id: plan
+        shell: bash
+        run: |
+          set -euo pipefail
+          matrix="$(uv run python -m scripts.ci.test_topology matrix \
+            --all --shards 4 --tier per-change 2> reason.txt)"
+          cat reason.txt
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+          uv run python -m scripts.ci.test_topology plan \
+            --shards 4 --tier per-change >> "$GITHUB_STEP_SUMMARY"
+
+  unit:
+    name: Unit shard ${{ matrix.shard }} (${{ matrix.count }} modules)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: plan
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - name: Set up Python
+        run: uv python install 3.12
+      - name: Install the locked dependency set
+        run: uv sync --locked
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run this shard
+        shell: bash
+        env:
+          # Reduced allocator parity, exhaustive sweep in nightly.yml. See the
+          # note in pr.yml and docs/ci-topology.md.
+          ELECTIONSIM_ADVERSARIAL_CASES: "700"
+          MODULES: ${{ matrix.modules }}
+        run: |
+          set -euo pipefail
+          echo "modules: $MODULES"
+          # shellcheck disable=SC2086
+          uv run python -m unittest -v $MODULES
+
+      - name: Assert the Node reference contract did not silently skip
+        if: contains(matrix.modules, 'tests.test_reference_publication_contract')
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv run python -m unittest -v \
+            tests.test_reference_publication_contract.ReferencePublicationContractTests \
+            2>&1 | tee reference.log
+          if grep -q "skipped" reference.log; then
+            echo "::error::Reference publication contract tests skipped; Node coverage was lost."
+            exit 1
+          fi
+
+  # ---------------------------------------------------------------------------
+  # Informational: records what CI cannot cover, rather than letting a skip
+  # pass unnoticed as if it were coverage. Never required.
+  # ---------------------------------------------------------------------------
+  cross-repo-coverage:
+    name: Cross-repository contract coverage (informational)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - name: Set up Python
+        run: uv python install 3.12
+      - name: Install the locked dependency set
+        run: uv sync --locked
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # This test evaluates the deployed website source verbatim. There is no
+      # edvinli.github.io checkout here, so it is EXPECTED to skip; it is
+      # authoritative only in the publication gate, which does have one.
+      - name: Report ACTUAL browser consumer status
+        shell: bash
+        run: |
+          uv run python -m unittest -v tests.test_actual_browser_consumer 2>&1 | tee actual.log || true
+          if grep -q "skipped" actual.log; then
+            echo "::notice::ACTUAL_BROWSER_CONSUMER_TEST skipped: no edvinli.github.io checkout in Full CI."
+            echo "::notice::Contract coverage here is the REFERENCE reimplementation only; the ACTUAL test is enforced by the publication gate."
+            echo "ACTUAL browser consumer: SKIPPED (no website checkout). Enforced in the publication gate." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "ACTUAL browser consumer: RAN against the website source." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  required:
+    name: Full CI required checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [plan, unit]
+    if: always()
+    steps:
+      - shell: bash
+        env:
+          PLAN: ${{ needs.plan.result }}
+          UNIT: ${{ needs.unit.result }}
+        run: |
+          set -euo pipefail
+          echo "plan=$PLAN unit=$UNIT"
+          # A skipped shard matrix means the plan produced nothing, which for
+          # the full tier is a defect, not an empty diff.
+          if [[ "$PLAN" != "success" || "$UNIT" != "success" ]]; then
+            echo "::error::full CI did not pass"
+            exit 1
+          fi
+          echo "Full unit suite passed."

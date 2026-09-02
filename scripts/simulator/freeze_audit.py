@@ -434,6 +434,11 @@ def run_audit(run_adversarial: bool = False) -> dict[str, Any]:
         output_path = _REPO_ROOT / "data" / "processed" / "simulations" / "adversarial_mandate_audit_report.json"
         env = os.environ.copy()
         env["ELECTIONSIM_ADVERSARIAL_REPORT"] = str(output_path)
+        # The freeze audit records the exhaustive audit as evidence. An
+        # ambient ELECTIONSIM_ADVERSARIAL_CASES from a developer or CI shell
+        # would otherwise be inherited and shrink the run behind the
+        # artifact's back, so drop it and take the test's full default.
+        env.pop("ELECTIONSIM_ADVERSARIAL_CASES", None)
         subprocess.run(
             ["uv", "run", "python", "-m", "unittest", "tests.test_adversarial_mandates.TestAdversarialMandateAllocation.test_20000_unique_adversarial_fast_vs_exact_cases"],
             cwd=_REPO_ROOT,

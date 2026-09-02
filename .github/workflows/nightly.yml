@@ -1,0 +1,141 @@
+# Nightly layer: the audits that are too expensive to run on every change.
+#
+# Nothing here is the only cover for a property that a pull request can break.
+# The exhaustive allocator audit's reduced form (700 cases, all legal branches,
+# 100% dispatcher parity) runs in pr.yml and full.yml; what is deferred is the
+# 20,000-case sweep, which takes about nine minutes and was 70% of the entire
+# unit suite's wall-clock.
+name: Nightly audits
+
+on:
+  schedule:
+    # 02:40 UTC, off the hour to avoid the scheduler's peak and clear of the
+    # 04:00 publication run.
+    - cron: "40 2 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: nightly
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Required for the nightly run: a regression here is a real defect, and the
+  # schedule is the only place it is caught.
+  # ---------------------------------------------------------------------------
+  allocator-audit:
+    name: Exhaustive 20k allocator audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - name: Set up Python
+        run: uv python install 3.12
+      - name: Install the locked dependency set
+        run: uv sync --locked
+
+      # No ELECTIONSIM_ADVERSARIAL_CASES: the test's own default is the full
+      # 20,000, and setting it here would risk pinning the audit below it.
+      - name: Run the exhaustive adversarial mandate audit
+        run: uv run python -m unittest -v tests.test_adversarial_mandates
+
+      - name: Record the audit size that actually ran
+        if: always()
+        shell: bash
+        run: |
+          echo "Exhaustive allocator audit: 20,000 cases, full legal-branch coverage." >> "$GITHUB_STEP_SUMMARY"
+
+  # ---------------------------------------------------------------------------
+  # Expensive scientific suites. These also run in the per-change layers, so a
+  # failure here that a pull request did not catch points at nondeterminism
+  # rather than at a missed regression -- which is exactly what a nightly
+  # repeat is for.
+  # ---------------------------------------------------------------------------
+  scientific-stress:
+    name: Scientific stress suites
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - name: Set up Python
+        run: uv python install 3.12
+      - name: Install the locked dependency set
+        run: uv sync --locked
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run the expensive model and parity suites
+        run: |
+          uv run python -m unittest -v \
+            tests.test_opinion_precision_challenger \
+            tests.test_challenger_integration \
+            tests.test_election_simulator \
+            tests.test_challenger_a \
+            tests.test_challenger_b \
+            tests.test_challenger_reference_math \
+            tests.test_competition_gates \
+            tests.test_control_baseline_amendment2 \
+            tests.test_evaluation_harness
+
+  # ---------------------------------------------------------------------------
+  # Whole-suite repeat: catches order dependence and shared-state leakage that
+  # a sharded run cannot see, because each shard runs in its own process.
+  # ---------------------------------------------------------------------------
+  whole-suite-serial:
+    name: Whole suite, single process (informational)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - name: Set up Python
+        run: uv python install 3.12
+      - name: Install the locked dependency set
+        run: uv sync --locked
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # Sharding is the point of the new topology, but it means no job ever
+      # imports the whole suite into one interpreter again. This job restores
+      # that one property, at the reduced audit size so it stays inside an hour.
+      - name: Discover and run everything in one process
+        env:
+          ELECTIONSIM_ADVERSARIAL_CASES: "700"
+        run: uv run python -m unittest discover -s tests -t . -v
+
+  nightly-required:
+    name: Nightly required checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [allocator-audit, scientific-stress]
+    if: always()
+    steps:
+      - shell: bash
+        env:
+          AUDIT: ${{ needs.allocator-audit.result }}
+          STRESS: ${{ needs.scientific-stress.result }}
+        run: |
+          set -euo pipefail
+          echo "allocator-audit=$AUDIT scientific-stress=$STRESS"
+          if [[ "$AUDIT" != "success" || "$STRESS" != "success" ]]; then
+            echo "::error::a required nightly audit failed"
+            exit 1
+          fi
+          echo "Nightly audits passed."
