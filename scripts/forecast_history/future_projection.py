@@ -1,4 +1,4 @@
-"""Conditional forward projection for the coalition forecast history chart.
+"""Conditional shrinking-horizon fan — the *secondary* analytical future view.
 
 This module deliberately keeps hypothetical future chart points separate from
 ``history["series"]``. Every projection point freezes the polling cutoff at the
@@ -9,6 +9,14 @@ The projection reuses the frozen production scientific components, including
 the adopted ElectionNoise law, geographic projection, controlled rounding, and
 statutory mandate allocator. It is a conditional visualization, not a forecast
 of future polling observations.
+
+Since the coherent campaign-path model was introduced this fan is **no longer
+the primary future prognosis**. It answers the narrower question "how much
+uncertainty remains if the underlying opinion stays unchanged", and the
+published object is explicitly demoted to
+``role = "secondary_analytical_view"``. The headline future view lives in
+``scripts.forecast_history.campaign_paths`` and its published contract in
+``scripts.forecast_history.campaign_paths_contract``.
 """
 
 from __future__ import annotations
@@ -394,9 +402,27 @@ def update_history_with_production_result(
     projection_samples: int = DEFAULT_PROJECTION_SAMPLES,
     projection_data_dir: Path | str | None = None,
     projection_runner: Callable[..., Any] | None = None,
+    campaign_path_samples: int | None = None,
+    campaign_path_simulator: Callable[..., Any] | None = None,
     **history_kwargs: Any,
 ) -> dict[str, Any]:
-    """Roll in the certified point and attach a separate conditional fan."""
+    """Roll in the certified point, the primary paths and the secondary fan.
+
+    ``future_campaign_paths`` is the headline future view: coherent simulated
+    opinion trajectories from the certified origin through election day, whose
+    election-day endpoint is bitwise identical to the certified production
+    draws.  ``future_projection`` is retained and explicitly demoted to the
+    secondary "remaining uncertainty if opinion stays unchanged" view.
+    """
+
+    # Imported lazily: the campaign-path contract reuses this module's date and
+    # label helpers, so a module-level import would be circular.
+    from .campaign_paths_contract import (
+        build_future_campaign_paths,
+        mark_secondary_projection,
+        validate_future_campaign_paths_contract,
+        validate_secondary_projection_role,
+    )
 
     history = _update_history_with_production_result(
         existing_payload,
@@ -417,20 +443,46 @@ def update_history_with_production_result(
     if not isinstance(seed, int) or isinstance(seed, bool):
         seed = DEFAULT_SIMULATION_SEED
 
-    history["future_projection"] = build_future_projection(
-        origin_date=current["date"],
-        election_date=history["election_date"],
-        anchor_point=current,
-        samples=projection_samples,
-        seed=seed,
-        data_dir=projection_data_dir,
-        coalitions=history["coalitions"],
-        projection_runner=projection_runner,
+    history["future_projection"] = mark_secondary_projection(
+        build_future_projection(
+            origin_date=current["date"],
+            election_date=history["election_date"],
+            anchor_point=current,
+            samples=projection_samples,
+            seed=seed,
+            data_dir=projection_data_dir,
+            coalitions=history["coalitions"],
+            projection_runner=projection_runner,
+        )
     )
     validate_future_projection_contract(history)
+    validate_secondary_projection_role(history["future_projection"])
+
+    origin = _coerce_date(current["date"], name="current production date")
+    election = _coerce_date(history["election_date"], name="history.election_date")
+    if origin < election:
+        history["future_campaign_paths"] = build_future_campaign_paths(
+            origin_date=current["date"],
+            election_date=history["election_date"],
+            anchor_point=current,
+            samples=campaign_path_samples,
+            seed=seed,
+            data_dir=projection_data_dir,
+            coalitions=history["coalitions"],
+            path_simulator=campaign_path_simulator,
+        )
+        validate_future_campaign_paths_contract(history)
+    else:
+        # On election day there is no remaining campaign to simulate.  Drop the
+        # key rather than publishing an empty primary view.
+        history.pop("future_campaign_paths", None)
+
     history["deterministic_content_sha256"] = deterministic_history_sha256(history)
     validate_history_contract(history)
     validate_future_projection_contract(history)
+    validate_secondary_projection_role(history["future_projection"])
+    if "future_campaign_paths" in history:
+        validate_future_campaign_paths_contract(history)
     return history
 
 

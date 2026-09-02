@@ -27,9 +27,15 @@ def _history_update_with_projection(
     production_result: Any,
     *,
     projection_runner: Callable[..., Any] | None = None,
+    campaign_path_simulator: Callable[..., Any] | None = None,
     **kwargs: Any,
 ):
-    """Attach the conditional fan using the exact processed input root in use."""
+    """Attach both future views using the exact processed input root in use.
+
+    The primary coherent campaign-path region and the secondary
+    shrinking-horizon fan each have their own injectable seam, so a test may
+    replace either without changing publication behaviour for the other.
+    """
 
     poll_file = kwargs.get("poll_file")
     projection_data_dir = None
@@ -41,6 +47,7 @@ def _history_update_with_projection(
         production_result,
         projection_data_dir=projection_data_dir,
         projection_runner=projection_runner,
+        campaign_path_simulator=campaign_path_simulator,
         **kwargs,
     )
 

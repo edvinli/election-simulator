@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 import csv
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 import hashlib
 import json
 import os
@@ -42,6 +42,7 @@ from scripts.election_automation import (
     run_website_checks,
     should_publish,
 )
+from scripts.forecast_history.campaign_paths import CampaignPathSimulation
 from scripts.forecast_history.contract import DEFAULT_COALITIONS, build_groups_from_matrices, validate_history_contract
 from scripts.forecast_history.generate import build_history, update_history_with_production_result
 from scripts.publication_pipeline.pipeline import run_publication_pipeline
@@ -121,6 +122,54 @@ class ElectionAutomationTests(unittest.TestCase):
             summary=SimpleNamespace(as_of=kwargs["as_of"]),
             vote_shares_matrix=np.tile(votes, (repeats, 1))[:samples],
             seats_matrix=np.tile(seats, (repeats, 1))[:samples],
+        )
+
+    @classmethod
+    def _campaign_path_simulator(cls, **kwargs) -> CampaignPathSimulation:
+        """Return cheap opinion paths through the campaign-path seam.
+
+        These orchestration tests stage placeholder model inputs, so the real
+        simulator cannot run here and the scientific parity gate has nothing
+        to verify.  The parity mathematics is covered end to end against the
+        canonical engine in ``tests/test_campaign_paths.py``; this stub only
+        keeps the *publication wiring* under test.
+        """
+
+        origin = date.fromisoformat(str(kwargs["as_of"]))
+        election = date.fromisoformat(str(kwargs["election_date"]))
+        path_days = (election - origin).days
+        samples = int(kwargs["samples"])
+        coalitions = kwargs["coalitions"]
+        draws = {
+            key: np.linspace(45.0, 55.0, samples, dtype=np.float64)[np.newaxis, :]
+            .repeat(path_days + 1, axis=0)
+            for key in coalitions
+        }
+        return CampaignPathSimulation(
+            origin_date=origin,
+            election_date=election,
+            path_days=path_days,
+            samples=samples,
+            seed=int(kwargs["seed"]),
+            day_dates=tuple(origin + timedelta(days=offset) for offset in range(path_days + 1)),
+            coalition_draws=draws,
+            representative_indices=tuple(range(min(4, samples))),
+            endpoint_national_shares=np.full((samples, 9), 1.0 / 9.0),
+            endpoint_opinion_composition=np.full((samples, 9), 100.0 / 9.0),
+            diagnostics={
+                "model_id": "coherent_campaign_paths_v1",
+                "eligible_trajectories": 4357,
+                "earliest_trajectory_start": "2014-09-15",
+                "latest_trajectory_end": origin.isoformat(),
+                "endpoint_horizon_days": min(path_days, 112),
+                "time_warp": "identity" if path_days <= 112 else "monotone_stretch",
+                "opinion_state_seed": 1,
+                "dynamics_seed": 2,
+                "election_noise_seed": 3,
+                "endpoint_parity_verified": True,
+                "endpoint_parity_max_abs_difference_pp": 0.0,
+                "endpoint_parity_reference": "generate_national_vote_shares",
+            },
         )
 
     @staticmethod
@@ -419,6 +468,7 @@ class ElectionAutomationTests(unittest.TestCase):
                     refresh_fn=refresh,
                     simulation_runner=runner,
                     projection_runner=projection_runner,
+                    campaign_path_simulator=self._campaign_path_simulator,
                     website_check_fn=lambda _: {"status": "PASS"},
                     generated_at_utc="2026-09-05T06:00:00+00:00",
                 )
@@ -497,6 +547,7 @@ class ElectionAutomationTests(unittest.TestCase):
                 refresh_fn=refresh,
                 simulation_runner=runner,
                 projection_runner=self._projection_runner,
+                    campaign_path_simulator=self._campaign_path_simulator,
                 website_check_fn=lambda _: {"status": "PASS"},
                 mode="dry_run",
                 generated_at_utc="2026-09-05T08:00:00+00:00",
@@ -563,6 +614,7 @@ class ElectionAutomationTests(unittest.TestCase):
                 refresh_fn=lambda raw, processed, **kwargs: {"messages": []},
                 simulation_runner=runner,
                 projection_runner=self._projection_runner,
+                    campaign_path_simulator=self._campaign_path_simulator,
                 website_check_fn=lambda _: {"status": "PASS"},
                 generated_at_utc="2026-09-05T04:00:00+00:00",
             )
@@ -625,6 +677,7 @@ class ElectionAutomationTests(unittest.TestCase):
                     refresh_fn=refresh,
                     simulation_runner=runner,
                     projection_runner=self._projection_runner,
+                    campaign_path_simulator=self._campaign_path_simulator,
                     website_check_fn=failed_website_check,
                     generated_at_utc="2026-09-05T06:00:00+00:00",
                 )
@@ -676,6 +729,7 @@ class ElectionAutomationTests(unittest.TestCase):
                     refresh_fn=refresh,
                     simulation_runner=runner,
                     projection_runner=self._projection_runner,
+                    campaign_path_simulator=self._campaign_path_simulator,
                     website_check_fn=lambda _: {"status": "PASS"},
                     generated_at_utc="2026-09-05T04:00:00+00:00",
                 )
@@ -1196,6 +1250,7 @@ time.sleep(60)
                     refresh_fn=refresh,
                     simulation_runner=succeeding_runner,
                     projection_runner=self._projection_runner,
+                    campaign_path_simulator=self._campaign_path_simulator,
                     website_check_fn=lambda _: {"status": "PASS"},
                     generated_at_utc="2026-09-05T08:05:00+00:00",
                 )
@@ -1232,6 +1287,7 @@ time.sleep(60)
                     forecast_as_of="2026-09-05",
                     simulation_runner=runner,
                     projection_runner=self._projection_runner,
+                    campaign_path_simulator=self._campaign_path_simulator,
                     website_check_fn=lambda _: {"status": "PASS"},
                     generated_at_utc="2026-09-05T09:00:00+00:00",
                     commit=True,

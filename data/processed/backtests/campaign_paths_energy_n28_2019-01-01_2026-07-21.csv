@@ -1,0 +1,17 @@
+model,horizon_days,cases,mean_energy_score
+campaign_paths,1,198,0.087191
+campaign_paths,7,198,0.269833
+campaign_paths,14,198,0.449846
+campaign_paths,28,198,0.792555
+endpoint_fan,1,198,0.351365
+endpoint_fan,7,198,0.40707
+endpoint_fan,14,198,0.510817
+endpoint_fan,28,198,0.792555
+frozen_state,1,198,0.104972
+frozen_state,7,198,0.374291
+frozen_state,14,198,0.621744
+frozen_state,28,198,1.084137
+independent_walk,1,198,0.087095
+independent_walk,7,198,0.271835
+independent_walk,14,198,0.4556
+independent_walk,28,198,0.813456
