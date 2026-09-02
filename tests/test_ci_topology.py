@@ -203,3 +203,116 @@ class GraphTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class WorkflowCoverageTests(unittest.TestCase):
+    """Every module must run in some required job of some workflow.
+
+    The tier functions can be a correct partition while the workflows still
+    fail to invoke one side of it, which would drop a whole tier silently. The
+    workflows are read as text rather than parsed, to avoid adding a YAML
+    dependency for four assertions.
+    """
+
+    WORKFLOWS = _REPO_ROOT / ".github" / "workflows"
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        if not cls.WORKFLOWS.is_dir():
+            raise unittest.SkipTest("no workflows directory")
+        cls.text = {
+            path.name: path.read_text(encoding="utf-8")
+            for path in cls.WORKFLOWS.glob("*.yml")
+        }
+
+    def test_full_ci_runs_the_whole_per_change_tier(self) -> None:
+        full = self.text["full.yml"]
+        self.assertIn("--all --shards 4 --tier per-change", " ".join(full.split()))
+
+    def test_nightly_runs_every_nightly_only_module_by_name(self) -> None:
+        nightly = self.text["nightly.yml"]
+        for module in NIGHTLY_ONLY:
+            self.assertIn(
+                f"tests.{module}", nightly,
+                f"{module} is deferred to nightly but nightly never names it",
+            )
+
+    def test_nightly_does_not_pin_the_audit_below_its_full_size(self) -> None:
+        # The exhaustive job must not set ELECTIONSIM_ADVERSARIAL_CASES; the
+        # test's own default is the full 20,000.
+        nightly = self.text["nightly.yml"]
+        audit_job = nightly.split("allocator-audit:", 1)[1].split("\n  scientific-stress:", 1)[0]
+        # Ignore comments; the job explains in prose why it sets nothing.
+        effective = [
+            line for line in audit_job.splitlines()
+            if not line.lstrip().startswith("#")
+        ]
+        offenders = [l for l in effective if "ELECTIONSIM_ADVERSARIAL_CASES" in l]
+        self.assertEqual(
+            offenders, [],
+            "the exhaustive audit job must not override the case count",
+        )
+
+    def test_per_change_layers_use_a_branch_covering_audit_size(self) -> None:
+        from tests.test_adversarial_mandates import (
+            _FULL_AUDIT_CASES,
+            _MIN_BRANCH_COVERAGE_CASES,
+        )
+
+        for name in ("pr.yml", "full.yml"):
+            values = [
+                int(line.split(":", 1)[1].strip().strip('"'))
+                for line in self.text[name].splitlines()
+                if "ELECTIONSIM_ADVERSARIAL_CASES:" in line
+                and not line.lstrip().startswith("#")
+            ]
+            self.assertTrue(
+                values, f"{name} does not set an audit size at all")
+            for value in values:
+                self.assertGreaterEqual(
+                    value, _MIN_BRANCH_COVERAGE_CASES,
+                    f"{name} runs the audit below full branch coverage")
+                self.assertLessEqual(value, _FULL_AUDIT_CASES, name)
+
+    def test_the_publication_gate_still_names_its_own_suites(self) -> None:
+        """The gate must not have been rewired to depend on the new layers."""
+        gate = self.text["election-simulator-publication.yml"]
+        for module in (
+            "tests.test_publication_pipeline",
+            "tests.test_prospective_archive",
+            "tests.test_forecast_history_contract",
+            "tests.test_forecast_history",
+            "tests.test_site_publisher",
+            "tests.test_production_freeze",
+            "tests.test_publication_freeze",
+            "tests.test_election_automation",
+        ):
+            self.assertIn(
+                module, gate,
+                f"the publication gate no longer runs {module}",
+            )
+
+    def test_the_publication_gate_runs_the_real_production_sample_count(self) -> None:
+        from scripts.election_automation import PRODUCTION_SAMPLES
+
+        self.assertEqual(
+            PRODUCTION_SAMPLES, 100_000,
+            "the publication gate's production simulation was reduced",
+        )
+
+    def test_pr_workflow_does_not_also_trigger_on_push(self) -> None:
+        """The duplicate push + pull_request run must stay gone."""
+        pr = self.text["pr.yml"]
+        trigger_block = pr.split("on:", 1)[1].split("concurrency:", 1)[0]
+        self.assertNotIn("push:", trigger_block)
+        self.assertIn("pull_request", trigger_block)
+
+    def test_no_module_is_covered_only_by_an_informational_job(self) -> None:
+        # cross-repo-coverage and whole-suite-serial are continue-on-error.
+        # Anything they run must also run in a required job.
+        everything = set(all_test_modules(_REPO_ROOT, tier="all"))
+        per_change = set(all_test_modules(_REPO_ROOT, tier="per-change"))
+        nightly = set(all_test_modules(_REPO_ROOT, tier="nightly"))
+        # full.yml (required) covers per_change; nightly.yml's required jobs
+        # cover NIGHTLY_ONLY by name.
+        self.assertEqual(per_change | nightly, everything)
