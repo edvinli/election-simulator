@@ -1,4 +1,4 @@
-.PHONY: fetch-pollofpolls process-pollofpolls test-pollofpolls opinion-state backtest pop-baseline pop-baseline-benchmark pop-publication fetch-election-results process-election-results hindcast election-residuals election-layer election-layer-v2 vote-share-calibration fetch-mandate-data process-mandate-data test-mandate-allocation fetch-scb-support-voting process-scb-support-voting test-scb-support-voting process-threshold-events test-threshold-events run-scb-behavioral-diagnostic test-scb-behavioral-diagnostic run-pop-state-diagnostics test-pop-state-diagnostics run-opinion-precision-challenger test-opinion-precision-challenger check check-changed test-affected test-shard-plan test-changed test-full test-nightly-audit
+.PHONY: fetch-pollofpolls process-pollofpolls test-pollofpolls opinion-state backtest pop-baseline pop-baseline-benchmark pop-publication fetch-election-results process-election-results hindcast election-residuals election-layer election-layer-v2 vote-share-calibration fetch-mandate-data process-mandate-data test-mandate-allocation fetch-scb-support-voting process-scb-support-voting test-scb-support-voting process-threshold-events test-threshold-events run-scb-behavioral-diagnostic test-scb-behavioral-diagnostic run-pop-state-diagnostics test-pop-state-diagnostics run-opinion-precision-challenger test-opinion-precision-challenger check check-changed test-affected test-shard-plan test-changed test-full test-nightly-audit run-campaign-path-eval test-campaign-paths test-campaign-path-eval
 
 PYTHON := $(shell which uv >/dev/null 2>&1 && echo "uv run python" || echo "python3")
 
@@ -174,3 +174,12 @@ run-opinion-precision-challenger:
 
 test-opinion-precision-challenger:
 	$(PYTHON) -m unittest tests/test_opinion_precision_challenger.py
+
+run-campaign-path-eval:
+	$(PYTHON) -m scripts.campaign_path_eval
+
+test-campaign-paths:
+	$(PYTHON) -m unittest tests/test_campaign_paths.py
+
+test-campaign-path-eval:
+	$(PYTHON) -m unittest tests/test_campaign_path_eval.py

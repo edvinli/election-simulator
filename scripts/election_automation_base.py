@@ -1316,6 +1316,7 @@ def run_production_event(
     seed: int = DEFAULT_SIMULATION_SEED,
     simulation_runner: Callable[..., Any] | None = None,
     projection_runner: Callable[..., Any] | None = None,
+    campaign_path_simulator: Callable[..., Any] | None = None,
     history_updater: Callable[..., dict[str, Any]] | None = None,
     website_check_fn: Callable[[Path], dict[str, Any]] | None = None,
     commit: bool = False,
@@ -1426,6 +1427,7 @@ def run_production_event(
             }
             if history_updater is not None:
                 history_kwargs["projection_runner"] = projection_runner
+                history_kwargs["campaign_path_simulator"] = campaign_path_simulator
             history = selected_history_updater(existing_history, result, **history_kwargs)
             write_history_json(staged_history, history)
             validate_history_contract(_load_json_object(staged_history))
@@ -1542,6 +1544,7 @@ def run_automation(
     refresh_fn: Callable[..., dict[str, Any]] = refresh_snapshot,
     simulation_runner: Callable[..., Any] | None = None,
     projection_runner: Callable[..., Any] | None = None,
+    campaign_path_simulator: Callable[..., Any] | None = None,
     generated_at_utc: str | None = None,
     stage_callback: StageCallback | None = None,
 ) -> AutomationResult:
@@ -1720,6 +1723,7 @@ def run_automation(
                         generated_at_utc=generated_at_utc,
                         simulation_runner=simulation_runner,
                         projection_runner=projection_runner,
+                        campaign_path_simulator=campaign_path_simulator,
                         website_check_fn=website_check_fn,
                         commit=False,
                         push=False,
@@ -1739,6 +1743,7 @@ def run_automation(
                     generated_at_utc=generated_at_utc,
                     simulation_runner=simulation_runner,
                     projection_runner=projection_runner,
+                    campaign_path_simulator=campaign_path_simulator,
                     website_check_fn=website_check_fn,
                     commit=effective_commit,
                     push=effective_push,

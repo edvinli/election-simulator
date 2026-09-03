@@ -52,6 +52,8 @@ For a detailed breakdown of our modeling philosophy, comparisons with Poll of Po
 ## 📁 Technical Documentation
 
 - **[Modeling Philosophy & Design Choices](docs/MODELING_PHILOSOPHY.md)**: Full design rationale, benchmark evaluation, and rejected alternatives log.
+- **[Coherent Forward Campaign Paths](docs/future_campaign_paths.md)**: Whole-path opinion trajectories from today to election day, and the bitwise election-day parity argument.
+- **[Campaign-Path Retrospective Evaluation](docs/campaign_path_evaluation.md)**: Rolling out-of-sample CRPS, interval coverage and Energy Scores against the rejected alternatives.
 - **[Election Simulator v1.0 Specification](docs/election_simulator.md)**: End-to-end mathematical specification.
 - **[PoP State-Dependence Diagnostic](docs/pop_state_dependence_evidence.md)**: Out-of-sample evaluation of state-conditioned dynamics.
 - **[SCB Behavioral Threshold Diagnostic](docs/scb_behavioral_diagnostic.md)**: Regression analysis of 29 PSU survey waves.
@@ -72,12 +74,15 @@ make test-scb-support-voting
 make test-threshold-events
 make test-scb-behavioral-diagnostic
 make test-pop-state-diagnostics
+make test-campaign-paths
+make test-campaign-path-eval
 
 # Run data processing & diagnostic pipelines
 make process-scb-support-voting
 make process-threshold-events
 make run-scb-behavioral-diagnostic
 make run-pop-state-diagnostics
+make run-campaign-path-eval
 ```
 
 Node is required for the publication contract tests. Two layers exist and are

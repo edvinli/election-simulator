@@ -27,6 +27,24 @@ _FUTURE_PROJECTION_EXPORTS = {
     "validate_future_projection_contract",
 }
 _PROJECTION_SIMULATOR_EXPORTS = {"simulate_conditional_projection"}
+_CAMPAIGN_PATH_EXPORTS = {
+    "CAMPAIGN_PATH_MODEL_ID",
+    "DEFAULT_REPRESENTATIVE_PATHS",
+    "build_campaign_path_pool",
+    "campaign_paths_tooltip_sv",
+    "election_day_tooltip_sv",
+    "resolve_endpoint_horizon",
+    "simulate_campaign_paths",
+}
+_CAMPAIGN_PATH_CONTRACT_EXPORTS = {
+    "PRIMARY_ROLE",
+    "SECONDARY_ROLE",
+    "SECONDARY_DESCRIPTION_SV",
+    "build_future_campaign_paths",
+    "mark_secondary_projection",
+    "validate_future_campaign_paths_contract",
+    "validate_secondary_projection_role",
+}
 
 
 def __getattr__(name: str):
@@ -38,6 +56,10 @@ def __getattr__(name: str):
     if name in _PROJECTION_SIMULATOR_EXPORTS:
         module = import_module("scripts.forecast_history.projection_simulator")
         return getattr(module, name)
+    if name in _CAMPAIGN_PATH_EXPORTS:
+        return getattr(import_module("scripts.forecast_history.campaign_paths"), name)
+    if name in _CAMPAIGN_PATH_CONTRACT_EXPORTS:
+        return getattr(import_module("scripts.forecast_history.campaign_paths_contract"), name)
     module = import_module("scripts.forecast_history.generate")
     if hasattr(module, name):
         return getattr(module, name)
@@ -45,7 +67,21 @@ def __getattr__(name: str):
 
 
 __all__ = [
+    "CAMPAIGN_PATH_MODEL_ID",
     "DEFAULT_COALITIONS",
+    "DEFAULT_REPRESENTATIVE_PATHS",
+    "PRIMARY_ROLE",
+    "SECONDARY_DESCRIPTION_SV",
+    "SECONDARY_ROLE",
+    "build_campaign_path_pool",
+    "build_future_campaign_paths",
+    "campaign_paths_tooltip_sv",
+    "election_day_tooltip_sv",
+    "mark_secondary_projection",
+    "resolve_endpoint_horizon",
+    "simulate_campaign_paths",
+    "validate_future_campaign_paths_contract",
+    "validate_secondary_projection_role",
     "DEFAULT_ARCHIVE_DIR",
     "DEFAULT_HISTORY_OUTPUT",
     "DEFAULT_HISTORY_SAMPLES",

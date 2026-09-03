@@ -1,0 +1,42 @@
+{
+  "base_seed": 12345,
+  "campaign_paths_coverage_50_all_horizons": 0.593188,
+  "campaign_paths_coverage_90_all_horizons": 0.894025,
+  "campaign_paths_mean_crps_all_horizons": 0.060198,
+  "campaign_paths_mean_crps_interior_days": 0.056416,
+  "endpoint_bitwise_identical_all_origins": true,
+  "endpoint_fan_coverage_50_all_horizons": 0.709074,
+  "endpoint_fan_coverage_90_all_horizons": 0.964798,
+  "endpoint_fan_mean_crps_all_horizons": 0.068238,
+  "endpoint_fan_mean_crps_interior_days": 0.06526,
+  "endpoint_horizon_days": 11,
+  "endpoint_max_abs_crps_difference": 0.0,
+  "energy_checkpoints": [
+    1,
+    7,
+    11
+  ],
+  "energy_subsample": 300,
+  "first_origin": "2019-01-01",
+  "frozen_state_coverage_50_all_horizons": 0.171936,
+  "frozen_state_coverage_90_all_horizons": 0.171936,
+  "frozen_state_mean_crps_all_horizons": 0.077048,
+  "frozen_state_mean_crps_interior_days": 0.071701,
+  "independent_walk_coverage_50_all_horizons": 0.531129,
+  "independent_walk_coverage_90_all_horizons": 0.869105,
+  "independent_walk_mean_crps_all_horizons": 0.06036,
+  "independent_walk_mean_crps_interior_days": 0.056524,
+  "last_origin": "2026-08-18",
+  "models": [
+    "campaign_paths",
+    "frozen_state",
+    "endpoint_fan",
+    "independent_walk"
+  ],
+  "origins": 399,
+  "path_days": 11,
+  "samples": 2000,
+  "state_uncertainty": "excluded_common_to_all_models",
+  "stride_days": 7,
+  "target": "realized_poll_of_polls_trajectory"
+}

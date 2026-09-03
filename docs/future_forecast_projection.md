@@ -1,4 +1,20 @@
-# Conditional future forecast projection
+# Conditional future forecast projection (secondary analytical view)
+
+> [!IMPORTANT]
+> **This is no longer the primary future prognosis.** The headline future
+> visualization is the coherent forward campaign-path model documented in
+> [`future_campaign_paths.md`](future_campaign_paths.md), which simulates
+> complete opinion trajectories from today to election day. The projection
+> described here is retained only as a secondary analytical view showing
+> *remaining uncertainty if the underlying opinion stays unchanged*.
+>
+> Accordingly the published `future_projection` object now carries
+> `role: "secondary_analytical_view"`, `primary: false` and the Swedish
+> `description_sv` "Kvarvarande osäkerhet om det underliggande opinionsläget
+> står stilla. Detta är en sekundär analysvy, inte huvudprognosen för
+> framtiden." A consumer must not present it as the main future forecast, and
+> `validate_secondary_projection_role()` fails closed if those fields are
+> missing or changed.
 
 The coalition history chart may show a **forward-looking conditional projection** from the latest certified forecast through election day. This is deliberately not part of the historical `series` and must never be described as future polling data.
 
@@ -7,6 +23,15 @@ The coalition history chart may show a **forward-looking conditional projection*
 The projection answers one narrowly defined question:
 
 > How would ElectionSimulator's election-day distribution change as the remaining campaign-dynamics horizon shrinks, if the underlying opinion state measured at the latest certified forecast remained unchanged?
+
+That question is deliberately narrow. It says nothing about *where opinion may
+actually go* between today and election day, which is why it was demoted: for
+a short remaining horizon the fan is nearly flat and reads as a claim that
+nothing more can happen. The empirical case for the replacement is in
+[`campaign_path_evaluation.md`](campaign_path_evaluation.md), where holding the
+opinion state fixed (`frozen_state`) is scored against the realized
+Poll-of-Polls trajectory and loses decisively on both CRPS and interval
+coverage.
 
 For every projected calendar date:
 
@@ -47,7 +72,10 @@ The date is generated from the actual projection origin.
 
 ## Rendering requirements
 
-A consumer should render the future region separately from historical observations:
+A consumer renders this fan, if at all, **behind an explicit secondary
+control** — never as the default future region, which belongs to
+`future_campaign_paths`. When it is shown it must be rendered separately from
+historical observations:
 
 - x-axis maximum: election day;
 - future background: very light neutral shading;
