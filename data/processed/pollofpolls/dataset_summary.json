@@ -1,12 +1,12 @@
 {
   "individual_earliest_interview_start": "2009-01-02",
-  "individual_latest_interview_end": "2026-08-30",
-  "individual_long_rows": 14390,
-  "individual_polls": 1439,
-  "metadata_enriched_polls": 1185,
+  "individual_latest_interview_end": "2026-09-01",
+  "individual_long_rows": 14400,
+  "individual_polls": 1440,
+  "metadata_enriched_polls": 1186,
   "metadata_match_status_counts": {
     "ambiguous_span_match": 2,
-    "exact_span_match": 1167,
+    "exact_span_match": 1168,
     "exact_span_match_approximate_supplementary_period": 18,
     "no_match": 252
   },
@@ -112,6 +112,6 @@
     "YouGov"
   ],
   "timeseries_earliest": "2014-09-15",
-  "timeseries_latest": "2026-08-30",
-  "timeseries_observations": 4368
+  "timeseries_latest": "2026-09-01",
+  "timeseries_observations": 4370
 }
