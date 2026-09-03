@@ -137,7 +137,7 @@ class AuxiliaryMetricTests(unittest.TestCase):
             0.975: 2.0,
         }
         # Default WIS uses the pre-registered 50/80/90/95% interval set.
-        self.assertAlmostEqual(weighted_interval_score(quantiles, 1.0), 0.85 / 0.925)
+        self.assertAlmostEqual(weighted_interval_score(quantiles, 1.0), 0.85 / 4.5)
         with self.assertRaisesRegex(ValueError, "missing required probability"):
             weighted_interval_score({0.5: 1.0, 0.1: 0.0, 0.9: 2.0}, 1.0)
 

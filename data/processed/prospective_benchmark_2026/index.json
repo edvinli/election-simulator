@@ -8,6 +8,12 @@
       "path": "amendments/001-operational-clarifications.json",
       "sha256": "4bfecbfca1d11d4a90c63d324896b3436de2bfab6cf91d49d56c464fee08561a",
       "primary_scoring_effect": "NONE"
+    },
+    {
+      "amendment_number": 2,
+      "path": "amendments/002-standard-wis-normalization.json",
+      "sha256": "9023ecca77ded5b5f89e09d9f1daeca280e0b549381a1c7108f8d20e7c70380e",
+      "primary_scoring_effect": "Fallback-B score scale corrected; ranking unchanged"
     }
   ],
   "captures": []

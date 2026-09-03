@@ -456,7 +456,8 @@ def weighted_interval_score(
     2/alpha*(y-upper)*I(y>upper)``.
 
     The median has weight ``1/2`` and each interval has weight ``alpha/2``;
-    the weighted sum is normalised by the sum of those weights.  This function
+    the standard WIS normalisation divides the weighted sum by ``K + 1/2``.
+    This function
     requires a median and both endpoints for every requested level.  It does
     not interpolate, fit, or otherwise manufacture unreported quantiles.
     """
@@ -466,7 +467,7 @@ def weighted_interval_score(
     levels = _normalise_interval_levels(interval_levels)
     median = _quantile_for(values, 0.5)
     numerator = 0.5 * abs(median - target)
-    denominator = 0.5
+    denominator = len(levels) + 0.5
     for level in levels:
         alpha = 1.0 - level
         lower = _quantile_for(values, alpha / 2.0)
@@ -480,7 +481,6 @@ def weighted_interval_score(
             interval_score += 2.0 / alpha * (target - upper)
         weight = alpha / 2.0
         numerator += weight * interval_score
-        denominator += weight
     return float(numerator / denominator)
 
 

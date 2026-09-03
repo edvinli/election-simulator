@@ -75,6 +75,9 @@ levels. The scorer uses all and only the common levels (and requires each
 level for every scored party). No quantile interpolation or joint
 distribution reconstruction is performed.
 
+Per amendment 002, the weighted sum uses the standard WIS normalization
+`K + 1/2`; the earlier weighted-average denominator is not used.
+
 ## Fallback hierarchy
 
 `select_primary_scoring_tier` encodes the preregistered hierarchy:
