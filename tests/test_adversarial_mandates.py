@@ -1,4 +1,18 @@
-"""Genuinely unique 20,000+ adversarial stress test suite comparing fast mandate allocator against exact legal reference."""
+"""Genuinely unique 20,000+ adversarial stress test suite comparing fast mandate allocator against exact legal reference.
+
+The exhaustive 20,000-case audit takes roughly nine minutes, which is most of
+the wall-clock cost of the whole unit suite. ELECTIONSIM_ADVERSARIAL_CASES
+lowers the case count so the pull-request layer can still prove the parity and
+branch-coverage properties on every change while the exhaustive audit runs on
+the nightly schedule. The assertions are written against the configured count,
+so a reduced run is a smaller audit of the same kind and not a weaker one: the
+dispatcher must still match the exact legal reference on 100% of cases, every
+allocation must still sum to 349, all inputs must still be distinct, and every
+legal branch (awarded cutoff tie, local 12% rule, overhang, multi-return) must
+still be reached. Anything below _MIN_BRANCH_COVERAGE_CASES is rejected rather
+than run, because the generators cycle the branch selector modulo 7 and the
+fixed-seat map modulo 5 and a shorter run could silently stop covering them.
+"""
 
 import hashlib
 import json
@@ -47,12 +61,46 @@ def _has_actual_adjustment_boundary_tie(ref_alloc, cv_map: dict[str, dict[str, i
     return False
 
 
+# The full audit. Nightly runs this; nothing else should lower it silently.
+_FULL_AUDIT_CASES = 20_000
+
+# The branch generators cycle i % 7 and the fixed-seat map i % 5, so a run has
+# to be a comfortable multiple of 35 before every combination is reached often
+# enough for the "this legal branch was exercised" assertions to be meaningful.
+_MIN_BRANCH_COVERAGE_CASES = 350
+
+
+def _configured_case_count() -> int:
+    """Resolve the audit size, refusing values too small to cover every branch."""
+    raw = os.environ.get("ELECTIONSIM_ADVERSARIAL_CASES")
+    if raw is None or raw.strip() == "":
+        return _FULL_AUDIT_CASES
+    try:
+        requested = int(raw)
+    except ValueError as exc:
+        raise ValueError(
+            f"ELECTIONSIM_ADVERSARIAL_CASES must be an integer, got {raw!r}"
+        ) from exc
+    if requested > _FULL_AUDIT_CASES:
+        raise ValueError(
+            "ELECTIONSIM_ADVERSARIAL_CASES cannot exceed the audit size "
+            f"{_FULL_AUDIT_CASES}; got {requested}"
+        )
+    if requested < _MIN_BRANCH_COVERAGE_CASES:
+        raise ValueError(
+            "ELECTIONSIM_ADVERSARIAL_CASES must be at least "
+            f"{_MIN_BRANCH_COVERAGE_CASES} to cover every legal branch; "
+            f"got {requested}"
+        )
+    return requested
+
+
 class TestAdversarialMandateAllocation(unittest.TestCase):
-    """Stress testing fast vectorized allocator vs exact legal reference on 20,000 genuinely unique matrices."""
+    """Stress testing fast vectorized allocator vs exact legal reference on genuinely unique matrices."""
 
     def test_20000_unique_adversarial_fast_vs_exact_cases(self) -> None:
-        """Run 20,000 unique deterministic adversarial cases covering all legal branches and exact cutoff ties."""
-        n_cases = 20_000
+        """Run unique deterministic adversarial cases covering all legal branches and exact cutoff ties."""
+        n_cases = _configured_case_count()
         rng = np.random.default_rng(20260913)
 
         fixed_2018_arr = np.array([FIXED_SEATS_2018[c] for c in OFFICIAL_CONSTITUENCY_CODES], dtype=np.int64)
@@ -252,7 +300,11 @@ class TestAdversarialMandateAllocation(unittest.TestCase):
         total_time = time.perf_counter() - t_start
 
         # Assertions
-        self.assertGreaterEqual(len(unique_input_hashes), n_cases, "All 20,000 matrix/config inputs must be distinct!")
+        self.assertGreaterEqual(
+            len(unique_input_hashes),
+            n_cases,
+            f"All {n_cases:,} matrix/config inputs must be distinct!",
+        )
         self.assertEqual(counts["total_seat_violations"], 0, "All allocations must sum strictly to 349 seats!")
         self.assertEqual(counts["fast_kernel_mismatches"], 0, "Fast kernel must match exact reference on every case it handles!")
         self.assertEqual(counts["dispatcher_matches"], n_cases, "Production dispatcher must match exact reference on 100% of all cases!")
@@ -268,6 +320,8 @@ class TestAdversarialMandateAllocation(unittest.TestCase):
         out_report = {
             "unique_cases_generated": len(unique_input_hashes),
             "canonical_input_config_hashes": len(unique_input_hashes),
+            "audit_cases_configured": n_cases,
+            "is_full_audit": n_cases == _FULL_AUDIT_CASES,
             "total_cases": counts["total_cases"],
             "runtime_seconds": round(total_time, 2),
             "fast_path_count": counts["fast_path"],
@@ -291,6 +345,16 @@ class TestAdversarialMandateAllocation(unittest.TestCase):
         # the tracked evidence artifact.
         report_env = os.environ.get("ELECTIONSIM_ADVERSARIAL_REPORT")
         if report_env:
+            # A reduced run is a legitimate pull-request check but it is not
+            # the audit the tracked artifact stands for. Writing it here would
+            # silently downgrade the recorded evidence, so refuse instead.
+            if n_cases != _FULL_AUDIT_CASES:
+                raise AssertionError(
+                    "refusing to write the adversarial audit artifact from a "
+                    f"reduced run of {n_cases:,} cases; unset "
+                    "ELECTIONSIM_ADVERSARIAL_CASES to regenerate evidence at "
+                    f"the full {_FULL_AUDIT_CASES:,}"
+                )
             report_path = Path(report_env)
             report_path.parent.mkdir(parents=True, exist_ok=True)
             with report_path.open("w", encoding="utf-8") as f:
@@ -298,7 +362,7 @@ class TestAdversarialMandateAllocation(unittest.TestCase):
                 f.write("\n")
 
         print("\n==========================================================================================")
-        print("GENUINE 20,000 ADVERSARIAL MANDATE AUDIT REPORT")
+        print(f"GENUINE {n_cases:,} ADVERSARIAL MANDATE AUDIT REPORT")
         print(f"Total Unique Cases: {out_report['unique_cases_generated']:,} in {total_time:.2f} s")
         print(f"  Fast Path:                  {out_report['fast_path_count']:,}")
         print(f"  Exact Tie Fallbacks:        {out_report['exact_tie_fallback_count']:,}")

@@ -50,6 +50,8 @@ from scripts.vote_share_calibration.election_noise_b import (
     zero_sum_projector,
 )
 
+from tests._freeze_drift import unexpected_drift
+
 
 def synth(k: int, seed: int) -> np.ndarray:
     rng = np.random.default_rng(seed)
@@ -222,11 +224,11 @@ class HistoricalFreezeRelationship(unittest.TestCase):
         from diagnostics.election_noise_v2.control_baseline_amendment2.harness2 import freeze as ev
         from diagnostics.election_noise_v2.challengers import freeze_challengers as cf
         for name, res in (("evaluator", ev.verify()), ("challenger", cf.verify())):
-            drifted = {d["file"] for d in res["drift"]}
-            self.assertTrue(
-                drifted <= INTENTIONALLY_CHANGED,
+            unexpected = unexpected_drift(res, INTENTIONALLY_CHANGED)
+            self.assertEqual(
+                unexpected, set(),
                 f"{name} freeze drifted outside the intentional flip: "
-                f"{sorted(drifted - INTENTIONALLY_CHANGED)}")
+                f"{sorted(unexpected)}")
 
     def test_freeze_artifacts_are_preserved_byte_for_byte(self):
         expected = {

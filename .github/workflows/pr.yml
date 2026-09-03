@@ -1,0 +1,205 @@
+# Pull-request layer: run what the change affects, in parallel, and nothing else.
+#
+# The workflow this replaced triggered on `push` to every branch *and* on
+# `pull_request`, so a branch with an open pull request ran the whole
+# twelve-minute suite twice for the same commit. Pushes to main are covered by
+# full.yml; this workflow is only ever about a proposed change.
+name: PR
+
+on:
+  pull_request:
+  merge_group:
+
+# A newer push makes the previous run's answer irrelevant.
+concurrency:
+  group: pr-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Fast feedback, and the selector every other job trusts.
+  # ---------------------------------------------------------------------------
+  static:
+    name: Static checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - name: Set up Python
+        run: uv python install 3.12
+      - name: Install the locked dependency set
+        run: uv sync --locked
+
+      - name: Byte-compile every source and test file
+        run: uv run python -m compileall -q scripts tests
+
+      # The selector decides what the unit jobs below run. If it under-selects,
+      # the matrix silently shrinks and every job still reports success, so it
+      # is tested before anything relies on it.
+      - name: Test the CI topology tooling
+        run: uv run python -m unittest tests.test_ci_topology
+
+  # ---------------------------------------------------------------------------
+  # What does this diff affect?
+  # ---------------------------------------------------------------------------
+  plan:
+    name: Plan affected suites
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: static
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      empty: ${{ steps.plan.outputs.empty }}
+      reason: ${{ steps.plan.outputs.reason }}
+    steps:
+      # Selection diffs against the merge base, so history is required.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - name: Set up Python
+        run: uv python install 3.12
+      - name: Install the locked dependency set
+        run: uv sync --locked
+
+      - name: Select affected test modules
+        id: plan
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+        run: |
+          set -euo pipefail
+          matrix="$(uv run python -m scripts.ci.test_topology matrix \
+            --base "$BASE_SHA" --shards 2 2> reason.txt)"
+          reason="$(head -n1 reason.txt)"
+          cat reason.txt
+
+          included="$(printf '%s' "$matrix" \
+            | uv run python -c 'import json,sys; print(len(json.load(sys.stdin)["include"]))')"
+          if [[ "$included" -eq 0 ]]; then
+            echo "empty=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "empty=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+          echo "reason=$reason" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Affected suite selection"
+            echo ""
+            echo "- $reason"
+            echo "- shards: $included"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # ---------------------------------------------------------------------------
+  # The affected unit tests, split across shards.
+  # ---------------------------------------------------------------------------
+  unit:
+    name: Unit shard ${{ matrix.shard }} (${{ matrix.count }} modules)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: plan
+    if: needs.plan.outputs.empty == 'false'
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - name: Set up Python
+        run: uv python install 3.12
+      - name: Install the locked dependency set
+        run: uv sync --locked
+
+      # tests.test_reference_publication_contract executes under Node. Without
+      # Node it does not fail, it skips, so Node is present on every shard
+      # rather than only on the one that happens to hold it today.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run this shard
+        shell: bash
+        env:
+          # A reduced but genuine allocator parity audit: the production
+          # dispatcher must still match the exact legal reference on 100% of
+          # cases and every legal branch (cutoff tie, local 12%, overhang,
+          # multi-return) must still be reached. Only the exhaustive
+          # 20,000-case sweep is deferred, to nightly.yml.
+          ELECTIONSIM_ADVERSARIAL_CASES: "700"
+          MODULES: ${{ matrix.modules }}
+        run: |
+          set -euo pipefail
+          echo "modules: $MODULES"
+          # shellcheck disable=SC2086
+          uv run python -m unittest -v $MODULES
+
+      - name: Assert the Node reference contract did not silently skip
+        # Only meaningful on the shard that actually holds the contract module.
+        if: contains(matrix.modules, 'tests.test_reference_publication_contract')
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv run python -m unittest -v \
+            tests.test_reference_publication_contract.ReferencePublicationContractTests \
+            2>&1 | tee reference.log
+          if grep -q "skipped" reference.log; then
+            echo "::error::Reference publication contract tests skipped; Node coverage was lost."
+            exit 1
+          fi
+
+  # ---------------------------------------------------------------------------
+  # Single required status. Branch protection points here, not at the matrix,
+  # whose job names change with the selection.
+  # ---------------------------------------------------------------------------
+  required:
+    name: PR required checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [static, plan, unit]
+    if: always()
+    steps:
+      - name: Fail unless every required job succeeded
+        shell: bash
+        env:
+          STATIC: ${{ needs.static.result }}
+          PLAN: ${{ needs.plan.result }}
+          UNIT: ${{ needs.unit.result }}
+          EMPTY: ${{ needs.plan.outputs.empty }}
+          REASON: ${{ needs.plan.outputs.reason }}
+        run: |
+          set -euo pipefail
+          echo "static=$STATIC plan=$PLAN unit=$UNIT empty=$EMPTY"
+          echo "selection: $REASON"
+          if [[ "$STATIC" != "success" || "$PLAN" != "success" ]]; then
+            echo "::error::a required job did not succeed"
+            exit 1
+          fi
+          # `unit` may be skipped only when the selector proved that no Python
+          # test can be affected. Any other skip is a broken matrix and must
+          # not be allowed to read as success.
+          if [[ "$EMPTY" == "true" ]]; then
+            if [[ "$UNIT" != "skipped" ]]; then
+              echo "::error::unit result was '$UNIT' for an empty selection"
+              exit 1
+            fi
+            echo "No Python test is affected by this diff."
+            exit 0
+          fi
+          if [[ "$UNIT" != "success" ]]; then
+            echo "::error::affected unit tests did not pass (result: $UNIT)"
+            exit 1
+          fi
+          echo "All required PR checks passed."

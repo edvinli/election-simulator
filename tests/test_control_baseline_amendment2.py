@@ -32,6 +32,8 @@ _HAS_GEO = (
 from scripts.mandates.law import MandateLaw, mandate_law_for_election_year
 from scripts.simulator.config import PARLIAMENTARY_PARTIES_8
 
+from tests._freeze_drift import unexpected_drift
+
 CERTIFIED = {
     2014: {"M": 84, "L": 19, "C": 22, "KD": 16, "S": 113, "V": 21, "MP": 25, "SD": 49},
     2018: {"M": 70, "L": 20, "C": 31, "KD": 22, "S": 100, "V": 28, "MP": 16, "SD": 62},
@@ -284,11 +286,11 @@ class EvaluatorFreezeTest(unittest.TestCase):
         from diagnostics.election_noise_v2.control_baseline_amendment2.harness2.freeze import verify
 
         res = verify()
-        drifted = {d["file"] for d in res["drift"]}
-        self.assertTrue(
-            drifted <= self.KNOWN_POST_FREEZE_CHANGES,
+        unexpected = unexpected_drift(res, self.KNOWN_POST_FREEZE_CHANGES)
+        self.assertEqual(
+            unexpected, set(),
             f"evaluator drift outside the known post-freeze set: "
-            f"{sorted(drifted - self.KNOWN_POST_FREEZE_CHANGES)}")
+            f"{sorted(unexpected)}")
         self.assertGreater(res["checks"], 30)
 
     def test_freeze_records_the_amendment2_hashes(self) -> None:

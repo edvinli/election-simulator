@@ -30,6 +30,22 @@ from scripts.simulator.config import PARLIAMENTARY_PARTIES_8
 
 
 class ForecastHistoryTests(unittest.TestCase):
+    """Unit tests for history assembly, isolated from the repository's archive.
+
+    Every ``build_history`` call here passes ``archive_dir=None``. The default
+    is ``data/processed/prospective_forecasts``, and ``build_history`` folds
+    every date it finds there into ``observation_dates``. These tests pin
+    explicit ``dates`` and a ``latest_result`` for 2026-05-24, so once the
+    publication automation archived anything later, ``latest_result`` no longer
+    matched ``max(observation_dates)`` and the calls raised. The tests were
+    reading production state they never meant to depend on, and they broke a
+    little further with every publish.
+
+    Archive substitution itself is still covered: the cases that exercise it
+    inject ``archived_points`` directly, which is the behaviour under test
+    rather than whatever happens to be on disk.
+    """
+
     @staticmethod
     def _matrices() -> tuple[np.ndarray, np.ndarray]:
         # The first eight columns are the parliamentary parties in canonical
@@ -221,6 +237,7 @@ class ForecastHistoryTests(unittest.TestCase):
                 writer.writeheader()
                 writer.writerows([*rows, *before])
             payload = build_history(
+                archive_dir=None,
                 dates=["2022-09-11"],
                 poll_file=path,
                 samples=4,
@@ -255,6 +272,7 @@ class ForecastHistoryTests(unittest.TestCase):
                 "simulation_runner": runner,
                 "source_worktree_clean": True,
                 "production_latest_samples": 4,
+                "archive_dir": None,
             }
             first = build_history(**kwargs)
             second = build_history(**kwargs)
@@ -294,6 +312,7 @@ class ForecastHistoryTests(unittest.TestCase):
             path = Path(temporary) / "polls.csv"
             self._poll_csv(path)
             payload = build_history(
+                archive_dir=None,
                 dates=["2026-05-23", "2026-05-24"],
                 poll_file=path,
                 samples=4,
@@ -324,6 +343,7 @@ class ForecastHistoryTests(unittest.TestCase):
             path = Path(temporary) / "polls.csv"
             self._poll_csv(path)
             first = build_history(
+                archive_dir=None,
                 dates=["2026-05-23"],
                 poll_file=path,
                 samples=4,
@@ -333,6 +353,7 @@ class ForecastHistoryTests(unittest.TestCase):
                 production_latest_samples=4,
             )
             second = build_history(
+                archive_dir=None,
                 dates=["2026-05-23", "2026-05-24"],
                 poll_file=path,
                 samples=4,
@@ -369,6 +390,7 @@ class ForecastHistoryTests(unittest.TestCase):
             path = Path(temporary) / "polls.csv"
             self._poll_csv(path)
             payload = build_history(
+                archive_dir=None,
                 dates=["2026-05-23", "2026-05-24"],
                 poll_file=path,
                 samples=4,
@@ -405,6 +427,7 @@ class ForecastHistoryTests(unittest.TestCase):
             path = Path(temporary) / "polls.csv"
             self._poll_csv(path)
             initial = build_history(
+                archive_dir=None,
                 dates=["2026-05-23", "2026-05-24"],
                 poll_file=path,
                 samples=4,
@@ -414,6 +437,7 @@ class ForecastHistoryTests(unittest.TestCase):
                 source_worktree_clean=True,
             )
             replaced = build_history(
+                archive_dir=None,
                 dates=["2026-05-23", "2026-05-24"],
                 poll_file=path,
                 samples=4,
@@ -453,6 +477,7 @@ class ForecastHistoryTests(unittest.TestCase):
             path = Path(temporary) / "polls.csv"
             self._poll_csv(path)
             payload = build_history(
+                archive_dir=None,
                 dates=["2026-05-23", "2026-05-24"],
                 poll_file=path,
                 samples=4,
@@ -500,6 +525,7 @@ class ForecastHistoryTests(unittest.TestCase):
     def test_serial_and_parallel_execution_determinism(self) -> None:
         dates = ["2026-05-23", "2026-05-24"]
         serial = build_history(
+            archive_dir=None,
             dates=dates,
             samples=50,
             production_latest_samples=50,
@@ -509,6 +535,7 @@ class ForecastHistoryTests(unittest.TestCase):
             source_worktree_clean=True,
         )
         parallel = build_history(
+            archive_dir=None,
             dates=dates,
             samples=50,
             production_latest_samples=50,

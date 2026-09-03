@@ -19,6 +19,16 @@ PROCESSED_TIMESERIES_PATH = (
 )
 PARLIAMENTARY_PARTIES = ("M", "L", "C", "KD", "S", "V", "MP", "SD")
 
+#: The series is daily and contiguous, so its length is fully determined by its
+#: endpoints -- asserting a row count as well only restated the size of
+#: whatever data happened to be checked in, and broke on every polling refresh.
+#: The first date is a real claim (the party chart begins here) and is pinned.
+#: The last date is bounded instead: it may only move forward, and it may never
+#: reach into the future, which is the property a poll-of-polls series has to
+#: hold and which an exact literal never checked.
+SERIES_FIRST_DATE = date(2009, 1, 2)
+SERIES_COVERED_THROUGH_AT_LEAST = date(2026, 8, 24)
+
 
 class PollofpollsPartyChartExtensionTests(unittest.TestCase):
     def test_parse_party_chart_pop_series_returns_dates_and_floats(self) -> None:
@@ -34,13 +44,20 @@ class PollofpollsPartyChartExtensionTests(unittest.TestCase):
 
     def test_extract_party_chart_pop_timeseries_starts_in_2009(self) -> None:
         rows = extract_party_chart_pop_timeseries(RAW_DIR)
-        self.assertEqual(len(rows), 6444)
-        self.assertEqual(rows[0]["date"], "2009-01-02")
-        self.assertEqual(rows[-1]["date"], "2026-08-24")
-
         dates = [date.fromisoformat(r["date"]) for r in rows]
+
+        self.assertEqual(dates[0], SERIES_FIRST_DATE)
+        self.assertGreaterEqual(
+            dates[-1], SERIES_COVERED_THROUGH_AT_LEAST,
+            "the party chart series lost coverage it previously had")
+        self.assertLessEqual(
+            dates[-1], date.today(),
+            "the party chart series extends into the future")
+
         self.assertEqual(dates, sorted(dates))
         self.assertEqual(len(set(dates)), len(dates))
+        # Daily and gapless: with sortedness and uniqueness above, this pins
+        # the row count exactly without naming a number that drifts.
         self.assertEqual(len(rows), (dates[-1] - dates[0]).days + 1)
 
         first = rows[0]

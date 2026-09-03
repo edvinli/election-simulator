@@ -211,29 +211,58 @@ class BacktestExecutionAndLogicTests(unittest.TestCase):
         # Different base seed produces different seed
         self.assertNotEqual(seed1, seed4)
 
-    def test_missing_target_observation_skipped_cleanly(self) -> None:
-        # Origin = 2026-08-23 (the maximum date in dataset)
-        # Horizon 7d -> Target 2026-08-30 (which does not exist)
-        res = run_backtest(
-            model="no_change",
-            start_date="2026-08-23",
-            end_date="2026-08-23",
-            horizons=(7, 14),
-            samples=500,
+    @staticmethod
+    def _last_timeseries_date() -> date:
+        """The final observation date in the processed poll-of-polls series."""
+        path = (
+            Path(__file__).resolve().parents[1]
+            / "data" / "processed" / "pollofpolls" / "pollofpolls_timeseries.csv"
         )
+        with path.open(encoding="utf-8") as handle:
+            dates = [row["date"] for row in csv.DictReader(handle)]
+        return date.fromisoformat(max(dates))
+
+    def test_missing_target_observation_skipped_cleanly(self) -> None:
+        # A case whose target observation lies past the end of the dataset must
+        # be skipped, not evaluated against nothing.
+        #
+        # The origin is read from the dataset rather than written in. It used to
+        # be the literal 2026-08-23, described in a comment as "the maximum date
+        # in dataset"; once the polling refresh carried the series to 2026-08-30
+        # the 7-day target existed after all, one case was legitimately
+        # evaluated, and the test failed while the property it names still held.
+        # Anchoring to the last observation keeps the case genuinely
+        # out-of-range however far the data advances.
+        last_observed = self._last_timeseries_date()
+        origin = last_observed.isoformat()
+        # output_dir defaults to data/processed/backtests inside the repository,
+        # so without this the test leaves untracked result files behind on
+        # every run and a CI workspace is dirty afterwards.
+        with tempfile.TemporaryDirectory() as out:
+            res = run_backtest(
+                model="no_change",
+                start_date=origin,
+                end_date=origin,
+                horizons=(7, 14),
+                samples=500,
+                output_dir=out,
+            )
         self.assertEqual(res["summary"]["evaluated_cases_count"], 0)
         self.assertEqual(res["summary"]["skipped_cases_count"], 2)
         self.assertEqual(len(res["results_df"]), 0)
 
     def test_no_change_samples_identical_across_horizons_for_same_origin(self) -> None:
-        res = run_backtest(
-            model="no_change",
-            start_date="2024-01-01",
-            end_date="2024-01-01",
-            horizons=(7, 14, 28),
-            samples=1000,
-            seed=42,
-        )
+        # See the note above: keep run results out of the repository.
+        with tempfile.TemporaryDirectory() as out:
+            res = run_backtest(
+                model="no_change",
+                start_date="2024-01-01",
+                end_date="2024-01-01",
+                horizons=(7, 14, 28),
+                samples=1000,
+                seed=42,
+                output_dir=out,
+            )
         df = res["results_df"]
         # Point forecasts (predictive P50) for party 'S' should be identical across horizons 7, 14, 28
         s_rows = df[df["party"] == "S"]
