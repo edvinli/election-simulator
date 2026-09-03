@@ -580,6 +580,39 @@ def _archive_point_from_record(
     }
 
 
+#: The fields an archived prospective point contributes to the published
+#: series.  It is a strict allowlist so an archive record cannot smuggle
+#: unrelated keys into the chart contract, and it lives here exactly once:
+#: the set was previously duplicated at both insertion sites, which is how it
+#: silently fell out of step with ``_archive_point_from_record`` and dropped
+#: the additive party block.
+_ARCHIVED_POINT_FIELDS: frozenset[str] = frozenset(
+    {
+        "date",
+        "samples",
+        "horizon_days",
+        "dynamics_horizon_days",
+        "provenance",
+        "groups",
+        "parties",
+        "source_git_commit",
+        "publication_generation",
+        "deterministic_payload_sha256",
+        "generated_at_utc",
+    }
+)
+
+
+def _archived_series_point(archived: Mapping[str, Any]) -> dict[str, Any]:
+    """Project one archived record onto the published series-point contract."""
+
+    return {
+        key: value
+        for key, value in archived.items()
+        if key in _ARCHIVED_POINT_FIELDS and value is not None
+    }
+
+
 def _load_archive_records(archive_dir: Path | str | None) -> list[Mapping[str, Any]]:
     if archive_dir is None:
         return []
@@ -902,24 +935,7 @@ def build_history(
             point_date != official_latest_date or archived["samples"] == production_latest_samples
         ):
             series.append(
-                {
-                    key: value
-                    for key, value in archived.items()
-                    if key
-                    in {
-                        "date",
-                        "samples",
-                        "horizon_days",
-                        "dynamics_horizon_days",
-                        "provenance",
-                        "groups",
-                        "source_git_commit",
-                        "publication_generation",
-                        "deterministic_payload_sha256",
-                        "generated_at_utc",
-                    }
-                    and value is not None
-                }
+                _archived_series_point(archived)
             )
             if not model_commit:
                 model_commit_value = str(archived.get("source_git_commit") or model_commit_value)
@@ -981,24 +997,7 @@ def build_history(
     for point_date, archived in archived_by_date.items():
         if point_date not in {date.fromisoformat(point["date"]) for point in series}:
             series.append(
-                {
-                    key: value
-                    for key, value in archived.items()
-                    if key
-                    in {
-                        "date",
-                        "samples",
-                        "horizon_days",
-                        "dynamics_horizon_days",
-                        "provenance",
-                        "groups",
-                        "source_git_commit",
-                        "publication_generation",
-                        "deterministic_payload_sha256",
-                        "generated_at_utc",
-                    }
-                    and value is not None
-                }
+                _archived_series_point(archived)
             )
     # Preserve points already present in a resumable artifact, including dates
     # from an earlier chunk that are not part of this invocation's requested
