@@ -59,6 +59,12 @@ from .contract import (
     validate_history_contract,
     write_history_json,
 )
+from .party_contract import (
+    build_parties_from_matrices,
+    parties_view_metadata,
+    party_point_from_archive_record,
+    series_carries_parties,
+)
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
@@ -484,6 +490,15 @@ def _point_from_result(
         "dynamics_horizon_days": dynamics_horizon,
         "provenance": provenance,
         "groups": groups,
+        # Additive party marginals from the identical joint draws.  Nothing is
+        # simulated twice and nothing is reconstructed from the coalition
+        # quantiles above; at the certified point these *are* the published
+        # party forecast.
+        "parties": build_parties_from_matrices(
+            votes,
+            seats,
+            party_order=HISTORY_PARTY_ORDER,
+        ),
     }
     if provenance != "reconstructed_current_model":
         manifest = manifest if isinstance(manifest, Mapping) else {}
@@ -541,6 +556,7 @@ def _archive_point_from_record(
     dynamics_horizon = source.get("dynamics_horizon_days", source.get("dynamics_eval_horizon"))
     if not isinstance(dynamics_horizon, int) or isinstance(dynamics_horizon, bool):
         dynamics_horizon = min(actual_horizon, HISTORY_DYNAMICS_CAP_DAYS)
+    archived_parties = party_point_from_archive_record(record)
     return {
         "date": point_date.isoformat(),
         "samples": samples,
@@ -548,6 +564,10 @@ def _archive_point_from_record(
         "dynamics_horizon_days": dynamics_horizon,
         "provenance": "prospective_archived",
         "groups": normalized_groups,
+        # Party marginals, unlike joint coalition intervals, *are* recoverable
+        # from an archived snapshot.  A snapshot that predates them yields
+        # None and the point simply carries no party block.
+        **({"parties": archived_parties} if archived_parties else {}),
         "generated_at_utc": source.get("generated_at_utc", record.get("generated_at_utc")),
         "source_git_commit": source.get("source_git_commit", record.get("source_git_commit")),
         "publication_generation": source.get(
@@ -1030,13 +1050,19 @@ def build_history(
             "Historiska prognoser är rekonstruerade i efterhand med dagens modell och den slutliga historiska Poll of Polls-serien. "
             "Den senaste punkten visar den officiella aktuella valprognosen. "
             "Äkta prospektiva arkivpunkter ersätts inte där arkivet saknar de gemensamma koalitionsdragningar som krävs för att beräkna koalitionsintervall korrekt. "
-            "Röstandelar beräknas över de åtta riksdagspartierna."
+            "Koalitionernas röstandelar beräknas över de åtta riksdagspartierna; "
+            "enskilda partiers röstandelar redovisas över hela valmanskåren."
         ),
         "archive_diagnostics": {
             "rich_archived_points_used": len(archived_by_date),
             "legacy_or_incomplete_archives_skipped": skipped_archives,
         },
     }
+    # Declared only when the series actually carries party summaries. Resuming
+    # from an artifact generated before this contract regenerates nothing, so
+    # such a run legitimately produces no party family at all.
+    if series_carries_parties(series):
+        payload["parties_view"] = parties_view_metadata()
     if existing_payload is not None:
         payload["resume_diagnostics"] = {
             "existing_points_reused": sum(
@@ -1234,6 +1260,11 @@ def update_history_with_production_result(
         }
     )
     payload["schedule"].update({"observation_count": len(series)})
+    # The party family travels with the artifact. Reconstructed points carry
+    # whatever the last full generation gave them; the certified point always
+    # carries its own, derived from its own draws.
+    if series_carries_parties(series):
+        payload["parties_view"] = parties_view_metadata()
     if generated_at_utc is not None:
         payload["generated_at_utc"] = str(generated_at_utc)
     payload["deterministic_content_sha256"] = deterministic_history_sha256(payload)

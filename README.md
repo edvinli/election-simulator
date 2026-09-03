@@ -53,6 +53,7 @@ For a detailed breakdown of our modeling philosophy, comparisons with Poll of Po
 
 - **[Modeling Philosophy & Design Choices](docs/MODELING_PHILOSOPHY.md)**: Full design rationale, benchmark evaluation, and rejected alternatives log.
 - **[Coherent Forward Campaign Paths](docs/future_campaign_paths.md)**: Whole-path opinion trajectories from today to election day, and the bitwise election-day parity argument.
+- **[Per-Party Time Series](docs/party_timeseries.md)**: the additive party family on the same chart, its nine-category denominator, and election-day parity with the certified party forecast.
 - **[Campaign-Path Retrospective Evaluation](docs/campaign_path_evaluation.md)**: Rolling out-of-sample CRPS, interval coverage and Energy Scores against the rejected alternatives.
 - **[Election Simulator v1.0 Specification](docs/election_simulator.md)**: End-to-end mathematical specification.
 - **[PoP State-Dependence Diagnostic](docs/pop_state_dependence_evidence.md)**: Out-of-sample evaluation of state-conditioned dynamics.
@@ -76,6 +77,7 @@ make test-scb-behavioral-diagnostic
 make test-pop-state-diagnostics
 make test-campaign-paths
 make test-campaign-path-eval
+make test-party-timeseries
 
 # Run data processing & diagnostic pipelines
 make process-scb-support-voting

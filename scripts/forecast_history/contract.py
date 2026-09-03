@@ -513,6 +513,13 @@ def validate_history_contract(payload: Mapping[str, Any]) -> None:
             raise ValueError(f"polls contains duplicate poll_id {poll_id!r}")
         poll_ids.add(poll_id)
 
+    # Additive party family.  Imported lazily because the party module reads
+    # this module's quantile helpers, so a module-level import would be
+    # circular.  A payload without ``parties_view`` is unaffected.
+    from .party_contract import validate_parties_view
+
+    validate_parties_view(payload)
+
     digest = payload.get("deterministic_content_sha256")
     if digest is not None:
         if not _valid_sha256(digest):
