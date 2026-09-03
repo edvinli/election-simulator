@@ -25,6 +25,7 @@ from scripts.forecast_history.campaign_paths import (
     campaign_paths_tooltip_sv,
     draw_trajectory_indices_and_signs,
     election_day_tooltip_sv,
+    origin_state_tooltip_sv,
     resolve_endpoint_horizon,
     simulate_campaign_paths,
 )
@@ -233,7 +234,11 @@ class CampaignPathContractTests(unittest.TestCase):
         self.assertFalse(rendering["intermediate_seat_trajectory"])
         self.assertFalse(rendering["poll_observations_in_future"])
         self.assertFalse(rendering["poll_of_polls_observations_in_future"])
-        self.assertEqual(rendering["continues_from"], "poll_of_polls_opinion_series")
+        self.assertEqual(rendering["continues_from"], "current_opinion_state")
+        self.assertEqual(rendering["origin_state_label"], "Opinionsläge i dag")
+        self.assertEqual(
+            rendering["origin_state_tooltip_sv"], origin_state_tooltip_sv(ORIGIN)
+        )
 
     def test_representative_paths_are_ordered_unique_and_in_range(self) -> None:
         history, paths = self._fixture()
@@ -247,6 +252,49 @@ class CampaignPathContractTests(unittest.TestCase):
                 track = item["values"][coalition]
                 self.assertEqual(len(track), self.PATH_DAYS + 1)
                 self.assertTrue(all(0.0 <= value <= 100.0 for value in track))
+
+    def test_day_zero_is_published_as_state_only_and_labelled_separately(self) -> None:
+        """The fan's origin is the latent state, not the certified forecast."""
+
+        history, paths = self._fixture()
+        validate_future_campaign_paths_contract(history)
+        self.assertEqual(paths["path_construction"]["origin_day_quantity"], "opinion_state_only")
+        self.assertEqual(paths["bands"][0]["path_day"], 0)
+        self.assertEqual(paths["bands"][0]["date"], ORIGIN)
+        self.assertEqual(paths["rendering"]["continues_from"], "current_opinion_state")
+        self.assertIn("inte valdagsprognosen", paths["rendering"]["origin_state_tooltip_sv"])
+
+    def test_validator_rejects_a_day_zero_that_claims_more_than_the_state(self) -> None:
+        history, _ = self._fixture()
+        history["future_campaign_paths"]["path_construction"]["origin_day_quantity"] = (
+            "opinion_state_plus_dynamics"
+        )
+        with self.assertRaisesRegex(ValueError, "current-state uncertainty only"):
+            validate_future_campaign_paths_contract(history)
+
+    def test_validator_rejects_a_missing_origin_state_label(self) -> None:
+        history, _ = self._fixture()
+        del history["future_campaign_paths"]["rendering"]["origin_state_label"]
+        with self.assertRaisesRegex(ValueError, "origin state label"):
+            validate_future_campaign_paths_contract(history)
+
+    def test_the_disclosure_tracks_the_day_map(self) -> None:
+        """A stretched path must not claim to be a same-length movement."""
+
+        identity = campaign_paths_tooltip_sv(ORIGIN, ELECTION, "identity", 11)
+        stretched = campaign_paths_tooltip_sv(ORIGIN, ELECTION, "monotone_stretch", 112)
+        self.assertIn("av samma längd", identity)
+        self.assertNotIn("av samma längd", stretched)
+        self.assertIn("tidsutsträckt", stretched)
+        self.assertIn("112 dagar", stretched)
+
+    def test_validator_rejects_a_same_length_claim_on_a_stretched_path(self) -> None:
+        history, _ = self._fixture()
+        paths = history["future_campaign_paths"]
+        paths["path_construction"]["time_warp"] = "monotone_stretch"
+        paths["path_construction"]["endpoint_horizon_days"] = 7
+        with self.assertRaisesRegex(ValueError, "disclosure is missing or changed"):
+            validate_future_campaign_paths_contract(history)
 
     def test_validator_rejects_a_leaked_trajectory_end(self) -> None:
         history, _ = self._fixture()

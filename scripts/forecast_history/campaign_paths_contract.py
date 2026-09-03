@@ -43,9 +43,11 @@ from .campaign_paths import (
     ELECTION_DAY_LABEL_SV,
     FUTURE_REGION_LABEL_SV,
     ORIGIN_BOUNDARY_LABEL_SV,
+    ORIGIN_STATE_LABEL_SV,
     PATH_LEGEND_SV,
     campaign_paths_tooltip_sv,
     election_day_tooltip_sv,
+    origin_state_tooltip_sv,
     simulate_campaign_paths,
 )
 from .contract import DEFAULT_COALITIONS, QUANTILE_LEVELS
@@ -57,7 +59,12 @@ SECONDARY_ROLE = "secondary_analytical_view"
 ENDPOINT_PARITY_GUARANTEE = "bitwise_identical_to_production_election_day_draws"
 PATH_QUANTITY = "underlying_opinion_share"
 PATH_SELECTION_RULE = "evenly_spaced_draw_indices"
-CONTINUES_FROM = "poll_of_polls_opinion_series"
+#: What the fan emanates from.  Not the certified forecast point on the same
+#: date — that carries campaign dynamics and ElectionNoise on top — and not the
+#: published Poll of Polls series, which the chart no longer draws.  It is the
+#: model's own latent opinion state at the origin, published as ``bands[0]``.
+CONTINUES_FROM = "current_opinion_state"
+ORIGIN_DAY_QUANTITY = "opinion_state_only"
 
 #: The secondary fan answers a strictly narrower question than the primary
 #: view, and the published copy has to say so in the reader's language.
@@ -229,6 +236,9 @@ def build_future_campaign_paths(
             "latest_trajectory_end": str(construction["latest_trajectory_end"]),
             "endpoint_horizon_days": int(construction["endpoint_horizon_days"]),
             "time_warp": str(construction["time_warp"]),
+            # Day 0 carries current-state uncertainty only: no campaign
+            # dynamics, no ElectionNoise, no geography, no mandates.
+            "origin_day_quantity": ORIGIN_DAY_QUANTITY,
             "synthesized_future_polls": False,
             "daily_independent_random_walk": False,
             "directional_momentum": False,
@@ -264,7 +274,12 @@ def build_future_campaign_paths(
             "groups": deepcopy(dict(anchor_groups)),
             "tooltip_sv": election_day_tooltip_sv(election),
         },
-        "tooltip_sv": campaign_paths_tooltip_sv(origin, election),
+        "tooltip_sv": campaign_paths_tooltip_sv(
+            origin,
+            election,
+            str(construction["time_warp"]),
+            int(construction["endpoint_horizon_days"]),
+        ),
         "rendering": {
             "x_axis_max": election.isoformat(),
             "future_region": {
@@ -274,6 +289,8 @@ def build_future_campaign_paths(
                 "label": FUTURE_REGION_LABEL_SV,
             },
             "origin_boundary_label": ORIGIN_BOUNDARY_LABEL_SV,
+            "origin_state_label": ORIGIN_STATE_LABEL_SV,
+            "origin_state_tooltip_sv": origin_state_tooltip_sv(origin),
             "election_day_label": election_day_label_sv(election),
             "election_day_distribution_label": ELECTION_DAY_LABEL_SV,
             "path_legend_label": PATH_LEGEND_SV,
@@ -352,9 +369,6 @@ def validate_future_campaign_paths_contract(
     samples = value.get("samples")
     if not isinstance(samples, int) or isinstance(samples, bool) or samples <= 0:
         raise ValueError("future_campaign_paths samples must be a positive integer")
-    if value.get("tooltip_sv") != campaign_paths_tooltip_sv(origin, election):
-        raise ValueError("future_campaign_paths disclosure is missing or changed")
-
     construction = value.get("path_construction")
     if not isinstance(construction, Mapping):
         raise ValueError("future_campaign_paths.path_construction must be an object")
@@ -379,6 +393,15 @@ def validate_future_campaign_paths_contract(
         raise ValueError("campaign paths declare an unknown time warp")
     if construction.get("time_warp") == "identity" and endpoint_horizon != path_days:
         raise ValueError("an identity time warp requires the endpoint horizon to equal path_days")
+    if construction.get("origin_day_quantity") != ORIGIN_DAY_QUANTITY:
+        raise ValueError("path day zero must publish current-state uncertainty only")
+    # The "same length" wording is only true under the identity day map, so the
+    # disclosure is regenerated from the published construction rather than
+    # compared against one fixed sentence.
+    if value.get("tooltip_sv") != campaign_paths_tooltip_sv(
+        origin, election, str(construction.get("time_warp")), endpoint_horizon
+    ):
+        raise ValueError("future_campaign_paths disclosure is missing or changed")
     latest_end = _coerce_date(
         construction.get("latest_trajectory_end"),
         name="future_campaign_paths.path_construction.latest_trajectory_end",
@@ -548,6 +571,10 @@ def validate_future_campaign_paths_contract(
         raise ValueError("campaign-path rendering boundaries must span origin to election day")
     if rendering.get("origin_boundary_label") != ORIGIN_BOUNDARY_LABEL_SV:
         raise ValueError("campaign-path origin boundary label changed")
+    if rendering.get("origin_state_label") != ORIGIN_STATE_LABEL_SV:
+        raise ValueError("campaign-path origin state label is missing or changed")
+    if rendering.get("origin_state_tooltip_sv") != origin_state_tooltip_sv(origin):
+        raise ValueError("campaign-path origin state disclosure is missing or changed")
     if rendering.get("election_day_label") != election_day_label_sv(election):
         raise ValueError("campaign-path election-day label changed")
     if rendering.get("election_day_distribution_label") != ELECTION_DAY_LABEL_SV:
@@ -571,7 +598,9 @@ def validate_future_campaign_paths_contract(
     if rendering.get("poll_of_polls_observations_in_future") is not False:
         raise ValueError("campaign paths must prohibit future Poll of Polls observations")
     if rendering.get("continues_from") != CONTINUES_FROM:
-        raise ValueError("campaign paths must declare that they continue the opinion series")
+        raise ValueError(
+            "campaign paths must declare that they continue the current opinion state"
+        )
 
 
 def mark_secondary_projection(projection: Mapping[str, Any]) -> dict[str, Any]:
@@ -601,6 +630,7 @@ def validate_secondary_projection_role(projection: Mapping[str, Any]) -> None:
 
 __all__ = [
     "CONTINUES_FROM",
+    "ORIGIN_DAY_QUANTITY",
     "ENDPOINT_PARITY_GUARANTEE",
     "PATH_QUANTITY",
     "PATH_SELECTION_RULE",

@@ -25,10 +25,25 @@ Two different quantities share the x-axis and the contract keeps them apart:
 | **Future region (`bands`, `paths`)** | **latent opinion** $\theta_{t+d}$ | OpinionState at $t$ + whole-path campaign dynamics |
 | **Election day (`election_day`)** | **official election-day forecast** | the certified production distribution, unchanged |
 
-The future paths are therefore the forward continuation of the **Poll of Polls
-opinion series**, not of the forecast line. The published contract states this
-explicitly as `rendering.continues_from = "poll_of_polls_opinion_series"` and
-`quantity = "underlying_opinion_share"`.
+The future paths are therefore a forward continuation of **latent opinion**,
+not of the forecast line. The published contract states this explicitly as
+`quantity = "underlying_opinion_share"` and
+`rendering.continues_from = "current_opinion_state"`.
+
+The origin of the fan is `bands[0]`, i.e. `path_day = 0`: the model's own
+estimate of *today's* latent opinion, carrying current-state uncertainty and
+nothing else. It is published with its own Swedish label
+(`rendering.origin_state_label` = "Opinionsläge i dag") and its own disclosure,
+because it is a **different quantity** from the certified `current_production`
+forecast point that sits on the same calendar date. That point additionally
+carries campaign dynamics and ElectionNoise and is therefore much wider. A
+consumer must draw the origin as its own marker and let the fan emanate from
+it; reusing the forecast dot as the fan's origin would silently equate two
+different distributions. `path_construction.origin_day_quantity` is
+`opinion_state_only` and the validator rejects anything else.
+
+The chart no longer draws the aggregate Poll of Polls series at all, so the
+contract does not claim to continue it.
 
 ElectionNoise is a *poll-to-election* structural error. It realizes once, on
 election day, and is deliberately absent from every intermediate day. The
@@ -181,8 +196,16 @@ $$\tau(d) = \max\big(1, \min(h, \operatorname{round}(d \cdot h / n))\big), \qqua
 published as `time_warp = "monotone_stretch"`. Endpoint parity is preserved
 exactly; the cost is that the intermediate days are a smoothed, time-dilated
 version of a shorter real campaign and therefore understate within-window
-volatility. This is a presentation limitation of the existing 112-day cap, not
-a new modeling assumption, and it is disclosed in the contract.
+volatility.
+
+The reader-facing disclosure tracks the day map rather than overstating the
+construction. Under the identity map it says each path is "en hel historisk
+opinionsrörelse **av samma längd**"; under a stretch it says the movement is
+"på *h* dagar, **tidsutsträckt över perioden**". `campaign_paths_tooltip_sv`
+takes the warp and the endpoint horizon, and the validator regenerates the
+sentence from the published construction, so the two cannot drift apart. This
+is a presentation limitation of the existing 112-day cap, not a new modeling
+assumption.
 
 ---
 
@@ -203,15 +226,16 @@ added to `future_projection`.
 | `path_days`, `samples` | $n$ and the Monte Carlo draw count |
 | `path_construction` | CLR space, sign policy, leakage rule, pool size, endpoint horizon, day map, and explicit `false` disclaimers for synthesized polls, daily random walk and directional momentum |
 | `endpoint_parity` | the bitwise guarantee, the verification flag, the observed difference and the three shared production sub-seeds |
-| `bands[]` | one point for `path_day = 0 … n`, each with per-coalition `vote` `p05/p25/p50/p75/p95`. **Vote only** |
+| `bands[]` | one point for `path_day = 0 … n`, each with per-coalition `vote` `p05/p25/p50/p75/p95`. **Vote only**; `path_day = 0` is state-only |
 | `paths` | a limited, deterministically selected set of individual trajectories: `count`, `selection`, `sample_indices`, and per-coalition daily vote tracks |
 | `election_day` | the certified production `groups` (vote **and** seats), `includes_election_noise: true`, `includes_geography_and_mandates: true`, `label_sv: "Valdagsprognos"` |
-| `rendering` | axis maximum, future-region bounds and Swedish labels, `interval_bands`, `path_units: ["vote"]`, `election_day_units: ["vote","seats"]`, `median_may_be_flat: true`, `intermediate_seat_trajectory: false`, and the two future-observation prohibitions |
-| `tooltip_sv` | the reader-facing disclosure, regenerated from the actual dates |
+| `rendering` | axis maximum, future-region bounds and Swedish labels including `origin_state_label` and `origin_state_tooltip_sv`, `interval_bands`, `path_units: ["vote"]`, `election_day_units: ["vote","seats"]`, `median_may_be_flat: true`, `intermediate_seat_trajectory: false`, `continues_from`, and the two future-observation prohibitions |
+| `tooltip_sv` | the reader-facing disclosure, regenerated from the actual dates **and the day map** |
 
 `path_day = 0` is the origin itself, carrying **only** current-state
 uncertainty. It is what makes the fan visibly emanate from today's opinion
-rather than from the election-day forecast band.
+rather than from the election-day forecast band, and it is rendered as its own
+marker rather than as the certified forecast point.
 
 Representative trajectories are selected as evenly spaced draw indices,
 `round(linspace(0, N - 1, K))`. Draw order carries no information — the draws
@@ -270,6 +294,7 @@ it as a narrow fan meeting a much wider emphasized election-day distribution.
 
 - Above the 112-day cap the intermediate days are a monotone stretch of a
   112-day trajectory and are smoother than a genuine $n$-day movement (§4).
+  The published disclosure says so rather than claiming equal length.
 - Poll of Polls is the movement target, not a perfect measurement of latent
   voter opinion; the disclaimer in
   [`opinion_dynamics.md`](opinion_dynamics.md) applies unchanged.

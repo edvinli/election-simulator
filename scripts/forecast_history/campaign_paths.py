@@ -105,6 +105,11 @@ DEFAULT_REPRESENTATIVE_PATHS = 24
 FUTURE_REGION_LABEL_SV = "Möjliga opinionsbanor"
 ELECTION_DAY_LABEL_SV = "Valdagsprognos"
 ORIGIN_BOUNDARY_LABEL_SV = "I dag"
+#: Path day 0 is the latent ``OpinionState`` at the origin. It is a *different
+#: quantity* from the certified forecast point on the same calendar date, which
+#: also carries campaign dynamics and ElectionNoise, so it gets its own label
+#: and a consumer must never reuse the forecast marker as the fan's origin.
+ORIGIN_STATE_LABEL_SV = "Opinionsläge i dag"
 PATH_LEGEND_SV = "Simulerade opinionsbanor"
 BAND_LEGEND_SV = "50 % och 90 % av opinionsbanorna"
 
@@ -127,16 +132,45 @@ def _short_date_sv(value: date) -> str:
     return f"{value.day} {_MONTHS_SV[value.month - 1]}"
 
 
-def campaign_paths_tooltip_sv(origin_date: str | date, election_date: str | date) -> str:
-    """Return the published disclosure for the forward opinion-path region."""
+def campaign_paths_tooltip_sv(
+    origin_date: str | date,
+    election_date: str | date,
+    time_warp: str = "identity",
+    endpoint_horizon_days: int | None = None,
+) -> str:
+    """Return the published disclosure for the forward opinion-path region.
+
+    The "same length" claim is only literally true under the identity day map.
+    Above the 112-day Dynamics v2 cap (or on the fallback ladder) the sampled
+    trajectory is shorter than the displayed period and is stretched over it,
+    so the disclosure says that instead of overstating the construction.
+    """
 
     origin = _coerce_date(origin_date, name="origin_date")
     election = _coerce_date(election_date, name="election_date")
+    if time_warp == "identity":
+        construction = "Varje bana är en hel historisk opinionsrörelse av samma längd"
+    else:
+        days = "" if endpoint_horizon_days is None else f" på {endpoint_horizon_days} dagar"
+        construction = (
+            f"Varje bana är en hel historisk opinionsrörelse{days}, "
+            "tidsutsträckt över perioden"
+        )
     return (
         f"Simulerade opinionsbanor från {_short_date_sv(origin)} till "
-        f"{_short_date_sv(election)}. Varje bana är en hel historisk "
-        "opinionsrörelse av samma längd, med slumpmässigt tecken. "
+        f"{_short_date_sv(election)}. {construction}, med slumpmässigt tecken. "
         "Framtida mätningar är okända och simuleras inte."
+    )
+
+
+def origin_state_tooltip_sv(origin_date: str | date) -> str:
+    """Return the published disclosure for the path origin at day 0."""
+
+    origin = _coerce_date(origin_date, name="origin_date")
+    return (
+        f"Opinionsläget {_short_date_sv(origin)} enligt modellens skattning av "
+        "dagens underliggande opinion. Detta är inte valdagsprognosen: den "
+        "innehåller dessutom kampanjrörelse och valdagsavvikelse."
     )
 
 
@@ -522,6 +556,7 @@ def simulate_campaign_paths(
 
 __all__ = [
     "BAND_LEGEND_SV",
+    "ORIGIN_STATE_LABEL_SV",
     "CAMPAIGN_PATH_ASSUMPTION",
     "CAMPAIGN_PATH_MODEL_ID",
     "CAMPAIGN_PATH_TYPE",
@@ -537,6 +572,7 @@ __all__ = [
     "campaign_paths_tooltip_sv",
     "draw_trajectory_indices_and_signs",
     "election_day_tooltip_sv",
+    "origin_state_tooltip_sv",
     "resolve_endpoint_horizon",
     "simulate_campaign_paths",
 ]

@@ -5,9 +5,23 @@ Two separate questions, deliberately kept apart.
 1. **Did the election-day endpoint model change?** It must not. The new
    visualization is only allowed to exist if it leaves every published
    forecast probability untouched.
-2. **Are the newly published intermediate days calibrated?** The path model is
-   the first thing this project publishes for `t + d` with `0 < d < n`, so that
-   part is genuinely new and needs its own out-of-sample evidence.
+2. **Is the newly published intermediate-day *dynamics mechanism*
+   calibrated?** The path model is the first thing this project publishes for
+   `t + d` with `0 < d < n`, so that part is genuinely new and needs its own
+   out-of-sample evidence.
+
+> [!IMPORTANT]
+> **What this evaluation does and does not certify.** Every model below is
+> conditioned on `theta_t = PoP_t`, a *deterministic* origin. These scores
+> therefore validate the **campaign-dynamics path mechanism** — whether
+> resampling one whole historical trajectory with one sign is a well-calibrated
+> description of how opinion moves over `d` days. They do **not** measure the
+> calibration of the fan the chart actually draws, which starts from the
+> `OpinionState` posterior at `path_day = 0` and is correspondingly wider at
+> every horizon. `OpinionState` is evaluated separately (see
+> [`opinion_state_model.md`](opinion_state_model.md) and
+> [`pop_baseline.md`](pop_baseline.md)); combining the two into one displayed
+> interval is not scored here.
 
 Reproduce with:
 
@@ -48,7 +62,7 @@ Artifacts land in `data/processed/backtests/campaign_paths_*.csv` and
 | id | what it is |
 | :-- | :-- |
 | `campaign_paths` | the adopted model: one whole historical trajectory per draw, one sign for the whole path |
-| `frozen_state` | what the incumbent shrinking-horizon view implies about opinion: `theta[t+d] = PoP_t`, a point mass at every intermediate day |
+| `frozen_state` | the "opinion does not move" reference: `theta[t+d] = PoP_t`, a point mass at every intermediate day. It is **not** the old `future_projection` object, which is an election-day forecast carrying `OpinionState` *and* ElectionNoise at every displayed date; it isolates the one assumption that fan makes about *opinion* |
 | `endpoint_fan` | the naive alternative of reusing the *election-day* dynamics spread at every intermediate day, i.e. a constant-width fan |
 | `independent_walk` | the explicitly rejected alternative: `d` independently signed one-day CLR steps accumulated into a random walk |
 
@@ -122,12 +136,19 @@ Energy Score over the full nine-category composition (`n = 28`):
 
 ## 4. What the numbers say
 
-**Holding opinion fixed is the worst available assumption.** `frozen_state` —
-the opinion claim implicit in the shrinking-horizon fan — is a point mass, so
-its coverage is whatever fraction of days the Poll-of-Polls consensus happens
-not to have moved: 31 % after one day, 5 % after four weeks. Its CRPS is worse
-than the adopted model at every horizon beyond `d = 1`. This is the empirical
-case for replacing the headline future view rather than merely re-styling it.
+**Holding opinion fixed is the worst available assumption.** `frozen_state` is
+a point mass, so its coverage is whatever fraction of days the Poll-of-Polls
+consensus happens not to have moved: 31 % after one day, 5 % after four weeks.
+Its CRPS is worse than the adopted model at every horizon beyond `d = 1`.
+
+Read that as a statement about the *assumption*, not about the old object. The
+shrinking-horizon `future_projection` is not this row: it is an election-day
+forecast at every displayed date and carries `OpinionState` and ElectionNoise
+uncertainty, so its intervals are wide. What it does not do is let the
+underlying opinion move, and that is the assumption scored here. The case for
+replacing the headline future view is that the assumption is empirically poor,
+and that an election-day forecast repeated across intermediate dates answers a
+different question from "where can opinion go from here".
 
 **Whole-path resampling beats a daily random walk, and the gap grows with the
 horizon.** The two models are identical at `d = 1` — a one-day path *is* a
@@ -152,7 +173,8 @@ narrow at `d = 1`–`d = 7` at the 90 % level (0.88–0.91). Both are small and
 both are inherited from the frozen Dynamics v2 transition pool rather than
 introduced by the path construction — the endpoint of that pool is the adopted
 production model and is not retuned here. No parameter was fitted for this
-evaluation.
+evaluation. Again, these are the numbers for the dynamics mechanism at a
+deterministic origin, not for the displayed fan.
 
 ---
 
@@ -162,6 +184,11 @@ evaluation.
   opinion. Every model in the table is scored against the same target, so the
   comparison is fair, but the absolute CRPS values inherit that target's
   smoothing.
+* The deterministic origin is the largest single caveat. The published fan adds
+  the `OpinionState` posterior at `path_day = 0`, which widens every interval,
+  including at `d = n`. Nothing here says the *displayed* 90 % band covers 90 %
+  of realized opinion; it says the dynamics increment that band is built from
+  is close to nominal on its own.
 * Rolling origins 14 (or 7) days apart share most of their transition pools and
   their realized trajectories overlap, so the 198 (399) cases are far from
   independent. The differences reported here are consistent across every
