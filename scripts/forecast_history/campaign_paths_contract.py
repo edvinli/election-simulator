@@ -51,6 +51,15 @@ from .campaign_paths import (
     simulate_campaign_paths,
 )
 from .contract import DEFAULT_COALITIONS, QUANTILE_LEVELS
+from .party_contract import (
+    NATIONAL_THRESHOLD_PCT,
+    PARTY_DEFINITION_ORDER,
+    PARTY_VOTE_DENOMINATOR,
+    THRESHOLD_LABEL_SV,
+    build_party_vote_quantiles,
+    validate_party_summaries,
+    validate_party_vote_only,
+)
 from .future_projection import _coerce_date, election_day_label_sv
 
 
@@ -182,18 +191,46 @@ def build_future_campaign_paths(
         parity_difference = None
 
     # ---- predictive bands ----------------------------------------------
+    # The party family is published only when the certified anchor carries its
+    # own party summaries, because election day is a verbatim copy of them.
+    # Half a family -- opinion bands with no certified endpoint to meet -- would
+    # be worse than none, so the whole family is gated on one condition.
+    anchor_parties = anchor_point.get("parties")
+    simulated_parties = getattr(simulation, "party_draws", None) or {}
+    publish_parties = (
+        isinstance(anchor_parties, Mapping)
+        and bool(anchor_parties)
+        and bool(simulated_parties)
+    )
+    if publish_parties:
+        validate_party_summaries(anchor_parties, name="anchor_point.parties")
+        # An empty set means "this simulator does not do parties" and is handled
+        # above by simply not publishing the family. A *partial* or reordered
+        # set means something is broken, and that fails closed.
+        if list(simulated_parties) != list(PARTY_DEFINITION_ORDER):
+            raise ValueError("campaign-path simulation returned unexpected parties")
+
     bands: list[dict[str, Any]] = []
     for day_offset, day_date in enumerate(simulation.day_dates):
-        bands.append(
-            {
-                "date": day_date.isoformat(),
-                "path_day": day_offset,
-                "groups": {
-                    key: {"vote": _vote_quantiles(simulation.coalition_draws[key][day_offset])}
-                    for key in coalition_config
-                },
+        band: dict[str, Any] = {
+            "date": day_date.isoformat(),
+            "path_day": day_offset,
+            "groups": {
+                key: {"vote": _vote_quantiles(simulation.coalition_draws[key][day_offset])}
+                for key in coalition_config
+            },
+        }
+        if publish_parties:
+            # A sibling key, never merged into ``groups``: a consumer that
+            # validates ``groups`` against the coalition list exactly must keep
+            # working byte for byte.
+            band["parties"] = {
+                party: {
+                    "vote": build_party_vote_quantiles(simulation.party_draws[party][day_offset])
+                }
+                for party in PARTY_DEFINITION_ORDER
             }
-        )
+        bands.append(band)
 
     # ---- representative individual trajectories -------------------------
     sample_indices = tuple(int(index) for index in simulation.representative_indices)
@@ -201,19 +238,28 @@ def build_future_campaign_paths(
         raise ValueError("campaign-path simulation returned no representative trajectories")
     if any(index < 0 or index >= resolved_samples for index in sample_indices):
         raise ValueError("representative trajectory indices fall outside the draw matrix")
-    path_series = [
-        {
+    def _track(draws: Any, index: int) -> list[float]:
+        return [
+            round(float(draws[day_offset, index]), _PATH_VALUE_DECIMALS)
+            for day_offset in range(path_days + 1)
+        ]
+
+    path_series = []
+    for index in sample_indices:
+        item: dict[str, Any] = {
             "sample_index": index,
             "values": {
-                key: [
-                    round(float(simulation.coalition_draws[key][day_offset, index]), _PATH_VALUE_DECIMALS)
-                    for day_offset in range(path_days + 1)
-                ]
-                for key in coalition_config
+                key: _track(simulation.coalition_draws[key], index) for key in coalition_config
             },
         }
-        for index in sample_indices
-    ]
+        if publish_parties:
+            # Same draw, same sign, same historical trajectory -- one path is
+            # one coherent nine-category composition, read out per party.
+            item["party_values"] = {
+                party: _track(simulation.party_draws[party], index)
+                for party in PARTY_DEFINITION_ORDER
+            }
+        path_series.append(item)
 
     return {
         "projection_type": CAMPAIGN_PATH_TYPE,
@@ -245,6 +291,10 @@ def build_future_campaign_paths(
             "synthesized_future_polls": False,
             "daily_independent_random_walk": False,
             "directional_momentum": False,
+            # Stated so a consumer never has to infer which denominator the
+            # party tracks use.  Coalitions renormalize over the eight
+            # parliamentary parties; a party does not.
+            "party_vote_share_denominator": PARTY_VOTE_DENOMINATOR,
         },
         "endpoint_parity": {
             "guarantee": ENDPOINT_PARITY_GUARANTEE,
@@ -276,6 +326,12 @@ def build_future_campaign_paths(
             # mutated through the history series (or vice versa) while still
             # being value-identical to the certified production point.
             "groups": deepcopy(dict(anchor_groups)),
+            **(
+                # Verbatim copy, exactly as ``groups`` is: the published party
+                # election-day distribution is the certified one by identity,
+                # not by a second computation that could drift from it.
+                {"parties": deepcopy(dict(anchor_parties))} if publish_parties else {}
+            ),
             "tooltip_sv": election_day_tooltip_sv(election),
         },
         "tooltip_sv": campaign_paths_tooltip_sv(
@@ -307,6 +363,19 @@ def build_future_campaign_paths(
             "poll_observations_in_future": False,
             "poll_of_polls_observations_in_future": False,
             "continues_from": CONTINUES_FROM,
+            **(
+                {
+                    "party_units": ["vote"],
+                    "party_election_day_units": ["vote", "seats"],
+                    # Latent opinion has no seat allocation, so the party view
+                    # gets no intermediate mandate paths either.
+                    "party_intermediate_seat_trajectory": False,
+                    "national_threshold_pct": NATIONAL_THRESHOLD_PCT,
+                    "national_threshold_label_sv": THRESHOLD_LABEL_SV,
+                }
+                if publish_parties
+                else {}
+            ),
         },
     }
 
@@ -473,6 +542,23 @@ def validate_future_campaign_paths_contract(
                 "history.poll_of_polls contains an observation after the campaign-path origin"
             )
 
+    # The party family is additive and all-or-nothing.  Presence is decided by
+    # the certified election-day copy, and every other party surface must then
+    # agree with that decision rather than appearing piecemeal.
+    election_day_value = value.get("election_day")
+    publish_parties = (
+        isinstance(election_day_value, Mapping) and "parties" in election_day_value
+    )
+    if publish_parties and "parties" not in current_point:
+        raise ValueError(
+            "campaign paths publish party election-day values that the certified "
+            "current_production point does not carry"
+        )
+    if publish_parties and construction.get("party_vote_share_denominator") != PARTY_VOTE_DENOMINATOR:
+        raise ValueError(
+            "campaign paths must declare the nine-category party vote-share denominator"
+        )
+
     bands = value.get("bands")
     if not isinstance(bands, list) or len(bands) != path_days + 1:
         raise ValueError("future_campaign_paths.bands must cover the origin and every campaign day")
@@ -496,6 +582,19 @@ def validate_future_campaign_paths_contract(
                 )
             _validate_vote_quantiles(
                 group["vote"], name=f"future_campaign_paths.bands[{index}].groups.{coalition}.vote"
+            )
+        if publish_parties:
+            if "parties" not in band:
+                raise ValueError(
+                    f"future_campaign_paths.bands[{index}] is missing its party opinion bands"
+                )
+            validate_party_vote_only(
+                band["parties"], name=f"future_campaign_paths.bands[{index}].parties"
+            )
+        elif "parties" in band:
+            raise ValueError(
+                f"future_campaign_paths.bands[{index}] publishes party bands with no "
+                "certified party election-day distribution to meet"
             )
 
     paths = value.get("paths")
@@ -538,6 +637,28 @@ def validate_future_campaign_paths_contract(
                 number = float(point)
                 if not math.isfinite(number) or number < 0.0 or number > 100.0:
                     raise ValueError("campaign-path trajectory values must be shares in 0–100")
+        if publish_parties:
+            party_values = item.get("party_values")
+            if not isinstance(party_values, Mapping) or list(party_values) != list(
+                PARTY_DEFINITION_ORDER
+            ):
+                raise ValueError(
+                    "campaign-path trajectories must cover the eight parliamentary parties in order"
+                )
+            for party in PARTY_DEFINITION_ORDER:
+                track = party_values[party]
+                if not isinstance(track, list) or len(track) != path_days + 1:
+                    raise ValueError(
+                        "each party trajectory needs one value for the origin and every day"
+                    )
+                for point in track:
+                    if not isinstance(point, (int, float)) or isinstance(point, bool):
+                        raise ValueError("party trajectory values must be numeric")
+                    number = float(point)
+                    if not math.isfinite(number) or number < 0.0 or number > 100.0:
+                        raise ValueError("party trajectory values must be shares in 0–100")
+        elif "party_values" in item:
+            raise ValueError("campaign-path trajectories publish parties the contract does not declare")
 
     election_day = value.get("election_day")
     if not isinstance(election_day, Mapping):
@@ -561,6 +682,15 @@ def validate_future_campaign_paths_contract(
             "the election-day distribution must reproduce the certified production vote and "
             "seat summaries exactly"
         )
+    if publish_parties:
+        validate_party_summaries(
+            election_day["parties"], name="future_campaign_paths.election_day.parties"
+        )
+        if election_day["parties"] != current_point.get("parties"):
+            raise ValueError(
+                "the election-day party distribution must reproduce the certified production "
+                "party vote and seat summaries exactly"
+            )
 
     rendering = value.get("rendering")
     if not isinstance(rendering, Mapping):
@@ -607,6 +737,36 @@ def validate_future_campaign_paths_contract(
         raise ValueError(
             "campaign paths must declare that they continue the current opinion state"
         )
+    if publish_parties:
+        if rendering.get("party_units") != ["vote"]:
+            raise ValueError("party trajectories are vote-share only")
+        if rendering.get("party_election_day_units") != ["vote", "seats"]:
+            raise ValueError("the party election-day distribution must support vote and seats")
+        if rendering.get("party_intermediate_seat_trajectory") is not False:
+            raise ValueError("the party view must not imply a smooth future mandate trajectory")
+        threshold = rendering.get("national_threshold_pct")
+        if (
+            not isinstance(threshold, (int, float))
+            or isinstance(threshold, bool)
+            or float(threshold) != NATIONAL_THRESHOLD_PCT
+        ):
+            raise ValueError(
+                f"the party view must publish the {NATIONAL_THRESHOLD_PCT} % national threshold"
+            )
+        if not isinstance(rendering.get("national_threshold_label_sv"), str) or not str(
+            rendering.get("national_threshold_label_sv")
+        ).strip():
+            raise ValueError("the party view must publish a Swedish threshold label")
+    else:
+        for forbidden in (
+            "party_units",
+            "party_election_day_units",
+            "party_intermediate_seat_trajectory",
+        ):
+            if forbidden in rendering:
+                raise ValueError(
+                    f"campaign-path rendering declares {forbidden} with no published party family"
+                )
 
 
 def mark_secondary_projection(projection: Mapping[str, Any]) -> dict[str, Any]:

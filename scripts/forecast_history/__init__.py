@@ -1,4 +1,4 @@
-"""Offline coalition forecast history publication helpers."""
+"""Offline forecast history publication helpers (coalitions and parties)."""
 
 from importlib import import_module
 
@@ -36,6 +36,22 @@ _CAMPAIGN_PATH_EXPORTS = {
     "resolve_endpoint_horizon",
     "simulate_campaign_paths",
 }
+_PARTY_CONTRACT_EXPORTS = {
+    "NATIONAL_THRESHOLD_PCT",
+    "PARTY_DEFINITION_ORDER",
+    "PARTY_VIEW_SCHEMA_VERSION",
+    "PARTY_VOTE_DENOMINATOR",
+    "assert_election_day_party_parity",
+    "build_parties_from_matrices",
+    "build_party_vote_quantiles",
+    "parties_view_metadata",
+    "party_point_from_archive_record",
+    "party_seat_draws",
+    "party_vote_draws",
+    "validate_parties_view",
+    "validate_party_summaries",
+    "validate_party_vote_only",
+}
 _CAMPAIGN_PATH_CONTRACT_EXPORTS = {
     "PRIMARY_ROLE",
     "SECONDARY_ROLE",
@@ -58,6 +74,8 @@ def __getattr__(name: str):
         return getattr(module, name)
     if name in _CAMPAIGN_PATH_EXPORTS:
         return getattr(import_module("scripts.forecast_history.campaign_paths"), name)
+    if name in _PARTY_CONTRACT_EXPORTS:
+        return getattr(import_module("scripts.forecast_history.party_contract"), name)
     if name in _CAMPAIGN_PATH_CONTRACT_EXPORTS:
         return getattr(import_module("scripts.forecast_history.campaign_paths_contract"), name)
     module = import_module("scripts.forecast_history.generate")
@@ -68,6 +86,20 @@ def __getattr__(name: str):
 
 __all__ = [
     "CAMPAIGN_PATH_MODEL_ID",
+    "NATIONAL_THRESHOLD_PCT",
+    "PARTY_DEFINITION_ORDER",
+    "PARTY_VIEW_SCHEMA_VERSION",
+    "PARTY_VOTE_DENOMINATOR",
+    "assert_election_day_party_parity",
+    "build_parties_from_matrices",
+    "build_party_vote_quantiles",
+    "parties_view_metadata",
+    "party_point_from_archive_record",
+    "party_seat_draws",
+    "party_vote_draws",
+    "validate_parties_view",
+    "validate_party_summaries",
+    "validate_party_vote_only",
     "DEFAULT_COALITIONS",
     "DEFAULT_REPRESENTATIVE_PATHS",
     "PRIMARY_ROLE",

@@ -53,7 +53,7 @@ Every one of those links is asserted, not assumed, and each one fails closed.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date, timedelta
 import math
 from pathlib import Path
@@ -88,6 +88,7 @@ from .contract import (
     QUANTILE_LEVELS,
     coalition_vote_draws,
 )
+from .party_contract import PARTY_DEFINITION_ORDER
 
 
 CAMPAIGN_PATH_MODEL_ID = "coherent_campaign_paths_v1"
@@ -383,6 +384,15 @@ class CampaignPathSimulation:
     endpoint_national_shares: np.ndarray    # (samples, 9) fractions, post ElectionNoise
     endpoint_opinion_composition: np.ndarray  # (samples, 9) percent, pre ElectionNoise
     diagnostics: dict[str, Any]
+    #: party -> (path_days + 1, samples), the party's own column of the same
+    #: daily nine-category composition.  No renormalization: a party's share is
+    #: its share of the whole electorate, the denominator the certified
+    #: forecast and the 4 % threshold use.
+    #:
+    #: Defaulted because it is additive: an injected simulator that predates the
+    #: party family returns none, and the contract builder then publishes the
+    #: coalition family alone rather than half a party one.
+    party_draws: dict[str, np.ndarray] = field(default_factory=dict)
 
 
 def simulate_campaign_paths(
@@ -467,6 +477,10 @@ def simulate_campaign_paths(
     coalition_draws: dict[str, np.ndarray] = {
         key: np.empty((path_days + 1, samples), dtype=np.float64) for key in coalition_config
     }
+    party_draws: dict[str, np.ndarray] = {
+        party: np.empty((path_days + 1, samples), dtype=np.float64)
+        for party in PARTY_DEFINITION_ORDER
+    }
     day_dates = tuple(origin + timedelta(days=offset) for offset in range(path_days + 1))
 
     max_row_sum_error = 0.0
@@ -481,6 +495,10 @@ def simulate_campaign_paths(
         max_row_sum_error = max(max_row_sum_error, float(np.max(np.abs(row_sums - 100.0))))
         for key, members in coalition_config.items():
             coalition_draws[key][day_offset, :] = coalition_vote_draws(composition, members)
+        # ``composition`` rows already sum to 100 over the nine model
+        # categories, so a party column is its national vote share directly.
+        for party_index, party in enumerate(PARTY_DEFINITION_ORDER):
+            party_draws[party][day_offset, :] = composition[:, party_index]
         if day_offset == path_days:
             endpoint_opinion = composition
 
@@ -571,6 +589,7 @@ def simulate_campaign_paths(
         seed=seed,
         day_dates=day_dates,
         coalition_draws=coalition_draws,
+        party_draws=party_draws,
         representative_indices=representative,
         endpoint_national_shares=national,
         endpoint_opinion_composition=endpoint_opinion,
