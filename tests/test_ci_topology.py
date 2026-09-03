@@ -286,10 +286,21 @@ class WorkflowCoverageTests(unittest.TestCase):
             "tests.test_production_freeze",
             "tests.test_publication_freeze",
             "tests.test_election_automation",
+            "tests.test_polling_acquisition",
         ):
             self.assertIn(
                 module, gate,
                 f"the publication gate no longer runs {module}",
+            )
+
+    def test_the_publication_gate_still_requires_browser_acceptance(self) -> None:
+        """The gate's browser suites live in the automation runner, not the YAML."""
+        runner = (_REPO_ROOT / "scripts" / "election_automation_base.py").read_text(
+            encoding="utf-8")
+        for suite in ("forecast-timeseries.smoke.mjs", "government-builder.smoke.mjs"):
+            self.assertIn(
+                suite, runner,
+                f"the publication gate no longer runs {suite}",
             )
 
     def test_the_publication_gate_runs_the_real_production_sample_count(self) -> None:
