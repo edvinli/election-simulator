@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0",
+  "amendment_number": 3,
+  "amendment_id": "003-exact-deterministic-replay",
+  "created_at_utc": "2026-09-03T19:49:41Z",
+  "original_protocol_sha256": "16f920a88eb956b42f24307e4ada3b5b1133bffb11a6561e5a9e9ce75c5e3b23",
+  "reason": "Pre-capture integration review established that production retains the exact SimulationResult only in process and that the existing certified archive intentionally stores compact summaries. Persisting every intraday production generation would add substantial repository weight and publication risk. The original task specification expressly permitted a proved deterministic reproduction path when a same-SimulationResult sidecar could not be retained safely. This amendment freezes that narrow path before the first scheduled capture and before election results are known. It also records that amendments 001 and 002 contain future-skewed created_at_utc literals caused by a clerical timestamp error: their independently visible Git commit times, 2026-09-03T19:21:56Z and 2026-09-03T19:27:47Z respectively, are the authoritative evidence that both existed before this amendment and before any capture.",
+  "primary_scoring_effect": "A deterministically reproduced ElectionSimulator draw sidecar may qualify as REPLAY_VERIFIED and therefore may satisfy ElectionSimulator's draw-availability side of fallback level A. This can change which pre-registered scoring tier is available, but does not change fair CRPS, the requirement that both systems have verified predictive draws, the final date, party set, or winner rule.",
+  "replacement_rule": {
+    "scope": "ElectionSimulator exact-draw eligibility only",
+    "preferred_evidence": "Exact joint draws exported from the same certified production SimulationResult remain preferred and are labelled VERIFIED.",
+    "deterministic_replay_status": "REPLAY_VERIFIED",
+    "eligibility": [
+      "The selected immutable snapshot and its matching archive-index row must be proved to have existed in Git at or before the cutoff.",
+      "The certified source commit must resolve, be ancestral to the capture checkout, and have a commit timestamp at or before the cutoff.",
+      "The capture checkout must be clean and simulator code, model inputs, dependency lock, model version, configuration, seed, sample count, and input hashes must match the certified generation.",
+      "The replay must use exactly the certified production configuration, not a benchmark-tuned configuration.",
+      "The reproduced draws must regenerate the deterministic payload hash and every published national vote, threshold, seat, and coalition summary within the frozen exact-export tolerances.",
+      "The deterministic NPZ and metadata must be cryptographically bound to the selected generation and revalidated when discovered or scored. Any failed or unavailable check makes the draws ineligible."
+    ],
+    "prohibition": "A partial, approximate, differently configured, or summary-fitted rerun is not eligible and must never be presented as a production draw sidecar.",
+    "storage_policy": "Retain sidecars only for the mechanically selected benchmark generations. Do not alter the existing compact production archive or emit sidecars for every intraday generation."
+  },
+  "timestamp_correction": {
+    "amendment_001_git_commit": "53ed0b6da1a1baa011a7e4df871e3488d6613c23",
+    "amendment_001_author_commit_time_utc": "2026-09-03T19:21:56Z",
+    "amendment_001_incorrect_literal": "2026-09-03T19:45:00Z",
+    "amendment_002_git_commit": "c5fc5b0638581bd0e78c9d7221f5ad9ba7ea3424",
+    "amendment_002_author_commit_time_utc": "2026-09-03T19:27:47Z",
+    "amendment_002_incorrect_literal": "2026-09-03T20:10:00Z",
+    "effect": "No protocol or scoring rule changes; this preserves rather than rewrites the original erroneous literals."
+  },
+  "immutable": true
+}
