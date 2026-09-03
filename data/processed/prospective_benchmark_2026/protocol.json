@@ -1,0 +1,231 @@
+{
+  "schema_version": "1.0",
+  "protocol_id": "sweden-2026-prospective-election-forecast-benchmark-v1",
+  "created_at_utc": "2026-09-03T19:06:02Z",
+  "immutable": true,
+  "hash_contract": {
+    "algorithm": "SHA-256",
+    "target": "the exact bytes of protocol.json",
+    "sidecar": "protocol.sha256",
+    "capture_requirement": "Every durable capture manifest must contain the matching protocol SHA-256."
+  },
+  "research_question": "Which forecasting system, as actually published during the 2026 Swedish election campaign, performed better?",
+  "excluded_question": "Which mathematical model would win if both were retrospectively rerun with exactly the same information?",
+  "systems": [
+    "election_simulator",
+    "botten_ada"
+  ],
+  "party_order": [
+    "M",
+    "L",
+    "C",
+    "KD",
+    "S",
+    "V",
+    "MP",
+    "SD"
+  ],
+  "vote_share_unit": "percentage_points",
+  "vote_share_denominator": "official national valid votes",
+  "renormalize_eight_parties": false,
+  "election": {
+    "country": "Sweden",
+    "date": "2026-09-13",
+    "result_authority": "Valmyndigheten",
+    "result_status_required": "FINAL_CERTIFIED"
+  },
+  "schedule": {
+    "timezone": "Europe/Stockholm",
+    "local_cutoff_time": "23:30:00",
+    "campaign_start_date": "2026-09-04",
+    "campaign_end_date": "2026-09-12",
+    "scheduled_dates": [
+      "2026-09-04",
+      "2026-09-05",
+      "2026-09-06",
+      "2026-09-07",
+      "2026-09-08",
+      "2026-09-09",
+      "2026-09-10",
+      "2026-09-11",
+      "2026-09-12"
+    ],
+    "scheduled_utc_time_during_window": "21:30:00Z",
+    "primary_final_forecast_date": "2026-09-12",
+    "election_morning_primary_capture": false,
+    "durable_slots_per_date": 1
+  },
+  "timing_eligibility": {
+    "before_cutoff": "TOO_EARLY_EXCLUDED; no durable real capture is permitted",
+    "same_stockholm_date_at_or_after_cutoff": "ON_TIME_ELIGIBLE",
+    "after_scheduled_stockholm_date": "LATE_EXCLUDED",
+    "retroactive_capture": "PROHIBITED",
+    "dry_run": "Never durable and never indexed",
+    "actual_times_required": [
+      "retrieved_at_utc",
+      "retrieved_at_europe_stockholm"
+    ]
+  },
+  "comparison_time_semantics": {
+    "rule": "Compare what each system made public at the same wall-clock cutoff.",
+    "identical_internal_as_of_required": false,
+    "freshness_fields": [
+      "benchmark_cutoff",
+      "election_simulator.model_as_of",
+      "election_simulator.latest_poll_input_date",
+      "botten_ada.source_updated_at",
+      "botten_ada.latest_poll_date"
+    ],
+    "unchanged_content_on_consecutive_dates": "Permitted and retained as distinct scheduled evidence; it is never silently copied by the benchmark."
+  },
+  "election_simulator_selection": {
+    "rule": "Select the latest certified production generation that was durably committed at or before the benchmark cutoff.",
+    "ordering": [
+      "generated_at_utc descending",
+      "generation_id descending"
+    ],
+    "required_conditions": [
+      "generation generated_at_utc is at or before cutoff",
+      "the archive index and snapshot hashes validate",
+      "the source commit is resolvable",
+      "the Git commit first containing the immutable generation is at or before cutoff",
+      "sample count is exactly 100000",
+      "model version, seed, input hashes, payload hash, and source commit are recorded"
+    ],
+    "draw_policy": "Only exact joint draws exported from the same certified production SimulationResult, cryptographically linked to that generation and checked against its summaries and deterministic payload hash, are eligible. A separately configured benchmark rerun is prohibited."
+  },
+  "botten_ada_evidence": {
+    "hierarchy": [
+      "official contemporaneous predictive draws whose parity with the public forecast is verified",
+      "official machine-readable published probabilities, quantiles, intervals, and point estimates",
+      "official webpage values with preserved raw evidence"
+    ],
+    "required_provenance": [
+      "URL",
+      "retrieval timestamp UTC",
+      "content SHA-256",
+      "byte size",
+      "ETag if supplied",
+      "Last-Modified if supplied",
+      "source-reported update timestamp if available",
+      "extraction version",
+      "relevant upstream repository/config commit if identifiable",
+      "license and attribution metadata"
+    ],
+    "verified_draws_definition": "The archived official draw object is identified as election-day predictive draws and reproduces, within predeclared parsing tolerances, every simultaneously available public central forecast, compatible interval endpoint, and 4% threshold probability. Posterior parameter draws are not presumed to be predictive draws.",
+    "parity_absolute_tolerance_percentage_points": 0.051,
+    "parity_absolute_tolerance_probability": 0.0051,
+    "parity_rounding_rule": "Tolerance only covers the last displayed decimal place: 0.05 percentage points for values shown to one decimal and 0.005 probability for values shown as whole percentages, plus 0.001 numerical slack.",
+    "forbidden_inference": [
+      "inventing draws from quantiles or intervals",
+      "assuming a Gaussian law from plus/minus notation",
+      "constructing a joint distribution from marginals",
+      "treating a local reimplementation as Botten Ada's published forecast",
+      "carrying a prior capture forward after a source failure"
+    ]
+  },
+  "source_failure_policy": {
+    "model_statuses": [
+      "AVAILABLE",
+      "SOURCE_UNAVAILABLE",
+      "PARSE_FAILED",
+      "SOURCE_STALE",
+      "PARITY_UNVERIFIED"
+    ],
+    "durability": "The scheduled failure record is itself the immutable capture and must not later be overwritten.",
+    "retry_rule": "Retries may occur only before a durable slot is indexed. After a slot is indexed, all retries must fail closed.",
+    "carry_forward": false,
+    "freshness_rule": "Preserve and report source timestamps and unchanged hashes. A genuinely available unchanged published forecast remains what the system said and is not replaced; SOURCE_STALE is used only when the official source marks the forecast obsolete or does not contain a current 2026 election forecast."
+  },
+  "primary_scoring": {
+    "capture_date": "2026-09-12",
+    "availability_condition": "Both systems have verified election-day joint predictive vote-share draws.",
+    "metric": "mean_party_fair_crps",
+    "winner": "the system with the lower arithmetic mean fair CRPS over the fixed eight-party order",
+    "tie_rule": "exact equality at the machine-readable reported precision is a tie",
+    "fair_crps_formula": "mean_i |x_i-y| - (1/(2*n*(n-1))) * sum_{i!=j} |x_i-x_j|",
+    "minimum_draw_count": 2
+  },
+  "secondary_scoring": {
+    "fair_energy_score_formula": "mean_i ||x_i-y||_2 - (1/(2*n*(n-1))) * sum_{i!=j} ||x_i-x_j||_2",
+    "finite_ensemble_v_statistic": "Reported only as a labeled sensitivity metric, never substituted for the primary fair score.",
+    "point_mae": "MAE over the eight actual published central predictions; the benchmark must not choose mean versus median after results are known.",
+    "central_intervals": "Coverage and width are reported only for genuinely compatible published central interval levels.",
+    "seats": "Scored only if both systems provide genuine predictive seat distributions with compatible semantics.",
+    "government_majority": "Scored only when event definitions are proven identical."
+  },
+  "campaign_scoring": {
+    "dates": "all paired eligible scheduled captures from 2026-09-04 through 2026-09-12",
+    "weighting": "equal weight per scheduled capture date and equal weight per party within a date",
+    "reports": [
+      "equal-weight mean score across paired eligible dates",
+      "number of dates won by each system",
+      "per-date scores",
+      "paired eligible date count and all exclusion reasons"
+    ],
+    "intraday_weighting": "At most one capture per scheduled date; additional model updates receive no additional weight."
+  },
+  "fallback_hierarchy": [
+    {
+      "level": "A",
+      "condition": "verified election-day predictive draws for both systems",
+      "decision": "declare probabilistic winner by mean fair CRPS"
+    },
+    {
+      "level": "B",
+      "condition": "no mutually verified draws, but both systems have a published median and at least one genuinely compatible central interval level from the predeclared set 50%, 80%, 90%, 95%",
+      "decision": "declare probabilistic winner by mean WIS over the intersection of those levels, using all and only the common levels",
+      "wis_formula": "For common alpha levels, WIS = (0.5*|y-m| + sum_k (alpha_k/2)*IS_alpha_k)/(0.5 + sum_k alpha_k/2), where IS_alpha=(u-l)+(2/alpha)*(l-y)1[y<l]+(2/alpha)*(y-u)1[y>u]."
+    },
+    {
+      "level": "C",
+      "condition": "neither A nor B is supported",
+      "decision": "do not declare a probabilistic winner; compare point forecasts by eight-party MAE"
+    }
+  ],
+  "threshold_events": {
+    "parties": [
+      "L",
+      "C",
+      "KD",
+      "MP"
+    ],
+    "event": "official national valid-vote share >= 4.0 percentage points",
+    "metric": "Brier score",
+    "requires": "a genuinely published or verified-draw-derived probability from both systems",
+    "highlight": "L is pre-registered for explicit discussion; all four events are scored when comparable."
+  },
+  "official_results": {
+    "must_be_final_certified": true,
+    "required_fields": [
+      "official source URL",
+      "retrieved_at_utc",
+      "raw file SHA-256",
+      "valid national vote denominator",
+      "party vote counts and shares",
+      "final party seats",
+      "certification status"
+    ],
+    "preliminary_results_prohibited": true,
+    "capture_mutation_when_results_added": false
+  },
+  "reporting": {
+    "winner_not_hard_coded": true,
+    "distinguish_probabilistic_and_point_winners": true,
+    "report_uncertainty_and_limitations": true,
+    "universal_superiority_claims": false,
+    "primary_output_json": "diagnostics/prospective_benchmark_2026/final_report.json",
+    "primary_output_markdown": "diagnostics/prospective_benchmark_2026/final_report.md"
+  },
+  "amendments": {
+    "rewrite_original": false,
+    "directory": "data/processed/prospective_benchmark_2026/amendments",
+    "requirements": [
+      "sequential amendment number",
+      "UTC timestamp",
+      "immutable file and SHA-256 sidecar",
+      "reason",
+      "explicit primary-scoring effect"
+    ]
+  }
+}
