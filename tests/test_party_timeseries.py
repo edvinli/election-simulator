@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from datetime import date, timedelta
+from types import SimpleNamespace
 import json
 from pathlib import Path
 import unittest
@@ -285,6 +286,90 @@ class ArchiveQuantileAgreementTests(unittest.TestCase):
     def test_a_legacy_snapshot_without_marginals_yields_no_party_block(self) -> None:
         self.assertIsNone(party_point_from_archive_record({"groups": {}}))
         self.assertIsNone(party_point_from_archive_record({}))
+
+    def test_build_history_preserves_parties_on_an_archived_point(self) -> None:
+        """The real generation path, not the helper in isolation.
+
+        ``build_history`` projects an archived record onto the series-point
+        contract through a strict field allowlist. That allowlist was
+        duplicated at two insertion sites and silently fell out of step with
+        ``_archive_point_from_record``, so the additive party block was
+        recovered and then dropped again before it reached the artifact. The
+        helper-level test above passed throughout, because it never exercised
+        this path.
+        """
+
+        from scripts.forecast_history.generate import build_history
+
+        snapshots = sorted(
+            (REPO_ROOT / "data" / "processed" / "prospective_forecasts").glob("*/snapshot.json")
+        )
+        if not snapshots:
+            self.skipTest("no prospective archive snapshot is committed")
+        record = json.loads(snapshots[-1].read_text(encoding="utf-8"))
+        archived_date = date.fromisoformat(str(record["as_of"]))
+        election = date.fromisoformat(str(record["election_date"]))
+
+        votes, seats = _matrices()
+
+        def _runner(**kwargs):
+            return SimpleNamespace(
+                vote_shares_matrix=votes, seats_matrix=seats, manifest={"base_seed": 12345}
+            )
+
+        payload = build_history(
+            election_date=election,
+            dates=[archived_date - timedelta(days=7), archived_date],
+            samples=votes.shape[0],
+            production_latest_samples=int(record["samples"]),
+            archived_points=[record],
+            archive_dir=None,
+            simulation_runner=_runner,
+            model_commit="d" * 40,
+            source_worktree_clean=True,
+        )
+
+        archived_points = [
+            point for point in payload["series"] if point["provenance"] == "prospective_archived"
+        ]
+        self.assertEqual(
+            [point["date"] for point in archived_points], [archived_date.isoformat()],
+            "the archived snapshot should be used verbatim for its own date",
+        )
+        self.assertIn(
+            "parties", archived_points[0],
+            "build_history dropped the party block recovered from the archive",
+        )
+        validate_party_summaries(
+            archived_points[0]["parties"], name="archived series point"
+        )
+        # And the values are the archive's own, not a re-simulation.
+        self.assertEqual(
+            archived_points[0]["parties"]["M"]["vote"]["p50"],
+            round(float(record["national_vote_distributions"]["M"]["quantiles"]["p50"]), 6),
+        )
+
+    def test_every_archived_field_the_recovery_produces_survives_the_allowlist(self) -> None:
+        # The allowlist exists to keep unrelated keys out of the chart
+        # contract, so it must be a superset of what the recovery emits.
+        from scripts.forecast_history.generate import _ARCHIVED_POINT_FIELDS
+
+        snapshots = sorted(
+            (REPO_ROOT / "data" / "processed" / "prospective_forecasts").glob("*/snapshot.json")
+        )
+        if not snapshots:
+            self.skipTest("no prospective archive snapshot is committed")
+        record = json.loads(snapshots[-1].read_text(encoding="utf-8"))
+        point = _archive_point_from_record(
+            record,
+            election_date=date(2026, 9, 13),
+            coalitions={key: list(value) for key, value in DEFAULT_COALITIONS.items()},
+        )
+        if point is None:
+            self.skipTest("the newest snapshot carries no joint coalition groups")
+        dropped = {key for key, value in point.items()
+                   if value is not None and key not in _ARCHIVED_POINT_FIELDS}
+        self.assertEqual(dropped, set(), f"build_history would silently drop {sorted(dropped)}")
 
     def test_an_archived_point_carries_parties_when_recoverable(self) -> None:
         snapshots = sorted(

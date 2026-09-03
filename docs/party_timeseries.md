@@ -275,3 +275,31 @@ publication gate must use the `--real-artifact` form. See that repository's
 Note that party data cannot be backfilled with `--resume`: the resume cache
 keeps existing points byte for byte, party block or not, so a full generation
 is required.
+
+### The transitional backfill artifact
+
+A full generation populates the *historical* party family. It does not, and
+should not, produce the certified endpoint:
+
+- When the prospective archive already holds a snapshot for the latest date
+  whose draw count equals `--production-latest-samples`, `build_history` uses
+  that archived record verbatim rather than re-simulating. The point is
+  therefore `prospective_archived`, and a freshly generated backfill correctly
+  contains **zero** `current_production` points.
+- That is the intended state for the artifact, not a defect. Do not lower
+  `--production-latest-samples` to manufacture a local certified point: it
+  would replace CI-provenanced published numbers with a re-simulation from
+  whatever environment ran the generator, and
+  [`§3`](#3-election-day-parity) is an identity property, not a re-derivation.
+- The single authoritative `current_production` point, and both future
+  surfaces, are supplied by the next publication.
+  `update_history_with_production_result` copies the reused historical points
+  forward unchanged — party blocks included — and derives the certified point's
+  own party block from the same `SimulationResult` the publication bundle is
+  built from. Parity therefore holds by identity from that moment, whatever
+  environment generated the history behind it.
+
+So a backfill artifact is validated on coverage, structure and determinism, and
+**not** on endpoint parity against the still-live previous publication. Party
+mode stays correctly unavailable until the reconciling publication lands,
+because the consumer additionally requires a certified point.
