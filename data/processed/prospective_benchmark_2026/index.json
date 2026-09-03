@@ -2,5 +2,13 @@
   "schema_version": "1.0",
   "protocol_path": "protocol.json",
   "protocol_sha256": "16f920a88eb956b42f24307e4ada3b5b1133bffb11a6561e5a9e9ce75c5e3b23",
+  "amendments": [
+    {
+      "amendment_number": 1,
+      "path": "amendments/001-operational-clarifications.json",
+      "sha256": "4bfecbfca1d11d4a90c63d324896b3436de2bfab6cf91d49d56c464fee08561a",
+      "primary_scoring_effect": "NONE"
+    }
+  ],
   "captures": []
 }

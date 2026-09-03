@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "amendment_number": 1,
+  "amendment_id": "001-operational-clarifications",
+  "created_at_utc": "2026-09-03T19:45:00Z",
+  "original_protocol_sha256": "16f920a88eb956b42f24307e4ada3b5b1133bffb11a6561e5a9e9ce75c5e3b23",
+  "reason": "The original protocol froze late-capture exclusion and fair Energy Score but did not specify the last permissible delayed-run day or a computationally feasible deterministic pair-sampling design for a 100,000-member Energy Score. These details are fixed before the first capture and before election results are known.",
+  "primary_scoring_effect": "NONE. Mean party-level fair CRPS, its availability condition, the final date, and the winner rule are unchanged.",
+  "clarifications": {
+    "late_capture_limit": {
+      "rule": "A delayed scheduled job may create its immutable LATE_EXCLUDED record only on the immediately following Europe/Stockholm calendar day. Any later attempt is a prohibited retroactive capture and must not write or index a slot.",
+      "rationale": "This honors the requirement to retain a delayed next-day scheduled run without permitting missing older slots to be reconstructed later."
+    },
+    "fair_energy_score_computation": {
+      "estimator": "uniform ordered-distinct-pair Monte Carlo estimate of the preregistered fair U-statistic pair expectation",
+      "pair_sample_size_per_model_per_capture": 1000000,
+      "random_seed": 20260903,
+      "sampling_with_replacement": true,
+      "distance": "Euclidean norm over M,L,C,KD,S,V,MP,SD percentage points in the frozen order",
+      "reporting": "Label the Energy Score as a Monte Carlo estimate, record sample size and seed, and never use it in place of exact mean fair CRPS for the primary winner.",
+      "v_statistic_sensitivity": "Use the same distinct-pair sample and multiply its mean by (n-1)/n before the one-half pair term."
+    },
+    "source_timestamp_semantics": {
+      "rule": "A source-reported timestamp without a UTC offset is preserved verbatim and explicitly labelled timezone-unspecified. It is not converted to UTC by assumption. HTTP Last-Modified remains separate transport metadata."
+    }
+  },
+  "immutable": true
+}
