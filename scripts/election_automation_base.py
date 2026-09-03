@@ -961,13 +961,31 @@ def _run_command(
         )
 
 
+#: The browser suites the publication gate runs, as explicit argv.
+#:
+#: A suite is a *command*, not a filename: the party view is only meaningfully
+#: gated in its real-artifact mode, and that needs a flag. The default mode of
+#: ``party-timeseries.smoke.mjs`` overlays a committed fixture onto a copy of
+#: the site, which would gate every publication against the fixture instead of
+#: the artifact the run just generated.
+#:
+#: The suite path stays at index 1 in every entry. Failure messages name the
+#: suite from the command itself, and the gate's fail-closed tests match on
+#: that position.
+WEBSITE_GATE_COMMANDS: tuple[tuple[str, ...], ...] = (
+    ("node", "browser-tests/forecast-timeseries.smoke.mjs", "_site"),
+    ("node", "browser-tests/government-builder.smoke.mjs", "_site"),
+    ("node", "browser-tests/party-timeseries.smoke.mjs", "_site", "--real-artifact"),
+)
+
+
 def run_website_checks(
     site_root: Path,
     *,
     chrome_bin: str | None = None,
     stage_callback: StageCallback | None = _log_stage,
 ) -> dict[str, Any]:
-    """Build Jekyll and run both real-browser smoke tests."""
+    """Build Jekyll and run every real-browser gate suite."""
 
     env = os.environ.copy()
     if chrome_bin:
@@ -980,10 +998,11 @@ def run_website_checks(
             cwd=site_root,
             env=env,
         )
-    for test_name in ("forecast-timeseries.smoke.mjs", "government-builder.smoke.mjs"):
+    for command in WEBSITE_GATE_COMMANDS:
+        test_name = command[1].rsplit("/", 1)[-1]
         with _timed_stage(test_name, stage_callback):
             _run_command(
-                ["node", f"browser-tests/{test_name}", "_site"],
+                list(command),
                 name=test_name,
                 timeout_seconds=BROWSER_SMOKE_TIMEOUT_SECONDS,
                 cwd=site_root,
@@ -995,6 +1014,7 @@ def run_website_checks(
             "jekyll build",
             "forecast-timeseries browser smoke",
             "government-builder browser smoke",
+            "party-timeseries browser smoke (--real-artifact)",
             "zero console errors and no mobile horizontal overflow (smoke assertions)",
         ],
     }

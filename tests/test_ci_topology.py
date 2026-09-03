@@ -405,11 +405,19 @@ class WorkflowCoverageTests(unittest.TestCase):
         """The gate's browser suites live in the automation runner, not the YAML."""
         runner = (_REPO_ROOT / "scripts" / "election_automation_base.py").read_text(
             encoding="utf-8")
-        for suite in ("forecast-timeseries.smoke.mjs", "government-builder.smoke.mjs"):
+        for suite in ("forecast-timeseries.smoke.mjs", "government-builder.smoke.mjs",
+                      "party-timeseries.smoke.mjs"):
             self.assertIn(
                 suite, runner,
                 f"the publication gate no longer runs {suite}",
             )
+        # The party suite is only a gate in its real-artifact mode; its default
+        # mode would validate the committed fixture rather than the artifact
+        # the publication just generated.
+        self.assertIn(
+            "--real-artifact", runner,
+            "the publication gate no longer runs the party suite against the real artifact",
+        )
 
     def test_the_publication_gate_runs_the_real_production_sample_count(self) -> None:
         from scripts.election_automation import PRODUCTION_SAMPLES

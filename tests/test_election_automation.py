@@ -1005,6 +1005,13 @@ class ElectionAutomationTests(unittest.TestCase):
                     "government-builder.smoke.mjs",
                     BROWSER_SMOKE_TIMEOUT_SECONDS,
                 ),
+                (
+                    # Real-artifact mode, not the fixture default: the gate has
+                    # to validate the artifact this publication just generated.
+                    ["node", "browser-tests/party-timeseries.smoke.mjs", "_site", "--real-artifact"],
+                    "party-timeseries.smoke.mjs",
+                    BROWSER_SMOKE_TIMEOUT_SECONDS,
+                ),
             ],
         )
         self.assertEqual(
@@ -1016,6 +1023,8 @@ class ElectionAutomationTests(unittest.TestCase):
                 ("forecast-timeseries.smoke.mjs", "DONE"),
                 ("government-builder.smoke.mjs", "START"),
                 ("government-builder.smoke.mjs", "DONE"),
+                ("party-timeseries.smoke.mjs", "START"),
+                ("party-timeseries.smoke.mjs", "DONE"),
             ],
         )
         self.assertTrue(all(elapsed is not None for _, event, elapsed in events if event == "DONE"))
