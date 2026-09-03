@@ -170,9 +170,16 @@ requirement: it takes the rows of the publication's own `parties.json` and
 fails closed on any disagreement — votes at the published three decimals, seats
 exactly.
 
-Measured against the certified generation `20260903T110151Z-68041c74`, all
-nine parties × five vote quantiles and eight parties × five seat quantiles
-agree exactly.
+Measured against the certified generation `20260903T110151Z-68041c74`, the
+**eight published parties** agree exactly on all five vote quantiles and all
+five seat quantiles — the 40 vote comparisons and 40 seat comparisons that the
+party family actually consists of.
+
+The same audit additionally covered the aggregate `REST` vote row, which the
+publication carries in `parties.json` but which is deliberately **not** part of
+the party family: it cannot cross the threshold, cannot hold seats, and is not
+a party a reader can follow. Its five vote quantiles agreed too, but that is a
+property of the shared quantile rule rather than of this contract.
 
 ---
 
@@ -212,8 +219,12 @@ message that says why.
 
 ## 6. Cost
 
-A full history artifact roughly doubles in size, because eight party
-definitions replace seven coalition definitions per point. Vote quantiles keep
+A full history artifact grows by about half — measured, 628 KB to 942 KB
+(+50 %) for the 296-point 2026 series. The eight party definitions are **added
+alongside** the seven coalition definitions on every point; nothing is
+replaced, which is what makes the family additive in the first place. The
+growth is under a naive 8/7 doubling because the party block carries no seat
+histogram and the surrounding per-point metadata is shared. Vote quantiles keep
 six decimals to stay identical to the archive's own rule rather than being
 truncated to display precision.
 
@@ -245,3 +256,22 @@ matrices it already holds, at no measurable cost.
 ```bash
 make test-party-timeseries
 ```
+
+## 8. Validating a real publication
+
+The website's `party-timeseries.smoke.mjs` has a real-artifact mode that reads
+the history a built site actually ships and refuses to expose the party view
+unless coverage is complete end to end:
+
+```bash
+node browser-tests/party-timeseries.smoke.mjs _site --real-artifact
+```
+
+Its default fixture mode overwrites the site's history with a committed
+fixture, which is what makes its mutation matrix deterministic — and is why the
+publication gate must use the `--real-artifact` form. See that repository's
+`browser-tests/README.md`.
+
+Note that party data cannot be backfilled with `--resume`: the resume cache
+keeps existing points byte for byte, party block or not, so a full generation
+is required.
