@@ -1,6 +1,6 @@
 {
   "_comment": "Measured single-module wall-clock in seconds, used only to balance shards. Recorded on macOS/Python 3.12 by running each module alone: `uv run python -m unittest tests.<module>`. Absolute values differ on CI runners; only the relative sizes matter here, so this needs refreshing when a suite's cost changes materially, not routinely. A module missing from this table is treated as average cost.",
-  "measured_total_seconds": 740.8,
+  "measured_total_seconds": 744.2,
   "seconds": {
     "test_adversarial_mandates": 519.3,
     "test_opinion_precision_challenger": 35.1,
@@ -18,6 +18,7 @@
     "test_forecast_history": 4.0,
     "test_reference_publication_contract": 3.5,
     "test_seat_hindcast": 3.4,
+    "test_ci_topology": 3.4,
     "test_future_projection": 2.9,
     "test_publication_metadata_namespace": 2.3,
     "test_evaluation_harness": 2.1,
