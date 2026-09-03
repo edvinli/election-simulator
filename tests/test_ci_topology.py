@@ -18,7 +18,7 @@ from pathlib import Path
 
 from scripts.ci.test_topology import (
     ALWAYS_RUN,
-    NIGHTLY_ONLY,
+    NIGHTLY_EXHAUSTIVE,
     all_test_modules,
     build_graph,
     select,
@@ -32,7 +32,7 @@ class ShardPlanTests(unittest.TestCase):
     """Sharding must never lose or duplicate a module."""
 
     def test_shards_partition_the_suite_exactly(self) -> None:
-        modules = all_test_modules(_REPO_ROOT, tier="per-change")
+        modules = all_test_modules(_REPO_ROOT)
         for count in (1, 2, 3, 4, 5, 8):
             bins = shard(modules, count)
             self.assertEqual(len(bins), count)
@@ -56,40 +56,90 @@ class ShardPlanTests(unittest.TestCase):
         self.assertEqual(sorted(flat), ["test_a", "test_b"])
         self.assertEqual(len(bins), 5)
 
-    def test_balancing_keeps_the_dominant_module_alone(self) -> None:
-        # The point of measured sharding: the 519-second audit must not be
-        # bin-packed alongside other work when it is included.
-        modules = all_test_modules(_REPO_ROOT, tier="all")
-        bins = shard(modules, 4)
-        heavy = [b for b in bins if "test_adversarial_mandates" in b]
-        self.assertEqual(len(heavy), 1)
-        self.assertEqual(
-            heavy[0], ["test_adversarial_mandates"],
-            "the exhaustive audit should occupy its own shard when present",
+    def test_shards_are_balanced_by_measured_cost(self) -> None:
+        # With the allocator audit at its reduced size no module dominates, so
+        # the bins should come out close together. A wide spread means the
+        # planner is packing by name or count rather than by duration -- or
+        # that timings.json has drifted badly.
+        from scripts.ci.test_topology import _timings
+
+        timings = _timings()
+        bins = shard(all_test_modules(_REPO_ROOT), 4)
+        loads = [sum(timings.get(m, 0.0) for m in b) for b in bins]
+        self.assertGreater(min(loads), 0, "a shard was given no measured work")
+        self.assertLess(
+            max(loads) / min(loads), 1.5,
+            f"shard loads are poorly balanced: "
+            f"{[round(x, 1) for x in loads]}",
         )
 
 
-class NightlySplitTests(unittest.TestCase):
-    """The nightly split must be a partition, not a subtraction."""
+class NightlyIsAReRunNotAnExclusion(unittest.TestCase):
+    """The defect these tests exist for.
 
-    def test_tiers_partition_the_suite(self) -> None:
-        everything = set(all_test_modules(_REPO_ROOT, tier="all"))
-        per_change = set(all_test_modules(_REPO_ROOT, tier="per-change"))
-        nightly = set(all_test_modules(_REPO_ROOT, tier="nightly"))
-        self.assertEqual(per_change | nightly, everything)
-        self.assertEqual(per_change & nightly, set())
+    An earlier version of the topology removed test_adversarial_mandates from
+    the per-change suite and called it "covered by nightly". The pull-request
+    matrix went on setting ELECTIONSIM_ADVERSARIAL_CASES=700 for a module that
+    was not in the matrix, so the allocator parity audit ran nowhere on a pull
+    request while every job reported success. The old assertions passed,
+    because they only checked that the case count was large enough -- never
+    that the module was present.
 
-    def test_nightly_only_modules_exist(self) -> None:
-        everything = set(all_test_modules(_REPO_ROOT, tier="all"))
-        for module in NIGHTLY_ONLY:
+    Nightly may run a module *harder*. It may never be the only place a module
+    runs.
+    """
+
+    def test_every_module_runs_on_every_change(self) -> None:
+        everything = set(all_test_modules(_REPO_ROOT))
+        # There is no per-change subset any more; this is the guarantee.
+        self.assertEqual(len(everything), len(all_test_modules(_REPO_ROOT)))
+        for module in NIGHTLY_EXHAUSTIVE:
             self.assertIn(
                 module, everything,
-                f"NIGHTLY_ONLY names {module}, which is not a test module",
+                f"{module} is named for a nightly re-run but is not a test module",
             )
 
-    def test_unknown_tier_is_rejected(self) -> None:
-        with self.assertRaises(ValueError):
-            all_test_modules(_REPO_ROOT, tier="sometimes")
+    def test_nightly_exhaustive_modules_are_not_withheld(self) -> None:
+        modules = all_test_modules(_REPO_ROOT)
+        for module in NIGHTLY_EXHAUSTIVE:
+            self.assertIn(
+                module, modules,
+                f"{module} was withheld from the per-change suite; nightly is a "
+                f"re-run, not a substitute",
+            )
+
+    def test_the_allocator_audit_is_in_the_per_change_suite(self) -> None:
+        self.assertIn("test_adversarial_mandates", all_test_modules(_REPO_ROOT))
+
+    def test_an_allocator_change_selects_the_audit(self) -> None:
+        modules, _ = select(["scripts/mandates/allocator.py"])
+        self.assertIn(
+            "test_adversarial_mandates", modules,
+            "a change to the allocator must run the parity audit",
+        )
+
+    def test_the_audit_appears_in_a_shard_of_the_full_matrix(self) -> None:
+        bins = shard(all_test_modules(_REPO_ROOT), 4)
+        holding = [b for b in bins if "test_adversarial_mandates" in b]
+        self.assertEqual(
+            len(holding), 1,
+            "the allocator audit must land in exactly one shard of the full run",
+        )
+
+    def test_the_audit_is_balanced_at_its_reduced_cost(self) -> None:
+        # Sharding only happens in the layers that set the reduced case count,
+        # so the recorded duration must be the reduced one. If the exhaustive
+        # 511s were recorded here the planner would give the module its own
+        # shard and leave the others idle.
+        from scripts.ci.test_topology import _timings
+
+        recorded = _timings().get("test_adversarial_mandates")
+        self.assertIsNotNone(recorded, "the audit has no recorded duration")
+        self.assertLess(
+            recorded, 120,
+            "timings.json records the exhaustive audit cost; sharding needs the "
+            "reduced one",
+        )
 
 
 class SelectionTests(unittest.TestCase):
@@ -104,7 +154,7 @@ class SelectionTests(unittest.TestCase):
         for path in ("uv.lock", "pyproject.toml"):
             modules, reason = select([path])
             self.assertEqual(
-                sorted(modules), sorted(all_test_modules(_REPO_ROOT, tier="all")),
+                sorted(modules), sorted(all_test_modules(_REPO_ROOT)),
                 f"{path} must select the whole suite",
             )
             self.assertIn("full suite", reason)
@@ -112,18 +162,18 @@ class SelectionTests(unittest.TestCase):
     def test_tracked_data_change_escalates_to_full_suite(self) -> None:
         modules, _ = select(["data/processed/simulations/whatever.json"])
         self.assertEqual(
-            sorted(modules), sorted(all_test_modules(_REPO_ROOT, tier="all")))
+            sorted(modules), sorted(all_test_modules(_REPO_ROOT)))
 
     def test_unmapped_path_escalates_to_full_suite(self) -> None:
         modules, reason = select(["some/new/thing.txt"])
         self.assertEqual(
-            sorted(modules), sorted(all_test_modules(_REPO_ROOT, tier="all")))
+            sorted(modules), sorted(all_test_modules(_REPO_ROOT)))
         self.assertIn("unmapped", reason)
 
     def test_non_python_file_under_scripts_escalates(self) -> None:
         modules, reason = select(["scripts/simulator/notes.txt"])
         self.assertEqual(
-            sorted(modules), sorted(all_test_modules(_REPO_ROOT, tier="all")))
+            sorted(modules), sorted(all_test_modules(_REPO_ROOT)))
         self.assertIn("full suite", reason)
 
     def test_artifact_only_tests_are_always_selected(self) -> None:
@@ -163,13 +213,8 @@ class SelectionTests(unittest.TestCase):
         ):
             self.assertIn(expected, modules)
 
-    def test_per_change_tier_drops_nightly_modules_from_selection(self) -> None:
-        modules, _ = select(["scripts/mandates/allocator.py"], tier="per-change")
-        for module in NIGHTLY_ONLY:
-            self.assertNotIn(module, modules)
-
     def test_selection_never_returns_an_unknown_module(self) -> None:
-        everything = set(all_test_modules(_REPO_ROOT, tier="all"))
+        everything = set(all_test_modules(_REPO_ROOT))
         for changed in (
             ["scripts/mandates/allocator.py"],
             ["scripts/simulator/engine.py"],
@@ -186,8 +231,33 @@ class SelectionTests(unittest.TestCase):
 class GraphTests(unittest.TestCase):
     def test_graph_covers_every_test_module(self) -> None:
         graph = build_graph(_REPO_ROOT)
-        for module in all_test_modules(_REPO_ROOT, tier="all"):
+        for module in all_test_modules(_REPO_ROOT):
             self.assertIn(f"tests.{module}", graph)
+
+    def test_no_artifact_only_module_is_left_out_of_always_run(self) -> None:
+        """A module the graph cannot reach must be declared, or it never runs.
+
+        ALWAYS_RUN is a hand-written list, and a hand-written list is the same
+        shape of hazard as the nightly exclusion that dropped the allocator
+        audit: add a test module that asserts against tracked artifacts without
+        importing anything from `scripts`, forget to list it here, and no
+        change under `scripts/` will ever select it. Nothing would fail.
+        """
+        graph = build_graph(_REPO_ROOT)
+        unreachable = {
+            module
+            for module in all_test_modules(_REPO_ROOT)
+            if not any(
+                dep.startswith("scripts")
+                for dep in graph.get(f"tests.{module}", set())
+            )
+        }
+        missing = sorted(unreachable - set(ALWAYS_RUN))
+        self.assertEqual(
+            missing, [],
+            f"these modules import nothing from scripts/, so no scripts change "
+            f"can select them, and they are not in ALWAYS_RUN: {missing}",
+        )
 
     def test_relative_imports_are_resolved_to_absolute_names(self) -> None:
         graph = build_graph(_REPO_ROOT)
@@ -225,16 +295,54 @@ class WorkflowCoverageTests(unittest.TestCase):
             for path in cls.WORKFLOWS.glob("*.yml")
         }
 
-    def test_full_ci_runs_the_whole_per_change_tier(self) -> None:
-        full = self.text["full.yml"]
-        self.assertIn("--all --shards 4 --tier per-change", " ".join(full.split()))
+    def test_full_ci_runs_every_module(self) -> None:
+        full = " ".join(self.text["full.yml"].split())
+        self.assertIn("--all --shards 4", full)
+        # A tier filter here is what silently dropped the allocator audit.
+        self.assertNotIn(
+            "--tier", full,
+            "full.yml must not filter the suite down to a subset",
+        )
 
-    def test_nightly_runs_every_nightly_only_module_by_name(self) -> None:
+    def test_pr_ci_does_not_filter_the_suite_to_a_subset(self) -> None:
+        self.assertNotIn("--tier", self.text["pr.yml"])
+
+    def test_the_reduced_audit_actually_runs_where_its_knob_is_set(self) -> None:
+        """A case count set for a module the matrix omits is not coverage.
+
+        This is the assertion the previous version lacked. It checks the two
+        facts together: the knob is set, *and* the module it applies to is
+        genuinely reachable in that layer's matrix.
+        """
+        for name in ("pr.yml", "full.yml"):
+            body = self.text[name]
+            sets_knob = any(
+                "ELECTIONSIM_ADVERSARIAL_CASES:" in line
+                and not line.lstrip().startswith("#")
+                for line in body.splitlines()
+            )
+            self.assertTrue(sets_knob, f"{name} sets no audit size")
+
+            # The layer builds its matrix from the selector, so the module is
+            # reachable exactly when the selector can return it.
+            self.assertIn(
+                "test_adversarial_mandates", all_test_modules(_REPO_ROOT),
+                f"{name} sets ELECTIONSIM_ADVERSARIAL_CASES for a module that "
+                f"is not in the suite its matrix is built from",
+            )
+            selected, _ = select(["scripts/mandates/allocator.py"])
+            self.assertIn(
+                "test_adversarial_mandates", selected,
+                f"{name} sets the audit size but no diff can select the audit",
+            )
+
+    def test_nightly_reruns_every_exhaustive_module_by_name(self) -> None:
         nightly = self.text["nightly.yml"]
-        for module in NIGHTLY_ONLY:
+        for module in NIGHTLY_EXHAUSTIVE:
             self.assertIn(
                 f"tests.{module}", nightly,
-                f"{module} is deferred to nightly but nightly never names it",
+                f"{module} is named for a nightly re-run but nightly never "
+                f"invokes it",
             )
 
     def test_nightly_does_not_pin_the_audit_below_its_full_size(self) -> None:
@@ -319,11 +427,9 @@ class WorkflowCoverageTests(unittest.TestCase):
         self.assertIn("pull_request", trigger_block)
 
     def test_no_module_is_covered_only_by_an_informational_job(self) -> None:
-        # cross-repo-coverage and whole-suite-serial are continue-on-error.
-        # Anything they run must also run in a required job.
-        everything = set(all_test_modules(_REPO_ROOT, tier="all"))
-        per_change = set(all_test_modules(_REPO_ROOT, tier="per-change"))
-        nightly = set(all_test_modules(_REPO_ROOT, tier="nightly"))
-        # full.yml (required) covers per_change; nightly.yml's required jobs
-        # cover NIGHTLY_ONLY by name.
-        self.assertEqual(per_change | nightly, everything)
+        # cross-repo-coverage and whole-suite-serial are continue-on-error, so
+        # nothing may depend on them. full.yml's required shards are built from
+        # the whole suite, which is what makes that true.
+        full = " ".join(self.text["full.yml"].split())
+        self.assertIn("--all --shards 4", full)
+        self.assertNotIn("--tier", full)

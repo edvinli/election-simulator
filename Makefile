@@ -4,7 +4,7 @@ PYTHON := $(shell which uv >/dev/null 2>&1 && echo "uv run python" || echo "pyth
 
 # --- Developer loop -------------------------------------------------------
 #
-# Three tiers, described in docs/ci-topology.md.
+# Three layers, described in docs/ci-topology.md.
 #
 #   make check          the loop you run before pushing: compiles, the CI
 #                       selector's own tests, and the tests your uncommitted
@@ -18,7 +18,7 @@ PYTHON := $(shell which uv >/dev/null 2>&1 && echo "uv run python" || echo "pyth
 # `make test-pollofpolls` still runs the entire suite unfiltered, including the
 # exhaustive audit, and so still takes about twelve minutes.
 
-# Reduced allocator parity for the developer and pull-request tiers: every
+# Reduced allocator parity for the developer and pull-request layers: every
 # legal branch is still exercised and the dispatcher must still match the exact
 # legal reference on every case. Override to raise it locally.
 ADVERSARIAL_CASES ?= 700
@@ -36,7 +36,7 @@ check:
 test-affected:
 	@modules="$$( { git diff --name-only $(BASE)...HEAD; git diff --name-only HEAD; git diff --name-only --cached; git ls-files --others --exclude-standard; } \
 		| sort -u \
-		| xargs $(PYTHON) -m scripts.ci.test_topology select --tier per-change --format unittest --changed )"; \
+		| xargs $(PYTHON) -m scripts.ci.test_topology select --format unittest --changed )"; \
 	if [ -z "$$modules" ]; then \
 		echo "No Python test is affected by the current changes."; \
 	else \
@@ -47,7 +47,7 @@ test-affected:
 test-changed: test-affected
 
 test-shard-plan:
-	$(PYTHON) -m scripts.ci.test_topology plan --shards $(if $(SHARDS),$(SHARDS),4) --tier per-change
+	$(PYTHON) -m scripts.ci.test_topology plan --shards $(if $(SHARDS),$(SHARDS),4)
 
 test-full:
 	ELECTIONSIM_ADVERSARIAL_CASES=$(ADVERSARIAL_CASES) $(PYTHON) -m unittest discover -s tests -t . -v

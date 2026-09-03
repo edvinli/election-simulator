@@ -1,12 +1,12 @@
 {
-  "_comment": "Measured single-module wall-clock in seconds, used only to balance shards. Recorded on macOS/Python 3.12 by running each module alone: `uv run python -m unittest tests.<module>`. Absolute values differ on CI runners; only the relative sizes matter here, so this needs refreshing when a suite's cost changes materially, not routinely. A module missing from this table is treated as average cost.",
-  "measured_total_seconds": 744.2,
+  "_comment": "Measured single-module wall-clock in seconds, used only to balance shards. Recorded on macOS/Python 3.12 by running each module alone: `uv run python -m unittest tests.<module>`. Absolute values differ on CI runners; only the relative sizes matter here, so this needs refreshing when a suite's cost changes materially, not routinely. A module missing from this table is treated as average cost. IMPORTANT: sharding only ever happens in the pull-request and full layers, which run test_adversarial_mandates at ELECTIONSIM_ADVERSARIAL_CASES=700. Its entry here is therefore that reduced cost, not the exhaustive one. Nightly runs the exhaustive 20,000-case audit (~511s) as a single unsharded job, so that figure never needs to balance anything and is recorded in exhaustive_seconds below for reference only.",
+  "measured_total_seconds": 241.9,
   "seconds": {
-    "test_adversarial_mandates": 519.3,
     "test_opinion_precision_challenger": 35.1,
     "test_election_automation": 34.9,
     "test_election_simulator": 22.2,
     "test_challenger_integration": 18.0,
+    "test_adversarial_mandates": 17.0,
     "test_static_exporter": 14.6,
     "test_pop_state_diagnostics": 8.4,
     "test_site_publisher": 7.9,
@@ -60,5 +60,8 @@
     "test_elections": 0.2,
     "test_historical_mandate_law": 0.2,
     "test_pollofpolls": 0.1
+  },
+  "exhaustive_seconds": {
+    "test_adversarial_mandates": 511.0
   }
 }

@@ -1,10 +1,11 @@
-# Full layer: the complete per-change unit suite, sharded, on every push to main.
+# Full layer: every unit test module, sharded, on every push to main.
 #
-# "Complete" here means every test module except the ones test_topology.py
-# declares NIGHTLY_ONLY -- today just the exhaustive 20,000-case allocator
-# audit, whose reduced form still runs here. The tiers are asserted to
-# partition the suite by tests.test_ci_topology, so a module cannot fall
-# between this workflow and nightly.yml without that test failing.
+# "Every" is literal -- no module is held back for nightly. What nightly adds
+# is a heavier configuration of a few of them: test_adversarial_mandates runs
+# here at ELECTIONSIM_ADVERSARIAL_CASES=700 and again in nightly.yml at its
+# exhaustive 20,000 default. tests.test_ci_topology asserts that the module is
+# actually in this matrix, because an earlier version set the case count for a
+# module the matrix did not contain and every job still went green.
 name: Full CI
 
 on:
@@ -44,11 +45,11 @@ jobs:
         run: |
           set -euo pipefail
           matrix="$(uv run python -m scripts.ci.test_topology matrix \
-            --all --shards 4 --tier per-change 2> reason.txt)"
+            --all --shards 4 2> reason.txt)"
           cat reason.txt
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
           uv run python -m scripts.ci.test_topology plan \
-            --shards 4 --tier per-change >> "$GITHUB_STEP_SUMMARY"
+            --shards 4 >> "$GITHUB_STEP_SUMMARY"
 
   unit:
     name: Unit shard ${{ matrix.shard }} (${{ matrix.count }} modules)
@@ -151,7 +152,7 @@ jobs:
           set -euo pipefail
           echo "plan=$PLAN unit=$UNIT"
           # A skipped shard matrix means the plan produced nothing, which for
-          # the full tier is a defect, not an empty diff.
+          # the full suite is a defect, not an empty diff.
           if [[ "$PLAN" != "success" || "$UNIT" != "success" ]]; then
             echo "::error::full CI did not pass"
             exit 1

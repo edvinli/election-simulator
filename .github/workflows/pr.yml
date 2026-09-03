@@ -80,7 +80,7 @@ jobs:
         run: |
           set -euo pipefail
           matrix="$(uv run python -m scripts.ci.test_topology matrix \
-            --base "$BASE_SHA" --shards 2 --tier per-change 2> reason.txt)"
+            --base "$BASE_SHA" --shards 2 2> reason.txt)"
           reason="$(head -n1 reason.txt)"
           cat reason.txt
 

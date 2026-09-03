@@ -34,7 +34,10 @@ ran the entire suite twice for the same commit; that duplication is gone.
 
 1. `static` - byte-compile, and run `tests.test_ci_topology`.
 2. `plan` - ask `scripts/ci/test_topology.py` which modules the diff affects.
-3. `unit` - run them across 2 shards.
+3. `unit` - run them across 2 shards, with
+   `ELECTIONSIM_ADVERSARIAL_CASES=700` so that
+   `test_adversarial_mandates` -- which *is* in this matrix whenever the diff
+   selects it -- audits allocator parity at the reduced size.
 4. `required` - one status for branch protection.
 
 Selection walks the **import graph**, transitively, rather than a hand-written
@@ -57,8 +60,11 @@ broken matrix cannot read as success.
 
 ## Layer 3 - Full CI (`.github/workflows/full.yml`)
 
-Every module except those declared `NIGHTLY_ONLY`, across 4 shards balanced by
-measured duration (`scripts/ci/timings.json`). Runs on push to `main`.
+Every module, across 4 shards balanced by measured duration
+(`scripts/ci/timings.json`). Runs on push to `main`.
+
+"Every" is literal. No module is held back for nightly -- see *Nightly is a
+re-run, never a substitute* below.
 
 Sharding by measured cost rather than by name or file count matters: one module
 was 70% of the suite's wall-clock, so a naive split leaves three runners idle
@@ -93,6 +99,25 @@ touch what the gate proves.
 
 ## Layer 5 - Nightly (`.github/workflows/nightly.yml`, 02:40 UTC)
 
+### Nightly is a re-run, never a substitute
+
+Nightly may run a module *harder*. It may never be the only place a module runs.
+
+This rule is written down because the first version of this topology broke it.
+`test_adversarial_mandates` was declared `NIGHTLY_ONLY` and removed from the
+per-change suite, while `pr.yml` and `full.yml` went on setting
+`ELECTIONSIM_ADVERSARIAL_CASES=700` for a module their matrices no longer
+contained. The allocator parity audit ran nowhere on a pull request, and every
+job reported success. The topology test of the time checked that the case count
+was large enough -- never that the module was present -- so it green-lit the
+configuration.
+
+`NIGHTLY_EXHAUSTIVE` now names modules that run in **both** places: at the
+reduced size on every change, and again on the schedule without the override.
+`tests.test_ci_topology` asserts the module is in the suite, that an allocator
+change selects it, that it lands in a shard of the full matrix, and that nightly
+invokes it by name with no override.
+
 - **Required:** the exhaustive 20,000-case allocator audit; the expensive
   scientific and parity suites.
 - **Informational:** `whole-suite-serial`, which runs `unittest discover` in a
@@ -107,9 +132,11 @@ against the exact legal reference. At 20,000 cases it takes about nine minutes
 -- roughly 70% of the entire unit suite.
 
 `ELECTIONSIM_ADVERSARIAL_CASES` lowers the case count. The per-change layers
-use 700 (about 18 seconds); nightly runs the full 20,000. Every assertion is
-written against the configured count, so the reduced run is a smaller audit of
-the same kind, not a weaker one:
+run the module at 700 cases (about 17 seconds); nightly runs the same module
+again at the full 20,000. The module is in the per-change suite either way --
+the knob changes its size, never whether it runs. Every assertion is written
+against the configured count, so the reduced run is a smaller audit of the same
+kind, not a weaker one:
 
 - the production dispatcher must match the exact legal reference on **100%** of
   cases;
@@ -166,8 +193,17 @@ accurately instead of failing on it.
 ## Refreshing the timings table
 
 `scripts/ci/timings.json` only balances shards; it is not a performance budget
-and does not need routine updates. Refresh it when a suite's cost changes
-materially:
+and does not need routine updates.
+
+One entry is deliberately not the module's default cost: sharding happens only
+in the layers that set `ELECTIONSIM_ADVERSARIAL_CASES=700`, so
+`test_adversarial_mandates` is recorded at that reduced cost (17s), not the
+exhaustive 511s. Recording the exhaustive figure would make the planner hand
+the module its own shard and leave the other three nearly idle. The exhaustive
+number is kept alongside, under `exhaustive_seconds`, for reference only;
+nightly runs it as a single unsharded job where no balancing is needed.
+
+Refresh the table when a suite's cost changes materially:
 
 ```sh
 for t in tests/test_*.py; do

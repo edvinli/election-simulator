@@ -53,12 +53,21 @@ ALWAYS_RUN = (
     "test_publication_freeze",
 )
 
-# Modules whose full form is too expensive for the per-change layers and runs
-# on the nightly schedule instead. Nothing here may be the only cover for a
-# property: test_adversarial_mandates keeps proving allocator parity on every
-# change through ELECTIONSIM_ADVERSARIAL_CASES, and only the exhaustive
-# 20,000-case sweep is deferred. See docs/ci-topology.md.
-NIGHTLY_ONLY = ("test_adversarial_mandates",)
+# Modules that the nightly schedule re-runs in a heavier configuration than the
+# per-change layers use.
+#
+# This is NOT an exclusion, and the distinction is the whole point. An earlier
+# version of this file removed these modules from the per-change suite and
+# called them "covered by nightly": the pull-request matrix then set
+# ELECTIONSIM_ADVERSARIAL_CASES=700 for a module that was not in the matrix at
+# all, so the allocator parity audit ran nowhere on a pull request while every
+# job reported green. Deferring the *size* of a check is fine; deferring the
+# only run of it is exactly the silent coverage loss this module exists to
+# prevent.
+#
+# Every module named here therefore runs on every change too, at the reduced
+# size, and nightly repeats it without the override. See docs/ci-topology.md.
+NIGHTLY_EXHAUSTIVE = ("test_adversarial_mandates",)
 
 # Path prefixes whose change can invalidate any test in the suite.
 FULL_RUN_PREFIXES = (
@@ -158,38 +167,23 @@ def _reverse_closure(graph: dict[str, set[str]], seeds: set[str]) -> set[str]:
     return seen
 
 
-def all_test_modules(repo_root: Path = _REPO_ROOT, *, tier: str = "all") -> list[str]:
+def all_test_modules(repo_root: Path = _REPO_ROOT) -> list[str]:
     """Every unit test module, by bare name.
 
-    `tier` selects which side of the nightly split to return: "per-change"
-    drops the modules deferred to nightly, "nightly" returns only those, and
-    "all" returns everything.
+    There is deliberately no way to ask for a subset here. Every module runs in
+    the per-change layers; what nightly changes is how heavily some of them run,
+    not whether they run at all.
     """
-    modules = sorted(p.stem for p in (repo_root / "tests").glob("test_*.py"))
-    if tier == "per-change":
-        return [m for m in modules if m not in NIGHTLY_ONLY]
-    if tier == "nightly":
-        return [m for m in modules if m in NIGHTLY_ONLY]
-    if tier != "all":
-        raise ValueError(f"unknown tier {tier!r}")
-    return modules
+    return sorted(p.stem for p in (repo_root / "tests").glob("test_*.py"))
 
 
-def select(
-    changed: list[str],
-    repo_root: Path = _REPO_ROOT,
-    *,
-    tier: str = "all",
-) -> tuple[list[str], str]:
+def select(changed: list[str], repo_root: Path = _REPO_ROOT) -> tuple[list[str], str]:
     """Choose the test modules a change requires.
 
     Returns the module names and a one-line reason, so CI can print why it ran
-    what it ran. `tier` is passed through to `all_test_modules`, so the
-    pull-request layer can ask for the per-change tier and have the nightly
-    modules dropped after selection rather than by a second filter it might
-    forget to apply.
+    what it ran.
     """
-    everything = all_test_modules(repo_root, tier=tier)
+    everything = all_test_modules(repo_root)
     considered = [p for p in changed if not p.startswith(IGNORED_PREFIXES)]
     if not considered:
         return [], "no path in the diff can affect the Python unit suite"
@@ -274,13 +268,11 @@ def main(argv: list[str] | None = None) -> int:
     p_select.add_argument("--shards", type=int, default=1)
     p_select.add_argument("--shard-index", type=int)
     p_select.add_argument("--format", choices=("lines", "unittest", "json"), default="lines")
-    p_select.add_argument("--tier", choices=("all", "per-change", "nightly"), default="all")
 
     p_shard = sub.add_parser("shard", help="split the whole suite into balanced shards")
     p_shard.add_argument("--shards", type=int, required=True)
     p_shard.add_argument("--shard-index", type=int, required=True)
     p_shard.add_argument("--format", choices=("lines", "unittest", "json"), default="lines")
-    p_shard.add_argument("--tier", choices=("all", "per-change", "nightly"), default="all")
 
     p_matrix = sub.add_parser(
         "matrix",
@@ -289,19 +281,17 @@ def main(argv: list[str] | None = None) -> int:
     m_source = p_matrix.add_mutually_exclusive_group(required=True)
     m_source.add_argument("--base", help="git ref to diff HEAD against")
     m_source.add_argument("--changed", nargs="*", help="explicit changed paths")
-    m_source.add_argument("--all", action="store_true", help="use the whole tier")
+    m_source.add_argument("--all", action="store_true", help="use every module")
     p_matrix.add_argument("--shards", type=int, required=True)
-    p_matrix.add_argument("--tier", choices=("all", "per-change", "nightly"), default="all")
 
     p_plan = sub.add_parser("plan", help="describe the shard plan for humans")
     p_plan.add_argument("--shards", type=int, required=True)
-    p_plan.add_argument("--tier", choices=("all", "per-change", "nightly"), default="all")
 
     args = parser.parse_args(argv)
 
     if args.command == "plan":
         timings = _timings()
-        bins = shard(all_test_modules(_REPO_ROOT, tier=args.tier), args.shards)
+        bins = shard(all_test_modules(_REPO_ROOT), args.shards)
         for index, group in enumerate(bins):
             cost = sum(timings.get(m, 0.0) for m in group)
             print(f"shard {index}: {len(group):2d} modules, {cost:7.1f}s")
@@ -311,11 +301,11 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "matrix":
         if args.all:
-            modules = all_test_modules(_REPO_ROOT, tier=args.tier)
-            reason = f"{args.tier} tier, all modules"
+            modules = all_test_modules(_REPO_ROOT)
+            reason = "every module"
         else:
             changed = args.changed if args.changed is not None else _changed_from_git(args.base)
-            modules, reason = select(changed, tier=args.tier)
+            modules, reason = select(changed)
         # Never open more shards than there is work for; an empty shard is a
         # runner spun up to do nothing.
         count = max(1, min(args.shards, len(modules)))
@@ -336,11 +326,11 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "select":
         changed = args.changed if args.changed is not None else _changed_from_git(args.base)
-        modules, reason = select(changed, tier=args.tier)
+        modules, reason = select(changed)
         print(f"selection: {reason}", file=sys.stderr)
     else:
-        modules = all_test_modules(_REPO_ROOT, tier=args.tier)
-        reason = f"{args.tier} tier"
+        modules = all_test_modules(_REPO_ROOT)
+        reason = "every module"
 
     if getattr(args, "shard_index", None) is not None and args.shards > 1:
         modules = shard(modules, args.shards)[args.shard_index]
