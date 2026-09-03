@@ -396,15 +396,28 @@ def simulate_campaign_paths(
     coalitions: Mapping[str, Sequence[str]] = DEFAULT_COALITIONS,
     representative_paths: int = DEFAULT_REPRESENTATIVE_PATHS,
     verify_endpoint_parity: bool = True,
+    reference_vote_shares_pct: np.ndarray | None = None,
 ) -> CampaignPathSimulation:
     """Simulate complete opinion paths from ``as_of`` through election day.
 
-    With ``verify_endpoint_parity`` the ``d = n`` endpoint is re-derived through
-    the canonical ``generate_national_vote_shares`` engine and compared bitwise.
-    That comparison is the load-bearing scientific gate: it is independent of
-    whoever produced the certified summaries, and it fails closed, so a wrong
-    seed, a misaligned trajectory pool or a changed ElectionNoise horizon
-    cannot reach publication.
+    With ``verify_endpoint_parity`` the ``d = n`` endpoint is compared bitwise
+    against the canonical production draws.  That comparison is the
+    load-bearing scientific gate and it fails closed, so a wrong seed, a
+    misaligned trajectory pool or a changed ElectionNoise horizon cannot reach
+    publication.
+
+    ``reference_vote_shares_pct`` supplies those canonical draws directly, as
+    the ``(N, 9)`` percentage matrix production already holds in
+    ``SimulationResult.vote_shares_matrix``, so a publication does not pay for
+    a second 100 000-draw run of ``generate_national_vote_shares``.  The
+    comparison happens in percentage points because both sides then apply the
+    identical ``* 100.0`` to their own fraction matrix; recovering fractions by
+    dividing by 100 would *not* round-trip bit-exactly and would break the very
+    equality this gate asserts.
+
+    Given ``None`` the reference is re-derived from the canonical engine, which
+    is what the unit tests do. An independent re-derivation is the stronger
+    check and is worth its cost in a test, but not once per publication.
     """
 
     origin = _coerce_date(as_of, name="as_of")
@@ -493,21 +506,34 @@ def simulate_campaign_paths(
     # the same frozen primitives must agree to the last bit.
     parity_verified = False
     parity_difference: float | None = None
+    parity_reference = "generate_national_vote_shares"
     if verify_endpoint_parity:
-        from scripts.vote_share_calibration.national_engine import generate_national_vote_shares
+        if reference_vote_shares_pct is None:
+            from scripts.vote_share_calibration.national_engine import (
+                generate_national_vote_shares,
+            )
 
-        reference = generate_national_vote_shares(
-            as_of=origin,
-            election_date=election,
-            samples=samples,
-            seed=seed,
-            data_dir=root,
-        )
-        parity_difference = float(np.max(np.abs(reference.nat_shares_matrix - national)))
-        if not np.array_equal(reference.nat_shares_matrix, national):
+            reference = generate_national_vote_shares(
+                as_of=origin,
+                election_date=election,
+                samples=samples,
+                seed=seed,
+                data_dir=root,
+            ).nat_shares_matrix * 100.0
+        else:
+            reference = np.asarray(reference_vote_shares_pct, dtype=np.float64)
+            parity_reference = "certified_production_result"
+            if reference.shape != national.shape:
+                raise ValueError(
+                    "the supplied production reference matrix has shape "
+                    f"{reference.shape}, expected {national.shape}"
+                )
+        endpoint_pct = national * 100.0
+        parity_difference = float(np.max(np.abs(reference - endpoint_pct)))
+        if not np.array_equal(reference, endpoint_pct):
             raise ValueError(
                 "campaign-path election-day draws are not bitwise identical to the "
-                f"canonical production draws (max |difference| = {parity_difference})"
+                f"canonical production draws (max |difference| = {parity_difference} pp)"
             )
         parity_verified = True
 
@@ -533,10 +559,8 @@ def simulate_campaign_paths(
         "daily_independent_random_walk": False,
         "directional_momentum": False,
         "endpoint_parity_verified": parity_verified,
-        "endpoint_parity_max_abs_difference_pp": (
-            None if parity_difference is None else parity_difference * 100.0
-        ),
-        "endpoint_parity_reference": "generate_national_vote_shares",
+        "endpoint_parity_max_abs_difference_pp": parity_difference,
+        "endpoint_parity_reference": parity_reference,
     }
 
     return CampaignPathSimulation(

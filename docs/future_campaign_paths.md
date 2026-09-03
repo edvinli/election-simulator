@@ -156,11 +156,31 @@ runtime rather than assumed.
    a missing date, so a punctured series fails the publication rather than
    silently producing a misaligned pool. The production series is gap-free
    daily from 2014-09-15.
-6. **Verified at publication time.** `build_future_campaign_paths` accepts the
-   certified `SimulationResult.vote_shares_matrix` and refuses to publish
-   unless the path model's own $d = n$ draws equal it bitwise. The published
-   `endpoint_parity.max_abs_vote_share_difference_pp` is `0.0`, and the
-   contract validator rejects any non-zero value on a verified check.
+6. **Verified at every build.** `simulate_campaign_paths` refuses to return
+   unless its own $d = n$ draws equal the canonical production draws bitwise.
+   The published `endpoint_parity.max_abs_vote_share_difference_pp` is `0.0`,
+   and the contract validator rejects any non-zero value on a verified check.
+
+   The reference comes from one of two places, named in
+   `endpoint_parity.reference`:
+
+   * `generate_national_vote_shares` — an **independent re-derivation** through
+     the canonical engine. This is the default and what the unit tests use; two
+     separately written code paths sharing the same frozen primitives must
+     agree to the last bit, which catches a wrong seed, a misaligned pool or a
+     changed ElectionNoise horizon.
+   * `certified_production_result` — the `(N, 9)` percentage matrix production
+     already holds in `SimulationResult.vote_shares_matrix`. A publication
+     passes this so it does not run a second 100 000-draw canonical simulation
+     purely to check itself. Measured, that saves 1.7 s of the ~194 s history
+     stage; ~97 % of that stage is the *secondary* shrinking-horizon fan
+     computing geography, integerization and statutory allocation for ten
+     intermediate dates at 10 000 draws.
+
+   The comparison is in percentage points, because both sides then apply the
+   identical `* 100.0` to their own fraction matrix. Recovering fractions by
+   dividing that matrix by 100 does **not** round-trip bit-exactly and would
+   break the very equality being asserted.
 7. **Published summaries are copies, not recomputations.**
    `election_day.groups` is a deep copy of the certified
    `current_production` point's `groups`, and the validator requires exact

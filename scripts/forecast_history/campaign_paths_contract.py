@@ -99,6 +99,7 @@ def build_future_campaign_paths(
     data_dir: Path | str | None = None,
     coalitions: Mapping[str, Sequence[str]] = DEFAULT_COALITIONS,
     representative_paths: int = DEFAULT_REPRESENTATIVE_PATHS,
+    reference_vote_shares_pct: Any | None = None,
     path_simulator: Callable[..., Any] | None = None,
 ) -> dict[str, Any]:
     """Build the primary forward campaign-path object.
@@ -150,6 +151,8 @@ def build_future_campaign_paths(
         "coalitions": coalition_config,
         "representative_paths": representative_paths,
     }
+    if reference_vote_shares_pct is not None:
+        kwargs["reference_vote_shares_pct"] = reference_vote_shares_pct
     if data_dir is not None:
         kwargs["data_dir"] = Path(data_dir)
     simulation = simulator(**kwargs)
@@ -248,6 +251,7 @@ def build_future_campaign_paths(
             "verified": parity_verified,
             "max_abs_vote_share_difference_pp": parity_difference,
             "election_day_summaries_source": "certified_current_production_point",
+            "reference": str(construction["endpoint_parity_reference"]),
             "shared_seeds": {
                 "opinion_state": int(construction["opinion_state_seed"]),
                 "shared_dynamics": int(construction["dynamics_seed"]),
@@ -416,6 +420,8 @@ def validate_future_campaign_paths_contract(
         raise ValueError("future_campaign_paths must guarantee bitwise endpoint parity")
     if parity.get("election_day_summaries_source") != "certified_current_production_point":
         raise ValueError("election-day summaries must come from the certified production point")
+    if parity.get("reference") not in {"generate_national_vote_shares", "certified_production_result"}:
+        raise ValueError("endpoint parity must name the reference it was checked against")
     difference = parity.get("max_abs_vote_share_difference_pp")
     if parity.get("verified") is True:
         if not isinstance(difference, (int, float)) or isinstance(difference, bool) or float(difference) != 0.0:

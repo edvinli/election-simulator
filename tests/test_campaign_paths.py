@@ -617,6 +617,120 @@ class CampaignPathScienceTests(unittest.TestCase):
         self.assertFalse(paths.diagnostics["endpoint_parity_verified"])
         self.assertIsNone(paths.diagnostics["endpoint_parity_max_abs_difference_pp"])
 
+    def test_the_gate_accepts_the_certified_production_matrix_as_reference(self) -> None:
+        """Publication compares against the matrix production already holds.
+
+        The independent re-derivation through the canonical engine stays the
+        default and is what every other test here exercises; supplying the
+        certified matrix removes a redundant 100,000-draw run from the
+        publication path without weakening the equality.
+        """
+
+        samples = 96
+        production = simulate_election(
+            as_of=ORIGIN,
+            election_date=ELECTION,
+            samples=samples,
+            seed=SEED,
+            data_dir=PROCESSED,
+        )
+        supplied = simulate_campaign_paths(
+            as_of=ORIGIN,
+            election_date=ELECTION,
+            samples=samples,
+            seed=SEED,
+            data_dir=PROCESSED,
+            reference_vote_shares_pct=production.vote_shares_matrix,
+        )
+        self.assertTrue(supplied.diagnostics["endpoint_parity_verified"])
+        self.assertEqual(supplied.diagnostics["endpoint_parity_max_abs_difference_pp"], 0.0)
+        self.assertEqual(
+            supplied.diagnostics["endpoint_parity_reference"], "certified_production_result"
+        )
+        # The two references must agree, or one of them is not canonical.
+        derived = simulate_campaign_paths(
+            as_of=ORIGIN,
+            election_date=ELECTION,
+            samples=samples,
+            seed=SEED,
+            data_dir=PROCESSED,
+        )
+        np.testing.assert_array_equal(
+            supplied.endpoint_national_shares, derived.endpoint_national_shares
+        )
+
+    def test_the_publication_helper_hands_over_percent_not_fractions(self) -> None:
+        """The unit that plumbs production's matrix into the gate.
+
+        Testing ``simulate_campaign_paths`` with the matrix directly leaves the
+        helper that produces it untested; a revision of that helper divided by
+        100 and every publication failed the parity gate with a 33.5 pp
+        difference while this module stayed green.
+        """
+
+        from scripts.forecast_history.future_projection import _production_vote_shares_pct
+
+        samples = 64
+        production = simulate_election(
+            as_of=ORIGIN,
+            election_date=ELECTION,
+            samples=samples,
+            seed=SEED,
+            data_dir=PROCESSED,
+        )
+        reference = _production_vote_shares_pct(production)
+        self.assertIsNotNone(reference)
+        # Percent, unchanged, and the identical object's values bit for bit.
+        np.testing.assert_array_equal(reference, production.vote_shares_matrix)
+        self.assertGreater(float(np.max(reference)), 1.0)
+
+        paths = simulate_campaign_paths(
+            as_of=ORIGIN,
+            election_date=ELECTION,
+            samples=samples,
+            seed=SEED,
+            data_dir=PROCESSED,
+            reference_vote_shares_pct=reference,
+        )
+        self.assertTrue(paths.diagnostics["endpoint_parity_verified"])
+        self.assertEqual(paths.diagnostics["endpoint_parity_max_abs_difference_pp"], 0.0)
+        self.assertEqual(
+            paths.diagnostics["endpoint_parity_reference"], "certified_production_result"
+        )
+
+    def test_the_publication_helper_declines_what_it_cannot_use(self) -> None:
+        from scripts.forecast_history.future_projection import _production_vote_shares_pct
+
+        self.assertIsNone(_production_vote_shares_pct(SimpleNamespace()))
+        self.assertIsNone(
+            _production_vote_shares_pct(SimpleNamespace(vote_shares_matrix=None))
+        )
+        self.assertIsNone(
+            _production_vote_shares_pct(SimpleNamespace(vote_shares_matrix=np.zeros((4, 8))))
+        )
+
+    def test_a_supplied_reference_that_disagrees_fails_closed(self) -> None:
+        with self.assertRaisesRegex(ValueError, "not bitwise identical"):
+            simulate_campaign_paths(
+                as_of=ORIGIN,
+                election_date=ELECTION,
+                samples=32,
+                seed=SEED,
+                data_dir=PROCESSED,
+                reference_vote_shares_pct=np.zeros((32, 9)),
+            )
+
+    def test_a_supplied_reference_of_the_wrong_shape_fails_closed(self) -> None:
+        with self.assertRaisesRegex(ValueError, "expected"):
+            simulate_campaign_paths(
+                as_of=ORIGIN,
+                election_date=ELECTION,
+                samples=32,
+                seed=SEED,
+                data_dir=PROCESSED,
+                reference_vote_shares_pct=np.zeros((8, 9)),
+            )
+
     def test_the_verified_gate_reports_exactly_zero(self) -> None:
         paths = simulate_campaign_paths(
             as_of=ORIGIN,
@@ -630,6 +744,7 @@ class CampaignPathScienceTests(unittest.TestCase):
         self.assertEqual(
             paths.diagnostics["endpoint_parity_reference"], "generate_national_vote_shares"
         )
+        self.assertEqual(paths.diagnostics["endpoint_parity_max_abs_difference_pp"], 0.0)
 
     def test_endpoint_parity_holds_beyond_the_112_day_dynamics_cap(self) -> None:
         """Above the cap the path is a monotone stretch with an exact endpoint."""

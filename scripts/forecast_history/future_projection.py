@@ -395,6 +395,34 @@ def build_future_projection(
     }
 
 
+def _production_vote_shares_pct(production_result: Any) -> Any | None:
+    """Return the certified election-day draw matrix in percent, if present.
+
+    ``SimulationResult.vote_shares_matrix`` *is* the canonical national matrix
+    times 100. The parity gate therefore compares in percentage points: both
+    sides apply the identical ``* 100.0`` to their own fraction matrix, whereas
+    dividing this matrix by 100 does not round-trip bit-exactly and would break
+    the equality being asserted.
+    """
+
+    matrix = getattr(production_result, "vote_shares_matrix", None)
+    if matrix is None:
+        return None
+    try:
+        import numpy as np
+
+        arr = np.asarray(matrix, dtype=np.float64)
+    except Exception:  # pragma: no cover - a stub result without a real matrix
+        return None
+    if arr.ndim != 2 or arr.shape[1] != 9:
+        return None
+    # Returned in percent, exactly as production holds it.  Dividing by 100
+    # here is what an earlier revision of this helper did, and it handed a
+    # fraction matrix to a percentage-point comparison: the gate then reported
+    # a 33.5 pp difference and failed every publication.
+    return arr
+
+
 def update_history_with_production_result(
     existing_payload: Mapping[str, Any],
     production_result: Any,
@@ -469,6 +497,11 @@ def update_history_with_production_result(
             seed=seed,
             data_dir=projection_data_dir,
             coalitions=history["coalitions"],
+            # Production already holds the certified election-day matrix, so
+            # the parity gate compares against it rather than paying for a
+            # second 100,000-draw canonical run.  The independent
+            # re-derivation stays in the unit tests.
+            reference_vote_shares_pct=_production_vote_shares_pct(production_result),
             path_simulator=campaign_path_simulator,
         )
         validate_future_campaign_paths_contract(history)
