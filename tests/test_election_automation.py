@@ -1431,14 +1431,44 @@ time.sleep(60)
         existing = json.loads(
             (REPOSITORY_ROOT / "files/election-simulator/history/coalition-timeseries.json").read_text()
         )
+        # Rollover is a property of the updater, not of whatever the committed
+        # artifact happens to hold. A freshly generated history deliberately
+        # carries no certified point -- when the archive already has a snapshot
+        # for the latest date at the production draw count, build_history uses
+        # that record verbatim -- so the prior certified point is established
+        # here rather than assumed. Depending on the shipped artifact's shape
+        # made this test fail on a legitimate regeneration.
+        existing = update_history_with_production_result(
+            existing,
+            self._result("2026-08-26"),
+            poll_file=REPOSITORY_ROOT / "data/processed/pollofpolls/swedishpolls_individual_polls.csv",
+            timeseries_file=REPOSITORY_ROOT / "data/processed/pollofpolls/pollofpolls_timeseries.csv",
+            archive_dir=REPOSITORY_ROOT / "data/processed/prospective_forecasts",
+            election_date="2026-09-13",
+            publication_generation="seed-generation",
+            deterministic_payload_sha256="a" * 64,
+            generated_at_utc="2026-08-31T21:00:00+00:00",
+            model_commit=COMMIT,
+            source_worktree_clean=True,
+        )
+        self.assertEqual(
+            sum(point["provenance"] == "current_production" for point in existing["series"]), 1,
+            "the seeded payload must carry exactly one certified point",
+        )
+        # Every reconstructed point *other than the one this update replaces*
+        # must survive byte for byte. Excluding the target date explicitly is
+        # the actual invariant; the previous version relied on that date not
+        # being covered by the artifact, which a denser regeneration changes.
+        rollover_date = "2026-08-25"
         reconstructed = {
             point["date"]: deepcopy(point)
             for point in existing["series"]
             if point["provenance"] == "reconstructed_current_model"
+            and point["date"] != rollover_date
         }
         new_day = update_history_with_production_result(
             existing,
-            self._result("2026-08-25"),
+            self._result(rollover_date),
             poll_file=REPOSITORY_ROOT / "data/processed/pollofpolls/swedishpolls_individual_polls.csv",
             timeseries_file=REPOSITORY_ROOT / "data/processed/pollofpolls/pollofpolls_timeseries.csv",
             archive_dir=REPOSITORY_ROOT / "data/processed/prospective_forecasts",
