@@ -1,0 +1,10 @@
+{
+  "metadata": {"run_written": "2026-09-03 17:10:53", "model": "model8m10", "n_draws": 4, "latest_date": "2026-09-03", "run": "fixture_fc2026"},
+  "questions": {
+    "is_KD_above_4_pct": {
+      "election": {"n_true": 3, "prob": 0.75},
+      "desc": "Ligger KD över spärren?",
+      "parties": ["KD"]
+    }
+  }
+}

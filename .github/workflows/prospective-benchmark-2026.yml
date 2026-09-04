@@ -1,0 +1,270 @@
+name: Prospective benchmark 2026 capture
+
+on:
+  schedule:
+    # 23:30 Europe/Stockholm during the frozen Sep 4–12 campaign window.
+    # The guard below restricts the otherwise yearless GitHub cron expression.
+    - cron: "30 21 * 9 *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Non-durable dry run or one real append-only capture"
+        required: true
+        default: dry_run
+        type: choice
+        options:
+          - dry_run
+          - capture
+      scheduled_date:
+        description: "Frozen Stockholm slot (YYYY-MM-DD); required for manual capture"
+        required: false
+        default: "2026-09-04"
+        type: string
+
+permissions:
+  contents: read
+
+# Share the production lock. A benchmark checkout must never race an unfinished
+# publication generation into or out of the cutoff selection set.
+concurrency:
+  group: election-simulator-production
+  cancel-in-progress: false
+
+jobs:
+  # Resolve the intended slot without checking out or mutating the repository.
+  # A scheduled GitHub event has no year/date field, so the explicit Stockholm
+  # wall clock is used.  Before the local cutoff, a delayed run belongs to the
+  # previous Stockholm date; after the cutoff, the current slot is selected.
+  schedule_guard:
+    permissions:
+      actions: read
+      contents: read
+    runs-on: ubuntu-latest
+    outputs:
+      active: ${{ steps.resolve.outputs.active }}
+      mode: ${{ steps.resolve.outputs.mode }}
+      scheduled_date: ${{ steps.resolve.outputs.scheduled_date }}
+      capture_id: ${{ steps.resolve.outputs.capture_id }}
+    steps:
+      - name: Resolve intended scheduled slot and guard the frozen window
+        id: resolve
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          MANUAL_MODE: ${{ github.event.inputs.mode || '' }}
+          MANUAL_DATE: ${{ github.event.inputs.scheduled_date || '' }}
+        run: |
+          if [[ "$EVENT_NAME" == "schedule" ]]; then
+            # Bind the slot to GitHub's externally recorded workflow-run
+            # creation time, not the possibly delayed runner wall clock.
+            # If that evidence cannot be retrieved, fail closed.
+            RUN_CREATED_AT="$(gh api "repos/$REPOSITORY/actions/runs/$RUN_ID" --jq .created_at)"
+            if [[ ! "$RUN_CREATED_AT" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T ]]; then
+              echo "Cannot establish the scheduled run creation time." >&2
+              exit 2
+            fi
+            STOCKHOLM_DATE="$(TZ=Europe/Stockholm date -d "$RUN_CREATED_AT" +%F)"
+            STOCKHOLM_TIME="$(TZ=Europe/Stockholm date -d "$RUN_CREATED_AT" +%H:%M)"
+            # A run created after midnight but before the next cutoff belongs
+            # to the prior slot and will be durably LATE_EXCLUDED. A run
+            # created at the next cutoff belongs to that date, avoiding
+            # retry/queue ambiguity between consecutive slots.
+            if [[ "$STOCKHOLM_TIME" < "23:30" ]]; then
+              SCHEDULED_DATE="$(TZ=Europe/Stockholm date -d "$RUN_CREATED_AT - 1 day" +%F)"
+            else
+              SCHEDULED_DATE="$STOCKHOLM_DATE"
+            fi
+            MODE="capture"
+          else
+            SCHEDULED_DATE="$MANUAL_DATE"
+            MODE="$MANUAL_MODE"
+            if [[ "$MODE" != "dry_run" && "$MODE" != "capture" ]]; then
+              echo "Manual mode must be dry_run or capture: $MODE" >&2
+              exit 2
+            fi
+          fi
+          if [[ ! "$SCHEDULED_DATE" =~ ^2026-09-(0[4-9]|1[0-2])$ ]]; then
+            if [[ "$EVENT_NAME" == "schedule" ]]; then
+              echo "active=false" >> "$GITHUB_OUTPUT"
+              echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+              echo "Scheduled event is outside the frozen 2026-09-04..12 window." >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            echo "Manual scheduled_date is outside the frozen window: $SCHEDULED_DATE" >&2
+            exit 2
+          fi
+          CAPTURE_ID="$(date -u --date="$SCHEDULED_DATE 21:30:00" +%Y%m%dT%H%M%SZ)"
+          {
+            echo "active=true"
+            echo "mode=$MODE"
+            echo "scheduled_date=$SCHEDULED_DATE"
+            echo "capture_id=$CAPTURE_ID"
+          } >> "$GITHUB_OUTPUT"
+          {
+            echo "### Prospective benchmark slot guard"
+            echo "- Event: $EVENT_NAME"
+            echo "- Workflow run created at: ${RUN_CREATED_AT:-manual dispatch}"
+            echo "- Guard evaluated at: $(TZ=Europe/Stockholm date --iso-8601=seconds)"
+            echo "- Scheduled Stockholm date: $SCHEDULED_DATE"
+            echo "- Mode: $MODE"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  dry_run:
+    if: needs.schedule_guard.outputs.active == 'true' && needs.schedule_guard.outputs.mode == 'dry_run'
+    needs: schedule_guard
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out simulator without persisted credentials
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install locked dependencies and verify a clean checkout
+        shell: bash
+        run: |
+          uv sync --frozen
+          test -z "$(git status --porcelain --untracked-files=all)"
+
+      - name: Run prospective capture gates
+        run: |
+          uv run python -m unittest \
+            tests.test_prospective_archive \
+            tests.test_prospective_benchmark_2026_capture \
+            tests.test_prospective_benchmark_2026_archive \
+            tests.test_prospective_benchmark_2026_results \
+            tests.test_prospective_benchmark_2026_report \
+            tests.test_prospective_benchmark_scoring \
+            tests.test_prospective_benchmark_2026_botten_ada_capture \
+            tests.test_prospective_benchmark_2026_adversarial \
+            tests.test_exact_draw_sidecar \
+            tests.test_prospective_benchmark_2026_workflow
+
+      - name: Execute non-durable benchmark dry run
+        shell: bash
+        env:
+          SCHEDULED_DATE: ${{ needs.schedule_guard.outputs.scheduled_date }}
+        run: |
+          uv run python -m scripts.prospective_benchmark_2026 capture \
+            --mode dry_run \
+            --scheduled-date "$SCHEDULED_DATE" \
+            --summary-path "$GITHUB_STEP_SUMMARY"
+
+      - name: Verify dry run left the repository untouched
+        shell: bash
+        run: |
+          test -z "$(git status --porcelain --untracked-files=all)"
+          echo "Dry run completed without durable files or repository changes." >> "$GITHUB_STEP_SUMMARY"
+
+  capture:
+    if: needs.schedule_guard.outputs.active == 'true' && needs.schedule_guard.outputs.mode == 'capture'
+    needs: schedule_guard
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out the simulator with complete history
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install locked dependencies and verify a clean checkout
+        shell: bash
+        run: |
+          uv sync --frozen
+          test -z "$(git status --porcelain --untracked-files=all)"
+
+      - name: Run prospective capture gates
+        run: |
+          uv run python -m unittest \
+            tests.test_prospective_archive \
+            tests.test_prospective_benchmark_2026_capture \
+            tests.test_prospective_benchmark_2026_archive \
+            tests.test_prospective_benchmark_2026_results \
+            tests.test_prospective_benchmark_2026_report \
+            tests.test_prospective_benchmark_scoring \
+            tests.test_prospective_benchmark_2026_botten_ada_capture \
+            tests.test_prospective_benchmark_2026_adversarial \
+            tests.test_exact_draw_sidecar \
+            tests.test_prospective_benchmark_2026_workflow
+
+      - name: Capture official contemporaneous evidence
+        shell: bash
+        env:
+          CAPTURE_MODE: capture
+          SCHEDULED_DATE: ${{ needs.schedule_guard.outputs.scheduled_date }}
+        run: |
+          uv run python -m scripts.prospective_benchmark_2026 capture \
+            --mode "$CAPTURE_MODE" \
+            --scheduled-date "$SCHEDULED_DATE" \
+            --summary-path "$GITHUB_STEP_SUMMARY"
+
+      - name: Validate the complete immutable archive
+        run: uv run python -m scripts.prospective_benchmark_2026 validate
+
+      - name: Verify only the expected benchmark slot changed
+        shell: bash
+        env:
+          CAPTURE_ID: ${{ needs.schedule_guard.outputs.capture_id }}
+        run: |
+          test -z "$(git status --porcelain --untracked-files=all | awk -v id="$CAPTURE_ID" '
+            $2 != "data/processed/prospective_benchmark_2026/index.json" &&
+            index($2, "data/processed/prospective_benchmark_2026/captures/" id "/") != 1 {print}')"
+          git diff --exit-code -- \
+            data/processed/prospective_benchmark_2026/protocol.json \
+            data/processed/prospective_benchmark_2026/protocol.sha256 \
+            docs/2026_prospective_benchmark_protocol.md
+
+      - name: Commit and push the append-only capture
+        shell: bash
+        env:
+          CAPTURE_ID: ${{ needs.schedule_guard.outputs.capture_id }}
+          SCHEDULED_DATE: ${{ needs.schedule_guard.outputs.scheduled_date }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- \
+            data/processed/prospective_benchmark_2026/index.json \
+            "data/processed/prospective_benchmark_2026/captures/$CAPTURE_ID"
+          test -z "$(git diff --cached --name-only | awk -v id="$CAPTURE_ID" '
+            $0 != "data/processed/prospective_benchmark_2026/index.json" &&
+            index($0, "data/processed/prospective_benchmark_2026/captures/" id "/") != 1 {print}')"
+          git commit -m "chore: capture prospective benchmark $SCHEDULED_DATE"
+          git push origin HEAD:main
+          {
+            echo "### Prospective benchmark capture"
+            echo "- Scheduled Stockholm date: $SCHEDULED_DATE"
+            echo "- Capture ID: $CAPTURE_ID"
+            echo "- Archive validation: PASS"
+            echo "- Commit: $(git rev-parse HEAD)"
+          } >> "$GITHUB_STEP_SUMMARY"

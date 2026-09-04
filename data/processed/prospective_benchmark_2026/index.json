@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0",
+  "protocol_path": "protocol.json",
+  "protocol_sha256": "16f920a88eb956b42f24307e4ada3b5b1133bffb11a6561e5a9e9ce75c5e3b23",
+  "amendments": [
+    {
+      "amendment_number": 1,
+      "path": "amendments/001-operational-clarifications.json",
+      "sha256": "4bfecbfca1d11d4a90c63d324896b3436de2bfab6cf91d49d56c464fee08561a",
+      "primary_scoring_effect": "NONE. Mean party-level fair CRPS, its availability condition, the final date, and the winner rule are unchanged."
+    },
+    {
+      "amendment_number": 2,
+      "path": "amendments/002-standard-wis-normalization.json",
+      "sha256": "9023ecca77ded5b5f89e09d9f1daeca280e0b549381a1c7108f8d20e7c70380e",
+      "primary_scoring_effect": "Fallback-B WIS values are rescaled to the standard definition. This cannot change the ElectionSimulator-versus-Botten-Ada ranking or winner because both are scored on the same common interval levels and therefore share the same positive denominator. Draw-based primary fair CRPS is unchanged."
+    },
+    {
+      "amendment_number": 3,
+      "path": "amendments/003-exact-deterministic-replay.json",
+      "sha256": "132f58d0e0b1d56da19f117e798680bac9bf22be5d92f75fcd1b4d94e2cf95a6",
+      "primary_scoring_effect": "A deterministically reproduced ElectionSimulator draw sidecar may qualify as REPLAY_VERIFIED and therefore may satisfy ElectionSimulator's draw-availability side of fallback level A. This can change which pre-registered scoring tier is available, but does not change fair CRPS, the requirement that both systems have verified predictive draws, the final date, party set, or winner rule."
+    }
+  ],
+  "captures": []
+}
