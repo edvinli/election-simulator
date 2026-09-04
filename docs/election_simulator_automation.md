@@ -85,10 +85,29 @@ deterministic and do not require that repository.
 Each production event runs the existing 100,000-draw simulator once. Its
 validated `SimulationResult` supplies the static publication, immutable
 prospective snapshot, and history point. The history update keeps exactly one
-point per calendar date: on a new date the previous current point becomes
-`prospective_archived`; a same-day run replaces that date and retains the old
-immutable archive generation. Reconstructed historical points are copied, not
-rerun.
+point per calendar date *and provenance*: on a new date the previous current
+point becomes `prospective_archived`; a same-day run replaces that date and
+retains the old immutable archive generation. Reconstructed historical points
+are copied, not rerun.
+
+A date may therefore carry two points, and this is deliberate. The chart draws
+one continuous line through the non-archived points, so the date whose official
+point was just relabelled needs a reconstructed point of its own or the line
+has a hole there. The `history curve backfill` stage, which runs immediately
+before the history update, simulates exactly the daily dates that lack a curve
+point -- normally the single previous publication day, and nothing at all when
+the curve is already continuous. It is deliberately non-fatal: the curve is a
+presentation of history, so a reconstruction failure logs and is skipped rather
+than blocking a certified forecast.
+
+Reconstruction also survives a poll refresh. A point reads only the polls
+visible on its own date, so an appended poll leaves every earlier point valid;
+`first_changed_poll_date` finds the earliest publication date whose polls
+actually differ and only points from there on are recomputed. Rejecting the
+whole cache on any source-hash change, as the earlier rule did, made
+reconstruction a ~300-point rebuild after any refresh -- which is why the curve
+stopped being extended and the gap at the end of the chart grew by a day per
+publication.
 
 The archive's normal API still rejects duplicate information-set/payload
 identities. Production daily and manual publish runs explicitly mark a duplicate

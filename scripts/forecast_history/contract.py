@@ -362,7 +362,7 @@ def validate_history_contract(payload: Mapping[str, Any]) -> None:
     # still carried on that point so a genuine production point can roll from
     # ``current_production`` to ``prospective_archived`` without introducing
     # a second visual point for the same day.
-    seen_point_dates: set[str] = set()
+    seen_point_keys: set[tuple[str, str]] = set()
     latest_series_date: date | None = None
     for index, point in enumerate(series):
         if not isinstance(point, Mapping):
@@ -423,10 +423,18 @@ def validate_history_contract(payload: Mapping[str, Any]) -> None:
                 lower=0.0,
                 upper=349.0,
             )
+        # A calendar date may legitimately carry two points: the reconstructed
+        # curve of the *current* model, and the genuinely prospective forecast
+        # that was actually published that day under whatever model was current
+        # then.  They answer different questions and the chart draws only the
+        # first, so collapsing them by date alone would leave the reconstructed
+        # curve with a hole on every date that has an archived publication --
+        # one per publication, forever.  Uniqueness is therefore keyed on the
+        # (date, provenance) pair the ordering already uses.
         ordering_key = (point["date"], str(point["provenance"]))
-        if point["date"] in seen_point_dates:
-            raise ValueError("series contains duplicate calendar dates")
-        seen_point_dates.add(point["date"])
+        if ordering_key in seen_point_keys:
+            raise ValueError("series contains duplicate (date, provenance) points")
+        seen_point_keys.add(ordering_key)
         if prior_key is not None and ordering_key < prior_key:
             raise ValueError("series must be ordered by date and provenance")
         prior_key = ordering_key

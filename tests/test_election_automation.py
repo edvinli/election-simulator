@@ -1483,8 +1483,35 @@ time.sleep(60)
             (REPOSITORY_ROOT / "files/election-simulator/history/coalition-timeseries.json").read_text()
         )
 
+        # Dates that already carry a reconstructed point must never be
+        # resimulated. A date carrying only an archived prospective point is
+        # not one of them: it has no curve point yet, and simulating it is how
+        # the hole each publication leaves gets closed.
+        reconstructed_dates = {
+            point["date"]
+            for point in existing["series"]
+            if point["provenance"] == "reconstructed_current_model"
+        }
+        resimulated: list[str] = []
+
         def unexpected_runner(**kwargs):
-            raise AssertionError(f"existing point was rerun: {kwargs}")
+            as_of = str(kwargs.get("as_of"))
+            if as_of in reconstructed_dates:
+                raise AssertionError(f"existing point was rerun: {kwargs}")
+            resimulated.append(as_of)
+            votes, seats = self._matrices()
+            requested = int(kwargs["samples"])
+            repeats = (requested + len(votes) - 1) // len(votes)
+            return SimpleNamespace(
+                summary=SimpleNamespace(as_of=as_of, total_samples=requested),
+                vote_shares_matrix=np.tile(votes, (repeats, 1))[:requested],
+                seats_matrix=np.tile(seats, (repeats, 1))[:requested],
+                manifest={
+                    "source_git_commit": COMMIT,
+                    "source_worktree_clean": True,
+                    "base_seed": 12345,
+                },
+            )
 
         rebuilt = build_history(
             election_date="2026-09-13",
@@ -1497,17 +1524,23 @@ time.sleep(60)
             simulation_runner=unexpected_runner,
             workers=1,
         )
-        before = [
-            point
+        before = {
+            point["date"]: point
             for point in existing["series"]
             if point["provenance"] == "reconstructed_current_model"
-        ]
-        after = [
-            point
+        }
+        after = {
+            point["date"]: point
             for point in rebuilt["series"]
             if point["provenance"] == "reconstructed_current_model"
-        ]
-        self.assertEqual(after, before)
+        }
+        # Every point that existed is carried over byte for byte. The rebuild
+        # may legitimately *add* points on dates the curve was missing, so the
+        # two sets are compared per date rather than as whole lists.
+        for point_date, point in before.items():
+            self.assertEqual(after.get(point_date), point, point_date)
+        # Whatever was resimulated had no curve point to begin with.
+        self.assertTrue(set(resimulated).isdisjoint(reconstructed_dates))
 
     def test_production_history_rollover_and_same_day_replacement(self) -> None:
         existing = json.loads(
@@ -1562,12 +1595,26 @@ time.sleep(60)
             source_worktree_clean=True,
         )
         self.assertEqual(sum(point["provenance"] == "current_production" for point in new_day["series"]), 1)
-        self.assertEqual(len({point["date"] for point in new_day["series"]}), len(new_day["series"]))
-        old_current = next(point for point in existing["series"] if point["provenance"] == "current_production")
-        rolled = next(point for point in new_day["series"] if point["date"] == old_current["date"])
-        self.assertEqual(rolled["provenance"], "prospective_archived")
+        # A date carries at most one point *per provenance*: the reconstructed
+        # curve and the archived publication for that day coexist.
         self.assertEqual(
-            {point["date"]: point for point in new_day["series"] if point["date"] in reconstructed},
+            len({(point["date"], point["provenance"]) for point in new_day["series"]}),
+            len(new_day["series"]),
+        )
+        old_current = next(point for point in existing["series"] if point["provenance"] == "current_production")
+        rolled = [
+            point for point in new_day["series"]
+            if point["date"] == old_current["date"]
+            and point["provenance"] == "prospective_archived"
+        ]
+        self.assertEqual(len(rolled), 1)
+        self.assertEqual(
+            {
+                point["date"]: point
+                for point in new_day["series"]
+                if point["provenance"] == "reconstructed_current_model"
+                and point["date"] in reconstructed
+            },
             reconstructed,
         )
 
@@ -1585,10 +1632,20 @@ time.sleep(60)
             source_worktree_clean=True,
         )
         self.assertEqual(len(same_day["series"]), len(existing["series"]))
-        self.assertEqual(len({point["date"] for point in same_day["series"]}), len(same_day["series"]))
         self.assertEqual(
-            next(point for point in same_day["series"] if point["date"] == old_current["date"])["provenance"],
-            "current_production",
+            len({(point["date"], point["provenance"]) for point in same_day["series"]}),
+            len(same_day["series"]),
+        )
+        # A same-day rerun replaces the point for its own date; the reconstructed
+        # point that may share that date is not what the rollover produces.
+        self.assertEqual(
+            [
+                point["provenance"]
+                for point in same_day["series"]
+                if point["date"] == old_current["date"]
+                and point["provenance"] != "reconstructed_current_model"
+            ],
+            ["current_production"],
         )
 
     def test_coalition_quantities_use_same_joint_draws(self) -> None:

@@ -38,7 +38,10 @@ from scripts.forecast_history.contract import (
     validate_history_contract,
     write_history_json,
 )
-from scripts.forecast_history.generate import update_history_with_production_result
+from scripts.forecast_history.generate import (
+    backfill_reconstructed_curve,
+    update_history_with_production_result,
+)
 from scripts.pollofpolls.__main__ import (
     PollingValidationError,
     refresh_snapshot,
@@ -1486,6 +1489,33 @@ def run_production_event(
         )
         payload_hash = str(run.snapshot["deterministic_payload_sha256"])
         source_commit = str(result.manifest.get("source_git_commit", ""))
+        # Close yesterday's hole before rolling today's point in.  The roll-in
+        # relabels the previous official point `prospective_archived` and
+        # cannot simulate a replacement, so without this the reconstructed
+        # curve loses one day per publication and the chart's last segment
+        # spans a widening gap.  Reconstruction is skipped entirely when the
+        # curve is already continuous, and a failure here must never block a
+        # certified forecast: the curve is a presentation of history, not the
+        # forecast itself.
+        with _timed_stage("history curve backfill", stage_callback):
+            try:
+                history_for_update, backfilled = backfill_reconstructed_curve(
+                    existing_history,
+                    poll_file=processed_root / "pollofpolls" / "swedishpolls_individual_polls.csv",
+                    timeseries_file=processed_root / "pollofpolls" / "pollofpolls_timeseries.csv",
+                    archive_dir=staged_archive,
+                    election_date=election,
+                )
+            except Exception as error:  # noqa: BLE001 - never block publication
+                history_for_update = existing_history
+                backfilled = []
+                _log_stage("history curve backfill", f"SKIPPED {error}")
+            if backfilled:
+                _log_stage(
+                    "history curve backfill",
+                    "RECONSTRUCTED "
+                    + ",".join(point_date.isoformat() for point_date in backfilled),
+                )
         with _timed_stage("history update", stage_callback):
             selected_history_updater = history_updater or update_history_with_production_result
             history_kwargs = {
@@ -1502,7 +1532,7 @@ def run_production_event(
             if history_updater is not None:
                 history_kwargs["projection_runner"] = projection_runner
                 history_kwargs["campaign_path_simulator"] = campaign_path_simulator
-            history = selected_history_updater(existing_history, result, **history_kwargs)
+            history = selected_history_updater(history_for_update, result, **history_kwargs)
             write_history_json(staged_history, history)
             validate_history_contract(_load_json_object(staged_history))
             # The self-hash in the history payload is checked once more at the

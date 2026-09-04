@@ -99,6 +99,33 @@ class ForecastHistoryContractTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_history_contract(duplicate)
 
+    def test_accepts_a_reconstructed_and_archived_point_on_one_date(self) -> None:
+        """One date carries two observations that answer different questions.
+
+        The reconstructed point is the current model's curve; the archived one
+        is what was actually published that day. Keying uniqueness on the date
+        alone forced them to compete, and the archived point won -- leaving the
+        drawn curve with a hole on every published date.
+        """
+
+        payload = self._payload()
+        twinned = deepcopy(payload)
+        archived = deepcopy(twinned["series"][0])
+        archived["provenance"] = "prospective_archived"
+        curve = deepcopy(twinned["series"][0])
+        curve["provenance"] = "reconstructed_current_model"
+        # The contract requires (date, provenance) order.
+        twinned["series"] = [archived, curve] + twinned["series"][1:]
+        twinned.pop("deterministic_content_sha256", None)
+        validate_history_contract(twinned)
+
+        # An exact (date, provenance) repeat is still a duplicate.
+        repeated = deepcopy(twinned)
+        repeated["series"] = [archived, deepcopy(archived), curve] + twinned["series"][2:]
+        repeated.pop("deterministic_content_sha256", None)
+        with self.assertRaises(ValueError):
+            validate_history_contract(repeated)
+
     def test_accepts_all_valid_provenance_types(self) -> None:
         payload = self._payload()
         for prov in ("reconstructed_current_model", "prospective_archived", "current_production"):
