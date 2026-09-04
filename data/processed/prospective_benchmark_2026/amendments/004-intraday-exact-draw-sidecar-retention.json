@@ -1,0 +1,43 @@
+{
+  "schema_version": "1.0",
+  "amendment_number": 4,
+  "amendment_id": "004-intraday-exact-draw-sidecar-retention",
+  "created_at_utc": "2026-09-04T16:01:35Z",
+  "original_protocol_sha256": "16f920a88eb956b42f24307e4ada3b5b1133bffb11a6561e5a9e9ce75c5e3b23",
+  "reason": "Post-merge rehearsal of the amendment 003 replay path showed that deterministic replay is not bit-stable across separate GitHub-hosted runners: a rerun on a different runner did not reproduce the certified draws bitwise despite matching source commit, model inputs, seed, model version, and dependency lock. The narrow path frozen by amendment 003 therefore cannot be relied on as the sole route to exact ElectionSimulator draws, and the storage policy that forbade sidecars for every intraday production generation would leave the benchmark without exact draws whenever the mechanically selected generation is an intraday one. This amendment is created before the first durable 2026-09-04 capture and before election results are known.",
+  "primary_scoring_effect": "Retaining a same-SimulationResult sidecar for every certified production generation can change which draws exist and therefore which pre-registered fallback tier is available. It does not change any scoring rule: fair CRPS and the standard WIS of amendment 002 are unchanged, as are the requirement that both systems have verified predictive draws, the cutoff rules, the party set, the final forecast date, and the winner hierarchy.",
+  "supersedes": {
+    "amendment_number": 3,
+    "amendment_id": "003-exact-deterministic-replay",
+    "field": "replacement_rule.storage_policy",
+    "superseded_text": "Do not alter the existing compact production archive or emit sidecars for every intraday generation.",
+    "scope": "Only the sentence above, and only its prohibition on emitting sidecars for every intraday production generation. Every other clause of amendment 003 -- the REPLAY_VERIFIED status, its eligibility list, and its prohibition on partial, approximate, differently configured, or summary-fitted reruns -- remains in force verbatim.",
+    "note": "Amendments 001, 002 and 003 and protocol.json are not rewritten. This amendment records the superseding rule additively, in keeping with the append-only amendment chain."
+  },
+  "replacement_rule": {
+    "scope": "ElectionSimulator exact-draw sidecar storage policy only",
+    "bounded_period": {
+      "first_scheduled_date": "2026-09-04",
+      "final_scheduled_date": "2026-09-12",
+      "note": "The permission is bounded to the frozen campaign capture window and expires with it. It grants no retention outside that window."
+    },
+    "storage_policy": "For scheduled dates 2026-09-04 through 2026-09-12, an exact draw sidecar may be retained for every certified production generation, intraday generations included.",
+    "conditions": [
+      "The sidecar must be exported from the same in-memory SimulationResult used for that publication. A sidecar produced by any later or separate simulation is not eligible under this amendment.",
+      "The sidecar must first appear in the same Git commit as its certified snapshot, so that its existence at publication time is provable from the commit graph alone."
+    ],
+    "status": "A sidecar meeting both conditions is VERIFIED, the same status amendment 003 gives to exact joint draws exported from the certified production SimulationResult.",
+    "replay_role": "Deterministic replay under amendment 003 remains available only as a fallback if it is ever needed. Rehearsal showed it is not bit-stable across runners, so it is not the primary route to exact draws."
+  },
+  "unchanged_rules": [
+    "Benchmark selection remains one mechanically selected generation per scheduled date; retaining more sidecars does not widen selection.",
+    "Sidecars belonging to unselected intraday generations receive no scoring weight of any kind.",
+    "Retroactive sidecar backfill remains prohibited: a sidecar that did not first appear in its certified snapshot's own commit is ineligible and must never be added later.",
+    "Cutoff rules, including the 23:30 Europe/Stockholm scheduled cutoff and the amendment 001 late-capture limit, are unchanged.",
+    "The fair CRPS formula and the amendment 002 standard WIS formula are unchanged.",
+    "The eight-party set M, L, C, KD, S, V, MP, SD in the frozen order is unchanged.",
+    "The final forecast date is unchanged.",
+    "The winner hierarchy and its fallback levels are unchanged."
+  ],
+  "immutable": true
+}

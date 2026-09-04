@@ -969,6 +969,32 @@ def _sidecar_summary_parity(
         raise ExactDrawSidecarError("exact-draw sidecar seat summary parity failed")
 
 
+def validate_exact_draw_sidecar(
+    draws_path: Path | str,
+    metadata_path: Path | str,
+    *,
+    certified_snapshot: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Validate an exact sidecar and all summaries against its snapshot."""
+
+    generation_id = certified_snapshot.get("generation_id")
+    payload_hash = certified_snapshot.get("deterministic_payload_sha256")
+    if not isinstance(generation_id, str) or not generation_id:
+        raise ExactDrawSidecarError("certified snapshot has no generation_id")
+    loaded = load_verified_draw_sidecar(
+        draws_path,
+        metadata_path,
+        expected_generation_id=generation_id,
+        expected_payload_hash=_require_hash(
+            payload_hash,
+            field="certified_snapshot.deterministic_payload_sha256",
+        ),
+        include_arrays=True,
+    )
+    _sidecar_summary_parity(loaded=loaded, snapshot=certified_snapshot)
+    return loaded
+
+
 def _validate_archive_entry(
     *,
     archive_root: Path,
@@ -1103,6 +1129,8 @@ def _validate_archive_entry(
 def _discover_verified_sidecar(
     *,
     archive_root: Path,
+    repo_root: Path,
+    cutoff: datetime,
     snapshot: Mapping[str, Any],
     provenance: Mapping[str, Any],
     include_draws: bool,
@@ -1121,17 +1149,37 @@ def _discover_verified_sidecar(
         }
     draws_path, metadata_path = existing[0]
     try:
-        loaded = load_verified_draw_sidecar(
+        loaded = validate_exact_draw_sidecar(
             draws_path,
             metadata_path,
-            expected_generation_id=str(snapshot["generation_id"]),
-            expected_payload_hash=str(snapshot["deterministic_payload_sha256"]),
-            # Summary parity requires the arrays even when the caller only
-            # requests sidecar bytes.  They are discarded below unless the
-            # explicit include_draws exchange was requested.
-            include_arrays=True,
+            certified_snapshot=snapshot,
         )
-        _sidecar_summary_parity(loaded=loaded, snapshot=snapshot)
+        try:
+            draws_relative = draws_path.relative_to(repo_root).as_posix()
+            metadata_relative = metadata_path.relative_to(repo_root).as_posix()
+        except ValueError as exc:
+            raise ExactDrawSidecarError(
+                "exact-draw sidecar is outside the verifiable repository checkout"
+            ) from exc
+        draws_first = _first_archive_commit(
+            repo_root,
+            draws_relative,
+            expected_sha256=compute_file_sha256(draws_path),
+        )
+        metadata_first = _first_archive_commit(
+            repo_root,
+            metadata_relative,
+            expected_sha256=compute_file_sha256(metadata_path),
+        )
+        snapshot_first = provenance.get("first_archive_commit")
+        if draws_first is None or metadata_first is None:
+            raise ExactDrawSidecarError("exact-draw sidecar has no verifiable first-containing commit")
+        if draws_first[0] != snapshot_first or metadata_first[0] != snapshot_first:
+            raise ExactDrawSidecarError(
+                "exact-draw sidecar was not committed atomically with the certified snapshot"
+            )
+        if draws_first[1] > cutoff or metadata_first[1] > cutoff:
+            raise ExactDrawSidecarError("exact-draw sidecar first-containing commit is after cutoff")
     except ExactDrawSidecarError as exc:
         return {
             "status": "UNVERIFIED_SIDECAR",
@@ -1145,6 +1193,8 @@ def _discover_verified_sidecar(
         "metadata_path": str(metadata_path.relative_to(archive_root)),
         "draws_file_sha256": loaded["metadata"]["draws_file_sha256"],
         "metadata": loaded["metadata"],
+        "first_archive_commit": draws_first[0],
+        "first_archive_commit_at_utc": draws_first[1].isoformat().replace("+00:00", "Z"),
     }
     if include_draws:
         sidecar["vote_shares_pct"] = loaded["vote_shares_pct"].tolist()
@@ -1243,6 +1293,8 @@ def collect_latest_certified_generation(
     _generated, _generation, snapshot, provenance = max(eligible, key=lambda row: (row[0], row[1]))
     exact_draws = _discover_verified_sidecar(
         archive_root=archive,
+        repo_root=repo,
+        cutoff=cutoff,
         snapshot=snapshot,
         provenance=provenance,
         include_draws=include_draws,
@@ -1308,5 +1360,6 @@ __all__ = [
     "collect_latest_certified_generation",
     "load_verified_draw_sidecar",
     "replay_certified_generation",
+    "validate_exact_draw_sidecar",
     "write_exact_draw_sidecar",
 ]

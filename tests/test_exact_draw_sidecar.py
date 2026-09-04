@@ -11,6 +11,7 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import numpy as np
 
@@ -187,6 +188,8 @@ class ExactDrawSidecarTests(unittest.TestCase):
             )
             discovered = _discover_verified_sidecar(
                 archive_root=archive,
+                repo_root=archive,
+                cutoff=datetime(2026, 9, 3, 21, 30, tzinfo=timezone.utc),
                 snapshot=snapshot,
                 provenance={},
                 include_draws=False,
@@ -276,6 +279,36 @@ class CertifiedGenerationSelectionTests(unittest.TestCase):
             selected["provenance"]["first_index_commit"],
         )
         self.assertEqual(selected["provenance"]["source_commit_resolved"], True)
+
+    def test_sidecar_added_after_snapshot_commit_is_not_accepted(self) -> None:
+        root, generation, _snapshot = self._make_repo(
+            archive_commit_time="2026-09-03T20:30:00Z"
+        )
+        generation_dir = root / "data" / "processed" / "prospective_forecasts" / generation
+        (generation_dir / "draws.npz").write_bytes(b"later draws")
+        (generation_dir / "draws.json").write_text("{}\n", encoding="utf-8")
+        self._git(root, "add", "data")
+        self._git(
+            root,
+            "commit",
+            "-qm",
+            "late sidecar",
+            env={
+                "GIT_AUTHOR_DATE": "2026-09-03T22:00:00Z",
+                "GIT_COMMITTER_DATE": "2026-09-03T22:00:00Z",
+            },
+        )
+        with patch(
+            "scripts.simulator.exact_draw_sidecar.validate_exact_draw_sidecar",
+            return_value={"metadata": {"draws_file_sha256": hashlib.sha256(b"later draws").hexdigest()}},
+        ):
+            selected = collect_latest_certified_generation(
+                root / "data" / "processed" / "prospective_forecasts",
+                "2026-09-03T21:30:00Z",
+                root,
+            )
+        self.assertEqual(selected["exact_draws"]["status"], "UNVERIFIED_SIDECAR")
+        self.assertIn("not committed atomically", selected["exact_draws"]["reason"])
 
     def test_replay_rejects_later_committed_simulator_code(self) -> None:
         root, _generation, snapshot = self._make_repo(

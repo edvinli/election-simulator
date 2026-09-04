@@ -61,6 +61,12 @@ from scripts.static_exporter import (
     validate_published_directory,
 )
 from scripts.simulator.config import DEFAULT_ELECTION_DATE, DEFAULT_SIMULATION_SEED
+from scripts.simulator.exact_draw_sidecar import (
+    SIDECAR_DRAWS_FILENAME,
+    SIDECAR_METADATA_FILENAME,
+    validate_exact_draw_sidecar,
+    write_exact_draw_sidecar,
+)
 from scripts.simulator.reproducibility import compute_file_sha256, get_git_commit_hash
 
 
@@ -69,6 +75,8 @@ ELECTION_DAY = date.fromisoformat(DEFAULT_ELECTION_DATE)
 DAILY_SCHEDULE_UTC = "0 4 * * *"
 INTRADAY_SCHEDULE_UTC = "0 6,8,10,12,14,16,18,20 * * *"
 PRODUCTION_SAMPLES = 100_000
+BENCHMARK_SIDECAR_START = date(2026, 9, 4)
+BENCHMARK_SIDECAR_END = date(2026, 9, 12)
 VALID_MODES = ("probe", "dry_run", "publish")
 AUTOMATION_ENABLED_ENV = "ELECTION_AUTOMATION_ENABLED"
 SOURCE_PROVENANCE_DIRECT_LIVE = "DIRECT_LIVE_FETCH"
@@ -691,7 +699,12 @@ def _load_json_object(path: Path) -> dict[str, Any]:
     return value
 
 
-def _validate_archive_directory(archive_dir: Path, *, expected_generation: str | None = None) -> dict[str, Any]:
+def _validate_archive_directory(
+    archive_dir: Path,
+    *,
+    expected_generation: str | None = None,
+    require_exact_draws_for_expected: bool = False,
+) -> dict[str, Any]:
     """Validate index/path/hash links, including the newly appended snapshot."""
 
     index_path = archive_dir / "index.json"
@@ -725,6 +738,23 @@ def _validate_archive_directory(archive_dir: Path, *, expected_generation: str |
             raise AutomationError("Prospective archive duplicate-payload marker mismatch")
         if expected_generation and entry.get("generation_id") == expected_generation:
             matching = snapshot
+            draws_path = snapshot_path.parent / SIDECAR_DRAWS_FILENAME
+            metadata_path = snapshot_path.parent / SIDECAR_METADATA_FILENAME
+            if os.path.lexists(draws_path) != os.path.lexists(metadata_path):
+                raise AutomationError("Prospective archive exact-draw sidecar is incomplete")
+            if require_exact_draws_for_expected and not draws_path.is_file():
+                raise AutomationError("New production generation lacks its exact-draw sidecar")
+            if draws_path.is_file():
+                try:
+                    validate_exact_draw_sidecar(
+                        draws_path,
+                        metadata_path,
+                        certified_snapshot=snapshot,
+                    )
+                except ValueError as exc:
+                    raise AutomationError(
+                        f"Prospective archive exact-draw sidecar failed validation: {exc}"
+                    ) from exc
     if expected_generation and matching is None:
         raise AutomationError(f"Prospective archive lacks generation {expected_generation}")
     return matching or {}
@@ -837,14 +867,26 @@ def _stage_copy_archive(staged_archive: Path, destination_archive: Path) -> None
         generation_dir = source.parent
         generation_name = generation_dir.name
         destination = destination_archive / generation_name
+        allowed_names = {"snapshot.json", SIDECAR_DRAWS_FILENAME, SIDECAR_METADATA_FILENAME}
+        source_files = {path.name: path for path in generation_dir.iterdir()}
+        if set(source_files) - allowed_names:
+            raise AutomationError(f"Unexpected file in archive generation: {generation_dir}")
+        if any(path.is_symlink() or not path.is_file() for path in source_files.values()):
+            raise AutomationError(f"Archive generation contains a non-regular file: {generation_dir}")
         if destination.exists():
-            if not destination.is_dir() or (destination / "snapshot.json").read_bytes() != source.read_bytes():
+            destination_files = {path.name: path for path in destination.iterdir()} if destination.is_dir() else {}
+            if (
+                not destination.is_dir()
+                or set(destination_files) != set(source_files)
+                or any(destination_files[name].read_bytes() != path.read_bytes() for name, path in source_files.items())
+            ):
                 raise AutomationError(f"Existing archive generation differs: {destination}")
             continue
         temporary = Path(tempfile.mkdtemp(prefix=f".{generation_name}.staging-", dir=destination_archive))
         installed = False
         try:
-            _copy_file_atomic(source, temporary / "snapshot.json")
+            for name, path in source_files.items():
+                _copy_file_atomic(path, temporary / name)
             os.replace(temporary, destination)
             installed = True
         finally:
@@ -1427,9 +1469,21 @@ def run_production_event(
                 "production simulation result as_of does not match the explicit forecast date"
             )
         generation = str(run.snapshot["generation_id"])
-        validate_published_directory(staged_publication)
-        _validate_archive_directory(staged_archive, expected_generation=generation)
         result = run.simulation_result
+        retain_exact_draws = BENCHMARK_SIDECAR_START <= as_of <= BENCHMARK_SIDECAR_END
+        if retain_exact_draws:
+            write_exact_draw_sidecar(
+                result,
+                staged_archive / generation,
+                generation_id=generation,
+                certified_snapshot=run.snapshot,
+            )
+        validate_published_directory(staged_publication)
+        _validate_archive_directory(
+            staged_archive,
+            expected_generation=generation,
+            require_exact_draws_for_expected=retain_exact_draws,
+        )
         payload_hash = str(run.snapshot["deterministic_payload_sha256"])
         source_commit = str(result.manifest.get("source_git_commit", ""))
         with _timed_stage("history update", stage_callback):

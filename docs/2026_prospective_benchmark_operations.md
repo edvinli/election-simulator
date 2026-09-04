@@ -33,7 +33,7 @@ A durable capture before cutoff is rejected. A run retrieved on the immediately 
 
 A sidecar from the same production `SimulationResult` is preferred. Because the existing publication boundary did not retain that in-process object, amendment 003 permits a narrow `REPLAY_VERIFIED` path. Replay must prove the exact certified snapshot and index row existed by cutoff; source ancestry; a clean checkout; unchanged simulator code, inputs, lockfile, configuration, version, seed, and hashes; and parity with the deterministic payload plus every published vote, threshold, seat, and coalition summary. Discovery repeats the parity checks. Any failed check leaves the draws unverified.
 
-Only the nine mechanically selected generations receive sidecars. At approximately 7.3–7.4 MiB per compressed 100,000-draw sidecar, this avoids changing the production archive or retaining every intraday matrix.
+Amendment 004 supersedes that storage policy after rehearsal showed replay is not bit-stable across separate GitHub-hosted runners. For 2026-09-04 through 2026-09-12 every certified production generation may retain a sidecar, at approximately 7.3–7.4 MiB per compressed 100,000-draw sidecar, provided it is exported from the same in-memory `SimulationResult` as its publication and first appears in that snapshot's own commit. Such a sidecar is `VERIFIED`; replay is now only a fallback. Selection is unchanged at one generation per scheduled date, unselected intraday sidecars carry no scoring weight, and retroactive backfill remains prohibited.
 
 ## Botten Ada evidence and parity finding
 
