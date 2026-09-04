@@ -141,6 +141,7 @@ jobs:
           uv run python -m unittest \
             tests.test_publication_pipeline \
             tests.test_prospective_archive \
+            tests.test_exact_draw_sidecar \
             tests.test_forecast_history_contract \
             tests.test_forecast_history \
             tests.test_site_publisher \
@@ -380,6 +381,7 @@ jobs:
           uv run python -m unittest \
             tests.test_publication_pipeline \
             tests.test_prospective_archive \
+            tests.test_exact_draw_sidecar \
             tests.test_forecast_history_contract \
             tests.test_forecast_history \
             tests.test_site_publisher \

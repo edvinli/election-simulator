@@ -49,6 +49,10 @@ from scripts.publication_pipeline.pipeline import run_publication_pipeline
 from scripts.site_publisher import GENERATION_FILES, publish_generation_to_site, sync_history_to_site
 from scripts.static_exporter import validate_published_directory
 from scripts.simulator.engine import SimulationResult, simulate_election
+from scripts.simulator.exact_draw_sidecar import (
+    collect_latest_certified_generation,
+    load_verified_draw_sidecar,
+)
 from scripts.simulator.summary import compute_simulation_summary
 
 
@@ -240,7 +244,7 @@ class ElectionAutomationTests(unittest.TestCase):
         summary, helper = compute_simulation_summary(
             as_of,
             "2026-09-13",
-            votes,
+            votes / 100.0,
             seats,
             manifest,
             local_12_pct_flags=np.zeros_like(threshold_flags, dtype=bool),
@@ -1303,6 +1307,26 @@ time.sleep(60)
                     push=False,
                     allow_duplicate_payload=True,
                 )
+            generation = str(first[0].snapshot["generation_id"])
+            generation_dir = source / "data/processed/prospective_forecasts" / generation
+            loaded_sidecar = load_verified_draw_sidecar(
+                generation_dir / "draws.npz",
+                generation_dir / "draws.json",
+                expected_generation_id=generation,
+                expected_payload_hash=first[0].snapshot["deterministic_payload_sha256"],
+            )
+            np.testing.assert_array_equal(
+                loaded_sidecar["vote_shares_pct"],
+                production_result.vote_shares_matrix,
+            )
+            np.testing.assert_array_equal(loaded_sidecar["seats"], production_result.seats_matrix)
+            selected = collect_latest_certified_generation(
+                source / "data/processed/prospective_forecasts",
+                "2100-01-01T00:00:00Z",
+                source,
+            )
+            self.assertEqual(selected["status"], "FOUND_WITH_VERIFIED_DRAWS")
+            self.assertEqual(selected["exact_draws"]["status"], "VERIFIED")
             new_source_pointer = (source / "files/election-simulator/current.json").read_bytes()
             shutil.rmtree(site / "files/election-simulator")
             shutil.copytree(old_site_tree, site / "files/election-simulator")
@@ -1338,6 +1362,55 @@ time.sleep(60)
                 (site / "files/election-simulator/current.json").read_bytes(),
                 new_source_pointer,
             )
+            self.assertEqual(self._git_status(source), "")
+            self.assertEqual(self._git_status(site), "")
+
+    def test_exact_sidecar_failure_leaves_live_repositories_untouched(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            source, site = self._production_fixture(Path(tmp))
+            production_result = self._production_result("2026-09-05")
+            source_pointer = (source / "files/election-simulator/current.json").read_bytes()
+            site_pointer = (site / "files/election-simulator/current.json").read_bytes()
+
+            def runner(**kwargs):
+                commit = subprocess.run(
+                    ["git", "rev-parse", "HEAD"],
+                    cwd=source,
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                ).stdout.strip()
+                production_result.manifest["source_git_commit"] = commit
+                production_result.manifest["git_commit"] = commit
+                return production_result
+
+            with (
+                patch(
+                    "scripts.publication_pipeline.pipeline.DEFAULT_PROCESSED_ROOT",
+                    source / "data/processed",
+                ),
+                patch(
+                    "scripts.election_automation_base.write_exact_draw_sidecar",
+                    side_effect=ValueError("sidecar gate failed"),
+                ),
+                self.assertRaisesRegex(ValueError, "sidecar gate failed"),
+            ):
+                run_production_event(
+                    source,
+                    site_repo=site,
+                    forecast_as_of="2026-09-05",
+                    simulation_runner=runner,
+                    projection_runner=self._projection_runner,
+                    campaign_path_simulator=self._campaign_path_simulator,
+                    website_check_fn=lambda _: {"status": "PASS"},
+                    generated_at_utc="2026-09-05T09:00:00+00:00",
+                    commit=True,
+                    push=False,
+                    allow_duplicate_payload=True,
+                )
+
+            self.assertEqual((source / "files/election-simulator/current.json").read_bytes(), source_pointer)
+            self.assertEqual((site / "files/election-simulator/current.json").read_bytes(), site_pointer)
             self.assertEqual(self._git_status(source), "")
             self.assertEqual(self._git_status(site), "")
 
