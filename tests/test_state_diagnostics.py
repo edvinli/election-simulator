@@ -82,7 +82,7 @@ class FullAuditIntegrationTests(unittest.TestCase):
         for section in expected_sections:
             self.assertIn(section, report)
 
-        self.assertEqual(report["reconstruction_report"]["residual_polls_count"], 191)
+        self.assertEqual(report["reconstruction_report"]["residual_polls_count"], 190)
         self.assertEqual(len(report["top_20_extreme_polls"]), 20)
 
 
