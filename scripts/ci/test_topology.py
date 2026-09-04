@@ -12,7 +12,8 @@ reaches it through any chain of imports, not only the ones naming it directly.
 Import analysis alone is not sufficient, and the gaps are handled explicitly
 rather than hoped away:
 
-  * Seven modules (the freeze and reference-math tests) import nothing from
+  * Artifact-only modules (freeze, reference-math, and workflow-contract
+    tests) import nothing from
     `scripts` at all -- they assert against tracked artifacts. Nothing in a
     diff of `scripts/**` would ever select them, so they are always run. They
     cost about seven seconds together.
@@ -50,6 +51,7 @@ ALWAYS_RUN = (
     "test_competition_gates",
     "test_evaluator_freeze_reconstructible",
     "test_production_freeze",
+    "test_prospective_benchmark_2026_workflow",
     "test_publication_freeze",
 )
 
