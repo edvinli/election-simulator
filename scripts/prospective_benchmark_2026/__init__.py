@@ -1,10 +1,38 @@
-"""Scoring utilities for the prospective 2026 ElectionSimulator comparison.
+"""Utilities for the prospective 2026 ElectionSimulator comparison.
 
 This package deliberately does not alter the historical Botten Ada harness.
 The scoring functions here are provenance-agnostic: callers must provide
 verified predictive draws or explicitly published quantiles/probabilities and
 must keep that evidence decision outside this module.
 """
+
+from .archive import (
+    AMENDMENT_SCHEMA_VERSION,
+    CAPTURE_SCHEMA_VERSION,
+    DEFAULT_ARCHIVE_ROOT,
+    INDEX_SCHEMA_VERSION,
+    MODEL_NAMES,
+    MODEL_STATUSES,
+    ArchiveValidationError,
+    CaptureCollisionError,
+    ModelCapture,
+    append_capture,
+    canonical_json_bytes,
+    protocol_sha256,
+    sha256_bytes,
+    sha256_file,
+    validate_archive,
+)
+from .time_rules import (
+    CaptureTimeError,
+    CaptureTiming,
+    FINAL_CAPTURE_DATE,
+    FIRST_CAPTURE_DATE,
+    STOCKHOLM,
+    capture_id_for_date,
+    classify_capture_time,
+    scheduled_cutoff,
+)
 
 from .scoring import (
     DEFAULT_INTERVAL_LEVELS,
@@ -32,6 +60,29 @@ from .scoring import (
 )
 
 __all__ = [
+    "AMENDMENT_SCHEMA_VERSION",
+    "CAPTURE_SCHEMA_VERSION",
+    "DEFAULT_ARCHIVE_ROOT",
+    "INDEX_SCHEMA_VERSION",
+    "MODEL_NAMES",
+    "MODEL_STATUSES",
+    "ArchiveValidationError",
+    "CaptureCollisionError",
+    "ModelCapture",
+    "append_capture",
+    "canonical_json_bytes",
+    "protocol_sha256",
+    "sha256_bytes",
+    "sha256_file",
+    "validate_archive",
+    "CaptureTimeError",
+    "CaptureTiming",
+    "FINAL_CAPTURE_DATE",
+    "FIRST_CAPTURE_DATE",
+    "STOCKHOLM",
+    "capture_id_for_date",
+    "classify_capture_time",
+    "scheduled_cutoff",
     "DEFAULT_INTERVAL_LEVELS",
     "PRIMARY_PARTY_ORDER",
     "PROBABILISTIC_TIER_FAIR_DRAWS",

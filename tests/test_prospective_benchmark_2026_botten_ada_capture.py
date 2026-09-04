@@ -13,6 +13,8 @@ import numpy as np
 from scripts.prospective_benchmark_2026.botten_ada_capture import (
     ADA_REPOSITORY_COMMIT,
     DEFAULT_SOURCE_SPECS,
+    OFFICIAL_DATA_URL,
+    PARITY_VOTE_TOLERANCE_PROPORTION,
     RDS_URL,
     STATUS_PARITY_UNVERIFIED,
     STATUS_PARITY_VERIFIED,
@@ -22,6 +24,7 @@ from scripts.prospective_benchmark_2026.botten_ada_capture import (
     BottenAdaDrawsNotVerified,
     SourceArtifact,
     capture_botten_ada,
+    draw_matrix_sha256,
     parse_forecast_json,
     parse_public_bundle,
     parity_evaluate,
@@ -273,6 +276,85 @@ class TestProspectiveBottenAdaCapture(unittest.TestCase):
                 published_forecast=capture.record["forecast"],
             )
             self.assertEqual(parity["status"], STATUS_PARITY_UNVERIFIED)
+
+    def test_verified_draw_gate_requires_and_validates_exact_source_and_matrix_bytes(self) -> None:
+        draws = np.full((4, 8), 0.1, dtype=np.float64)
+        published = {
+            "metadata": {"n_draws": 4},
+            "election": {
+                party: {"votes": {"p5": 0.1, "p50": 0.1, "p95": 0.1}}
+                for party in ("M", "L", "C", "KD", "S", "V", "MP", "SD")
+            },
+        }
+        rds_body = b"official RDS fixture bytes"
+        semantic_body = b"official semantic evidence fixture bytes"
+        provenance = {
+            "source_url": RDS_URL,
+            "draw_role": "election_day_predictive_draws",
+            "semantic_evidence_reference": "raw/official-data.html",
+            "semantic_evidence_url": OFFICIAL_DATA_URL,
+            "source_sha256": hashlib.sha256(rds_body).hexdigest(),
+            "source_byte_size": len(rds_body),
+            "draws_sha256": draw_matrix_sha256(draws),
+            "semantic_evidence_sha256": hashlib.sha256(semantic_body).hexdigest(),
+            "semantic_evidence_byte_size": len(semantic_body),
+            "extraction_method": "fixture extraction",
+            "extraction_version": "fixture-v1",
+        }
+        parity = verify_official_draws(
+            draws,
+            draw_provenance=provenance,
+            published_forecast=published,
+            source_artifact=SourceArtifact(
+                url=RDS_URL,
+                body=rds_body,
+                retrieved_at_utc="2026-09-04T21:31:00Z",
+                status_code=200,
+                method="GET",
+            ),
+            semantic_evidence_artifact=SourceArtifact(
+                url=OFFICIAL_DATA_URL,
+                body=semantic_body,
+                retrieved_at_utc="2026-09-04T21:31:00Z",
+                status_code=200,
+                method="GET",
+            ),
+        )
+        self.assertEqual(parity["status"], STATUS_PARITY_VERIFIED)
+
+        tampered = dict(provenance)
+        tampered["draws_sha256"] = draw_matrix_sha256(draws + 0.0001)
+        rejected = verify_official_draws(
+            draws,
+            draw_provenance=tampered,
+            published_forecast=published,
+            source_artifact=SourceArtifact(
+                url=RDS_URL,
+                body=rds_body,
+                retrieved_at_utc="2026-09-04T21:31:00Z",
+                status_code=200,
+                method="GET",
+            ),
+            semantic_evidence_artifact=SourceArtifact(
+                url=OFFICIAL_DATA_URL,
+                body=semantic_body,
+                retrieved_at_utc="2026-09-04T21:31:00Z",
+                status_code=200,
+                method="GET",
+            ),
+        )
+        self.assertEqual(rejected["status"], STATUS_PARITY_UNVERIFIED)
+
+    def test_parity_cannot_widen_frozen_vote_tolerance(self) -> None:
+        draws = np.full((4, 8), 0.1, dtype=np.float64)
+        with self.assertRaises(ValueError):
+            parity_evaluate(draws, {
+                "metadata": {"n_draws": 4},
+                "election": {
+                    party: {"votes": {"p5": 0.1, "p50": 0.1, "p95": 0.1}}
+                    for party in ("M", "L", "C", "KD", "S", "V", "MP", "SD")
+                },
+            }, tolerance=PARITY_VOTE_TOLERANCE_PROPORTION + 1e-9)
 
     def test_missing_required_source_is_not_a_zero_forecast(self) -> None:
         artifacts = {

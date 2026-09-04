@@ -39,6 +39,15 @@ import numpy as np
 SCHEMA_VERSION = "1.0"
 PARSER_VERSION = "2026-09-03.botten-ada-v1"
 PARTY_ORDER: tuple[str, ...] = ("M", "L", "C", "KD", "S", "V", "MP", "SD")
+# These are frozen in ``data/processed/prospective_benchmark_2026/protocol.json``.
+# Vote-share quantiles are published as proportions (0.051 percentage points is
+# 0.00051 on that scale), while threshold probabilities use a separate
+# probability tolerance (0.51 percentage points is 0.0051).  Keeping the two
+# tolerances separate prevents a rounding allowance for a probability event
+# from accidentally making a vote-share parity check too permissive.
+PARITY_VOTE_TOLERANCE_PERCENTAGE_POINTS = 0.051
+PARITY_VOTE_TOLERANCE_PROPORTION = PARITY_VOTE_TOLERANCE_PERCENTAGE_POINTS / 100.0
+PARITY_THRESHOLD_TOLERANCE_PROBABILITY = 0.0051
 THRESHOLD_EVENTS: dict[str, str] = {
     "L": "is_L_above_4_pct",
     "C": "is_C_above_4_pct",
@@ -61,6 +70,20 @@ ADA_CONFIG_URL = (
 )
 ADA_LICENSE = "MIT (ada_code); CC BY-NC-SA 4.0 (Botten Ada published data/code page)"
 ADA_LICENSE_URL = "https://creativecommons.org/licenses/by-nc-sa/4.0/"
+
+# Evidence URLs that may establish the meaning of an extracted RDS object.
+# They are intentionally exact, pinned publication surfaces rather than an
+# arbitrary URL supplied by a caller.  The bytes from one of these URLs must
+# also be passed to ``verify_official_draws`` and hash-checked there.
+SEMANTIC_EVIDENCE_URLS = frozenset(
+    {
+        OFFICIAL_SITE_URL,
+        OFFICIAL_DATA_URL,
+        OFFICIAL_FAQ_URL,
+        ADA_REPOSITORY_COMMIT_URL,
+        ADA_CONFIG_URL,
+    }
+)
 
 PARTY_PAGE_URLS: dict[str, str] = {
     "V": f"{OFFICIAL_SITE_URL}parti/vansterpartiet",
@@ -267,6 +290,27 @@ def _header_datetime(headers: Mapping[str, str], name: str) -> str | None:
     return _iso_utc(parsed)
 
 
+def _declared_content_length(headers: Mapping[str, str], *, url: str) -> int | None:
+    """Return a validated HTTP content length, or ``None`` when absent.
+
+    A malformed response header is source evidence failure, not a parser
+    crash.  In particular, do not let ``int()``'s ``ValueError`` escape from
+    the network boundary: capture jobs must record an unavailable artifact and
+    leave the append-only archive retryable.
+    """
+
+    value = _header(headers, "Content-Length")
+    if value is None:
+        return None
+    try:
+        length = int(value, 10)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise BottenAdaSourceError(f"Invalid Content-Length header for {url}: {value!r}") from exc
+    if length < 0:
+        raise BottenAdaSourceError(f"Invalid negative Content-Length header for {url}: {value!r}")
+    return length
+
+
 def fetch_source(
     url: str,
     *,
@@ -295,8 +339,8 @@ def fetch_source(
             if head_only:
                 body = None
             else:
-                declared_length = _header(headers, "Content-Length")
-                if declared_length is not None and int(declared_length) > max_bytes:
+                declared_length = _declared_content_length(headers, url=url)
+                if declared_length is not None and declared_length > max_bytes:
                     raise BottenAdaSourceError(
                         f"Refusing source larger than {max_bytes} bytes ({url}, {declared_length})"
                     )
@@ -311,14 +355,14 @@ def fetch_source(
                 headers=headers,
                 method=method,
             )
-    except (HTTPError, URLError, TimeoutError, OSError, BottenAdaSourceError) as exc:
+    except (HTTPError, URLError, TimeoutError, OSError, ValueError, BottenAdaSourceError) as exc:
         # A failed source is represented explicitly by the capture layer.  We
         # retain a retrieval timestamp and never substitute another date's
         # response.
         return SourceArtifact(
             url=url,
             body=None,
-            retrieved_at_utc=_iso_utc(datetime.now(timezone.utc) if started else started),
+            retrieved_at_utc=_iso_utc(started),
             status_code=int(getattr(exc, "code", 0) or 0),
             headers={},
             method=method,
@@ -371,7 +415,7 @@ def _number(value: Any, *, field_name: str, lower: float | None = None, upper: f
         raise BottenAdaParseError(f"{field_name} must be numeric")
     try:
         result = float(value)
-    except (TypeError, ValueError) as exc:
+    except (TypeError, ValueError, OverflowError) as exc:
         raise BottenAdaParseError(f"{field_name} must be numeric") from exc
     if not math.isfinite(result):
         raise BottenAdaParseError(f"{field_name} must be finite")
@@ -683,7 +727,29 @@ def _source_error(artifact: SourceArtifact | None) -> str:
 
 def _coerce_artifact(value: SourceArtifact | Mapping[str, Any], *, key: str) -> SourceArtifact:
     if isinstance(value, SourceArtifact):
-        return value
+        body = value.body
+        if isinstance(body, str):
+            body = body.encode("utf-8")
+        if body is not None and not isinstance(body, bytes):
+            raise TypeError(f"Artifact {key}.body must be bytes")
+        headers = value.headers
+        if headers is None:
+            headers = {}
+        if not isinstance(headers, Mapping):
+            raise TypeError(f"Artifact {key}.headers must be a mapping")
+        try:
+            status_code = int(value.status_code)
+        except (TypeError, ValueError, OverflowError) as exc:
+            raise TypeError(f"Artifact {key}.status_code must be an integer") from exc
+        return SourceArtifact(
+            url=str(value.url),
+            body=body,
+            retrieved_at_utc=str(value.retrieved_at_utc),
+            status_code=status_code,
+            headers=dict(headers),
+            method=str(value.method),
+            error=None if value.error is None else str(value.error),
+        )
     if not isinstance(value, Mapping):
         raise TypeError(f"Artifact {key} must be SourceArtifact or mapping")
     body = value.get("body")
@@ -691,15 +757,48 @@ def _coerce_artifact(value: SourceArtifact | Mapping[str, Any], *, key: str) -> 
         body = body.encode("utf-8")
     if body is not None and not isinstance(body, bytes):
         raise TypeError(f"Artifact {key}.body must be bytes")
+    headers = value.get("headers", {})
+    if headers is None:
+        headers = {}
+    if not isinstance(headers, Mapping):
+        raise TypeError(f"Artifact {key}.headers must be a mapping")
+    status_code = value.get("status_code", 200)
+    try:
+        status_code = int(status_code)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise TypeError(f"Artifact {key}.status_code must be an integer") from exc
     return SourceArtifact(
         url=str(value.get("url", "")),
         body=body,
         retrieved_at_utc=str(value.get("retrieved_at_utc", "")),
-        status_code=int(value.get("status_code", 200)),
-        headers=dict(value.get("headers", {})),
+        status_code=status_code,
+        headers=dict(headers),
         method=str(value.get("method", "GET")),
         error=None if value.get("error") is None else str(value.get("error")),
     )
+
+
+def _validate_public_artifact_identity(artifacts: Mapping[str, SourceArtifact]) -> None:
+    """Require every supplied artifact to be the exact preregistered source.
+
+    Parsing a JSON object with the expected shape is not enough to establish
+    that it was published by Botten Ada.  A caller-controlled URL must never
+    be able to enter the archive merely by returning plausible bytes.  The
+    exact URL check is intentionally strict (including path and trailing
+    slash); ``fetch_source`` records the requested URL, so normal HTTP
+    redirects do not weaken this identity check.
+    """
+
+    unknown = sorted(set(artifacts) - set(DEFAULT_SOURCE_SPECS))
+    if unknown:
+        raise BottenAdaCaptureError(f"Unexpected Botten Ada source artifact keys: {unknown}")
+    for key, artifact in artifacts.items():
+        expected = DEFAULT_SOURCE_SPECS[key].url
+        if artifact.url != expected:
+            raise BottenAdaCaptureError(
+                f"{key} artifact URL is not the preregistered Botten Ada source: "
+                f"expected {expected!r}, got {artifact.url!r}"
+            )
 
 
 def _source_reported_updates(provenance: Mapping[str, Mapping[str, Any]]) -> dict[str, Any]:
@@ -728,9 +827,13 @@ def parse_public_bundle(
         raise BottenAdaCaptureError(
             f"This prospective module is frozen for election date {ELECTION_DATE}, got {expected_election_date}"
         )
-    normalized_artifacts: dict[str, SourceArtifact] = {
-        key: _coerce_artifact(value, key=key) for key, value in artifacts.items()
-    }
+    try:
+        normalized_artifacts: dict[str, SourceArtifact] = {
+            key: _coerce_artifact(value, key=key) for key, value in artifacts.items()
+        }
+    except (TypeError, ValueError) as exc:
+        raise BottenAdaCaptureError(f"Malformed Botten Ada source artifact: {exc}") from exc
+    _validate_public_artifact_identity(normalized_artifacts)
     provenance: dict[str, Any] = {}
     raw_files: dict[str, bytes] = {}
     parsed: dict[str, Any] = {}
@@ -1010,33 +1113,166 @@ def _unverified_parity(reason: str) -> dict[str, Any]:
     }
 
 
+def _validate_frozen_tolerance(value: float, *, name: str, maximum: float) -> float:
+    """Validate a parity tolerance without allowing the protocol to widen."""
+
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise ValueError(f"{name} must be a finite non-negative number") from exc
+    if not math.isfinite(parsed) or parsed < 0:
+        raise ValueError(f"{name} must be a finite non-negative number")
+    if parsed > maximum:
+        raise ValueError(
+            f"{name} cannot exceed the frozen protocol maximum {maximum}"
+        )
+    return parsed
+
+
+def _coerce_vote_draws(vote_draws: Sequence[Sequence[float]] | np.ndarray) -> np.ndarray:
+    """Validate and canonicalize an eight-party proportion matrix."""
+
+    try:
+        draws = np.asarray(vote_draws, dtype=np.float64)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise BottenAdaCaptureError("vote_draws must be numeric") from exc
+    if draws.ndim != 2 or draws.shape[0] == 0 or draws.shape[1] != len(PARTY_ORDER):
+        raise BottenAdaCaptureError(f"vote_draws must have shape (N, {len(PARTY_ORDER)})")
+    if not np.all(np.isfinite(draws)) or np.any(draws < 0.0) or np.any(draws > 1.0):
+        raise BottenAdaCaptureError("vote_draws must be finite proportions in [0, 1]")
+    # The digest used by the verified-draw gate is independent of native byte
+    # order, strides, and the caller's input container.  Party order and unit
+    # are included in the digest descriptor so a column permutation cannot be
+    # presented as the same extracted evidence.
+    return np.ascontiguousarray(draws, dtype="<f8")
+
+
+def _draw_matrix_digest(draws: np.ndarray) -> str:
+    descriptor = json.dumps(
+        {
+            "dtype": draws.dtype.str,
+            "shape": [int(value) for value in draws.shape],
+            "party_order": list(PARTY_ORDER),
+            "unit": "proportion_of_national_valid_votes",
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    ).encode("utf-8")
+    digest = hashlib.sha256()
+    digest.update(descriptor)
+    digest.update(b"\x00")
+    digest.update(draws.tobytes(order="C"))
+    return digest.hexdigest()
+
+
+def draw_matrix_sha256(vote_draws: Sequence[Sequence[float]] | np.ndarray) -> str:
+    """Return the canonical SHA-256 used in ``verify_official_draws``.
+
+    Callers extracting a future official draw object should record this digest
+    in ``draw_provenance['draws_sha256']``.  The digest covers dtype, shape,
+    canonical party order, units, and bytes; it is not a hash of quantiles or
+    of a caller-selected summary.
+    """
+
+    return _draw_matrix_digest(_coerce_vote_draws(vote_draws))
+
+
+def _sha256_digest(value: Any, *, field_name: str) -> str | None:
+    if not isinstance(value, str) or len(value) != 64:
+        return None
+    try:
+        int(value, 16)
+    except ValueError:
+        return None
+    return value.lower()
+
+
+def _nonnegative_integer(value: Any, *, field_name: str, positive: bool = False) -> int | None:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    try:
+        finite = math.isfinite(float(value))
+        integer = int(value)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    if not finite or integer != value:
+        return None
+    if (positive and integer <= 0) or (not positive and integer < 0):
+        return None
+    return integer
+
+
+def _bound_evidence_artifact(
+    value: SourceArtifact | Mapping[str, Any] | None,
+    *,
+    key: str,
+    expected_url: str,
+    declared_sha256: Any,
+    declared_byte_size: Any,
+) -> tuple[SourceArtifact | None, str | None]:
+    """Validate bytes supplied as cryptographic evidence for a draw gate."""
+
+    digest = _sha256_digest(declared_sha256, field_name=f"{key}.sha256")
+    if digest is None:
+        return None, f"{key} requires a SHA-256 digest of the exact archived bytes"
+    size = _nonnegative_integer(declared_byte_size, field_name=f"{key}.byte_size", positive=True)
+    if size is None:
+        return None, f"{key} requires a positive exact byte size"
+    if value is None:
+        return None, f"{key} bytes were not supplied for hash validation"
+    try:
+        artifact = _coerce_artifact(value, key=key)
+    except (TypeError, ValueError, BottenAdaCaptureError) as exc:
+        return None, f"{key} evidence artifact is malformed: {exc}"
+    if artifact.url != expected_url:
+        return None, f"{key} evidence URL is not the preregistered official source"
+    if artifact.body is None:
+        return None, f"{key} evidence artifact has no body bytes"
+    if artifact.status_code < 200 or artifact.status_code >= 300 or artifact.error:
+        return None, f"{key} evidence artifact is not a successful response"
+    if artifact.method.upper() != "GET":
+        return None, f"{key} evidence requires the exact GET body, not method {artifact.method!r}"
+    actual_digest = _sha256(artifact.body)
+    if actual_digest != digest:
+        return None, f"{key} SHA-256 does not match the supplied official bytes"
+    if len(artifact.body) != size:
+        return None, f"{key} byte size does not match the supplied official bytes"
+    return artifact, None
+
+
 def parity_evaluate(
     vote_draws: Sequence[Sequence[float]] | np.ndarray,
     published_forecast: Mapping[str, Any],
     *,
     threshold_probabilities: Mapping[str, Any] | None = None,
     expected_n_draws: int | None = None,
-    tolerance: float = 0.0011,
+    tolerance: float = PARITY_VOTE_TOLERANCE_PROPORTION,
+    threshold_tolerance: float = PARITY_THRESHOLD_TOLERANCE_PROBABILITY,
 ) -> dict[str, Any]:
     """Check exact supplied draws against published p5/p50/p95 and thresholds.
 
     This function does not read RDS files or construct draws.  It only checks
     an already extracted matrix supplied by a caller who can document its
     origin.  Values in the official API are proportions, so the threshold is
-    tested at ``0.04``.  The default tolerance is slightly above half a
-    three-decimal publication rounding unit.
+    tested at ``0.04``.  The two defaults are frozen separately in the
+    protocol: 0.051 percentage points for published vote-share quantiles and
+    0.51 percentage points for published threshold probabilities.
     """
 
-    if tolerance < 0:
-        raise ValueError("tolerance must be non-negative")
-    try:
-        draws = np.asarray(vote_draws, dtype=np.float64)
-    except (TypeError, ValueError) as exc:
-        raise BottenAdaCaptureError("vote_draws must be numeric") from exc
-    if draws.ndim != 2 or draws.shape[0] == 0 or draws.shape[1] != len(PARTY_ORDER):
-        raise BottenAdaCaptureError(f"vote_draws must have shape (N, {len(PARTY_ORDER)})")
-    if not np.all(np.isfinite(draws)) or np.any(draws < 0.0) or np.any(draws > 1.0):
-        raise BottenAdaCaptureError("vote_draws must be finite proportions in [0, 1]")
+    tolerance = _validate_frozen_tolerance(
+        tolerance,
+        name="tolerance",
+        maximum=PARITY_VOTE_TOLERANCE_PROPORTION,
+    )
+    threshold_tolerance = _validate_frozen_tolerance(
+        threshold_tolerance,
+        name="threshold_tolerance",
+        maximum=PARITY_THRESHOLD_TOLERANCE_PROBABILITY,
+    )
+    draws = _coerce_vote_draws(vote_draws)
+    if not isinstance(published_forecast, Mapping):
+        raise BottenAdaCaptureError("published_forecast must be a mapping")
     if expected_n_draws is not None and draws.shape[0] != expected_n_draws:
         return _unverified_parity(
             f"draw count {draws.shape[0]} does not match publisher-declared count {expected_n_draws}"
@@ -1088,7 +1324,7 @@ def parity_evaluate(
                 "draw_probability": probability,
                 "published_probability": published_probability,
                 "absolute_error": error,
-                "within_tolerance": error <= tolerance,
+                "within_tolerance": error <= threshold_tolerance,
                 "inclusive_threshold": 0.04,
             }
     verified = max_error <= tolerance and all(item["within_tolerance"] for item in threshold_checks.values())
@@ -1096,7 +1332,11 @@ def parity_evaluate(
         "status": STATUS_PARITY_VERIFIED if verified else STATUS_PARITY_UNVERIFIED,
         "eligible_for_probabilistic_scoring": bool(verified),
         "draw_count": int(draws.shape[0]),
+        # ``tolerance`` is retained as a backwards-compatible alias for the
+        # vote-share tolerance; new consumers should use the explicit fields.
         "tolerance": tolerance,
+        "vote_tolerance": tolerance,
+        "threshold_tolerance": threshold_tolerance,
         "max_quantile_absolute_error": max_error,
         "quantiles": quantile_checks,
         "thresholds": threshold_checks,
@@ -1110,7 +1350,10 @@ def verify_official_draws(
     draw_provenance: Mapping[str, Any],
     published_forecast: Mapping[str, Any],
     threshold_probabilities: Mapping[str, Any] | None = None,
-    tolerance: float = 0.0011,
+    tolerance: float = PARITY_VOTE_TOLERANCE_PROPORTION,
+    threshold_tolerance: float = PARITY_THRESHOLD_TOLERANCE_PROBABILITY,
+    source_artifact: SourceArtifact | Mapping[str, Any] | None = None,
+    semantic_evidence_artifact: SourceArtifact | Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Gate exact draws on explicit semantic evidence and parity.
 
@@ -1119,26 +1362,105 @@ def verify_official_draws(
     assert that the extracted matrix is election-day predictive draws and
     provide a human-auditable evidence reference before this function can
     return ``VERIFIED``.
+
+    The cryptographic binding is part of this gate, rather than a convention
+    left to callers.  A verified call must provide:
+
+    * ``source_artifact``: the exact successful GET body for ``RDS_URL``;
+    * ``draw_provenance.source_sha256`` and ``source_byte_size`` matching that
+      body;
+    * ``draw_provenance.draws_sha256`` matching :func:`draw_matrix_sha256`;
+    * ``semantic_evidence_artifact`` from one of the pinned official evidence
+      URLs, with matching ``semantic_evidence_sha256`` and byte size; and
+    * non-empty ``extraction_method`` and ``extraction_version`` fields.
+
+    This means a local matrix cannot become an official forecast by claiming
+    an official URL and a free-form reference.  The RDS and semantic evidence
+    bytes are passed in by the caller and are never fetched implicitly here.
+    If either artifact is unavailable, the result is explicitly
+    ``PARITY_UNVERIFIED``.
     """
 
+    provenance = dict(draw_provenance) if isinstance(draw_provenance, Mapping) else {}
+
+    def rejected(reason: str) -> dict[str, Any]:
+        result = _unverified_parity(reason)
+        result["draw_provenance"] = provenance
+        return result
+
+    if not isinstance(draw_provenance, Mapping):
+        return rejected("draw_provenance must be a mapping")
     if draw_provenance.get("source_url") != RDS_URL:
-        return _unverified_parity("Exact draws are not tied to the official Botten Ada RDS URL")
+        return rejected("Exact draws are not tied to the official Botten Ada RDS URL")
     if draw_provenance.get("draw_role") != "election_day_predictive_draws":
-        return _unverified_parity(
+        return rejected(
             "RDS/posterior samples were supplied without an explicit election_day_predictive_draws role"
         )
-    if not draw_provenance.get("semantic_evidence_reference"):
-        return _unverified_parity("No auditable evidence reference establishes RDS election-day predictive semantics")
+    reference = draw_provenance.get("semantic_evidence_reference")
+    if not isinstance(reference, str) or not reference.strip():
+        return rejected("No auditable evidence reference establishes RDS election-day predictive semantics")
+    for field_name in ("extraction_method", "extraction_version"):
+        value = draw_provenance.get(field_name)
+        if not isinstance(value, str) or not value.strip():
+            return rejected(f"Verified draws require a non-empty {field_name}")
+
+    draws = _coerce_vote_draws(vote_draws)
+    declared_draws_digest = _sha256_digest(
+        draw_provenance.get("draws_sha256"),
+        field_name="draws_sha256",
+    )
+    if declared_draws_digest is None:
+        return rejected("Verified draws require draws_sha256 for the exact canonical matrix")
+    actual_draws_digest = _draw_matrix_digest(draws)
+    if actual_draws_digest != declared_draws_digest:
+        return rejected("draws_sha256 does not match the supplied vote-draw matrix")
+
+    _, source_error = _bound_evidence_artifact(
+        source_artifact,
+        key="source_artifact",
+        expected_url=RDS_URL,
+        declared_sha256=draw_provenance.get("source_sha256"),
+        declared_byte_size=draw_provenance.get("source_byte_size"),
+    )
+    if source_error is not None:
+        return rejected(source_error)
+
+    semantic_url = draw_provenance.get("semantic_evidence_url")
+    if not isinstance(semantic_url, str) or semantic_url not in SEMANTIC_EVIDENCE_URLS:
+        return rejected(
+            "semantic_evidence_url must be one of the pinned official Botten Ada or repository sources"
+        )
+    _, semantic_error = _bound_evidence_artifact(
+        semantic_evidence_artifact,
+        key="semantic_evidence_artifact",
+        expected_url=str(semantic_url),
+        declared_sha256=draw_provenance.get("semantic_evidence_sha256"),
+        declared_byte_size=draw_provenance.get("semantic_evidence_byte_size"),
+    )
+    if semantic_error is not None:
+        return rejected(semantic_error)
+
+    if not isinstance(published_forecast, Mapping):
+        return rejected("published_forecast must be a mapping")
     metadata = published_forecast.get("metadata", {})
     expected_n_draws = metadata.get("n_draws") if isinstance(metadata, Mapping) else None
+    if expected_n_draws is not None:
+        expected_n_draws = _nonnegative_integer(
+            expected_n_draws,
+            field_name="published_forecast.metadata.n_draws",
+            positive=True,
+        )
+        if expected_n_draws is None:
+            return rejected("published_forecast.metadata.n_draws must be a positive integer")
     parity = parity_evaluate(
-        vote_draws,
+        draws,
         published_forecast,
         threshold_probabilities=threshold_probabilities,
-        expected_n_draws=None if expected_n_draws is None else int(expected_n_draws),
+        expected_n_draws=expected_n_draws,
         tolerance=tolerance,
+        threshold_tolerance=threshold_tolerance,
     )
-    parity["draw_provenance"] = dict(draw_provenance)
+    parity["draw_provenance"] = provenance
     return parity
 
 
@@ -1167,11 +1489,15 @@ __all__ = [
     "OFFICIAL_DATA_URL",
     "OFFICIAL_FAQ_URL",
     "OFFICIAL_SITE_URL",
+    "PARITY_THRESHOLD_TOLERANCE_PROBABILITY",
+    "PARITY_VOTE_TOLERANCE_PERCENTAGE_POINTS",
+    "PARITY_VOTE_TOLERANCE_PROPORTION",
     "PARSER_VERSION",
     "PARTY_ORDER",
     "PARTY_PAGE_URLS",
     "RDS_URL",
     "SCHEMA_VERSION",
+    "SEMANTIC_EVIDENCE_URLS",
     "STATUS_COMPLETE",
     "STATUS_PARITY_UNVERIFIED",
     "STATUS_PARITY_VERIFIED",
@@ -1182,6 +1508,7 @@ __all__ = [
     "SourceSpec",
     "THRESHOLD_EVENTS",
     "capture_botten_ada",
+    "draw_matrix_sha256",
     "fetch_source",
     "parse_forecast_json",
     "parse_homepage_html",
