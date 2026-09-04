@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.4",
+  "generated_at_utc": "2026-09-04T11:08:09.479310+00:00",
+  "as_of": "2026-09-04",
+  "election_date": "2026-09-13",
+  "model": {
+    "name": "ElectionSimulator",
+    "version": "1.1.0-rc1",
+    "candidate": "A",
+    "candidate_namespace": "botten_ada_benchmark_model_lineage; not the ElectionNoise challenger"
+  },
+  "election_noise_law": "pp_lw_gaussian",
+  "election_noise_candidate": "B",
+  "election_noise_namespace": "ElectionNoise v2 competition; B is the adopted challenger, CONTROL the superseded empirical bootstrap. Unrelated to model.candidate.",
+  "source_repository": "edvinli/election-simulator",
+  "source_git_commit": "bc581a32e2cb3bf28c33b0e6fde20b9e44e770c9",
+  "source_worktree_clean": true,
+  "input_hashes": {
+    "poll_data_hash": "908f6f673da131f00df496ce4a5a9ae71199112e14234acb46f37dfc275735cf",
+    "election_data_hash": "3a99ffb1b0fbef60d61712764a2136982ecf01c4879a43edc6d9a38ddb4ba0fc",
+    "mandate_data_hash": "444c457061abc8c9516f7aad6f35d6e85bb4d720f8244fb029d9b1438d3bd11e",
+    "geography_data_hash": "cb296ab2b1780425a1611649cf8ead030020bb1a7dce9b4ea7e4b136425b1743",
+    "model_config_hash": "5c90aba27b78f9bc2a5f5202a5de802ba3609a68f4a9f8f1bf026221bf5ad848"
+  },
+  "deterministic_payload_sha256": "e2bd5c60a422ed6c86bc9e57490a82fef83a8e724790d8f0fd1c7328d4aa4976",
+  "rest_semantics": "REST is aggregate vote mass for modeled-as-ineligible parties; it cannot independently qualify or receive seats.",
+  "interval_semantics": "Central empirical predictive intervals at 50%, 80%, and 90%; they are not confidence intervals.",
+  "validation_note": "Historical validation is retrospective and not independent holdout validation."
+}
