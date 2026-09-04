@@ -20,6 +20,12 @@
       "path": "amendments/003-exact-deterministic-replay.json",
       "sha256": "132f58d0e0b1d56da19f117e798680bac9bf22be5d92f75fcd1b4d94e2cf95a6",
       "primary_scoring_effect": "A deterministically reproduced ElectionSimulator draw sidecar may qualify as REPLAY_VERIFIED and therefore may satisfy ElectionSimulator's draw-availability side of fallback level A. This can change which pre-registered scoring tier is available, but does not change fair CRPS, the requirement that both systems have verified predictive draws, the final date, party set, or winner rule."
+    },
+    {
+      "amendment_number": 4,
+      "path": "amendments/004-intraday-exact-draw-sidecar-retention.json",
+      "sha256": "23104c034949a1c04c314f1ce4b39cdcf4005578935571f882365c003bba26fc",
+      "primary_scoring_effect": "Retaining a same-SimulationResult sidecar for every certified production generation can change which draws exist and therefore which pre-registered fallback tier is available. It does not change any scoring rule: fair CRPS and the standard WIS of amendment 002 are unchanged, as are the requirement that both systems have verified predictive draws, the cutoff rules, the party set, the final forecast date, and the winner hierarchy."
     }
   ],
   "captures": []
