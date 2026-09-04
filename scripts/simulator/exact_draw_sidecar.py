@@ -30,6 +30,7 @@ import io
 import json
 import os
 from pathlib import Path
+import platform
 import subprocess
 import tempfile
 from typing import Any, Mapping
@@ -47,6 +48,15 @@ SIDECAR_SCHEMA_VERSION = "1.0"
 SIDECAR_DRAWS_FILENAME = "draws.npz"
 SIDECAR_METADATA_FILENAME = "draws.json"
 _PAYLOAD_HASH_LENGTH = 64
+REPLAY_DEPENDENCY_PATHS: tuple[str, ...] = ("pyproject.toml", "uv.lock")
+REPLAY_EQUIVALENCE_PATHS: tuple[str, ...] = (
+    "scripts",
+    *REPLAY_DEPENDENCY_PATHS,
+    "data/processed/pollofpolls",
+    "data/processed/elections",
+    "data/processed/mandates",
+    "data/processed/geography",
+)
 
 
 class ExactDrawSidecarError(ValueError):
@@ -262,6 +272,11 @@ def build_exact_draw_metadata(
             },
         },
         "draws_file_sha256": None if draws_file_sha256 is None else _require_hash(draws_file_sha256, field="draws_file_sha256"),
+        "runtime": {
+            "python_version": platform.python_version(),
+            "python_implementation": platform.python_implementation(),
+            "numpy_version": np.__version__,
+        },
         "draw_semantics": (
             "Exact joint matrices emitted by the certified production SimulationResult; "
             "no draws are reconstructed from published quantiles."
@@ -360,9 +375,10 @@ def replay_certified_generation(
     whose separate simulator job did not retain its in-memory result.  It runs
     the ordinary ``simulate_election`` entrypoint against the local checkout;
     before doing so it proves that the checkout is clean and that no tracked
-    ``scripts`` or model-input file differs from the generation's source
-    commit.  The replay is accepted only when the deterministic payload hash,
-    input hashes, manifest identity, and every published compact summary agree.
+    ``scripts`` file, locked dependency contract, or model-input file differs
+    from the generation's source commit. The replay is accepted only when the
+    deterministic payload hash, input hashes, manifest identity, and every
+    published compact summary agree.
 
     The returned result is the exact result used to build a sidecar.  The
     evidence mapping is JSON-serializable and records the equivalence checks.
@@ -390,20 +406,24 @@ def replay_certified_generation(
     if not is_git_worktree_clean(repo):
         raise ExactDrawSidecarError("replay checkout must be clean before exact-draw reproduction")
 
-    # A later artifact-only commit is harmless, but any tracked code or model
-    # input change makes running the current checkout an unproven substitute.
-    diff_paths = [
-        "scripts",
-        "data/processed/pollofpolls",
-        "data/processed/elections",
-        "data/processed/mandates",
-        "data/processed/geography",
-    ]
-    diff = _git(repo, ["diff", "--quiet", f"{source_commit}..{head}", "--", *diff_paths], check=False)
+    # A later artifact-only commit is harmless, but any tracked code, locked
+    # dependency contract, or model-input change makes the current checkout
+    # an unproved substitute for the certified environment.
+    diff = _git(
+        repo,
+        ["diff", "--quiet", f"{source_commit}..{head}", "--", *REPLAY_EQUIVALENCE_PATHS],
+        check=False,
+    )
     if diff.returncode != 0:
         raise ExactDrawSidecarError(
-            "replay checkout differs from the certified source in code or model inputs"
+            "replay checkout differs from the certified source in code or model inputs "
+            "or dependency contract"
         )
+    dependency_hashes: dict[str, str] = {}
+    for relative in REPLAY_DEPENDENCY_PATHS:
+        dependency = repo / relative
+        _regular_file(dependency, label=f"replay dependency contract {relative}")
+        dependency_hashes[relative] = compute_file_sha256(dependency)
 
     from scripts.simulator.engine import simulate_election
 
@@ -493,9 +513,15 @@ def replay_certified_generation(
         "certified_source_git_commit": source_commit,
         "replay_checkout_head": head,
         "source_equivalence_basis": (
-            "git diff --quiet source_commit..HEAD over scripts and all model-relevant "
-            "processed input directories"
+            "git diff --quiet source_commit..HEAD over scripts, pyproject.toml, uv.lock, "
+            "and all model-relevant processed input directories"
         ),
+        "dependency_contract_sha256": dependency_hashes,
+        "runtime": {
+            "python_version": platform.python_version(),
+            "python_implementation": platform.python_implementation(),
+            "numpy_version": np.__version__,
+        },
         "deterministic_payload_sha256": payload_hash,
         "published_summary_parity": True,
         "input_hash_parity": True,

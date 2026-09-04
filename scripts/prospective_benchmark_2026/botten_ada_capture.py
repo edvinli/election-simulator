@@ -54,6 +54,14 @@ THRESHOLD_EVENTS: dict[str, str] = {
     "KD": "is_KD_above_4_pct",
     "MP": "is_MP_above_4_pct",
 }
+DECISION_SOURCE_KEYS: tuple[str, ...] = (
+    "forecast",
+    "threshold_L",
+    "threshold_C",
+    "threshold_KD",
+    "threshold_MP",
+)
+DECISION_GENERATION_FIELDS: tuple[str, ...] = ("run", "model", "run_written")
 ELECTION_DATE = "2026-09-13"
 
 OFFICIAL_SITE_URL = "https://www.bottenada.se/"
@@ -97,6 +105,7 @@ PARTY_PAGE_URLS: dict[str, str] = {
 }
 
 STATUS_COMPLETE = "COMPLETE"
+STATUS_AVAILABLE = "AVAILABLE"
 STATUS_SOURCE_UNAVAILABLE = "SOURCE_UNAVAILABLE"
 STATUS_PARSE_FAILED = "PARSE_FAILED"
 STATUS_SOURCE_STALE = "SOURCE_STALE"
@@ -809,6 +818,41 @@ def _source_reported_updates(provenance: Mapping[str, Mapping[str, Any]]) -> dic
     }
 
 
+def _decision_generation_identity(parsed: Mapping[str, Any]) -> tuple[dict[str, Any] | None, str | None]:
+    """Require every scoring-bearing latest_forecast object to be one Ada run."""
+
+    missing_sources = [key for key in DECISION_SOURCE_KEYS if key not in parsed]
+    if missing_sources:
+        # Source/parse errors are classified by the ordinary bundle logic.
+        return None, None
+    identities: dict[str, dict[str, Any]] = {}
+    for key in DECISION_SOURCE_KEYS:
+        value = parsed[key]
+        metadata = value.get("metadata") if isinstance(value, Mapping) else None
+        if not isinstance(metadata, Mapping):
+            return None, f"{key} has no metadata for Ada generation identity"
+        missing_fields = [
+            field
+            for field in DECISION_GENERATION_FIELDS
+            if metadata.get(field) is None or metadata.get(field) == ""
+        ]
+        if missing_fields:
+            return None, f"{key} lacks Ada generation fields {missing_fields}"
+        identities[key] = {field: metadata[field] for field in DECISION_GENERATION_FIELDS}
+    expected = identities["forecast"]
+    mismatches = {
+        key: identity
+        for key, identity in identities.items()
+        if identity != expected
+    }
+    if mismatches:
+        return None, (
+            "decision-bearing latest_forecast artifacts do not share one "
+            f"run/model/run_written identity: expected {expected!r}, mismatches {mismatches!r}"
+        )
+    return dict(expected), None
+
+
 def parse_public_bundle(
     artifacts: Mapping[str, SourceArtifact | Mapping[str, Any]],
     *,
@@ -887,11 +931,20 @@ def parse_public_bundle(
         if artifact is not None and artifact.body is not None and 200 <= artifact.status_code < 300:
             raw_files[spec.raw_name] = artifact.body
 
-    forecast = parsed.get("forecast")
+    decision_generation, generation_error = _decision_generation_identity(parsed)
+    if generation_error is not None:
+        errors["generation_identity"] = generation_error
+    decision_bundle_eligible = generation_error is None
+    # A mixed Ada generation is retained in the exact raw bytes and source
+    # provenance, but none of its decision-bearing quantities may reach the
+    # scorer as a synthetic bundle.
+    forecast = parsed.get("forecast") if decision_bundle_eligible else None
     threshold_probabilities = {
         parsed_value["party"]: parsed_value
         for key, parsed_value in parsed.items()
-        if key.startswith("threshold_") and isinstance(parsed_value, dict)
+        if decision_bundle_eligible
+        and key.startswith("threshold_")
+        and isinstance(parsed_value, dict)
     }
     latest_polls = parsed.get("latest_polls")
     timeseries = parsed.get("timeseries")
@@ -905,6 +958,8 @@ def parse_public_bundle(
             or forecast_artifact.status_code >= 300
         )
         status = STATUS_SOURCE_UNAVAILABLE if source_missing else STATUS_PARSE_FAILED
+    elif "generation_identity" in errors:
+        status = STATUS_PARSE_FAILED
     elif any(key in errors for key in normalized_artifacts if key != "rds"):
         # A partial API outage or malformed optional source remains visible in
         # the record; a caller may apply the preregistered metric fallback.
@@ -916,10 +971,10 @@ def parse_public_bundle(
             for key in errors
         ) else STATUS_PARSE_FAILED
     else:
-        # There are no exact draws in this normalized publication record.  The
-        # status is therefore honest even though point/interval quantities are
-        # available and parseable.
-        status = STATUS_PARITY_UNVERIFIED
+        # Source/publication availability and draw verification are separate
+        # concepts. Exact-draw eligibility remains nested under capabilities
+        # and provenance.draws.
+        status = STATUS_AVAILABLE
 
     record: dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
@@ -985,6 +1040,7 @@ def parse_public_bundle(
             },
             "sources": provenance,
             "source_reported_updates": _source_reported_updates(provenance),
+            "decision_generation_identity": decision_generation,
             "draws": {
                 "status": STATUS_PARITY_UNVERIFIED,
                 "eligible_for_probabilistic_scoring": False,
@@ -997,6 +1053,76 @@ def parse_public_bundle(
         "raw_file_paths": sorted(raw_files),
     }
     return record, raw_files
+
+
+def _apply_decision_cutoff(record: dict[str, Any], cutoff: datetime) -> None:
+    """Remove scoring evidence not proved to have existed by the cutoff.
+
+    S3 ``Last-Modified`` is the contemporaneous publication evidence for the
+    mutable ``latest_forecast`` objects. Raw bytes and their hashes remain in
+    provenance even when a source is rejected here.
+    """
+
+    provenance = record.get("provenance")
+    sources = provenance.get("sources") if isinstance(provenance, Mapping) else None
+    violations: dict[str, str] = {}
+    observed: dict[str, str | None] = {}
+    for key in DECISION_SOURCE_KEYS:
+        source = sources.get(key) if isinstance(sources, Mapping) else None
+        modified = source.get("last_modified_utc") if isinstance(source, Mapping) else None
+        observed[key] = modified if isinstance(modified, str) else None
+        if not isinstance(modified, str) or not modified:
+            violations[key] = "missing or unparseable HTTP Last-Modified"
+            continue
+        try:
+            modified_at = _parse_timestamp(modified)
+        except ValueError:
+            violations[key] = f"unparseable HTTP Last-Modified {modified!r}"
+            continue
+        if modified_at > cutoff:
+            violations[key] = (
+                f"HTTP Last-Modified {_iso_utc(modified_at)} is after benchmark cutoff "
+                f"{_iso_utc(cutoff)}"
+            )
+
+    decision_cutoff = {
+        "benchmark_cutoff": _iso_utc(cutoff),
+        "required_sources": list(DECISION_SOURCE_KEYS),
+        "last_modified_utc": observed,
+        "eligible": not violations,
+        "violations": violations,
+    }
+    if isinstance(provenance, dict):
+        provenance["decision_cutoff"] = decision_cutoff
+    if not violations:
+        return
+
+    # Preserve enough normalized identity/hash evidence to explain the
+    # rejection, while ensuring the ordinary scorer sees no forecast values.
+    record["rejected_decision_evidence"] = {
+        "reason": "Decision-bearing Ada artifact was not proved available by the cutoff",
+        "decision_generation_identity": (
+            provenance.get("decision_generation_identity")
+            if isinstance(provenance, Mapping)
+            else None
+        ),
+        "source_content_sha256": {
+            key: (sources.get(key) or {}).get("content_sha256")
+            for key in DECISION_SOURCE_KEYS
+        } if isinstance(sources, Mapping) else {},
+    }
+    errors = dict(record.get("errors", {}))
+    errors["cutoff_eligibility"] = json.dumps(violations, sort_keys=True)
+    record["errors"] = errors
+    record["status"] = STATUS_SOURCE_UNAVAILABLE
+    record["forecast"] = None
+    record["threshold_probabilities_4pct"] = {}
+    capabilities = record.get("capabilities")
+    if isinstance(capabilities, dict):
+        capabilities["published_vote_quantiles"] = False
+        capabilities["published_central_predictions"] = False
+        capabilities["published_threshold_probabilities"] = []
+        capabilities["published_seat_quantiles"] = False
 
 
 def _call_fetcher(fetcher: Fetcher, spec: SourceSpec) -> SourceArtifact:
@@ -1073,6 +1199,7 @@ def capture_botten_ada(
     record["capture"] = cutoff_record
     record["provenance"] = dict(record["provenance"])
     record["provenance"]["capture_cutoff"] = cutoff_record
+    _apply_decision_cutoff(record, parsed_cutoff)
     if stale_before is not None:
         stale_bound = _parse_timestamp(stale_before)
         updated_at = record.get("source_updated_at")
@@ -1484,6 +1611,8 @@ __all__ = [
     "BottenAdaDrawsNotVerified",
     "BottenAdaParseError",
     "BottenAdaSourceError",
+    "DECISION_GENERATION_FIELDS",
+    "DECISION_SOURCE_KEYS",
     "DEFAULT_SOURCE_SPECS",
     "ELECTION_DATE",
     "OFFICIAL_DATA_URL",
@@ -1499,6 +1628,7 @@ __all__ = [
     "SCHEMA_VERSION",
     "SEMANTIC_EVIDENCE_URLS",
     "STATUS_COMPLETE",
+    "STATUS_AVAILABLE",
     "STATUS_PARITY_UNVERIFIED",
     "STATUS_PARITY_VERIFIED",
     "STATUS_PARSE_FAILED",

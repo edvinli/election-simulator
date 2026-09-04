@@ -116,6 +116,8 @@ class ExactDrawSidecarTests(unittest.TestCase):
         metadata = json.loads(files["draws.json"])
         self.assertEqual(metadata["vote_party_order"], ["M", "L", "C", "KD", "S", "V", "MP", "SD", "REST"])
         self.assertEqual(metadata["samples"], 4)
+        self.assertRegex(metadata["runtime"]["python_version"], r"^\d+\.\d+")
+        self.assertEqual(metadata["runtime"]["numpy_version"], np.__version__)
 
     def test_sidecar_rejects_generation_or_payload_mismatch(self) -> None:
         result = self._result()
@@ -207,9 +209,10 @@ class CertifiedGenerationSelectionTests(unittest.TestCase):
         self.addCleanup(lambda: shutil.rmtree(root, ignore_errors=True))
         self._git(root, "init", "-q")
         (root / "README").write_text("source\n", encoding="utf-8")
+        (root / "pyproject.toml").write_text("[project]\nname='fixture'\nversion='0'\n", encoding="utf-8")
+        (root / "uv.lock").write_text("version = 1\n", encoding="utf-8")
         source_commit = self._git(
-            root,
-            "add", "README",
+            root, "add", "README", "pyproject.toml", "uv.lock",
         )
         self._git(root, "commit", "-qm", "source", env={"GIT_AUTHOR_DATE": "2026-09-03T20:00:00Z", "GIT_COMMITTER_DATE": "2026-09-03T20:00:00Z"})
         source_commit = self._git(root, "rev-parse", "HEAD")
@@ -294,6 +297,28 @@ class CertifiedGenerationSelectionTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(ExactDrawSidecarError, "code or model inputs"):
             replay_certified_generation(snapshot, root)
+
+    def test_replay_rejects_later_dependency_contract_change(self) -> None:
+        for dependency in ("uv.lock", "pyproject.toml"):
+            with self.subTest(dependency=dependency):
+                root, _generation, snapshot = self._make_repo(
+                    archive_commit_time="2026-09-03T21:30:00Z"
+                )
+                path = root / dependency
+                path.write_text(path.read_text(encoding="utf-8") + "# changed\n", encoding="utf-8")
+                self._git(root, "add", dependency)
+                self._git(
+                    root,
+                    "commit",
+                    "-qm",
+                    f"later {dependency} change",
+                    env={
+                        "GIT_AUTHOR_DATE": "2026-09-03T22:00:00Z",
+                        "GIT_COMMITTER_DATE": "2026-09-03T22:00:00Z",
+                    },
+                )
+                with self.assertRaisesRegex(ExactDrawSidecarError, "dependency contract"):
+                    replay_certified_generation(snapshot, root)
 
     def test_same_day_generations_are_selected_by_cutoff_not_fitness(self) -> None:
         root, first_generation, first_snapshot = self._make_repo(

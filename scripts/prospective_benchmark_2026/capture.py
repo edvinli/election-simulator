@@ -134,7 +134,7 @@ def _normalize_election_simulator(selected: Mapping[str, Any], *, repo_root: Pat
     distributions = snapshot.get("national_vote_distributions")
     if not isinstance(summary, Mapping) or not isinstance(distributions, Mapping):
         raise CaptureSourceError("Selected ElectionSimulator snapshot lacks published vote summaries")
-    central = {party: float(summary[party]["vote_share_mean"]) for party in PARTY_ORDER}
+    published_mean = {party: float(summary[party]["vote_share_mean"]) for party in PARTY_ORDER}
     quantiles = {
         party: {
             "0.05": float(distributions[party]["quantiles"]["p05"]),
@@ -167,9 +167,10 @@ def _normalize_election_simulator(selected: Mapping[str, Any], *, repo_root: Pat
         "vote_share_unit": "percentage_points",
         "vote_share_denominator": "official_national_valid_votes",
         "published_central_prediction": {
-            "kind": "published_vote_share_mean",
-            "values": central,
+            "kind": "published_vote_share_p50",
+            "values": {party: quantiles[party]["0.50"] for party in PARTY_ORDER},
         },
+        "supplementary_vote_share_mean": published_mean,
         "published_quantiles": quantiles,
         "threshold_probabilities_4pct": {
             party: float(snapshot["threshold_probabilities_4pct"][party])
@@ -360,6 +361,26 @@ def run_capture(
         "draws": {
             "election_simulator": election_simulator.forecast.get("draws"),
             "botten_ada": botten_ada.forecast.get("draws"),
+        },
+        "audit": {
+            "election_simulator": {
+                "generation_id": election_simulator.provenance.get("generation_id"),
+                "generated_at_utc": election_simulator.provenance.get("generated_at_utc"),
+                "deterministic_payload_sha256": election_simulator.provenance.get(
+                    "deterministic_payload_sha256"
+                ),
+                "published_central_prediction_kind": (
+                    election_simulator.forecast.get("published_central_prediction") or {}
+                ).get("kind"),
+            },
+            "botten_ada": {
+                "decision_generation_identity": botten_ada.provenance.get(
+                    "decision_generation_identity"
+                ),
+                "decision_cutoff": botten_ada.provenance.get("decision_cutoff"),
+                "source_updated_at": botten_ada.provenance.get("source_updated_at"),
+                "latest_poll_date": botten_ada.provenance.get("latest_poll_date"),
+            },
         },
     }
     if durable:

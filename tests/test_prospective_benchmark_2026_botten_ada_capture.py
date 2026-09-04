@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 import hashlib
 import json
 from pathlib import Path
@@ -16,6 +17,7 @@ from scripts.prospective_benchmark_2026.botten_ada_capture import (
     OFFICIAL_DATA_URL,
     PARITY_VOTE_TOLERANCE_PROPORTION,
     RDS_URL,
+    STATUS_AVAILABLE,
     STATUS_PARITY_UNVERIFIED,
     STATUS_PARITY_VERIFIED,
     STATUS_PARSE_FAILED,
@@ -100,7 +102,9 @@ class TestProspectiveBottenAdaCapture(unittest.TestCase):
             fetcher=self._fixture_fetcher(),
         )
         self.assertIsInstance(capture, BottenAdaCapture)
-        self.assertEqual(capture.record["status"], STATUS_PARITY_UNVERIFIED)
+        self.assertEqual(capture.record["status"], STATUS_AVAILABLE)
+        self.assertEqual(capture.record["provenance"]["draws"]["status"], STATUS_PARITY_UNVERIFIED)
+        self.assertTrue(capture.record["provenance"]["decision_cutoff"]["eligible"])
         json.dumps(capture.jsonable(), allow_nan=False)
         self.assertIn("raw/latest_forecast_seats--all.json", capture.raw_files)
         self.assertIn("raw/latest_pop_timeseries.csv", capture.raw_files)
@@ -120,6 +124,43 @@ class TestProspectiveBottenAdaCapture(unittest.TestCase):
         self.assertEqual(capture.record["provenance"]["sources"]["rds"]["byte_size"], 1685140142)
         self.assertIsNone(capture.record["provenance"]["sources"]["rds"]["content_sha256"])
         self.assertNotIn("raw/pop.rds", capture.raw_files)
+
+    def test_decision_artifact_modified_after_cutoff_is_retained_but_ineligible(self) -> None:
+        base_fetcher = self._fixture_fetcher()
+
+        def fetch(url: str, *, head_only: bool = False) -> SourceArtifact:
+            artifact = base_fetcher(url, head_only=head_only)
+            if url == DEFAULT_SOURCE_SPECS["forecast"].url:
+                headers = dict(artifact.headers)
+                headers["Last-Modified"] = "Fri, 04 Sep 2026 21:31:00 GMT"
+                return replace(artifact, headers=headers)
+            return artifact
+
+        capture = capture_botten_ada("2026-09-04T21:30:00Z", fetcher=fetch)
+        self.assertEqual(capture.record["status"], STATUS_SOURCE_UNAVAILABLE)
+        self.assertIsNone(capture.record["forecast"])
+        self.assertEqual(capture.record["threshold_probabilities_4pct"], {})
+        self.assertFalse(capture.record["provenance"]["decision_cutoff"]["eligible"])
+        self.assertIn("forecast", capture.record["provenance"]["decision_cutoff"]["violations"])
+        self.assertIn("raw/latest_forecast_seats--all.json", capture.raw_files)
+
+    def test_decision_artifacts_must_share_one_ada_generation(self) -> None:
+        base_fetcher = self._fixture_fetcher()
+
+        def fetch(url: str, *, head_only: bool = False) -> SourceArtifact:
+            artifact = base_fetcher(url, head_only=head_only)
+            if url == DEFAULT_SOURCE_SPECS["threshold_L"].url:
+                payload = json.loads(artifact.body)
+                payload["metadata"]["run"] = "different_run"
+                return replace(artifact, body=json.dumps(payload).encode("utf-8"))
+            return artifact
+
+        capture = capture_botten_ada("2026-09-04T21:30:00Z", fetcher=fetch)
+        self.assertEqual(capture.record["status"], STATUS_PARSE_FAILED)
+        self.assertIsNone(capture.record["forecast"])
+        self.assertEqual(capture.record["threshold_probabilities_4pct"], {})
+        self.assertIn("generation_identity", capture.record["errors"])
+        self.assertIn("raw/latest_forecast_question--is_L_above_4_pct.json", capture.raw_files)
 
     def test_standalone_writer_refuses_overwrite(self) -> None:
         capture = capture_botten_ada(

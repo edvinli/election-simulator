@@ -116,8 +116,12 @@ def _validate_forecast_contract(forecast: Mapping[str, Any], *, expected_system:
         if not isinstance(thresholds, Mapping):
             raise ReportError("Available forecast threshold probabilities are malformed")
         for party, probability in thresholds.items():
-            if party not in {"L", "C", "KD", "MP"}:
-                raise ReportError(f"Available forecast has an unregistered threshold event: {party}")
+            # A publisher may expose threshold probabilities for more parties
+            # than the four preregistered scoring events. Preserve and validate
+            # those official values; _threshold_scores deliberately evaluates
+            # only THRESHOLD_PARTIES.
+            if party not in PARTY_ORDER:
+                raise ReportError(f"Available forecast has an unknown-party threshold event: {party}")
             try:
                 numeric = float(probability)
             except (TypeError, ValueError) as exc:

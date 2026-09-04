@@ -39,6 +39,11 @@ class TestPostElectionReport(unittest.TestCase):
             party: {"0.05": value - 2 + offset, "0.50": value + offset, "0.95": value + 2 + offset}
             for party, value in actual.items()
         }
+        thresholds = (
+            {party: 0.5 for party in PARTIES}
+            if system == "election_simulator"
+            else {"L": 0.5, "C": 0.9, "KD": 0.8, "MP": 0.7}
+        )
         return {
             "schema_version": "1.0",
             "system": system,
@@ -49,7 +54,7 @@ class TestPostElectionReport(unittest.TestCase):
             "vote_share_denominator": "official_national_valid_votes",
             "published_central_prediction": {"kind": "published", "values": central},
             "published_quantiles": quantiles,
-            "threshold_probabilities_4pct": {"L": 0.5, "C": 0.9, "KD": 0.8, "MP": 0.7},
+            "threshold_probabilities_4pct": thresholds,
             "draws": {"verified_predictive_vote_draws": False, "path": None},
         }
 
@@ -65,7 +70,7 @@ class TestPostElectionReport(unittest.TestCase):
                     provenance={"generation_id": f"es-{day}"},
                 ),
                 "botten_ada": ModelCapture(
-                    status="PARITY_UNVERIFIED",
+                    status="AVAILABLE",
                     forecast=self._forecast("botten_ada", offset=0.2),
                     provenance={"source": "official fixture", "draws": "PARITY_UNVERIFIED"},
                 ),
@@ -113,6 +118,9 @@ class TestPostElectionReport(unittest.TestCase):
             self.assertEqual(report["campaign"]["scorable_capture_count"], 2)
             self.assertEqual(report["campaign"]["by_metric"]["mean_wis"]["capture_count"], 2)
             self.assertEqual(len(report["official_result"]["normalized_manifest_sha256"]), 64)
+            # Real ES captures retain threshold probabilities for all eight
+            # parties; only the four preregistered events are scored.
+            self.assertEqual(set(report["final_forecast"]["threshold_4pct"]), {"L", "C", "KD", "MP"})
             self.assertEqual(report["final_forecast"]["threshold_4pct"]["L"]["outcome_share_gte_4pct"], True)
             markdown = render_markdown(report)
             self.assertIn("Probabilistic winner: `botten_ada`", markdown)
