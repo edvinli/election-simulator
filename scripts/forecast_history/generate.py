@@ -695,6 +695,124 @@ def _worker_simulate_date(
     )
 
 
+def _poll_identity(poll: Mapping[str, Any]) -> tuple[Any, ...]:
+    """A stable identity for one serialized poll observation."""
+
+    parties = poll.get("parties")
+    party_items = (
+        tuple(sorted((str(key), value) for key, value in parties.items()))
+        if isinstance(parties, Mapping)
+        else ()
+    )
+    return (
+        str(poll.get("company") or ""),
+        str(poll.get("house") or ""),
+        str(poll.get("publication_date") or ""),
+        str(poll.get("fieldwork_start") or ""),
+        str(poll.get("fieldwork_end") or ""),
+        poll.get("n"),
+        party_items,
+    )
+
+
+def first_changed_poll_date(
+    previous_polls: Iterable[Mapping[str, Any]],
+    current_polls: Iterable[Mapping[str, Any]],
+) -> date | None:
+    """The earliest publication date whose polls differ between two sources.
+
+    A reconstructed point for date *D* is a function of the polls visible on
+    *D* and nothing later, so a poll appended after *D* leaves that point
+    unchanged.  Comparing the two poll sets tells us exactly how far forward
+    the previous artifact stays valid: every date strictly before the returned
+    one is still reusable.  ``None`` means the two sources agree.
+    """
+
+    def indexed(
+        polls: Iterable[Mapping[str, Any]],
+    ) -> tuple[dict[str, Mapping[str, Any]], dict[str, date]]:
+        by_id: dict[str, Mapping[str, Any]] = {}
+        dates: dict[str, date] = {}
+        for poll in polls:
+            poll_id = poll.get("poll_id")
+            if poll_id is None:
+                continue
+            try:
+                published = _coerce_date(
+                    poll.get("publication_date"), name="poll publication_date"
+                )
+            except (TypeError, ValueError):
+                continue
+            by_id[str(poll_id)] = poll
+            dates[str(poll_id)] = published
+        return by_id, dates
+
+    previous, previous_dates = indexed(previous_polls)
+    current, current_dates = indexed(current_polls)
+    if not previous_dates:
+        return None
+    # The recorded poll list is filtered to the chart period, so the comparison
+    # has to be too: the raw source reaches back to 2006 and every poll outside
+    # the recorded window would otherwise register as an addition. A poll
+    # published after the window ends is later than every point in the series
+    # and so cannot have changed one.
+    window_start = min(previous_dates.values())
+    window_end = max(previous_dates.values())
+
+    def in_window(published: date) -> bool:
+        return window_start <= published <= window_end
+
+    changed: list[date] = []
+    for poll_id in set(previous) | set(current):
+        before = previous.get(poll_id)
+        after = current.get(poll_id)
+        published = previous_dates.get(poll_id, current_dates.get(poll_id))
+        if published is None or not in_window(published):
+            continue
+        if before is not None and after is not None and _poll_identity(before) == _poll_identity(after):
+            continue
+        changed.append(published)
+    return min(changed) if changed else None
+
+
+def missing_curve_dates(
+    payload: Mapping[str, Any],
+    *,
+    dynamics_cap_date: str | date = HISTORY_CAP_DATE,
+) -> list[date]:
+    """Daily dates the reconstructed curve should cover but does not.
+
+    The chart draws one continuous line through the non-archived points, so a
+    date carrying only an archived prospective point is a hole in it.  Each
+    publication creates one: the roll-in relabels the previous official point
+    ``prospective_archived`` and cannot simulate a replacement.  Only the
+    daily part of the schedule is considered -- before the dynamics cap the
+    series is deliberately weekly.
+    """
+
+    cap = _coerce_date(dynamics_cap_date, name="dynamics_cap_date")
+    curve_dates: set[date] = set()
+    all_dates: set[date] = set()
+    for point in payload.get("series") or []:
+        try:
+            point_date = _coerce_date(point.get("date"), name="series point date")
+        except (TypeError, ValueError):
+            continue
+        all_dates.add(point_date)
+        if str(point.get("provenance")) != "prospective_archived":
+            curve_dates.add(point_date)
+    if not all_dates:
+        return []
+    latest = max(all_dates)
+    missing: list[date] = []
+    current = max(cap, min(all_dates))
+    while current <= latest:
+        if current not in curve_dates:
+            missing.append(current)
+        current += timedelta(days=1)
+    return missing
+
+
 def build_history(
     *,
     election_date: str | date = DEFAULT_ELECTION_DATE,
@@ -770,6 +888,7 @@ def build_history(
     # contract identity must match; silently combining different model/input
     # revisions would make the chart's provenance misleading.
     existing_points: dict[date, dict[str, Any]] = {}
+    existing_archived_points: dict[date, dict[str, Any]] = {}
     existing_model_commit: str | None = None
     if existing_payload is not None:
         validate_history_contract(existing_payload)
@@ -780,9 +899,17 @@ def build_history(
         if existing_payload["coalitions"] != coalition_config:
             raise ValueError("existing_payload uses a different coalition configuration")
         existing_model_commit = str(existing_payload["model_commit"])
+        # The resume cache holds one *curve* point per date. An archived
+        # prospective point is a second, parallel observation for its date --
+        # never the curve point -- so it is routed to the archived map instead
+        # of occupying the slot a reconstructed point has to fill.
         for point in existing_payload["series"]:
-            existing_points[date.fromisoformat(point["date"])] = dict(point)
-        for point_date in existing_points:
+            point_date = date.fromisoformat(point["date"])
+            if str(point.get("provenance")) == "prospective_archived":
+                existing_archived_points[point_date] = dict(point)
+            else:
+                existing_points[point_date] = dict(point)
+        for point_date in list(existing_points) + list(existing_archived_points):
             if point_date not in observation_dates:
                 observation_dates.append(point_date)
         observation_dates.sort()
@@ -792,7 +919,30 @@ def build_history(
     if not isinstance(poll_hash, str) or len(poll_hash) != 64:
         raise FileNotFoundError(f"SwedishPolls source file not found: {poll_path}")
     if existing_payload is not None and existing_payload["poll_source_sha256"] != poll_hash:
-        raise ValueError("existing_payload was generated from a different SwedishPolls source")
+        # A refreshed poll file is not grounds for discarding the whole cache.
+        # A point's forecast reads only the polls visible on its own date, so
+        # appending a new poll -- what a daily refresh almost always is --
+        # leaves every earlier point valid.  Reuse those and re-simulate from
+        # the first date whose visible polls actually changed.  Rejecting the
+        # artifact outright instead made reconstruction a ~300-point rebuild
+        # after any refresh, which is why the curve stopped being extended.
+        changed_from = first_changed_poll_date(
+            existing_payload.get("polls") or [], all_polls
+        )
+        if changed_from is None:
+            # The file differs but the poll observations it yields do not
+            # (whitespace, row order, an excluded column): nothing to redo.
+            pass
+        else:
+            # Only the reconstructed curve is recomputed from polls. An
+            # archived prospective point is a record of what was published on
+            # its date and is never re-derived, so it survives a refresh.
+            existing_points = {
+                point_date: point
+                for point_date, point in existing_points.items()
+                if point_date < changed_from
+                or str(point.get("provenance")) == "current_production"
+            }
     if existing_payload is not None and model_commit is not None and existing_payload["model_commit"] != model_commit:
         raise ValueError("existing_payload uses a different model_commit")
     records = list(archived_points or []) + _load_archive_records(archive_dir)
@@ -813,6 +963,12 @@ def build_history(
         current_key = str(normalized.get("generated_at_utc") or "")
         if previous is None or current_key >= previous_key:
             archived_by_date[point_date] = normalized
+
+    # Archived points already published in a resumable artifact are preserved
+    # even when the archive directory no longer carries the record they came
+    # from; an on-disk record for the same date wins, being the richer source.
+    for point_date, archived in existing_archived_points.items():
+        archived_by_date.setdefault(point_date, archived)
 
     for point_date in archived_by_date:
         if point_date not in observation_dates:
@@ -852,8 +1008,15 @@ def build_history(
         if point_date == official_latest_date and latest_result is not None:
             continue
         archived = archived_by_date.get(point_date)
-        if archived is not None and (
-            point_date != official_latest_date or archived["samples"] == production_latest_samples
+        # On the latest date the archived official artifact *is* the point:
+        # it is the exact joint publication, and reconstructing it would
+        # replace an official number with an approximation of it. On every
+        # earlier date the archived point is a second observation alongside
+        # the reconstructed curve, so the date still has to be simulated.
+        if (
+            archived is not None
+            and point_date == official_latest_date
+            and archived["samples"] == production_latest_samples
         ):
             continue
         requested_samples = production_latest_samples if point_date == official_latest_date else samples
@@ -931,8 +1094,10 @@ def build_history(
                 model_commit_value = _model_commit_from(latest_result, model_commit_value)
             continue
         archived = archived_by_date.get(point_date)
-        if archived is not None and (
-            point_date != official_latest_date or archived["samples"] == production_latest_samples
+        if (
+            archived is not None
+            and point_date == official_latest_date
+            and archived["samples"] == production_latest_samples
         ):
             series.append(
                 _archived_series_point(archived)
@@ -991,20 +1156,39 @@ def build_history(
         if not model_commit:
             model_commit_value = _model_commit_from(result, model_commit_value)
 
-    # Rich archived points outside the regular schedule are retained as
-    # meaningful publication observations (for example, a prospective run
-    # archived on a Thursday between weekly reconstructed points).
+    # Rich archived points are retained as meaningful publication observations
+    # -- both those outside the regular schedule (a prospective run archived on
+    # a Thursday between weekly reconstructed points) and those that share a
+    # date with a reconstructed point. Membership is keyed on (date,
+    # provenance): keying it on the date alone silently dropped every archived
+    # point whose date the reconstructed curve also covers.
+    def _series_keys() -> set[tuple[date, str]]:
+        return {
+            (date.fromisoformat(point["date"]), str(point["provenance"]))
+            for point in series
+        }
+
+    present = _series_keys()
     for point_date, archived in archived_by_date.items():
-        if point_date not in {date.fromisoformat(point["date"]) for point in series}:
-            series.append(
-                _archived_series_point(archived)
-            )
+        # The official point for today is the same publication this archive
+        # record describes, so an archived twin of it would publish one
+        # forecast twice under two labels. It becomes a genuine archived
+        # observation on a later day, when the roll-in relabels it.
+        if (point_date, "current_production") in present:
+            continue
+        candidate = _archived_series_point(archived)
+        key = (point_date, str(candidate["provenance"]))
+        if key not in present:
+            series.append(candidate)
+            present.add(key)
     # Preserve points already present in a resumable artifact, including dates
     # from an earlier chunk that are not part of this invocation's requested
     # date window.
     for point_date, existing in existing_points.items():
-        if point_date not in {date.fromisoformat(point["date"]) for point in series}:
+        key = (point_date, str(existing["provenance"]))
+        if key not in present:
             series.append(existing)
+            present.add(key)
     series.sort(key=lambda point: (point["date"], point["provenance"]))
 
     poll_of_polls = serialize_poll_of_polls_timeseries(
@@ -1197,8 +1381,8 @@ def update_history_with_production_result(
         raise ValueError("production_result source_git_commit is not a Git commit hash")
     series.append(new_point)
     series.sort(key=lambda point: (point["date"], str(point["provenance"])))
-    if len({point["date"] for point in series}) != len(series):
-        raise ValueError("production history update would create duplicate calendar dates")
+    if len({(point["date"], str(point["provenance"])) for point in series}) != len(series):
+        raise ValueError("production history update would create duplicate (date, provenance) points")
     if sum(point.get("provenance") == "current_production" for point in series) != 1:
         raise ValueError("production history must contain exactly one current_production point")
 
@@ -1286,6 +1470,85 @@ def generate_history_artifact(
     payload = build_history(**kwargs)
     write_history_json(output, payload)
     return payload
+
+
+def backfill_reconstructed_curve(
+    payload: Mapping[str, Any],
+    *,
+    poll_file: Path | str = DEFAULT_POLL_FILE,
+    timeseries_file: Path | str = DEFAULT_TIMESERIES_FILE,
+    archive_dir: Path | str | None = DEFAULT_ARCHIVE_DIR,
+    election_date: str | date = DEFAULT_ELECTION_DATE,
+    coalitions: Mapping[str, Sequence[str]] = DEFAULT_COALITIONS,
+    samples: int = DEFAULT_HISTORY_SAMPLES,
+    seed: int = DEFAULT_SIMULATION_SEED,
+    production_latest_samples: int | None = None,
+    simulation_runner: Callable[..., Any] | None = None,
+    workers: int = 1,
+    progress_callback: Callable[[int, int, str], None] | None = None,
+) -> tuple[dict[str, Any], list[date]]:
+    """Fill the holes the daily roll-in leaves in the reconstructed curve.
+
+    Returns the payload and the dates that were simulated.  When the curve is
+    already continuous the payload is returned unchanged and no simulation
+    runs, so this is cheap to call on every publication -- which is the point:
+    the hole is one day wide if it is closed daily and grows without bound if
+    it is not.
+    """
+
+    dates = missing_curve_dates(payload)
+    if not dates:
+        return dict(payload), []
+    # The official point is reused byte for byte, which requires declaring the
+    # draw count it actually carries: a mismatch makes the resume cache reject
+    # it and try to re-simulate an official artifact as a reconstruction.
+    official_samples = production_latest_samples
+    if official_samples is None:
+        official = [
+            point
+            for point in payload.get("series") or []
+            if str(point.get("provenance")) == "current_production"
+        ]
+        official_samples = int(official[-1]["samples"]) if official else 100_000
+    filled = build_history(
+        election_date=election_date,
+        dates=dates,
+        samples=samples,
+        seed=seed,
+        poll_file=poll_file,
+        timeseries_file=timeseries_file,
+        archive_dir=archive_dir,
+        existing_payload=payload,
+        coalitions=coalitions,
+        production_latest_samples=official_samples,
+        model_commit=str(payload["model_commit"]),
+        simulation_runner=simulation_runner,
+        workers=workers,
+        progress_callback=progress_callback,
+    )
+    # `build_history` assembles a payload from its own inputs, so anything a
+    # later stage attached -- the campaign-path region and the secondary
+    # projection fan, both anchored to the certified point this call does not
+    # touch -- would be dropped by a rebuild. Adding curve points must not
+    # silently remove published views, so carry across whatever the rebuild
+    # does not produce itself.
+    carried = False
+    # A rebuild-only diagnostic that the daily roll-in never writes: publishing
+    # it here would make a backfilled artifact differ in shape from every other
+    # publication, and its counters describe the rebuild rather than the file.
+    if "resume_diagnostics" not in payload and filled.pop("resume_diagnostics", None) is not None:
+        carried = True
+    for key, value in payload.items():
+        if key == "deterministic_content_sha256":
+            continue
+        if key not in filled:
+            filled[key] = value
+            carried = True
+    # The digest covers the whole payload, so it has to be taken after the
+    # carried-across views are back in place.
+    if carried:
+        filled["deterministic_content_sha256"] = deterministic_history_sha256(filled)
+    return filled, dates
 
 
 def main(argv: Sequence[str] | None = None) -> int:

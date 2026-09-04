@@ -231,9 +231,12 @@ truncated to display precision.
 Backfilling party data into existing reconstructed points requires a full
 `scripts.forecast_history.generate` run — the resume cache keeps old points
 byte-for-byte, party block or not — at about 20 seconds per point per core.
-Daily publication is unaffected: `update_history_with_production_result` copies
-existing points forward and derives the new certified point's party block from
-matrices it already holds, at no measurable cost.
+Daily publication is nearly unaffected: `update_history_with_production_result`
+copies existing points forward and derives the new certified point's party block
+from matrices it already holds, at no measurable cost. The one simulated point
+per publication is the `history curve backfill` stage closing the previous day's
+hole in the reconstructed curve, at about 20 seconds; it carries the party block
+like any other reconstructed point.
 
 ---
 

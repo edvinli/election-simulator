@@ -19,10 +19,13 @@ from scripts.forecast_history.contract import (
     coalition_vote_draws,
 )
 from scripts.forecast_history.generate import (
+    backfill_reconstructed_curve,
     build_history,
     build_history_dates,
     filter_swedishpolls_as_of,
     filter_swedishpolls_period,
+    first_changed_poll_date,
+    missing_curve_dates,
     serialize_poll_of_polls_timeseries,
     serialize_swedishpolls,
 )
@@ -326,6 +329,190 @@ class ForecastHistoryTests(unittest.TestCase):
         by_date = {point["date"]: point for point in payload["series"]}
         self.assertEqual(by_date["2026-05-24"]["provenance"], "prospective_archived")
         self.assertEqual(by_date["2026-05-23"]["provenance"], "reconstructed_current_model")
+
+    def test_archived_point_does_not_displace_the_reconstructed_curve(self) -> None:
+        """An archived point is a second observation, not a substitute.
+
+        The chart draws one continuous line through the non-archived points, so
+        an archived point that took the reconstructed point's place left a hole
+        in the curve on its date -- one per publication, widening forever.
+        """
+
+        votes, seats = self._matrices()
+        groups = build_groups_from_matrices(votes, seats)
+        calls: list[tuple[str, int]] = []
+
+        def runner(*, as_of: str, election_date: str, samples: int, seed: int):
+            calls.append((as_of, samples))
+            return SimpleNamespace(
+                vote_shares_matrix=votes,
+                seats_matrix=seats,
+                manifest={"source_git_commit": "b" * 40},
+            )
+
+        # 2026-05-25 is not the latest requested date, so the archived record
+        # there is a genuine historical publication sitting behind the curve.
+        archived = {
+            "as_of": "2026-05-25",
+            "samples": 4,
+            "source_git_commit": "c" * 40,
+            "groups": groups,
+        }
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "polls.csv"
+            self._poll_csv(path)
+            payload = build_history(
+                archive_dir=None,
+                dates=["2026-05-24", "2026-05-25", "2026-05-26"],
+                poll_file=path,
+                samples=4,
+                archived_points=[archived],
+                simulation_runner=runner,
+                model_commit="b" * 40,
+                source_worktree_clean=True,
+                production_latest_samples=4,
+            )
+        # The archived date is simulated like any other: it needs a curve point.
+        self.assertIn(("2026-05-25", 4), calls)
+        provenances = {
+            (point["date"], point["provenance"]) for point in payload["series"]
+        }
+        self.assertIn(("2026-05-25", "reconstructed_current_model"), provenances)
+        self.assertIn(("2026-05-25", "prospective_archived"), provenances)
+        curve = [
+            point["date"]
+            for point in payload["series"]
+            if point["provenance"] != "prospective_archived"
+        ]
+        self.assertEqual(curve, ["2026-05-24", "2026-05-25", "2026-05-26"])
+
+    def test_missing_curve_dates_finds_archive_only_days(self) -> None:
+        votes, seats = self._matrices()
+        groups = build_groups_from_matrices(votes, seats)
+
+        def point(day: str, provenance: str) -> dict:
+            return {
+                "date": day,
+                "samples": 4,
+                "horizon_days": (date(2026, 9, 13) - date.fromisoformat(day)).days,
+                "dynamics_horizon_days": 0,
+                "provenance": provenance,
+                "groups": groups,
+            }
+
+        payload = {
+            "series": [
+                point("2026-05-24", "reconstructed_current_model"),
+                point("2026-05-25", "prospective_archived"),
+                point("2026-05-26", "prospective_archived"),
+                point("2026-05-27", "current_production"),
+            ]
+        }
+        self.assertEqual(
+            missing_curve_dates(payload),
+            [date(2026, 5, 25), date(2026, 5, 26)],
+        )
+        # A curve with no archive-only day needs nothing.
+        continuous = {
+            "series": [
+                point("2026-05-24", "reconstructed_current_model"),
+                point("2026-05-25", "reconstructed_current_model"),
+                point("2026-05-25", "prospective_archived"),
+                point("2026-05-26", "current_production"),
+            ]
+        }
+        self.assertEqual(missing_curve_dates(continuous), [])
+
+    def test_backfill_closes_the_hole_the_roll_in_leaves(self) -> None:
+        votes, seats = self._matrices()
+        calls: list[str] = []
+
+        def runner(*, as_of: str, election_date: str, samples: int, seed: int):
+            calls.append(as_of)
+            return SimpleNamespace(
+                vote_shares_matrix=votes,
+                seats_matrix=seats,
+                manifest={"source_git_commit": "b" * 40},
+            )
+
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "polls.csv"
+            self._poll_csv(path)
+            published = build_history(
+                archive_dir=None,
+                dates=["2026-05-24", "2026-05-25", "2026-05-26"],
+                poll_file=path,
+                samples=4,
+                simulation_runner=runner,
+                model_commit="b" * 40,
+                source_worktree_clean=True,
+                production_latest_samples=4,
+            )
+            # Simulate what the daily roll-in does to the previous official
+            # point: relabel it, leaving its date with no curve point.
+            holed = deepcopy(published)
+            for point in holed["series"]:
+                if point["date"] == "2026-05-25":
+                    point["provenance"] = "prospective_archived"
+            holed.pop("deterministic_content_sha256", None)
+            self.assertEqual(missing_curve_dates(holed), [date(2026, 5, 25)])
+
+            calls.clear()
+            filled, backfilled = backfill_reconstructed_curve(
+                holed,
+                poll_file=path,
+                archive_dir=None,
+                samples=4,
+                simulation_runner=runner,
+            )
+        self.assertEqual(backfilled, [date(2026, 5, 25)])
+        self.assertEqual(calls, ["2026-05-25"])
+        self.assertEqual(missing_curve_dates(filled), [])
+        provenances = {
+            (point["date"], point["provenance"]) for point in filled["series"]
+        }
+        self.assertIn(("2026-05-25", "reconstructed_current_model"), provenances)
+        self.assertIn(("2026-05-25", "prospective_archived"), provenances)
+
+        # Calling it on a continuous curve runs no simulation at all, which is
+        # what makes it safe on every publication.
+        calls.clear()
+        unchanged, nothing = backfill_reconstructed_curve(
+            filled, simulation_runner=runner
+        )
+        self.assertEqual(nothing, [])
+        self.assertEqual(calls, [])
+        self.assertEqual(unchanged["series"], filled["series"])
+
+    def test_first_changed_poll_date_ignores_appends_after_the_window(self) -> None:
+        def poll(poll_id: str, published: str, m: float = 20.0) -> dict:
+            return {
+                "poll_id": poll_id,
+                "company": "Test",
+                "house": "Test",
+                "publication_date": published,
+                "fieldwork_start": published,
+                "fieldwork_end": published,
+                "n": 1000,
+                "parties": {"M": m, "S": 30.0},
+            }
+
+        previous = [poll("a", "2026-05-24"), poll("b", "2026-05-26")]
+        self.assertIsNone(first_changed_poll_date(previous, list(previous)))
+        # An append past the recorded window cannot have changed any point.
+        self.assertIsNone(
+            first_changed_poll_date(previous, [*previous, poll("c", "2026-06-01")])
+        )
+        # A revision inside the window invalidates that date onward.
+        revised = [poll("a", "2026-05-24"), poll("b", "2026-05-26", m=21.0)]
+        self.assertEqual(
+            first_changed_poll_date(previous, revised), date(2026, 5, 26)
+        )
+        # So does a removal.
+        self.assertEqual(
+            first_changed_poll_date(previous, [poll("b", "2026-05-26")]),
+            date(2026, 5, 24),
+        )
 
     def test_resume_reuses_existing_points_and_generates_only_missing_dates(self) -> None:
         votes, seats = self._matrices()
