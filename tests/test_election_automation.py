@@ -54,26 +54,27 @@ from scripts.simulator.exact_draw_sidecar import (
     load_verified_draw_sidecar,
 )
 from scripts.simulator.summary import compute_simulation_summary
+from tests.history_fixtures import (
+    FROZEN_AS_OF,
+    FROZEN_ELECTION_DATE,
+    freeze_poll_inputs,
+    make_history_fixture,
+)
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 COMMIT = "a" * 40
 
-# The end-to-end publication tests roll a certified point into the *committed*
-# history artifact, whose latest date advances with every publication commit.
-# A hardcoded forecast date therefore drifts behind that artifact, and the
-# future projection built from the certified origin then spans dates that
-# already carry a real archived point -- so the publication fails the
-# projection overlap invariant for a reason that has nothing to do with the
-# behaviour under test. Deriving the date from the artifact keeps these tests
-# pinned to the same scenario they were written for as the data moves.
+# The publication fixture is frozen (see tests/history_fixtures.py): the
+# history it rolls a certified point into, and the polling inputs that history
+# agrees with, are built by the tests rather than read from the committed
+# artifact. Deriving the forecast date from the artifact removed the hardcoded
+# drift that broke these tests once; freezing the inputs removes the coupling
+# itself. One integration test still exercises the live committed artifact.
 LIVE_HISTORY_ARTIFACT = (
     REPOSITORY_ROOT / "files" / "election-simulator" / "history" / "coalition-timeseries.json"
 )
-FORECAST_AS_OF = max(
-    str(point["date"])
-    for point in json.loads(LIVE_HISTORY_ARTIFACT.read_text())["series"]
-)
+FORECAST_AS_OF = FROZEN_AS_OF
 FORECAST_DAY = date.fromisoformat(FORECAST_AS_OF)
 
 
@@ -324,6 +325,18 @@ class ElectionAutomationTests(unittest.TestCase):
         raw = source / "data/raw/pollofpolls"
         shutil.copytree(REPOSITORY_ROOT / "data/raw/pollofpolls", raw)
         shutil.copyfile(REPOSITORY_ROOT / "data/README.md", source / "data/README.md")
+
+        # Freeze the inputs the publication reads. The committed artifact and
+        # the committed polling CSVs both move with every publication; a test
+        # that rolls its certified point into them fails when they move, for
+        # reasons unrelated to what it asserts.
+        frozen_history = json.dumps(make_history_fixture(), separators=(",", ":"), sort_keys=False)
+        for repository in (source, site):
+            history_path = repository / "files/election-simulator/history/coalition-timeseries.json"
+            history_path.parent.mkdir(parents=True, exist_ok=True)
+            history_path.write_text(frozen_history, encoding="utf-8")
+        freeze_poll_inputs(processed / "pollofpolls")
+
         cls._init_git(source)
         cls._init_git(site)
         return source, site
@@ -1508,9 +1521,19 @@ time.sleep(60)
             self.assertFalse(called)
 
     def test_existing_reconstructed_points_are_reused_without_rerunning(self) -> None:
-        existing = json.loads(
-            (REPOSITORY_ROOT / "files/election-simulator/history/coalition-timeseries.json").read_text()
-        )
+        """The live committed artifact, deliberately: this is the integration lane.
+
+        Everything else in this module publishes into the frozen fixture from
+        tests/history_fixtures.py. This test and the rollover test below are
+        the exceptions, and they are exceptions on purpose: the property they
+        assert is about the shape the *shipped* artifact actually has -- which
+        points already carry a reconstructed curve, and which carry only an
+        archived prospective point. A synthetic history proves nothing about
+        that. Both read their dates out of the artifact rather than hardcoding
+        them, so a denser or longer artifact does not break them.
+        """
+
+        existing = json.loads(LIVE_HISTORY_ARTIFACT.read_text())
 
         # Dates that already carry a reconstructed point must never be
         # resimulated. A date carrying only an archived prospective point is
@@ -1572,9 +1595,9 @@ time.sleep(60)
         self.assertTrue(set(resimulated).isdisjoint(reconstructed_dates))
 
     def test_production_history_rollover_and_same_day_replacement(self) -> None:
-        existing = json.loads(
-            (REPOSITORY_ROOT / "files/election-simulator/history/coalition-timeseries.json").read_text()
-        )
+        # The second half of the live-artifact integration lane; see the note on
+        # test_existing_reconstructed_points_are_reused_without_rerunning.
+        existing = json.loads(LIVE_HISTORY_ARTIFACT.read_text())
         # Rollover is a property of the updater, not of whatever the committed
         # artifact happens to hold. A freshly generated history deliberately
         # carries no certified point -- when the archive already has a snapshot
@@ -1678,10 +1701,8 @@ time.sleep(60)
         )
 
     def test_coalition_quantities_use_same_joint_draws(self) -> None:
-        existing = json.loads(
-            (REPOSITORY_ROOT / "files/election-simulator/history/coalition-timeseries.json").read_text()
-        )
-        result = self._result("2026-08-25")
+        existing = make_history_fixture()
+        result = self._result(FORECAST_AS_OF)
         updated = update_history_with_production_result(
             existing,
             result,
@@ -1694,7 +1715,7 @@ time.sleep(60)
             model_commit=COMMIT,
             source_worktree_clean=True,
         )
-        current = next(point for point in updated["series"] if point["date"] == "2026-08-25")
+        current = next(point for point in updated["series"] if point["date"] == FORECAST_AS_OF)
         self.assertEqual(current["groups"], build_groups_from_matrices(result.vote_shares_matrix, result.seats_matrix))
         validate_history_contract(updated)
 
