@@ -14,7 +14,10 @@ class TestProspectiveBenchmarkWorkflow(unittest.TestCase):
         cls.text = WORKFLOW.read_text(encoding="utf-8")
 
     def test_schedule_dispatch_and_shared_production_lock(self) -> None:
-        self.assertIn('cron: "30 21 * 9 *"', self.text)
+        # The scheduled start is now an hour before the frozen cutoff; the
+        # cutoff itself is unchanged and the job waits for it. See
+        # tests/test_prospective_benchmark_2026_schedule.py for the rule.
+        self.assertIn('cron: "30 20 * 9 *"', self.text)
         self.assertIn("workflow_dispatch:", self.text)
         self.assertIn("Europe/Stockholm", self.text)
         self.assertIn("2026-09-(0[4-9]|1[0-2])", self.text)
@@ -22,7 +25,7 @@ class TestProspectiveBenchmarkWorkflow(unittest.TestCase):
         self.assertIn("cancel-in-progress: false", self.text)
         self.assertIn("actions: read", self.text)
         self.assertIn('gh api "repos/$REPOSITORY/actions/runs/$RUN_ID" --jq .created_at', self.text)
-        self.assertIn('date -d "$RUN_CREATED_AT"', self.text)
+        self.assertIn("resolve-slot --run-created-at", self.text)
 
     def test_dry_run_and_real_capture_modes_are_explicit(self) -> None:
         self.assertIn("- dry_run", self.text)

@@ -175,6 +175,50 @@ def _parse_utc_timestamp(value: Any, *, field: str) -> datetime:
     return parsed.astimezone(timezone.utc)
 
 
+class SlotNotEligibleError(ArchiveValidationError):
+    """Raised when an expected slot has no timing-eligible durable capture.
+
+    Distinct from an archive defect: the archive is intact and the capture is
+    legitimately recorded, but the slot did not produce evidence the protocol
+    can score. The operator has to see that difference -- a run that appended a
+    LATE_EXCLUDED record and exited green is how two campaign nights were lost
+    before anyone noticed.
+    """
+
+
+def slot_timing_outcome(
+    root: Path | str,
+    scheduled_date: str,
+) -> dict[str, Any]:
+    """Report the durable timing outcome recorded for one scheduled slot."""
+
+    index_path = Path(root) / "index.json"
+    index = _read_json(index_path)
+    rows = [
+        row
+        for row in index.get("captures", [])
+        if isinstance(row, Mapping) and str(row.get("scheduled_date")) == str(scheduled_date)
+    ]
+    if not rows:
+        return {
+            "scheduled_date": str(scheduled_date),
+            "outcome": "NO_DURABLE_CAPTURE",
+            "timing_status": None,
+            "timing_eligible": False,
+            "capture_id": None,
+        }
+    row = rows[-1]
+    eligible = row.get("timing_eligible") is True
+    return {
+        "scheduled_date": str(scheduled_date),
+        "outcome": "TIMING_ELIGIBLE" if eligible else "ARCHIVED_NOT_TIMING_ELIGIBLE",
+        "timing_status": row.get("timing_status"),
+        "timing_eligible": eligible,
+        "capture_id": row.get("capture_id"),
+        "capture_status": row.get("capture_status"),
+    }
+
+
 def _load_amendment_refs(root: Path, *, protocol_hash: str) -> list[dict[str, Any]]:
     """Validate immutable amendment artifacts and return canonical references."""
 

@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0",
+  "amendment_number": 5,
+  "amendment_id": "005-prewarmed-capture-start",
+  "created_at_utc": "2026-09-06T16:08:07Z",
+  "original_protocol_sha256": "16f920a88eb956b42f24307e4ada3b5b1133bffb11a6561e5a9e9ce75c5e3b23",
+  "reason": "The scheduled capture job was started at the frozen cutoff itself, 21:30:00Z, so checkout, dependency installation and the capture gates all ran after the cutoff had passed. The 2026-09-04 and 2026-09-05 runs therefore succeeded as workflow runs and archived LATE_EXCLUDED records, producing no timing-eligible evidence, and GitHub Actions scheduler delay can only push a job that begins at the cutoff further past it. This amendment moves the operational start of the job earlier so that all preparation completes while retrieval is still prohibited, and requires the job to wait for the unchanged cutoff before retrieving anything. It is created before election results are known and changes no scoring rule.",
+  "primary_scoring_effect": "NONE. The cutoff, the timing-eligibility rule, the late-capture limit, the fair CRPS primary metric and its availability condition, the party set, the final forecast date and the winner hierarchy are all unchanged. Only the wall-clock time at which the scheduled job begins its preparation changes.",
+  "supersedes": {
+    "artifact": "protocol.json",
+    "field": "schedule.scheduled_utc_time_during_window",
+    "superseded_text": "21:30:00Z",
+    "replacement_text": "The scheduled job starts at 20:30:00Z and blocks until 21:30:00Z before any retrieval.",
+    "scope": "Only the operational start time of the scheduled workflow. schedule.local_cutoff_time (23:30:00 Europe/Stockholm) and every other schedule field are unchanged.",
+    "note": "protocol.json, its SHA-256 and amendments 001 through 004 are not rewritten. This amendment records the superseding operational rule additively, in keeping with the append-only amendment chain."
+  },
+  "replacement_rule": {
+    "scope": "Operational scheduling of the capture workflow only",
+    "scheduled_job_start_utc": "20:30:00Z",
+    "scheduled_job_start_europe_stockholm": "22:30:00",
+    "frozen_cutoff_unchanged_utc": "21:30:00Z",
+    "prewarm_policy": "Checkout, dependency installation and the capture gate tests run before the cutoff. They are offline and must neither retrieve nor durably record any benchmark evidence.",
+    "cutoff_wait": "The job blocks until the frozen cutoff for its resolved slot before the capture command runs. run_capture independently refuses a durable capture before the cutoff, so the wait is an operational convenience and not the integrity boundary.",
+    "slot_attribution": "A scheduled run is attributed to the Stockholm date whose 22:30 local start it was created at or after, using GitHub's recorded run creation time rather than the runner clock. A run created before that local start has been delayed across local midnight and is attributed to the previous slot, which remains durably LATE_EXCLUDED under amendment 001.",
+    "operational_reporting": "A scheduled slot whose durable capture is not timing-eligible fails the workflow run. An intact archive containing no scorable evidence must not present as a successful capture."
+  },
+  "unchanged_rules": [
+    "The frozen cutoff is 23:30:00 Europe/Stockholm, 21:30:00Z during the window, for every scheduled date.",
+    "A durable capture before its scheduled cutoff remains prohibited and fails closed before any source request.",
+    "The amendment 001 late-capture limit is unchanged: a delayed scheduled run may create its LATE_EXCLUDED record only on the immediately following Europe/Stockholm calendar date.",
+    "LATE_EXCLUDED captures remain excluded from primary scoring, and the existing 2026-09-04 and 2026-09-05 records keep that label. This amendment does not make them timing-eligible and does not permit their recapture.",
+    "One durable slot per scheduled date, and the append-only archive and index chain, are unchanged.",
+    "The fair CRPS primary metric, the amendment 002 standard WIS formula, and the amendment 003 and 004 exact-draw rules are unchanged.",
+    "The eight-party set M, L, C, KD, S, V, MP, SD in the frozen order is unchanged.",
+    "The final forecast date 2026-09-12 and the winner hierarchy are unchanged."
+  ],
+  "immutable": true
+}
