@@ -9,7 +9,7 @@ from pathlib import Path
 import sys
 from typing import Any, Sequence
 
-from .archive import DEFAULT_ARCHIVE_ROOT, validate_archive
+from .archive import DEFAULT_ARCHIVE_ROOT, slot_timing_outcome, validate_archive
 from .capture import DEFAULT_ES_ARCHIVE, REPOSITORY_ROOT, run_capture
 from .report import DEFAULT_OUTPUT_DIR, write_report
 
@@ -51,6 +51,19 @@ def build_parser() -> argparse.ArgumentParser:
     validate = subparsers.add_parser("validate", help="validate the complete immutable archive")
     validate.add_argument("--archive-root", type=Path, default=DEFAULT_ARCHIVE_ROOT)
 
+    eligible = subparsers.add_parser(
+        "assert-eligible",
+        help="fail unless a scheduled slot recorded a timing-eligible durable capture",
+    )
+    eligible.add_argument("--scheduled-date", required=True, help="YYYY-MM-DD in Europe/Stockholm")
+    eligible.add_argument("--archive-root", type=Path, default=DEFAULT_ARCHIVE_ROOT)
+    eligible.add_argument("--summary-path", help="optional GitHub Actions summary file")
+    eligible.add_argument(
+        "--warn-only",
+        action="store_true",
+        help="report the outcome without failing (manual dispatch, not an expected slot)",
+    )
+
     score = subparsers.add_parser("score", help="score immutable captures against a final result manifest")
     score.add_argument("--results", type=Path, required=True, help="FINAL_CERTIFIED Valmyndigheten manifest")
     score.add_argument("--archive-root", type=Path, default=DEFAULT_ARCHIVE_ROOT)
@@ -71,6 +84,24 @@ def main(argv: Sequence[str] | None = None) -> int:
         _write_summary(args.summary_path, result)
         print(_json_text(result), end="")
         return 0
+    if args.command == "assert-eligible":
+        outcome = slot_timing_outcome(args.archive_root, args.scheduled_date)
+        _write_summary(args.summary_path, outcome)
+        print(_json_text(outcome), end="")
+        if outcome["timing_eligible"]:
+            return 0
+        # An append that is not timing-eligible is a real operational failure
+        # even though the archive is intact, so it is reported loudly and the
+        # two cases are named differently rather than collapsed into "failed".
+        message = (
+            f"Scheduled slot {outcome['scheduled_date']} produced no timing-eligible capture "
+            f"(outcome {outcome['outcome']}, timing status {outcome['timing_status']})."
+        )
+        print(f"::error::{message}", file=sys.stderr)
+        if args.summary_path:
+            with Path(args.summary_path).open("a", encoding="utf-8") as handle:
+                handle.write(f"\n> [!CAUTION]\n> {message}\n")
+        return 0 if args.warn_only else 4
     if args.command == "validate":
         result = validate_archive(args.archive_root)
         print(_json_text(result), end="")

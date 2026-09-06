@@ -2,9 +2,13 @@ name: Prospective benchmark 2026 capture
 
 on:
   schedule:
-    # 23:30 Europe/Stockholm during the frozen Sep 4–12 campaign window.
+    # 22:30 Europe/Stockholm during the frozen Sep 4–12 campaign window: one
+    # hour before the frozen 23:30 cutoff, so checkout, dependency install and
+    # the capture gates finish while retrieval is still prohibited. The job
+    # then waits for the cutoff, which is unchanged. Starting *at* the cutoff
+    # is why 2026-09-04 and 2026-09-05 archived LATE_EXCLUDED records.
     # The guard below restricts the otherwise yearless GitHub cron expression.
-    - cron: "30 21 * 9 *"
+    - cron: "30 20 * 9 *"
   workflow_dispatch:
     inputs:
       mode:
@@ -31,10 +35,13 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Resolve the intended slot without checking out or mutating the repository.
-  # A scheduled GitHub event has no year/date field, so the explicit Stockholm
-  # wall clock is used.  Before the local cutoff, a delayed run belongs to the
-  # previous Stockholm date; after the cutoff, the current slot is selected.
+  # Resolve the intended slot without mutating the repository. A scheduled
+  # GitHub event has no year/date field, so the slot is derived from GitHub's
+  # recorded run creation time by the same frozen rule the capture job uses:
+  # scripts/prospective_benchmark_2026/time_rules.py. That module is stdlib
+  # only and is invoked by path, so this job needs no dependency install, and
+  # the attribution rule has exactly one tested implementation instead of a
+  # shell copy that has to be kept in step with it.
   schedule_guard:
     permissions:
       actions: read
@@ -46,6 +53,18 @@ jobs:
       scheduled_date: ${{ steps.resolve.outputs.scheduled_date }}
       capture_id: ${{ steps.resolve.outputs.capture_id }}
     steps:
+      - name: Check out the frozen scheduling rules
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
       - name: Resolve intended scheduled slot and guard the frozen window
         id: resolve
         shell: bash
@@ -66,16 +85,15 @@ jobs:
               echo "Cannot establish the scheduled run creation time." >&2
               exit 2
             fi
-            STOCKHOLM_DATE="$(TZ=Europe/Stockholm date -d "$RUN_CREATED_AT" +%F)"
-            STOCKHOLM_TIME="$(TZ=Europe/Stockholm date -d "$RUN_CREATED_AT" +%H:%M)"
-            # A run created after midnight but before the next cutoff belongs
-            # to the prior slot and will be durably LATE_EXCLUDED. A run
-            # created at the next cutoff belongs to that date, avoiding
-            # retry/queue ambiguity between consecutive slots.
-            if [[ "$STOCKHOLM_TIME" < "23:30" ]]; then
-              SCHEDULED_DATE="$(TZ=Europe/Stockholm date -d "$RUN_CREATED_AT - 1 day" +%F)"
-            else
-              SCHEDULED_DATE="$STOCKHOLM_DATE"
+            # A run created at or after the scheduled start belongs to that
+            # Stockholm date even when the scheduler delays it past the cutoff.
+            # A run created before the scheduled start has been delayed across
+            # local midnight and belongs to the previous slot, which will be
+            # durably LATE_EXCLUDED.
+            if ! SCHEDULED_DATE="$(python scripts/prospective_benchmark_2026/time_rules.py \
+              resolve-slot --run-created-at "$RUN_CREATED_AT")"; then
+              echo "Cannot resolve the intended Stockholm slot from $RUN_CREATED_AT." >&2
+              exit 2
             fi
             MODE="capture"
           else
@@ -155,6 +173,7 @@ jobs:
             tests.test_prospective_benchmark_2026_botten_ada_capture \
             tests.test_prospective_benchmark_2026_adversarial \
             tests.test_exact_draw_sidecar \
+            tests.test_prospective_benchmark_2026_schedule \
             tests.test_prospective_benchmark_2026_workflow
 
       - name: Execute non-durable benchmark dry run
@@ -179,7 +198,10 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    # The prewarmed start means this job idles until the frozen cutoff: up to an
+    # hour of deliberate waiting, plus the capture itself. The old 45-minute
+    # budget assumed a job that began at the cutoff.
+    timeout-minutes: 120
     steps:
       - name: Check out the simulator with complete history
         uses: actions/checkout@v4
@@ -216,7 +238,21 @@ jobs:
             tests.test_prospective_benchmark_2026_botten_ada_capture \
             tests.test_prospective_benchmark_2026_adversarial \
             tests.test_exact_draw_sidecar \
+            tests.test_prospective_benchmark_2026_schedule \
             tests.test_prospective_benchmark_2026_workflow
+
+      # Everything above this point is prewarming: it must not retrieve or
+      # record any benchmark evidence. The real capture starts only once the
+      # frozen cutoff has arrived, and run_capture independently refuses a
+      # durable capture before it.
+      - name: Wait for the frozen 23:30 Europe/Stockholm cutoff
+        shell: bash
+        env:
+          SCHEDULED_DATE: ${{ needs.schedule_guard.outputs.scheduled_date }}
+        run: |
+          WAITED="$(python scripts/prospective_benchmark_2026/time_rules.py \
+            wait-for-cutoff --scheduled-date "$SCHEDULED_DATE")"
+          echo "- Cutoff wait: $WAITED" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Capture official contemporaneous evidence
         shell: bash
@@ -268,3 +304,19 @@ jobs:
             echo "- Archive validation: PASS"
             echo "- Commit: $(git rev-parse HEAD)"
           } >> "$GITHUB_STEP_SUMMARY"
+
+      # An append that is not timing-eligible leaves the archive intact and the
+      # benchmark slot empty. Those two outcomes must not both look green: a
+      # scheduled slot without eligible evidence fails the run.
+      - name: Require a timing-eligible capture for the scheduled slot
+        if: always()
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          SCHEDULED_DATE: ${{ needs.schedule_guard.outputs.scheduled_date }}
+        run: |
+          ARGS=(--scheduled-date "$SCHEDULED_DATE" --summary-path "$GITHUB_STEP_SUMMARY")
+          if [[ "$EVENT_NAME" != "schedule" ]]; then
+            ARGS+=(--warn-only)
+          fi
+          uv run python -m scripts.prospective_benchmark_2026 assert-eligible "${ARGS[@]}"
