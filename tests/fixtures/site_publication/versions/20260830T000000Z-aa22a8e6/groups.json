@@ -1,0 +1,9245 @@
+{
+  "schema_version": "1.4",
+  "majority_threshold": 175,
+  "groups": {
+    "tido": {
+      "parties": [
+        "M",
+        "SD",
+        "KD",
+        "L"
+      ],
+      "majority_threshold": 175,
+      "mean_seats": 157.375,
+      "median_seats": 157,
+      "p05_seats": 151,
+      "p10_seats": 153,
+      "p25_seats": 155,
+      "p75_seats": 160,
+      "p90_seats": 161,
+      "p95_seats": 162,
+      "prob_majority": 0.0,
+      "seat_histogram": {
+        "150": 0.125,
+        "155": 0.125,
+        "156": 0.125,
+        "157": 0.25,
+        "160": 0.125,
+        "161": 0.125,
+        "163": 0.125
+      }
+    },
+    "red_green_center": {
+      "parties": [
+        "S",
+        "V",
+        "MP",
+        "C"
+      ],
+      "majority_threshold": 175,
+      "mean_seats": 191.625,
+      "median_seats": 192,
+      "p05_seats": 186,
+      "p10_seats": 187,
+      "p25_seats": 188,
+      "p75_seats": 193,
+      "p90_seats": 195,
+      "p95_seats": 197,
+      "prob_majority": 1.0,
+      "seat_histogram": {
+        "186": 0.125,
+        "188": 0.125,
+        "189": 0.125,
+        "192": 0.25,
+        "193": 0.125,
+        "194": 0.125,
+        "199": 0.125
+      }
+    }
+  },
+  "coalition_builder": {
+    "party_order": [
+      "M",
+      "L",
+      "C",
+      "KD",
+      "S",
+      "V",
+      "MP",
+      "SD"
+    ],
+    "encoding": "bitmask",
+    "majority_threshold": 175,
+    "coalitions": {
+      "0": {
+        "mask": 0,
+        "parties": [],
+        "mean_seats": 0.0,
+        "median_seats": 0,
+        "p05_seats": 0,
+        "p10_seats": 0,
+        "p25_seats": 0,
+        "p75_seats": 0,
+        "p90_seats": 0,
+        "p95_seats": 0,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 0,
+          "counts": [
+            8
+          ]
+        }
+      },
+      "1": {
+        "mask": 1,
+        "parties": [
+          "M"
+        ],
+        "mean_seats": 63.375,
+        "median_seats": 62,
+        "p05_seats": 60,
+        "p10_seats": 60,
+        "p25_seats": 60,
+        "p75_seats": 66,
+        "p90_seats": 67,
+        "p95_seats": 68,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 60,
+          "counts": [
+            3,
+            0,
+            2,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "2": {
+        "mask": 2,
+        "parties": [
+          "L"
+        ],
+        "mean_seats": 0.0,
+        "median_seats": 0,
+        "p05_seats": 0,
+        "p10_seats": 0,
+        "p25_seats": 0,
+        "p75_seats": 0,
+        "p90_seats": 0,
+        "p95_seats": 0,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 0,
+          "counts": [
+            8
+          ]
+        }
+      },
+      "3": {
+        "mask": 3,
+        "parties": [
+          "M",
+          "L"
+        ],
+        "mean_seats": 63.375,
+        "median_seats": 62,
+        "p05_seats": 60,
+        "p10_seats": 60,
+        "p25_seats": 60,
+        "p75_seats": 66,
+        "p90_seats": 67,
+        "p95_seats": 68,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 60,
+          "counts": [
+            3,
+            0,
+            2,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "4": {
+        "mask": 4,
+        "parties": [
+          "C"
+        ],
+        "mean_seats": 28.875,
+        "median_seats": 29,
+        "p05_seats": 25,
+        "p10_seats": 25,
+        "p25_seats": 28,
+        "p75_seats": 30,
+        "p90_seats": 30,
+        "p95_seats": 31,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 25,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            2,
+            3,
+            0,
+            1
+          ]
+        }
+      },
+      "5": {
+        "mask": 5,
+        "parties": [
+          "M",
+          "C"
+        ],
+        "mean_seats": 92.25,
+        "median_seats": 91,
+        "p05_seats": 87,
+        "p10_seats": 88,
+        "p25_seats": 89,
+        "p75_seats": 93,
+        "p90_seats": 99,
+        "p95_seats": 99,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 87,
+          "counts": [
+            1,
+            0,
+            1,
+            2,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2
+          ]
+        }
+      },
+      "6": {
+        "mask": 6,
+        "parties": [
+          "L",
+          "C"
+        ],
+        "mean_seats": 28.875,
+        "median_seats": 29,
+        "p05_seats": 25,
+        "p10_seats": 25,
+        "p25_seats": 28,
+        "p75_seats": 30,
+        "p90_seats": 30,
+        "p95_seats": 31,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 25,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            2,
+            3,
+            0,
+            1
+          ]
+        }
+      },
+      "7": {
+        "mask": 7,
+        "parties": [
+          "M",
+          "L",
+          "C"
+        ],
+        "mean_seats": 92.25,
+        "median_seats": 91,
+        "p05_seats": 87,
+        "p10_seats": 88,
+        "p25_seats": 89,
+        "p75_seats": 93,
+        "p90_seats": 99,
+        "p95_seats": 99,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 87,
+          "counts": [
+            1,
+            0,
+            1,
+            2,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2
+          ]
+        }
+      },
+      "8": {
+        "mask": 8,
+        "parties": [
+          "KD"
+        ],
+        "mean_seats": 23.0,
+        "median_seats": 22,
+        "p05_seats": 19,
+        "p10_seats": 19,
+        "p25_seats": 20,
+        "p75_seats": 24,
+        "p90_seats": 27,
+        "p95_seats": 28,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 19,
+          "counts": [
+            1,
+            1,
+            1,
+            1,
+            2,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "9": {
+        "mask": 9,
+        "parties": [
+          "M",
+          "KD"
+        ],
+        "mean_seats": 86.375,
+        "median_seats": 87,
+        "p05_seats": 80,
+        "p10_seats": 80,
+        "p25_seats": 84,
+        "p75_seats": 89,
+        "p90_seats": 90,
+        "p95_seats": 91,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 80,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            2,
+            0,
+            2,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "10": {
+        "mask": 10,
+        "parties": [
+          "L",
+          "KD"
+        ],
+        "mean_seats": 23.0,
+        "median_seats": 22,
+        "p05_seats": 19,
+        "p10_seats": 19,
+        "p25_seats": 20,
+        "p75_seats": 24,
+        "p90_seats": 27,
+        "p95_seats": 28,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 19,
+          "counts": [
+            1,
+            1,
+            1,
+            1,
+            2,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "11": {
+        "mask": 11,
+        "parties": [
+          "M",
+          "L",
+          "KD"
+        ],
+        "mean_seats": 86.375,
+        "median_seats": 87,
+        "p05_seats": 80,
+        "p10_seats": 80,
+        "p25_seats": 84,
+        "p75_seats": 89,
+        "p90_seats": 90,
+        "p95_seats": 91,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 80,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            2,
+            0,
+            2,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "12": {
+        "mask": 12,
+        "parties": [
+          "C",
+          "KD"
+        ],
+        "mean_seats": 51.875,
+        "median_seats": 51,
+        "p05_seats": 47,
+        "p10_seats": 47,
+        "p25_seats": 48,
+        "p75_seats": 54,
+        "p90_seats": 57,
+        "p95_seats": 57,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 47,
+          "counts": [
+            1,
+            1,
+            1,
+            1,
+            0,
+            1,
+            0,
+            1,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "13": {
+        "mask": 13,
+        "parties": [
+          "M",
+          "C",
+          "KD"
+        ],
+        "mean_seats": 115.25,
+        "median_seats": 115,
+        "p05_seats": 110,
+        "p10_seats": 110,
+        "p25_seats": 110,
+        "p75_seats": 118,
+        "p90_seats": 121,
+        "p95_seats": 121,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 110,
+          "counts": [
+            2,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "14": {
+        "mask": 14,
+        "parties": [
+          "L",
+          "C",
+          "KD"
+        ],
+        "mean_seats": 51.875,
+        "median_seats": 51,
+        "p05_seats": 47,
+        "p10_seats": 47,
+        "p25_seats": 48,
+        "p75_seats": 54,
+        "p90_seats": 57,
+        "p95_seats": 57,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 47,
+          "counts": [
+            1,
+            1,
+            1,
+            1,
+            0,
+            1,
+            0,
+            1,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "15": {
+        "mask": 15,
+        "parties": [
+          "M",
+          "L",
+          "C",
+          "KD"
+        ],
+        "mean_seats": 115.25,
+        "median_seats": 115,
+        "p05_seats": 110,
+        "p10_seats": 110,
+        "p25_seats": 110,
+        "p75_seats": 118,
+        "p90_seats": 121,
+        "p95_seats": 121,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 110,
+          "counts": [
+            2,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "16": {
+        "mask": 16,
+        "parties": [
+          "S"
+        ],
+        "mean_seats": 106.0,
+        "median_seats": 105,
+        "p05_seats": 102,
+        "p10_seats": 103,
+        "p25_seats": 104,
+        "p75_seats": 107,
+        "p90_seats": 109,
+        "p95_seats": 110,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 101,
+          "counts": [
+            1,
+            0,
+            0,
+            2,
+            1,
+            1,
+            1,
+            0,
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "17": {
+        "mask": 17,
+        "parties": [
+          "M",
+          "S"
+        ],
+        "mean_seats": 169.375,
+        "median_seats": 168,
+        "p05_seats": 165,
+        "p10_seats": 165,
+        "p25_seats": 167,
+        "p75_seats": 172,
+        "p90_seats": 173,
+        "p95_seats": 173,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 165,
+          "counts": [
+            1,
+            1,
+            0,
+            2,
+            1,
+            0,
+            0,
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "18": {
+        "mask": 18,
+        "parties": [
+          "L",
+          "S"
+        ],
+        "mean_seats": 106.0,
+        "median_seats": 105,
+        "p05_seats": 102,
+        "p10_seats": 103,
+        "p25_seats": 104,
+        "p75_seats": 107,
+        "p90_seats": 109,
+        "p95_seats": 110,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 101,
+          "counts": [
+            1,
+            0,
+            0,
+            2,
+            1,
+            1,
+            1,
+            0,
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "19": {
+        "mask": 19,
+        "parties": [
+          "M",
+          "L",
+          "S"
+        ],
+        "mean_seats": 169.375,
+        "median_seats": 168,
+        "p05_seats": 165,
+        "p10_seats": 165,
+        "p25_seats": 167,
+        "p75_seats": 172,
+        "p90_seats": 173,
+        "p95_seats": 173,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 165,
+          "counts": [
+            1,
+            1,
+            0,
+            2,
+            1,
+            0,
+            0,
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "20": {
+        "mask": 20,
+        "parties": [
+          "C",
+          "S"
+        ],
+        "mean_seats": 134.875,
+        "median_seats": 133,
+        "p05_seats": 131,
+        "p10_seats": 132,
+        "p25_seats": 133,
+        "p75_seats": 135,
+        "p90_seats": 139,
+        "p95_seats": 140,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 131,
+          "counts": [
+            1,
+            0,
+            3,
+            1,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "21": {
+        "mask": 21,
+        "parties": [
+          "M",
+          "C",
+          "S"
+        ],
+        "mean_seats": 198.25,
+        "median_seats": 198,
+        "p05_seats": 193,
+        "p10_seats": 194,
+        "p25_seats": 195,
+        "p75_seats": 200,
+        "p90_seats": 202,
+        "p95_seats": 202,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 193,
+          "counts": [
+            1,
+            0,
+            1,
+            1,
+            0,
+            1,
+            1,
+            1,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "22": {
+        "mask": 22,
+        "parties": [
+          "L",
+          "C",
+          "S"
+        ],
+        "mean_seats": 134.875,
+        "median_seats": 133,
+        "p05_seats": 131,
+        "p10_seats": 132,
+        "p25_seats": 133,
+        "p75_seats": 135,
+        "p90_seats": 139,
+        "p95_seats": 140,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 131,
+          "counts": [
+            1,
+            0,
+            3,
+            1,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "23": {
+        "mask": 23,
+        "parties": [
+          "M",
+          "L",
+          "C",
+          "S"
+        ],
+        "mean_seats": 198.25,
+        "median_seats": 198,
+        "p05_seats": 193,
+        "p10_seats": 194,
+        "p25_seats": 195,
+        "p75_seats": 200,
+        "p90_seats": 202,
+        "p95_seats": 202,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 193,
+          "counts": [
+            1,
+            0,
+            1,
+            1,
+            0,
+            1,
+            1,
+            1,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "24": {
+        "mask": 24,
+        "parties": [
+          "KD",
+          "S"
+        ],
+        "mean_seats": 129.0,
+        "median_seats": 127,
+        "p05_seats": 123,
+        "p10_seats": 123,
+        "p25_seats": 124,
+        "p75_seats": 131,
+        "p90_seats": 138,
+        "p95_seats": 138,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 123,
+          "counts": [
+            2,
+            0,
+            1,
+            0,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "25": {
+        "mask": 25,
+        "parties": [
+          "M",
+          "KD",
+          "S"
+        ],
+        "mean_seats": 192.375,
+        "median_seats": 192,
+        "p05_seats": 185,
+        "p10_seats": 185,
+        "p25_seats": 188,
+        "p75_seats": 197,
+        "p90_seats": 198,
+        "p95_seats": 198,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 185,
+          "counts": [
+            2,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "26": {
+        "mask": 26,
+        "parties": [
+          "L",
+          "KD",
+          "S"
+        ],
+        "mean_seats": 129.0,
+        "median_seats": 127,
+        "p05_seats": 123,
+        "p10_seats": 123,
+        "p25_seats": 124,
+        "p75_seats": 131,
+        "p90_seats": 138,
+        "p95_seats": 138,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 123,
+          "counts": [
+            2,
+            0,
+            1,
+            0,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "27": {
+        "mask": 27,
+        "parties": [
+          "M",
+          "L",
+          "KD",
+          "S"
+        ],
+        "mean_seats": 192.375,
+        "median_seats": 192,
+        "p05_seats": 185,
+        "p10_seats": 185,
+        "p25_seats": 188,
+        "p75_seats": 197,
+        "p90_seats": 198,
+        "p95_seats": 198,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 185,
+          "counts": [
+            2,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "28": {
+        "mask": 28,
+        "parties": [
+          "C",
+          "KD",
+          "S"
+        ],
+        "mean_seats": 157.875,
+        "median_seats": 155,
+        "p05_seats": 153,
+        "p10_seats": 153,
+        "p25_seats": 154,
+        "p75_seats": 158,
+        "p90_seats": 167,
+        "p95_seats": 168,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 153,
+          "counts": [
+            1,
+            2,
+            2,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "29": {
+        "mask": 29,
+        "parties": [
+          "M",
+          "C",
+          "KD",
+          "S"
+        ],
+        "mean_seats": 221.25,
+        "median_seats": 221,
+        "p05_seats": 215,
+        "p10_seats": 215,
+        "p25_seats": 215,
+        "p75_seats": 226,
+        "p90_seats": 227,
+        "p95_seats": 228,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 215,
+          "counts": [
+            2,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "30": {
+        "mask": 30,
+        "parties": [
+          "L",
+          "C",
+          "KD",
+          "S"
+        ],
+        "mean_seats": 157.875,
+        "median_seats": 155,
+        "p05_seats": 153,
+        "p10_seats": 153,
+        "p25_seats": 154,
+        "p75_seats": 158,
+        "p90_seats": 167,
+        "p95_seats": 168,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 153,
+          "counts": [
+            1,
+            2,
+            2,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "31": {
+        "mask": 31,
+        "parties": [
+          "M",
+          "L",
+          "C",
+          "KD",
+          "S"
+        ],
+        "mean_seats": 221.25,
+        "median_seats": 221,
+        "p05_seats": 215,
+        "p10_seats": 215,
+        "p25_seats": 215,
+        "p75_seats": 226,
+        "p90_seats": 227,
+        "p95_seats": 228,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 215,
+          "counts": [
+            2,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "32": {
+        "mask": 32,
+        "parties": [
+          "V"
+        ],
+        "mean_seats": 29.625,
+        "median_seats": 29,
+        "p05_seats": 27,
+        "p10_seats": 27,
+        "p25_seats": 28,
+        "p75_seats": 31,
+        "p90_seats": 31,
+        "p95_seats": 31,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 27,
+          "counts": [
+            1,
+            1,
+            2,
+            1,
+            2,
+            1
+          ]
+        }
+      },
+      "33": {
+        "mask": 33,
+        "parties": [
+          "M",
+          "V"
+        ],
+        "mean_seats": 93.0,
+        "median_seats": 91,
+        "p05_seats": 87,
+        "p10_seats": 87,
+        "p25_seats": 90,
+        "p75_seats": 98,
+        "p90_seats": 98,
+        "p95_seats": 99,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 87,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            3,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            0,
+            1
+          ]
+        }
+      },
+      "34": {
+        "mask": 34,
+        "parties": [
+          "L",
+          "V"
+        ],
+        "mean_seats": 29.625,
+        "median_seats": 29,
+        "p05_seats": 27,
+        "p10_seats": 27,
+        "p25_seats": 28,
+        "p75_seats": 31,
+        "p90_seats": 31,
+        "p95_seats": 31,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 27,
+          "counts": [
+            1,
+            1,
+            2,
+            1,
+            2,
+            1
+          ]
+        }
+      },
+      "35": {
+        "mask": 35,
+        "parties": [
+          "M",
+          "L",
+          "V"
+        ],
+        "mean_seats": 93.0,
+        "median_seats": 91,
+        "p05_seats": 87,
+        "p10_seats": 87,
+        "p25_seats": 90,
+        "p75_seats": 98,
+        "p90_seats": 98,
+        "p95_seats": 99,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 87,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            3,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            0,
+            1
+          ]
+        }
+      },
+      "36": {
+        "mask": 36,
+        "parties": [
+          "C",
+          "V"
+        ],
+        "mean_seats": 58.5,
+        "median_seats": 58,
+        "p05_seats": 54,
+        "p10_seats": 55,
+        "p25_seats": 57,
+        "p75_seats": 59,
+        "p90_seats": 61,
+        "p95_seats": 62,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 54,
+          "counts": [
+            1,
+            0,
+            1,
+            0,
+            2,
+            2,
+            0,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "37": {
+        "mask": 37,
+        "parties": [
+          "M",
+          "C",
+          "V"
+        ],
+        "mean_seats": 121.875,
+        "median_seats": 121,
+        "p05_seats": 116,
+        "p10_seats": 116,
+        "p25_seats": 117,
+        "p75_seats": 125,
+        "p90_seats": 129,
+        "p95_seats": 129,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 116,
+          "counts": [
+            2,
+            0,
+            1,
+            0,
+            0,
+            2,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "38": {
+        "mask": 38,
+        "parties": [
+          "L",
+          "C",
+          "V"
+        ],
+        "mean_seats": 58.5,
+        "median_seats": 58,
+        "p05_seats": 54,
+        "p10_seats": 55,
+        "p25_seats": 57,
+        "p75_seats": 59,
+        "p90_seats": 61,
+        "p95_seats": 62,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 54,
+          "counts": [
+            1,
+            0,
+            1,
+            0,
+            2,
+            2,
+            0,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "39": {
+        "mask": 39,
+        "parties": [
+          "M",
+          "L",
+          "C",
+          "V"
+        ],
+        "mean_seats": 121.875,
+        "median_seats": 121,
+        "p05_seats": 116,
+        "p10_seats": 116,
+        "p25_seats": 117,
+        "p75_seats": 125,
+        "p90_seats": 129,
+        "p95_seats": 129,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 116,
+          "counts": [
+            2,
+            0,
+            1,
+            0,
+            0,
+            2,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "40": {
+        "mask": 40,
+        "parties": [
+          "KD",
+          "V"
+        ],
+        "mean_seats": 52.625,
+        "median_seats": 53,
+        "p05_seats": 49,
+        "p10_seats": 50,
+        "p25_seats": 51,
+        "p75_seats": 53,
+        "p90_seats": 55,
+        "p95_seats": 55,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 48,
+          "counts": [
+            1,
+            0,
+            0,
+            1,
+            1,
+            3,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "41": {
+        "mask": 41,
+        "parties": [
+          "M",
+          "KD",
+          "V"
+        ],
+        "mean_seats": 116.0,
+        "median_seats": 115,
+        "p05_seats": 110,
+        "p10_seats": 110,
+        "p25_seats": 113,
+        "p75_seats": 119,
+        "p90_seats": 120,
+        "p95_seats": 121,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 110,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            1,
+            1,
+            1,
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "42": {
+        "mask": 42,
+        "parties": [
+          "L",
+          "KD",
+          "V"
+        ],
+        "mean_seats": 52.625,
+        "median_seats": 53,
+        "p05_seats": 49,
+        "p10_seats": 50,
+        "p25_seats": 51,
+        "p75_seats": 53,
+        "p90_seats": 55,
+        "p95_seats": 55,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 48,
+          "counts": [
+            1,
+            0,
+            0,
+            1,
+            1,
+            3,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "43": {
+        "mask": 43,
+        "parties": [
+          "M",
+          "L",
+          "KD",
+          "V"
+        ],
+        "mean_seats": 116.0,
+        "median_seats": 115,
+        "p05_seats": 110,
+        "p10_seats": 110,
+        "p25_seats": 113,
+        "p75_seats": 119,
+        "p90_seats": 120,
+        "p95_seats": 121,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 110,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            1,
+            1,
+            1,
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "44": {
+        "mask": 44,
+        "parties": [
+          "C",
+          "KD",
+          "V"
+        ],
+        "mean_seats": 81.5,
+        "median_seats": 81,
+        "p05_seats": 77,
+        "p10_seats": 77,
+        "p25_seats": 78,
+        "p75_seats": 85,
+        "p90_seats": 85,
+        "p95_seats": 85,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 77,
+          "counts": [
+            1,
+            1,
+            1,
+            0,
+            1,
+            1,
+            0,
+            0,
+            3
+          ]
+        }
+      },
+      "45": {
+        "mask": 45,
+        "parties": [
+          "M",
+          "C",
+          "KD",
+          "V"
+        ],
+        "mean_seats": 144.875,
+        "median_seats": 145,
+        "p05_seats": 139,
+        "p10_seats": 139,
+        "p25_seats": 140,
+        "p75_seats": 146,
+        "p90_seats": 152,
+        "p95_seats": 152,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 139,
+          "counts": [
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            3,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2
+          ]
+        }
+      },
+      "46": {
+        "mask": 46,
+        "parties": [
+          "L",
+          "C",
+          "KD",
+          "V"
+        ],
+        "mean_seats": 81.5,
+        "median_seats": 81,
+        "p05_seats": 77,
+        "p10_seats": 77,
+        "p25_seats": 78,
+        "p75_seats": 85,
+        "p90_seats": 85,
+        "p95_seats": 85,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 77,
+          "counts": [
+            1,
+            1,
+            1,
+            0,
+            1,
+            1,
+            0,
+            0,
+            3
+          ]
+        }
+      },
+      "47": {
+        "mask": 47,
+        "parties": [
+          "M",
+          "L",
+          "C",
+          "KD",
+          "V"
+        ],
+        "mean_seats": 144.875,
+        "median_seats": 145,
+        "p05_seats": 139,
+        "p10_seats": 139,
+        "p25_seats": 140,
+        "p75_seats": 146,
+        "p90_seats": 152,
+        "p95_seats": 152,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 139,
+          "counts": [
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            3,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2
+          ]
+        }
+      },
+      "48": {
+        "mask": 48,
+        "parties": [
+          "S",
+          "V"
+        ],
+        "mean_seats": 135.625,
+        "median_seats": 135,
+        "p05_seats": 132,
+        "p10_seats": 132,
+        "p25_seats": 133,
+        "p75_seats": 136,
+        "p90_seats": 139,
+        "p95_seats": 139,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 132,
+          "counts": [
+            1,
+            1,
+            1,
+            1,
+            2,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "49": {
+        "mask": 49,
+        "parties": [
+          "M",
+          "S",
+          "V"
+        ],
+        "mean_seats": 199.0,
+        "median_seats": 198,
+        "p05_seats": 195,
+        "p10_seats": 195,
+        "p25_seats": 196,
+        "p75_seats": 201,
+        "p90_seats": 204,
+        "p95_seats": 204,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 195,
+          "counts": [
+            1,
+            2,
+            1,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "50": {
+        "mask": 50,
+        "parties": [
+          "L",
+          "S",
+          "V"
+        ],
+        "mean_seats": 135.625,
+        "median_seats": 135,
+        "p05_seats": 132,
+        "p10_seats": 132,
+        "p25_seats": 133,
+        "p75_seats": 136,
+        "p90_seats": 139,
+        "p95_seats": 139,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 132,
+          "counts": [
+            1,
+            1,
+            1,
+            1,
+            2,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "51": {
+        "mask": 51,
+        "parties": [
+          "M",
+          "L",
+          "S",
+          "V"
+        ],
+        "mean_seats": 199.0,
+        "median_seats": 198,
+        "p05_seats": 195,
+        "p10_seats": 195,
+        "p25_seats": 196,
+        "p75_seats": 201,
+        "p90_seats": 204,
+        "p95_seats": 204,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 195,
+          "counts": [
+            1,
+            2,
+            1,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "52": {
+        "mask": 52,
+        "parties": [
+          "C",
+          "S",
+          "V"
+        ],
+        "mean_seats": 164.5,
+        "median_seats": 164,
+        "p05_seats": 161,
+        "p10_seats": 162,
+        "p25_seats": 163,
+        "p75_seats": 165,
+        "p90_seats": 167,
+        "p95_seats": 168,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 160,
+          "counts": [
+            1,
+            0,
+            0,
+            2,
+            1,
+            2,
+            1,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "53": {
+        "mask": 53,
+        "parties": [
+          "M",
+          "C",
+          "S",
+          "V"
+        ],
+        "mean_seats": 227.875,
+        "median_seats": 228,
+        "p05_seats": 223,
+        "p10_seats": 224,
+        "p25_seats": 225,
+        "p75_seats": 231,
+        "p90_seats": 231,
+        "p95_seats": 232,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 222,
+          "counts": [
+            1,
+            0,
+            0,
+            2,
+            1,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            1
+          ]
+        }
+      },
+      "54": {
+        "mask": 54,
+        "parties": [
+          "L",
+          "C",
+          "S",
+          "V"
+        ],
+        "mean_seats": 164.5,
+        "median_seats": 164,
+        "p05_seats": 161,
+        "p10_seats": 162,
+        "p25_seats": 163,
+        "p75_seats": 165,
+        "p90_seats": 167,
+        "p95_seats": 168,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 160,
+          "counts": [
+            1,
+            0,
+            0,
+            2,
+            1,
+            2,
+            1,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "55": {
+        "mask": 55,
+        "parties": [
+          "M",
+          "L",
+          "C",
+          "S",
+          "V"
+        ],
+        "mean_seats": 227.875,
+        "median_seats": 228,
+        "p05_seats": 223,
+        "p10_seats": 224,
+        "p25_seats": 225,
+        "p75_seats": 231,
+        "p90_seats": 231,
+        "p95_seats": 232,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 222,
+          "counts": [
+            1,
+            0,
+            0,
+            2,
+            1,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            1
+          ]
+        }
+      },
+      "56": {
+        "mask": 56,
+        "parties": [
+          "KD",
+          "S",
+          "V"
+        ],
+        "mean_seats": 158.625,
+        "median_seats": 157,
+        "p05_seats": 152,
+        "p10_seats": 153,
+        "p25_seats": 155,
+        "p75_seats": 161,
+        "p90_seats": 165,
+        "p95_seats": 166,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 152,
+          "counts": [
+            1,
+            0,
+            1,
+            0,
+            1,
+            1,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "57": {
+        "mask": 57,
+        "parties": [
+          "M",
+          "KD",
+          "S",
+          "V"
+        ],
+        "mean_seats": 222.0,
+        "median_seats": 223,
+        "p05_seats": 214,
+        "p10_seats": 215,
+        "p25_seats": 219,
+        "p75_seats": 226,
+        "p90_seats": 227,
+        "p95_seats": 227,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 214,
+          "counts": [
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0,
+            1,
+            1,
+            2
+          ]
+        }
+      },
+      "58": {
+        "mask": 58,
+        "parties": [
+          "L",
+          "KD",
+          "S",
+          "V"
+        ],
+        "mean_seats": 158.625,
+        "median_seats": 157,
+        "p05_seats": 152,
+        "p10_seats": 153,
+        "p25_seats": 155,
+        "p75_seats": 161,
+        "p90_seats": 165,
+        "p95_seats": 166,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 152,
+          "counts": [
+            1,
+            0,
+            1,
+            0,
+            1,
+            1,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "59": {
+        "mask": 59,
+        "parties": [
+          "M",
+          "L",
+          "KD",
+          "S",
+          "V"
+        ],
+        "mean_seats": 222.0,
+        "median_seats": 223,
+        "p05_seats": 214,
+        "p10_seats": 215,
+        "p25_seats": 219,
+        "p75_seats": 226,
+        "p90_seats": 227,
+        "p95_seats": 227,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 214,
+          "counts": [
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0,
+            1,
+            1,
+            2
+          ]
+        }
+      },
+      "60": {
+        "mask": 60,
+        "parties": [
+          "C",
+          "KD",
+          "S",
+          "V"
+        ],
+        "mean_seats": 187.5,
+        "median_seats": 186,
+        "p05_seats": 182,
+        "p10_seats": 182,
+        "p25_seats": 185,
+        "p75_seats": 188,
+        "p90_seats": 194,
+        "p95_seats": 195,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 182,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "61": {
+        "mask": 61,
+        "parties": [
+          "M",
+          "C",
+          "KD",
+          "S",
+          "V"
+        ],
+        "mean_seats": 250.875,
+        "median_seats": 252,
+        "p05_seats": 244,
+        "p10_seats": 244,
+        "p25_seats": 245,
+        "p75_seats": 254,
+        "p90_seats": 256,
+        "p95_seats": 256,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 244,
+          "counts": [
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "62": {
+        "mask": 62,
+        "parties": [
+          "L",
+          "C",
+          "KD",
+          "S",
+          "V"
+        ],
+        "mean_seats": 187.5,
+        "median_seats": 186,
+        "p05_seats": 182,
+        "p10_seats": 182,
+        "p25_seats": 185,
+        "p75_seats": 188,
+        "p90_seats": 194,
+        "p95_seats": 195,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 182,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "63": {
+        "mask": 63,
+        "parties": [
+          "M",
+          "L",
+          "C",
+          "KD",
+          "S",
+          "V"
+        ],
+        "mean_seats": 250.875,
+        "median_seats": 252,
+        "p05_seats": 244,
+        "p10_seats": 244,
+        "p25_seats": 245,
+        "p75_seats": 254,
+        "p90_seats": 256,
+        "p95_seats": 256,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 244,
+          "counts": [
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "64": {
+        "mask": 64,
+        "parties": [
+          "MP"
+        ],
+        "mean_seats": 27.125,
+        "median_seats": 27,
+        "p05_seats": 24,
+        "p10_seats": 25,
+        "p25_seats": 26,
+        "p75_seats": 29,
+        "p90_seats": 29,
+        "p95_seats": 29,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 23,
+          "counts": [
+            1,
+            0,
+            0,
+            2,
+            1,
+            1,
+            3
+          ]
+        }
+      },
+      "65": {
+        "mask": 65,
+        "parties": [
+          "M",
+          "MP"
+        ],
+        "mean_seats": 90.5,
+        "median_seats": 89,
+        "p05_seats": 87,
+        "p10_seats": 87,
+        "p25_seats": 88,
+        "p75_seats": 92,
+        "p90_seats": 95,
+        "p95_seats": 95,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 87,
+          "counts": [
+            1,
+            1,
+            3,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "66": {
+        "mask": 66,
+        "parties": [
+          "L",
+          "MP"
+        ],
+        "mean_seats": 27.125,
+        "median_seats": 27,
+        "p05_seats": 24,
+        "p10_seats": 25,
+        "p25_seats": 26,
+        "p75_seats": 29,
+        "p90_seats": 29,
+        "p95_seats": 29,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 23,
+          "counts": [
+            1,
+            0,
+            0,
+            2,
+            1,
+            1,
+            3
+          ]
+        }
+      },
+      "67": {
+        "mask": 67,
+        "parties": [
+          "M",
+          "L",
+          "MP"
+        ],
+        "mean_seats": 90.5,
+        "median_seats": 89,
+        "p05_seats": 87,
+        "p10_seats": 87,
+        "p25_seats": 88,
+        "p75_seats": 92,
+        "p90_seats": 95,
+        "p95_seats": 95,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 87,
+          "counts": [
+            1,
+            1,
+            3,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "68": {
+        "mask": 68,
+        "parties": [
+          "C",
+          "MP"
+        ],
+        "mean_seats": 56.0,
+        "median_seats": 57,
+        "p05_seats": 49,
+        "p10_seats": 50,
+        "p25_seats": 54,
+        "p75_seats": 59,
+        "p90_seats": 59,
+        "p95_seats": 59,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 49,
+          "counts": [
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            2,
+            1
+          ]
+        }
+      },
+      "69": {
+        "mask": 69,
+        "parties": [
+          "M",
+          "C",
+          "MP"
+        ],
+        "mean_seats": 119.375,
+        "median_seats": 118,
+        "p05_seats": 113,
+        "p10_seats": 114,
+        "p25_seats": 116,
+        "p75_seats": 122,
+        "p90_seats": 125,
+        "p95_seats": 126,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 113,
+          "counts": [
+            1,
+            0,
+            1,
+            0,
+            1,
+            1,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "70": {
+        "mask": 70,
+        "parties": [
+          "L",
+          "C",
+          "MP"
+        ],
+        "mean_seats": 56.0,
+        "median_seats": 57,
+        "p05_seats": 49,
+        "p10_seats": 50,
+        "p25_seats": 54,
+        "p75_seats": 59,
+        "p90_seats": 59,
+        "p95_seats": 59,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 49,
+          "counts": [
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            2,
+            1
+          ]
+        }
+      },
+      "71": {
+        "mask": 71,
+        "parties": [
+          "M",
+          "L",
+          "C",
+          "MP"
+        ],
+        "mean_seats": 119.375,
+        "median_seats": 118,
+        "p05_seats": 113,
+        "p10_seats": 114,
+        "p25_seats": 116,
+        "p75_seats": 122,
+        "p90_seats": 125,
+        "p95_seats": 126,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 113,
+          "counts": [
+            1,
+            0,
+            1,
+            0,
+            1,
+            1,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "72": {
+        "mask": 72,
+        "parties": [
+          "KD",
+          "MP"
+        ],
+        "mean_seats": 50.125,
+        "median_seats": 49,
+        "p05_seats": 45,
+        "p10_seats": 46,
+        "p25_seats": 47,
+        "p75_seats": 51,
+        "p90_seats": 56,
+        "p95_seats": 57,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 44,
+          "counts": [
+            1,
+            0,
+            0,
+            1,
+            1,
+            2,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "73": {
+        "mask": 73,
+        "parties": [
+          "M",
+          "KD",
+          "MP"
+        ],
+        "mean_seats": 113.5,
+        "median_seats": 113,
+        "p05_seats": 108,
+        "p10_seats": 109,
+        "p25_seats": 110,
+        "p75_seats": 117,
+        "p90_seats": 118,
+        "p95_seats": 118,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 107,
+          "counts": [
+            1,
+            0,
+            0,
+            2,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "74": {
+        "mask": 74,
+        "parties": [
+          "L",
+          "KD",
+          "MP"
+        ],
+        "mean_seats": 50.125,
+        "median_seats": 49,
+        "p05_seats": 45,
+        "p10_seats": 46,
+        "p25_seats": 47,
+        "p75_seats": 51,
+        "p90_seats": 56,
+        "p95_seats": 57,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 44,
+          "counts": [
+            1,
+            0,
+            0,
+            1,
+            1,
+            2,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "75": {
+        "mask": 75,
+        "parties": [
+          "M",
+          "L",
+          "KD",
+          "MP"
+        ],
+        "mean_seats": 113.5,
+        "median_seats": 113,
+        "p05_seats": 108,
+        "p10_seats": 109,
+        "p25_seats": 110,
+        "p75_seats": 117,
+        "p90_seats": 118,
+        "p95_seats": 118,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 107,
+          "counts": [
+            1,
+            0,
+            0,
+            2,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "76": {
+        "mask": 76,
+        "parties": [
+          "C",
+          "KD",
+          "MP"
+        ],
+        "mean_seats": 79.0,
+        "median_seats": 78,
+        "p05_seats": 71,
+        "p10_seats": 72,
+        "p25_seats": 76,
+        "p75_seats": 83,
+        "p90_seats": 86,
+        "p95_seats": 86,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 70,
+          "counts": [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            2,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "77": {
+        "mask": 77,
+        "parties": [
+          "M",
+          "C",
+          "KD",
+          "MP"
+        ],
+        "mean_seats": 142.375,
+        "median_seats": 143,
+        "p05_seats": 136,
+        "p10_seats": 136,
+        "p25_seats": 136,
+        "p75_seats": 147,
+        "p90_seats": 148,
+        "p95_seats": 148,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 136,
+          "counts": [
+            2,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "78": {
+        "mask": 78,
+        "parties": [
+          "L",
+          "C",
+          "KD",
+          "MP"
+        ],
+        "mean_seats": 79.0,
+        "median_seats": 78,
+        "p05_seats": 71,
+        "p10_seats": 72,
+        "p25_seats": 76,
+        "p75_seats": 83,
+        "p90_seats": 86,
+        "p95_seats": 86,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 70,
+          "counts": [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            2,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "79": {
+        "mask": 79,
+        "parties": [
+          "M",
+          "L",
+          "C",
+          "KD",
+          "MP"
+        ],
+        "mean_seats": 142.375,
+        "median_seats": 143,
+        "p05_seats": 136,
+        "p10_seats": 136,
+        "p25_seats": 136,
+        "p75_seats": 147,
+        "p90_seats": 148,
+        "p95_seats": 148,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 136,
+          "counts": [
+            2,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "80": {
+        "mask": 80,
+        "parties": [
+          "S",
+          "MP"
+        ],
+        "mean_seats": 133.125,
+        "median_seats": 132,
+        "p05_seats": 129,
+        "p10_seats": 129,
+        "p25_seats": 130,
+        "p75_seats": 134,
+        "p90_seats": 138,
+        "p95_seats": 139,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 129,
+          "counts": [
+            1,
+            2,
+            0,
+            2,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "81": {
+        "mask": 81,
+        "parties": [
+          "M",
+          "S",
+          "MP"
+        ],
+        "mean_seats": 196.5,
+        "median_seats": 196,
+        "p05_seats": 192,
+        "p10_seats": 193,
+        "p25_seats": 194,
+        "p75_seats": 198,
+        "p90_seats": 200,
+        "p95_seats": 200,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 192,
+          "counts": [
+            1,
+            0,
+            1,
+            1,
+            2,
+            0,
+            1,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "82": {
+        "mask": 82,
+        "parties": [
+          "L",
+          "S",
+          "MP"
+        ],
+        "mean_seats": 133.125,
+        "median_seats": 132,
+        "p05_seats": 129,
+        "p10_seats": 129,
+        "p25_seats": 130,
+        "p75_seats": 134,
+        "p90_seats": 138,
+        "p95_seats": 139,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 129,
+          "counts": [
+            1,
+            2,
+            0,
+            2,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "83": {
+        "mask": 83,
+        "parties": [
+          "M",
+          "L",
+          "S",
+          "MP"
+        ],
+        "mean_seats": 196.5,
+        "median_seats": 196,
+        "p05_seats": 192,
+        "p10_seats": 193,
+        "p25_seats": 194,
+        "p75_seats": 198,
+        "p90_seats": 200,
+        "p95_seats": 200,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 192,
+          "counts": [
+            1,
+            0,
+            1,
+            1,
+            2,
+            0,
+            1,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "84": {
+        "mask": 84,
+        "parties": [
+          "C",
+          "S",
+          "MP"
+        ],
+        "mean_seats": 162.0,
+        "median_seats": 161,
+        "p05_seats": 156,
+        "p10_seats": 156,
+        "p25_seats": 158,
+        "p75_seats": 164,
+        "p90_seats": 168,
+        "p95_seats": 169,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 156,
+          "counts": [
+            1,
+            1,
+            0,
+            1,
+            0,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "85": {
+        "mask": 85,
+        "parties": [
+          "M",
+          "C",
+          "S",
+          "MP"
+        ],
+        "mean_seats": 225.375,
+        "median_seats": 226,
+        "p05_seats": 220,
+        "p10_seats": 221,
+        "p25_seats": 222,
+        "p75_seats": 228,
+        "p90_seats": 229,
+        "p95_seats": 230,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 219,
+          "counts": [
+            1,
+            0,
+            0,
+            2,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "86": {
+        "mask": 86,
+        "parties": [
+          "L",
+          "C",
+          "S",
+          "MP"
+        ],
+        "mean_seats": 162.0,
+        "median_seats": 161,
+        "p05_seats": 156,
+        "p10_seats": 156,
+        "p25_seats": 158,
+        "p75_seats": 164,
+        "p90_seats": 168,
+        "p95_seats": 169,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 156,
+          "counts": [
+            1,
+            1,
+            0,
+            1,
+            0,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "87": {
+        "mask": 87,
+        "parties": [
+          "M",
+          "L",
+          "C",
+          "S",
+          "MP"
+        ],
+        "mean_seats": 225.375,
+        "median_seats": 226,
+        "p05_seats": 220,
+        "p10_seats": 221,
+        "p25_seats": 222,
+        "p75_seats": 228,
+        "p90_seats": 229,
+        "p95_seats": 230,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 219,
+          "counts": [
+            1,
+            0,
+            0,
+            2,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "88": {
+        "mask": 88,
+        "parties": [
+          "KD",
+          "S",
+          "MP"
+        ],
+        "mean_seats": 156.125,
+        "median_seats": 152,
+        "p05_seats": 151,
+        "p10_seats": 151,
+        "p25_seats": 151,
+        "p75_seats": 158,
+        "p90_seats": 167,
+        "p95_seats": 167,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 151,
+          "counts": [
+            2,
+            2,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "89": {
+        "mask": 89,
+        "parties": [
+          "M",
+          "KD",
+          "S",
+          "MP"
+        ],
+        "mean_seats": 219.5,
+        "median_seats": 217,
+        "p05_seats": 212,
+        "p10_seats": 213,
+        "p25_seats": 216,
+        "p75_seats": 224,
+        "p90_seats": 227,
+        "p95_seats": 227,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 212,
+          "counts": [
+            1,
+            0,
+            1,
+            0,
+            0,
+            2,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "90": {
+        "mask": 90,
+        "parties": [
+          "L",
+          "KD",
+          "S",
+          "MP"
+        ],
+        "mean_seats": 156.125,
+        "median_seats": 152,
+        "p05_seats": 151,
+        "p10_seats": 151,
+        "p25_seats": 151,
+        "p75_seats": 158,
+        "p90_seats": 167,
+        "p95_seats": 167,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 151,
+          "counts": [
+            2,
+            2,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "91": {
+        "mask": 91,
+        "parties": [
+          "M",
+          "L",
+          "KD",
+          "S",
+          "MP"
+        ],
+        "mean_seats": 219.5,
+        "median_seats": 217,
+        "p05_seats": 212,
+        "p10_seats": 213,
+        "p25_seats": 216,
+        "p75_seats": 224,
+        "p90_seats": 227,
+        "p95_seats": 227,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 212,
+          "counts": [
+            1,
+            0,
+            1,
+            0,
+            0,
+            2,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "92": {
+        "mask": 92,
+        "parties": [
+          "C",
+          "KD",
+          "S",
+          "MP"
+        ],
+        "mean_seats": 185.0,
+        "median_seats": 182,
+        "p05_seats": 178,
+        "p10_seats": 179,
+        "p25_seats": 181,
+        "p75_seats": 186,
+        "p90_seats": 196,
+        "p95_seats": 197,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 177,
+          "counts": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            3,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "93": {
+        "mask": 93,
+        "parties": [
+          "M",
+          "C",
+          "KD",
+          "S",
+          "MP"
+        ],
+        "mean_seats": 248.375,
+        "median_seats": 247,
+        "p05_seats": 242,
+        "p10_seats": 242,
+        "p25_seats": 242,
+        "p75_seats": 253,
+        "p90_seats": 256,
+        "p95_seats": 257,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 242,
+          "counts": [
+            2,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "94": {
+        "mask": 94,
+        "parties": [
+          "L",
+          "C",
+          "KD",
+          "S",
+          "MP"
+        ],
+        "mean_seats": 185.0,
+        "median_seats": 182,
+        "p05_seats": 178,
+        "p10_seats": 179,
+        "p25_seats": 181,
+        "p75_seats": 186,
+        "p90_seats": 196,
+        "p95_seats": 197,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 177,
+          "counts": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            3,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "95": {
+        "mask": 95,
+        "parties": [
+          "M",
+          "L",
+          "C",
+          "KD",
+          "S",
+          "MP"
+        ],
+        "mean_seats": 248.375,
+        "median_seats": 247,
+        "p05_seats": 242,
+        "p10_seats": 242,
+        "p25_seats": 242,
+        "p75_seats": 253,
+        "p90_seats": 256,
+        "p95_seats": 257,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 242,
+          "counts": [
+            2,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "96": {
+        "mask": 96,
+        "parties": [
+          "V",
+          "MP"
+        ],
+        "mean_seats": 56.75,
+        "median_seats": 56,
+        "p05_seats": 55,
+        "p10_seats": 55,
+        "p25_seats": 55,
+        "p75_seats": 58,
+        "p90_seats": 58,
+        "p95_seats": 58,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 55,
+          "counts": [
+            2,
+            2,
+            1,
+            2,
+            1
+          ]
+        }
+      },
+      "97": {
+        "mask": 97,
+        "parties": [
+          "M",
+          "V",
+          "MP"
+        ],
+        "mean_seats": 120.125,
+        "median_seats": 119,
+        "p05_seats": 116,
+        "p10_seats": 116,
+        "p25_seats": 117,
+        "p75_seats": 122,
+        "p90_seats": 126,
+        "p95_seats": 126,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 116,
+          "counts": [
+            1,
+            2,
+            1,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            2
+          ]
+        }
+      },
+      "98": {
+        "mask": 98,
+        "parties": [
+          "L",
+          "V",
+          "MP"
+        ],
+        "mean_seats": 56.75,
+        "median_seats": 56,
+        "p05_seats": 55,
+        "p10_seats": 55,
+        "p25_seats": 55,
+        "p75_seats": 58,
+        "p90_seats": 58,
+        "p95_seats": 58,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 55,
+          "counts": [
+            2,
+            2,
+            1,
+            2,
+            1
+          ]
+        }
+      },
+      "99": {
+        "mask": 99,
+        "parties": [
+          "M",
+          "L",
+          "V",
+          "MP"
+        ],
+        "mean_seats": 120.125,
+        "median_seats": 119,
+        "p05_seats": 116,
+        "p10_seats": 116,
+        "p25_seats": 117,
+        "p75_seats": 122,
+        "p90_seats": 126,
+        "p95_seats": 126,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 116,
+          "counts": [
+            1,
+            2,
+            1,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            2
+          ]
+        }
+      },
+      "100": {
+        "mask": 100,
+        "parties": [
+          "C",
+          "V",
+          "MP"
+        ],
+        "mean_seats": 85.625,
+        "median_seats": 86,
+        "p05_seats": 80,
+        "p10_seats": 80,
+        "p25_seats": 84,
+        "p75_seats": 88,
+        "p90_seats": 88,
+        "p95_seats": 89,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 80,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            0,
+            2,
+            0,
+            1,
+            2,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "101": {
+        "mask": 101,
+        "parties": [
+          "M",
+          "C",
+          "V",
+          "MP"
+        ],
+        "mean_seats": 149.0,
+        "median_seats": 147,
+        "p05_seats": 143,
+        "p10_seats": 144,
+        "p25_seats": 146,
+        "p75_seats": 151,
+        "p90_seats": 155,
+        "p95_seats": 156,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 142,
+          "counts": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            2,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "102": {
+        "mask": 102,
+        "parties": [
+          "L",
+          "C",
+          "V",
+          "MP"
+        ],
+        "mean_seats": 85.625,
+        "median_seats": 86,
+        "p05_seats": 80,
+        "p10_seats": 80,
+        "p25_seats": 84,
+        "p75_seats": 88,
+        "p90_seats": 88,
+        "p95_seats": 89,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 80,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            0,
+            2,
+            0,
+            1,
+            2,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "103": {
+        "mask": 103,
+        "parties": [
+          "M",
+          "L",
+          "C",
+          "V",
+          "MP"
+        ],
+        "mean_seats": 149.0,
+        "median_seats": 147,
+        "p05_seats": 143,
+        "p10_seats": 144,
+        "p25_seats": 146,
+        "p75_seats": 151,
+        "p90_seats": 155,
+        "p95_seats": 156,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 142,
+          "counts": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            2,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "104": {
+        "mask": 104,
+        "parties": [
+          "KD",
+          "V",
+          "MP"
+        ],
+        "mean_seats": 79.75,
+        "median_seats": 78,
+        "p05_seats": 76,
+        "p10_seats": 76,
+        "p25_seats": 77,
+        "p75_seats": 81,
+        "p90_seats": 84,
+        "p95_seats": 84,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 76,
+          "counts": [
+            1,
+            1,
+            2,
+            1,
+            0,
+            1,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "105": {
+        "mask": 105,
+        "parties": [
+          "M",
+          "KD",
+          "V",
+          "MP"
+        ],
+        "mean_seats": 143.125,
+        "median_seats": 143,
+        "p05_seats": 138,
+        "p10_seats": 138,
+        "p25_seats": 139,
+        "p75_seats": 145,
+        "p90_seats": 148,
+        "p95_seats": 148,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 138,
+          "counts": [
+            1,
+            1,
+            1,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "106": {
+        "mask": 106,
+        "parties": [
+          "L",
+          "KD",
+          "V",
+          "MP"
+        ],
+        "mean_seats": 79.75,
+        "median_seats": 78,
+        "p05_seats": 76,
+        "p10_seats": 76,
+        "p25_seats": 77,
+        "p75_seats": 81,
+        "p90_seats": 84,
+        "p95_seats": 84,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 76,
+          "counts": [
+            1,
+            1,
+            2,
+            1,
+            0,
+            1,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "107": {
+        "mask": 107,
+        "parties": [
+          "M",
+          "L",
+          "KD",
+          "V",
+          "MP"
+        ],
+        "mean_seats": 143.125,
+        "median_seats": 143,
+        "p05_seats": 138,
+        "p10_seats": 138,
+        "p25_seats": 139,
+        "p75_seats": 145,
+        "p90_seats": 148,
+        "p95_seats": 148,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 138,
+          "counts": [
+            1,
+            1,
+            1,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "108": {
+        "mask": 108,
+        "parties": [
+          "C",
+          "KD",
+          "V",
+          "MP"
+        ],
+        "mean_seats": 108.625,
+        "median_seats": 108,
+        "p05_seats": 102,
+        "p10_seats": 102,
+        "p25_seats": 106,
+        "p75_seats": 113,
+        "p90_seats": 114,
+        "p95_seats": 114,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 102,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            0,
+            0,
+            0,
+            1,
+            2
+          ]
+        }
+      },
+      "109": {
+        "mask": 109,
+        "parties": [
+          "M",
+          "C",
+          "KD",
+          "V",
+          "MP"
+        ],
+        "mean_seats": 172.0,
+        "median_seats": 171,
+        "p05_seats": 166,
+        "p10_seats": 167,
+        "p25_seats": 168,
+        "p75_seats": 175,
+        "p90_seats": 178,
+        "p95_seats": 179,
+        "prob_majority": 0.25,
+        "seat_histogram": {
+          "min_seats": 165,
+          "counts": [
+            1,
+            0,
+            0,
+            2,
+            1,
+            0,
+            0,
+            0,
+            0,
+            2,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "110": {
+        "mask": 110,
+        "parties": [
+          "L",
+          "C",
+          "KD",
+          "V",
+          "MP"
+        ],
+        "mean_seats": 108.625,
+        "median_seats": 108,
+        "p05_seats": 102,
+        "p10_seats": 102,
+        "p25_seats": 106,
+        "p75_seats": 113,
+        "p90_seats": 114,
+        "p95_seats": 114,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 102,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            0,
+            0,
+            0,
+            1,
+            2
+          ]
+        }
+      },
+      "111": {
+        "mask": 111,
+        "parties": [
+          "M",
+          "L",
+          "C",
+          "KD",
+          "V",
+          "MP"
+        ],
+        "mean_seats": 172.0,
+        "median_seats": 171,
+        "p05_seats": 166,
+        "p10_seats": 167,
+        "p25_seats": 168,
+        "p75_seats": 175,
+        "p90_seats": 178,
+        "p95_seats": 179,
+        "prob_majority": 0.25,
+        "seat_histogram": {
+          "min_seats": 165,
+          "counts": [
+            1,
+            0,
+            0,
+            2,
+            1,
+            0,
+            0,
+            0,
+            0,
+            2,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "112": {
+        "mask": 112,
+        "parties": [
+          "S",
+          "V",
+          "MP"
+        ],
+        "mean_seats": 162.75,
+        "median_seats": 162,
+        "p05_seats": 160,
+        "p10_seats": 160,
+        "p25_seats": 160,
+        "p75_seats": 163,
+        "p90_seats": 166,
+        "p95_seats": 167,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 160,
+          "counts": [
+            2,
+            1,
+            2,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "113": {
+        "mask": 113,
+        "parties": [
+          "M",
+          "S",
+          "V",
+          "MP"
+        ],
+        "mean_seats": 226.125,
+        "median_seats": 226,
+        "p05_seats": 223,
+        "p10_seats": 223,
+        "p25_seats": 223,
+        "p75_seats": 228,
+        "p90_seats": 229,
+        "p95_seats": 229,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 223,
+          "counts": [
+            2,
+            1,
+            1,
+            0,
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "114": {
+        "mask": 114,
+        "parties": [
+          "L",
+          "S",
+          "V",
+          "MP"
+        ],
+        "mean_seats": 162.75,
+        "median_seats": 162,
+        "p05_seats": 160,
+        "p10_seats": 160,
+        "p25_seats": 160,
+        "p75_seats": 163,
+        "p90_seats": 166,
+        "p95_seats": 167,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 160,
+          "counts": [
+            2,
+            1,
+            2,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "115": {
+        "mask": 115,
+        "parties": [
+          "M",
+          "L",
+          "S",
+          "V",
+          "MP"
+        ],
+        "mean_seats": 226.125,
+        "median_seats": 226,
+        "p05_seats": 223,
+        "p10_seats": 223,
+        "p25_seats": 223,
+        "p75_seats": 228,
+        "p90_seats": 229,
+        "p95_seats": 229,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 223,
+          "counts": [
+            2,
+            1,
+            1,
+            0,
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "116": {
+        "mask": 116,
+        "parties": [
+          "C",
+          "S",
+          "V",
+          "MP"
+        ],
+        "mean_seats": 191.625,
+        "median_seats": 192,
+        "p05_seats": 186,
+        "p10_seats": 187,
+        "p25_seats": 188,
+        "p75_seats": 193,
+        "p90_seats": 195,
+        "p95_seats": 197,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 186,
+          "counts": [
+            1,
+            0,
+            1,
+            1,
+            0,
+            0,
+            2,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "117": {
+        "mask": 117,
+        "parties": [
+          "M",
+          "C",
+          "S",
+          "V",
+          "MP"
+        ],
+        "mean_seats": 255.0,
+        "median_seats": 254,
+        "p05_seats": 249,
+        "p10_seats": 251,
+        "p25_seats": 253,
+        "p75_seats": 259,
+        "p90_seats": 259,
+        "p95_seats": 259,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 248,
+          "counts": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            3,
+            0,
+            0,
+            0,
+            0,
+            3
+          ]
+        }
+      },
+      "118": {
+        "mask": 118,
+        "parties": [
+          "L",
+          "C",
+          "S",
+          "V",
+          "MP"
+        ],
+        "mean_seats": 191.625,
+        "median_seats": 192,
+        "p05_seats": 186,
+        "p10_seats": 187,
+        "p25_seats": 188,
+        "p75_seats": 193,
+        "p90_seats": 195,
+        "p95_seats": 197,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 186,
+          "counts": [
+            1,
+            0,
+            1,
+            1,
+            0,
+            0,
+            2,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "119": {
+        "mask": 119,
+        "parties": [
+          "M",
+          "L",
+          "C",
+          "S",
+          "V",
+          "MP"
+        ],
+        "mean_seats": 255.0,
+        "median_seats": 254,
+        "p05_seats": 249,
+        "p10_seats": 251,
+        "p25_seats": 253,
+        "p75_seats": 259,
+        "p90_seats": 259,
+        "p95_seats": 259,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 248,
+          "counts": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            3,
+            0,
+            0,
+            0,
+            0,
+            3
+          ]
+        }
+      },
+      "120": {
+        "mask": 120,
+        "parties": [
+          "KD",
+          "S",
+          "V",
+          "MP"
+        ],
+        "mean_seats": 185.75,
+        "median_seats": 183,
+        "p05_seats": 181,
+        "p10_seats": 181,
+        "p25_seats": 182,
+        "p75_seats": 186,
+        "p90_seats": 194,
+        "p95_seats": 195,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 181,
+          "counts": [
+            1,
+            1,
+            3,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "121": {
+        "mask": 121,
+        "parties": [
+          "M",
+          "KD",
+          "S",
+          "V",
+          "MP"
+        ],
+        "mean_seats": 249.125,
+        "median_seats": 249,
+        "p05_seats": 243,
+        "p10_seats": 243,
+        "p25_seats": 245,
+        "p75_seats": 253,
+        "p90_seats": 254,
+        "p95_seats": 255,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 243,
+          "counts": [
+            2,
+            0,
+            0,
+            1,
+            0,
+            0,
+            2,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "122": {
+        "mask": 122,
+        "parties": [
+          "L",
+          "KD",
+          "S",
+          "V",
+          "MP"
+        ],
+        "mean_seats": 185.75,
+        "median_seats": 183,
+        "p05_seats": 181,
+        "p10_seats": 181,
+        "p25_seats": 182,
+        "p75_seats": 186,
+        "p90_seats": 194,
+        "p95_seats": 195,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 181,
+          "counts": [
+            1,
+            1,
+            3,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "123": {
+        "mask": 123,
+        "parties": [
+          "M",
+          "L",
+          "KD",
+          "S",
+          "V",
+          "MP"
+        ],
+        "mean_seats": 249.125,
+        "median_seats": 249,
+        "p05_seats": 243,
+        "p10_seats": 243,
+        "p25_seats": 245,
+        "p75_seats": 253,
+        "p90_seats": 254,
+        "p95_seats": 255,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 243,
+          "counts": [
+            2,
+            0,
+            0,
+            1,
+            0,
+            0,
+            2,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "124": {
+        "mask": 124,
+        "parties": [
+          "C",
+          "KD",
+          "S",
+          "V",
+          "MP"
+        ],
+        "mean_seats": 214.625,
+        "median_seats": 212,
+        "p05_seats": 209,
+        "p10_seats": 209,
+        "p25_seats": 210,
+        "p75_seats": 216,
+        "p90_seats": 223,
+        "p95_seats": 224,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 209,
+          "counts": [
+            2,
+            0,
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "125": {
+        "mask": 125,
+        "parties": [
+          "M",
+          "C",
+          "KD",
+          "S",
+          "V",
+          "MP"
+        ],
+        "mean_seats": 278.0,
+        "median_seats": 278,
+        "p05_seats": 271,
+        "p10_seats": 272,
+        "p25_seats": 273,
+        "p75_seats": 282,
+        "p90_seats": 283,
+        "p95_seats": 284,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 271,
+          "counts": [
+            1,
+            0,
+            2,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "126": {
+        "mask": 126,
+        "parties": [
+          "L",
+          "C",
+          "KD",
+          "S",
+          "V",
+          "MP"
+        ],
+        "mean_seats": 214.625,
+        "median_seats": 212,
+        "p05_seats": 209,
+        "p10_seats": 209,
+        "p25_seats": 210,
+        "p75_seats": 216,
+        "p90_seats": 223,
+        "p95_seats": 224,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 209,
+          "counts": [
+            2,
+            0,
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "127": {
+        "mask": 127,
+        "parties": [
+          "M",
+          "L",
+          "C",
+          "KD",
+          "S",
+          "V",
+          "MP"
+        ],
+        "mean_seats": 278.0,
+        "median_seats": 278,
+        "p05_seats": 271,
+        "p10_seats": 272,
+        "p25_seats": 273,
+        "p75_seats": 282,
+        "p90_seats": 283,
+        "p95_seats": 284,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 271,
+          "counts": [
+            1,
+            0,
+            2,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "128": {
+        "mask": 128,
+        "parties": [
+          "SD"
+        ],
+        "mean_seats": 71.0,
+        "median_seats": 71,
+        "p05_seats": 64,
+        "p10_seats": 65,
+        "p25_seats": 66,
+        "p75_seats": 76,
+        "p90_seats": 76,
+        "p95_seats": 77,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 63,
+          "counts": [
+            1,
+            0,
+            0,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            2,
+            0,
+            1
+          ]
+        }
+      },
+      "129": {
+        "mask": 129,
+        "parties": [
+          "M",
+          "SD"
+        ],
+        "mean_seats": 134.375,
+        "median_seats": 136,
+        "p05_seats": 124,
+        "p10_seats": 125,
+        "p25_seats": 132,
+        "p75_seats": 138,
+        "p90_seats": 140,
+        "p95_seats": 140,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 123,
+          "counts": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            0,
+            2
+          ]
+        }
+      },
+      "130": {
+        "mask": 130,
+        "parties": [
+          "L",
+          "SD"
+        ],
+        "mean_seats": 71.0,
+        "median_seats": 71,
+        "p05_seats": 64,
+        "p10_seats": 65,
+        "p25_seats": 66,
+        "p75_seats": 76,
+        "p90_seats": 76,
+        "p95_seats": 77,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 63,
+          "counts": [
+            1,
+            0,
+            0,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            2,
+            0,
+            1
+          ]
+        }
+      },
+      "131": {
+        "mask": 131,
+        "parties": [
+          "M",
+          "L",
+          "SD"
+        ],
+        "mean_seats": 134.375,
+        "median_seats": 136,
+        "p05_seats": 124,
+        "p10_seats": 125,
+        "p25_seats": 132,
+        "p75_seats": 138,
+        "p90_seats": 140,
+        "p95_seats": 140,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 123,
+          "counts": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            0,
+            2
+          ]
+        }
+      },
+      "132": {
+        "mask": 132,
+        "parties": [
+          "C",
+          "SD"
+        ],
+        "mean_seats": 99.875,
+        "median_seats": 100,
+        "p05_seats": 93,
+        "p10_seats": 94,
+        "p25_seats": 95,
+        "p75_seats": 103,
+        "p90_seats": 106,
+        "p95_seats": 106,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 93,
+          "counts": [
+            1,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0,
+            2,
+            0,
+            0,
+            1,
+            0,
+            0,
+            2
+          ]
+        }
+      },
+      "133": {
+        "mask": 133,
+        "parties": [
+          "M",
+          "C",
+          "SD"
+        ],
+        "mean_seats": 163.25,
+        "median_seats": 166,
+        "p05_seats": 153,
+        "p10_seats": 154,
+        "p25_seats": 162,
+        "p75_seats": 166,
+        "p90_seats": 167,
+        "p95_seats": 167,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 153,
+          "counts": [
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            3,
+            1,
+            1
+          ]
+        }
+      },
+      "134": {
+        "mask": 134,
+        "parties": [
+          "L",
+          "C",
+          "SD"
+        ],
+        "mean_seats": 99.875,
+        "median_seats": 100,
+        "p05_seats": 93,
+        "p10_seats": 94,
+        "p25_seats": 95,
+        "p75_seats": 103,
+        "p90_seats": 106,
+        "p95_seats": 106,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 93,
+          "counts": [
+            1,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0,
+            2,
+            0,
+            0,
+            1,
+            0,
+            0,
+            2
+          ]
+        }
+      },
+      "135": {
+        "mask": 135,
+        "parties": [
+          "M",
+          "L",
+          "C",
+          "SD"
+        ],
+        "mean_seats": 163.25,
+        "median_seats": 166,
+        "p05_seats": 153,
+        "p10_seats": 154,
+        "p25_seats": 162,
+        "p75_seats": 166,
+        "p90_seats": 167,
+        "p95_seats": 167,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 153,
+          "counts": [
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            3,
+            1,
+            1
+          ]
+        }
+      },
+      "136": {
+        "mask": 136,
+        "parties": [
+          "KD",
+          "SD"
+        ],
+        "mean_seats": 94.0,
+        "median_seats": 95,
+        "p05_seats": 90,
+        "p10_seats": 90,
+        "p25_seats": 90,
+        "p75_seats": 95,
+        "p90_seats": 97,
+        "p95_seats": 99,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 90,
+          "counts": [
+            3,
+            0,
+            0,
+            0,
+            0,
+            3,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "137": {
+        "mask": 137,
+        "parties": [
+          "M",
+          "KD",
+          "SD"
+        ],
+        "mean_seats": 157.375,
+        "median_seats": 157,
+        "p05_seats": 151,
+        "p10_seats": 153,
+        "p25_seats": 155,
+        "p75_seats": 160,
+        "p90_seats": 161,
+        "p95_seats": 162,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 150,
+          "counts": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            2,
+            0,
+            0,
+            1,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "138": {
+        "mask": 138,
+        "parties": [
+          "L",
+          "KD",
+          "SD"
+        ],
+        "mean_seats": 94.0,
+        "median_seats": 95,
+        "p05_seats": 90,
+        "p10_seats": 90,
+        "p25_seats": 90,
+        "p75_seats": 95,
+        "p90_seats": 97,
+        "p95_seats": 99,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 90,
+          "counts": [
+            3,
+            0,
+            0,
+            0,
+            0,
+            3,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "139": {
+        "mask": 139,
+        "parties": [
+          "M",
+          "L",
+          "KD",
+          "SD"
+        ],
+        "mean_seats": 157.375,
+        "median_seats": 157,
+        "p05_seats": 151,
+        "p10_seats": 153,
+        "p25_seats": 155,
+        "p75_seats": 160,
+        "p90_seats": 161,
+        "p95_seats": 162,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 150,
+          "counts": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            2,
+            0,
+            0,
+            1,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "140": {
+        "mask": 140,
+        "parties": [
+          "C",
+          "KD",
+          "SD"
+        ],
+        "mean_seats": 122.875,
+        "median_seats": 123,
+        "p05_seats": 119,
+        "p10_seats": 119,
+        "p25_seats": 120,
+        "p75_seats": 125,
+        "p90_seats": 126,
+        "p95_seats": 126,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 119,
+          "counts": [
+            1,
+            1,
+            1,
+            1,
+            0,
+            1,
+            1,
+            2
+          ]
+        }
+      },
+      "141": {
+        "mask": 141,
+        "parties": [
+          "M",
+          "C",
+          "KD",
+          "SD"
+        ],
+        "mean_seats": 186.25,
+        "median_seats": 187,
+        "p05_seats": 181,
+        "p10_seats": 182,
+        "p25_seats": 185,
+        "p75_seats": 188,
+        "p90_seats": 189,
+        "p95_seats": 189,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 180,
+          "counts": [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            2,
+            1,
+            2
+          ]
+        }
+      },
+      "142": {
+        "mask": 142,
+        "parties": [
+          "L",
+          "C",
+          "KD",
+          "SD"
+        ],
+        "mean_seats": 122.875,
+        "median_seats": 123,
+        "p05_seats": 119,
+        "p10_seats": 119,
+        "p25_seats": 120,
+        "p75_seats": 125,
+        "p90_seats": 126,
+        "p95_seats": 126,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 119,
+          "counts": [
+            1,
+            1,
+            1,
+            1,
+            0,
+            1,
+            1,
+            2
+          ]
+        }
+      },
+      "143": {
+        "mask": 143,
+        "parties": [
+          "M",
+          "L",
+          "C",
+          "KD",
+          "SD"
+        ],
+        "mean_seats": 186.25,
+        "median_seats": 187,
+        "p05_seats": 181,
+        "p10_seats": 182,
+        "p25_seats": 185,
+        "p75_seats": 188,
+        "p90_seats": 189,
+        "p95_seats": 189,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 180,
+          "counts": [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            2,
+            1,
+            2
+          ]
+        }
+      },
+      "144": {
+        "mask": 144,
+        "parties": [
+          "S",
+          "SD"
+        ],
+        "mean_seats": 177.0,
+        "median_seats": 177,
+        "p05_seats": 169,
+        "p10_seats": 170,
+        "p25_seats": 174,
+        "p75_seats": 181,
+        "p90_seats": 181,
+        "p95_seats": 182,
+        "prob_majority": 0.75,
+        "seat_histogram": {
+          "min_seats": 169,
+          "counts": [
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "145": {
+        "mask": 145,
+        "parties": [
+          "M",
+          "S",
+          "SD"
+        ],
+        "mean_seats": 240.375,
+        "median_seats": 241,
+        "p05_seats": 235,
+        "p10_seats": 235,
+        "p25_seats": 235,
+        "p75_seats": 243,
+        "p90_seats": 246,
+        "p95_seats": 246,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 235,
+          "counts": [
+            2,
+            1,
+            0,
+            0,
+            0,
+            0,
+            2,
+            1,
+            0,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "146": {
+        "mask": 146,
+        "parties": [
+          "L",
+          "S",
+          "SD"
+        ],
+        "mean_seats": 177.0,
+        "median_seats": 177,
+        "p05_seats": 169,
+        "p10_seats": 170,
+        "p25_seats": 174,
+        "p75_seats": 181,
+        "p90_seats": 181,
+        "p95_seats": 182,
+        "prob_majority": 0.75,
+        "seat_histogram": {
+          "min_seats": 169,
+          "counts": [
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "147": {
+        "mask": 147,
+        "parties": [
+          "M",
+          "L",
+          "S",
+          "SD"
+        ],
+        "mean_seats": 240.375,
+        "median_seats": 241,
+        "p05_seats": 235,
+        "p10_seats": 235,
+        "p25_seats": 235,
+        "p75_seats": 243,
+        "p90_seats": 246,
+        "p95_seats": 246,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 235,
+          "counts": [
+            2,
+            1,
+            0,
+            0,
+            0,
+            0,
+            2,
+            1,
+            0,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "148": {
+        "mask": 148,
+        "parties": [
+          "C",
+          "S",
+          "SD"
+        ],
+        "mean_seats": 205.875,
+        "median_seats": 206,
+        "p05_seats": 200,
+        "p10_seats": 200,
+        "p25_seats": 203,
+        "p75_seats": 209,
+        "p90_seats": 210,
+        "p95_seats": 210,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 200,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            1,
+            1,
+            0,
+            1,
+            0,
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "149": {
+        "mask": 149,
+        "parties": [
+          "M",
+          "C",
+          "S",
+          "SD"
+        ],
+        "mean_seats": 269.25,
+        "median_seats": 270,
+        "p05_seats": 264,
+        "p10_seats": 264,
+        "p25_seats": 267,
+        "p75_seats": 271,
+        "p90_seats": 272,
+        "p95_seats": 272,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 264,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            1,
+            0,
+            1,
+            2,
+            1,
+            1
+          ]
+        }
+      },
+      "150": {
+        "mask": 150,
+        "parties": [
+          "L",
+          "C",
+          "S",
+          "SD"
+        ],
+        "mean_seats": 205.875,
+        "median_seats": 206,
+        "p05_seats": 200,
+        "p10_seats": 200,
+        "p25_seats": 203,
+        "p75_seats": 209,
+        "p90_seats": 210,
+        "p95_seats": 210,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 200,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            1,
+            1,
+            0,
+            1,
+            0,
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "151": {
+        "mask": 151,
+        "parties": [
+          "M",
+          "L",
+          "C",
+          "S",
+          "SD"
+        ],
+        "mean_seats": 269.25,
+        "median_seats": 270,
+        "p05_seats": 264,
+        "p10_seats": 264,
+        "p25_seats": 267,
+        "p75_seats": 271,
+        "p90_seats": 272,
+        "p95_seats": 272,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 264,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            1,
+            0,
+            1,
+            2,
+            1,
+            1
+          ]
+        }
+      },
+      "152": {
+        "mask": 152,
+        "parties": [
+          "KD",
+          "S",
+          "SD"
+        ],
+        "mean_seats": 200.0,
+        "median_seats": 201,
+        "p05_seats": 192,
+        "p10_seats": 193,
+        "p25_seats": 197,
+        "p75_seats": 202,
+        "p90_seats": 204,
+        "p95_seats": 205,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 191,
+          "counts": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            2,
+            0,
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "153": {
+        "mask": 153,
+        "parties": [
+          "M",
+          "KD",
+          "S",
+          "SD"
+        ],
+        "mean_seats": 263.375,
+        "median_seats": 263,
+        "p05_seats": 259,
+        "p10_seats": 260,
+        "p25_seats": 261,
+        "p75_seats": 265,
+        "p90_seats": 268,
+        "p95_seats": 268,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 258,
+          "counts": [
+            1,
+            0,
+            0,
+            2,
+            1,
+            0,
+            2,
+            0,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "154": {
+        "mask": 154,
+        "parties": [
+          "L",
+          "KD",
+          "S",
+          "SD"
+        ],
+        "mean_seats": 200.0,
+        "median_seats": 201,
+        "p05_seats": 192,
+        "p10_seats": 193,
+        "p25_seats": 197,
+        "p75_seats": 202,
+        "p90_seats": 204,
+        "p95_seats": 205,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 191,
+          "counts": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            2,
+            0,
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "155": {
+        "mask": 155,
+        "parties": [
+          "M",
+          "L",
+          "KD",
+          "S",
+          "SD"
+        ],
+        "mean_seats": 263.375,
+        "median_seats": 263,
+        "p05_seats": 259,
+        "p10_seats": 260,
+        "p25_seats": 261,
+        "p75_seats": 265,
+        "p90_seats": 268,
+        "p95_seats": 268,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 258,
+          "counts": [
+            1,
+            0,
+            0,
+            2,
+            1,
+            0,
+            2,
+            0,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "156": {
+        "mask": 156,
+        "parties": [
+          "C",
+          "KD",
+          "S",
+          "SD"
+        ],
+        "mean_seats": 228.875,
+        "median_seats": 230,
+        "p05_seats": 223,
+        "p10_seats": 223,
+        "p25_seats": 226,
+        "p75_seats": 232,
+        "p90_seats": 232,
+        "p95_seats": 232,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 223,
+          "counts": [
+            2,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            1,
+            2,
+            1
+          ]
+        }
+      },
+      "157": {
+        "mask": 157,
+        "parties": [
+          "M",
+          "C",
+          "KD",
+          "S",
+          "SD"
+        ],
+        "mean_seats": 292.25,
+        "median_seats": 292,
+        "p05_seats": 290,
+        "p10_seats": 290,
+        "p25_seats": 291,
+        "p75_seats": 293,
+        "p90_seats": 294,
+        "p95_seats": 294,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 290,
+          "counts": [
+            1,
+            2,
+            1,
+            2,
+            2
+          ]
+        }
+      },
+      "158": {
+        "mask": 158,
+        "parties": [
+          "L",
+          "C",
+          "KD",
+          "S",
+          "SD"
+        ],
+        "mean_seats": 228.875,
+        "median_seats": 230,
+        "p05_seats": 223,
+        "p10_seats": 223,
+        "p25_seats": 226,
+        "p75_seats": 232,
+        "p90_seats": 232,
+        "p95_seats": 232,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 223,
+          "counts": [
+            2,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            1,
+            2,
+            1
+          ]
+        }
+      },
+      "159": {
+        "mask": 159,
+        "parties": [
+          "M",
+          "L",
+          "C",
+          "KD",
+          "S",
+          "SD"
+        ],
+        "mean_seats": 292.25,
+        "median_seats": 292,
+        "p05_seats": 290,
+        "p10_seats": 290,
+        "p25_seats": 291,
+        "p75_seats": 293,
+        "p90_seats": 294,
+        "p95_seats": 294,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 290,
+          "counts": [
+            1,
+            2,
+            1,
+            2,
+            2
+          ]
+        }
+      },
+      "160": {
+        "mask": 160,
+        "parties": [
+          "V",
+          "SD"
+        ],
+        "mean_seats": 100.625,
+        "median_seats": 102,
+        "p05_seats": 91,
+        "p10_seats": 92,
+        "p25_seats": 96,
+        "p75_seats": 106,
+        "p90_seats": 107,
+        "p95_seats": 107,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 91,
+          "counts": [
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            2
+          ]
+        }
+      },
+      "161": {
+        "mask": 161,
+        "parties": [
+          "M",
+          "V",
+          "SD"
+        ],
+        "mean_seats": 164.0,
+        "median_seats": 167,
+        "p05_seats": 151,
+        "p10_seats": 152,
+        "p25_seats": 162,
+        "p75_seats": 167,
+        "p90_seats": 169,
+        "p95_seats": 170,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 151,
+          "counts": [
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            3,
+            0,
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "162": {
+        "mask": 162,
+        "parties": [
+          "L",
+          "V",
+          "SD"
+        ],
+        "mean_seats": 100.625,
+        "median_seats": 102,
+        "p05_seats": 91,
+        "p10_seats": 92,
+        "p25_seats": 96,
+        "p75_seats": 106,
+        "p90_seats": 107,
+        "p95_seats": 107,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 91,
+          "counts": [
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            2
+          ]
+        }
+      },
+      "163": {
+        "mask": 163,
+        "parties": [
+          "M",
+          "L",
+          "V",
+          "SD"
+        ],
+        "mean_seats": 164.0,
+        "median_seats": 167,
+        "p05_seats": 151,
+        "p10_seats": 152,
+        "p25_seats": 162,
+        "p75_seats": 167,
+        "p90_seats": 169,
+        "p95_seats": 170,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 151,
+          "counts": [
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            3,
+            0,
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "164": {
+        "mask": 164,
+        "parties": [
+          "C",
+          "V",
+          "SD"
+        ],
+        "mean_seats": 129.5,
+        "median_seats": 131,
+        "p05_seats": 121,
+        "p10_seats": 121,
+        "p25_seats": 125,
+        "p75_seats": 132,
+        "p90_seats": 135,
+        "p95_seats": 136,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 121,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            0,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "165": {
+        "mask": 165,
+        "parties": [
+          "M",
+          "C",
+          "V",
+          "SD"
+        ],
+        "mean_seats": 192.875,
+        "median_seats": 196,
+        "p05_seats": 181,
+        "p10_seats": 181,
+        "p25_seats": 191,
+        "p75_seats": 197,
+        "p90_seats": 198,
+        "p95_seats": 198,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 181,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            2,
+            2
+          ]
+        }
+      },
+      "166": {
+        "mask": 166,
+        "parties": [
+          "L",
+          "C",
+          "V",
+          "SD"
+        ],
+        "mean_seats": 129.5,
+        "median_seats": 131,
+        "p05_seats": 121,
+        "p10_seats": 121,
+        "p25_seats": 125,
+        "p75_seats": 132,
+        "p90_seats": 135,
+        "p95_seats": 136,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 121,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            0,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "167": {
+        "mask": 167,
+        "parties": [
+          "M",
+          "L",
+          "C",
+          "V",
+          "SD"
+        ],
+        "mean_seats": 192.875,
+        "median_seats": 196,
+        "p05_seats": 181,
+        "p10_seats": 181,
+        "p25_seats": 191,
+        "p75_seats": 197,
+        "p90_seats": 198,
+        "p95_seats": 198,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 181,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            2,
+            2
+          ]
+        }
+      },
+      "168": {
+        "mask": 168,
+        "parties": [
+          "KD",
+          "V",
+          "SD"
+        ],
+        "mean_seats": 123.625,
+        "median_seats": 123,
+        "p05_seats": 118,
+        "p10_seats": 119,
+        "p25_seats": 120,
+        "p75_seats": 127,
+        "p90_seats": 127,
+        "p95_seats": 128,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 118,
+          "counts": [
+            1,
+            0,
+            1,
+            1,
+            1,
+            0,
+            1,
+            0,
+            0,
+            2,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "169": {
+        "mask": 169,
+        "parties": [
+          "M",
+          "KD",
+          "V",
+          "SD"
+        ],
+        "mean_seats": 187.0,
+        "median_seats": 187,
+        "p05_seats": 179,
+        "p10_seats": 180,
+        "p25_seats": 185,
+        "p75_seats": 190,
+        "p90_seats": 192,
+        "p95_seats": 192,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 178,
+          "counts": [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            0,
+            1,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "170": {
+        "mask": 170,
+        "parties": [
+          "L",
+          "KD",
+          "V",
+          "SD"
+        ],
+        "mean_seats": 123.625,
+        "median_seats": 123,
+        "p05_seats": 118,
+        "p10_seats": 119,
+        "p25_seats": 120,
+        "p75_seats": 127,
+        "p90_seats": 127,
+        "p95_seats": 128,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 118,
+          "counts": [
+            1,
+            0,
+            1,
+            1,
+            1,
+            0,
+            1,
+            0,
+            0,
+            2,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "171": {
+        "mask": 171,
+        "parties": [
+          "M",
+          "L",
+          "KD",
+          "V",
+          "SD"
+        ],
+        "mean_seats": 187.0,
+        "median_seats": 187,
+        "p05_seats": 179,
+        "p10_seats": 180,
+        "p25_seats": 185,
+        "p75_seats": 190,
+        "p90_seats": 192,
+        "p95_seats": 192,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 178,
+          "counts": [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            0,
+            1,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "172": {
+        "mask": 172,
+        "parties": [
+          "C",
+          "KD",
+          "V",
+          "SD"
+        ],
+        "mean_seats": 152.5,
+        "median_seats": 153,
+        "p05_seats": 148,
+        "p10_seats": 148,
+        "p25_seats": 150,
+        "p75_seats": 154,
+        "p90_seats": 155,
+        "p95_seats": 156,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 148,
+          "counts": [
+            1,
+            1,
+            0,
+            1,
+            0,
+            2,
+            1,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "173": {
+        "mask": 173,
+        "parties": [
+          "M",
+          "C",
+          "KD",
+          "V",
+          "SD"
+        ],
+        "mean_seats": 215.875,
+        "median_seats": 217,
+        "p05_seats": 209,
+        "p10_seats": 210,
+        "p25_seats": 214,
+        "p75_seats": 219,
+        "p90_seats": 219,
+        "p95_seats": 219,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 208,
+          "counts": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            2,
+            1
+          ]
+        }
+      },
+      "174": {
+        "mask": 174,
+        "parties": [
+          "L",
+          "C",
+          "KD",
+          "V",
+          "SD"
+        ],
+        "mean_seats": 152.5,
+        "median_seats": 153,
+        "p05_seats": 148,
+        "p10_seats": 148,
+        "p25_seats": 150,
+        "p75_seats": 154,
+        "p90_seats": 155,
+        "p95_seats": 156,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 148,
+          "counts": [
+            1,
+            1,
+            0,
+            1,
+            0,
+            2,
+            1,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "175": {
+        "mask": 175,
+        "parties": [
+          "M",
+          "L",
+          "C",
+          "KD",
+          "V",
+          "SD"
+        ],
+        "mean_seats": 215.875,
+        "median_seats": 217,
+        "p05_seats": 209,
+        "p10_seats": 210,
+        "p25_seats": 214,
+        "p75_seats": 219,
+        "p90_seats": 219,
+        "p95_seats": 219,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 208,
+          "counts": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            2,
+            1
+          ]
+        }
+      },
+      "176": {
+        "mask": 176,
+        "parties": [
+          "S",
+          "V",
+          "SD"
+        ],
+        "mean_seats": 206.625,
+        "median_seats": 206,
+        "p05_seats": 200,
+        "p10_seats": 200,
+        "p25_seats": 201,
+        "p75_seats": 212,
+        "p90_seats": 213,
+        "p95_seats": 213,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 200,
+          "counts": [
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            2
+          ]
+        }
+      },
+      "177": {
+        "mask": 177,
+        "parties": [
+          "M",
+          "S",
+          "V",
+          "SD"
+        ],
+        "mean_seats": 270.0,
+        "median_seats": 271,
+        "p05_seats": 262,
+        "p10_seats": 262,
+        "p25_seats": 266,
+        "p75_seats": 272,
+        "p90_seats": 276,
+        "p95_seats": 277,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 262,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            2,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "178": {
+        "mask": 178,
+        "parties": [
+          "L",
+          "S",
+          "V",
+          "SD"
+        ],
+        "mean_seats": 206.625,
+        "median_seats": 206,
+        "p05_seats": 200,
+        "p10_seats": 200,
+        "p25_seats": 201,
+        "p75_seats": 212,
+        "p90_seats": 213,
+        "p95_seats": 213,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 200,
+          "counts": [
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            2
+          ]
+        }
+      },
+      "179": {
+        "mask": 179,
+        "parties": [
+          "M",
+          "L",
+          "S",
+          "V",
+          "SD"
+        ],
+        "mean_seats": 270.0,
+        "median_seats": 271,
+        "p05_seats": 262,
+        "p10_seats": 262,
+        "p25_seats": 266,
+        "p75_seats": 272,
+        "p90_seats": 276,
+        "p95_seats": 277,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 262,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            2,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "180": {
+        "mask": 180,
+        "parties": [
+          "C",
+          "S",
+          "V",
+          "SD"
+        ],
+        "mean_seats": 235.5,
+        "median_seats": 235,
+        "p05_seats": 230,
+        "p10_seats": 230,
+        "p25_seats": 231,
+        "p75_seats": 239,
+        "p90_seats": 239,
+        "p95_seats": 240,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 230,
+          "counts": [
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "181": {
+        "mask": 181,
+        "parties": [
+          "M",
+          "C",
+          "S",
+          "V",
+          "SD"
+        ],
+        "mean_seats": 298.875,
+        "median_seats": 300,
+        "p05_seats": 291,
+        "p10_seats": 292,
+        "p25_seats": 297,
+        "p75_seats": 301,
+        "p90_seats": 302,
+        "p95_seats": 303,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 291,
+          "counts": [
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            2,
+            1,
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "182": {
+        "mask": 182,
+        "parties": [
+          "L",
+          "C",
+          "S",
+          "V",
+          "SD"
+        ],
+        "mean_seats": 235.5,
+        "median_seats": 235,
+        "p05_seats": 230,
+        "p10_seats": 230,
+        "p25_seats": 231,
+        "p75_seats": 239,
+        "p90_seats": 239,
+        "p95_seats": 240,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 230,
+          "counts": [
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "183": {
+        "mask": 183,
+        "parties": [
+          "M",
+          "L",
+          "C",
+          "S",
+          "V",
+          "SD"
+        ],
+        "mean_seats": 298.875,
+        "median_seats": 300,
+        "p05_seats": 291,
+        "p10_seats": 292,
+        "p25_seats": 297,
+        "p75_seats": 301,
+        "p90_seats": 302,
+        "p95_seats": 303,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 291,
+          "counts": [
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            2,
+            1,
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "184": {
+        "mask": 184,
+        "parties": [
+          "KD",
+          "S",
+          "V",
+          "SD"
+        ],
+        "mean_seats": 229.625,
+        "median_seats": 230,
+        "p05_seats": 222,
+        "p10_seats": 223,
+        "p25_seats": 227,
+        "p75_seats": 232,
+        "p90_seats": 234,
+        "p95_seats": 235,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 222,
+          "counts": [
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            1,
+            0,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "185": {
+        "mask": 185,
+        "parties": [
+          "M",
+          "KD",
+          "S",
+          "V",
+          "SD"
+        ],
+        "mean_seats": 293.0,
+        "median_seats": 291,
+        "p05_seats": 289,
+        "p10_seats": 289,
+        "p25_seats": 290,
+        "p75_seats": 295,
+        "p90_seats": 298,
+        "p95_seats": 299,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 289,
+          "counts": [
+            1,
+            2,
+            1,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "186": {
+        "mask": 186,
+        "parties": [
+          "L",
+          "KD",
+          "S",
+          "V",
+          "SD"
+        ],
+        "mean_seats": 229.625,
+        "median_seats": 230,
+        "p05_seats": 222,
+        "p10_seats": 223,
+        "p25_seats": 227,
+        "p75_seats": 232,
+        "p90_seats": 234,
+        "p95_seats": 235,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 222,
+          "counts": [
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            1,
+            0,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "187": {
+        "mask": 187,
+        "parties": [
+          "M",
+          "L",
+          "KD",
+          "S",
+          "V",
+          "SD"
+        ],
+        "mean_seats": 293.0,
+        "median_seats": 291,
+        "p05_seats": 289,
+        "p10_seats": 289,
+        "p25_seats": 290,
+        "p75_seats": 295,
+        "p90_seats": 298,
+        "p95_seats": 299,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 289,
+          "counts": [
+            1,
+            2,
+            1,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "188": {
+        "mask": 188,
+        "parties": [
+          "C",
+          "KD",
+          "S",
+          "V",
+          "SD"
+        ],
+        "mean_seats": 258.5,
+        "median_seats": 260,
+        "p05_seats": 253,
+        "p10_seats": 253,
+        "p25_seats": 257,
+        "p75_seats": 260,
+        "p90_seats": 261,
+        "p95_seats": 261,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 253,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            3,
+            1,
+            1
+          ]
+        }
+      },
+      "189": {
+        "mask": 189,
+        "parties": [
+          "M",
+          "C",
+          "KD",
+          "S",
+          "V",
+          "SD"
+        ],
+        "mean_seats": 321.875,
+        "median_seats": 321,
+        "p05_seats": 320,
+        "p10_seats": 320,
+        "p25_seats": 320,
+        "p75_seats": 323,
+        "p90_seats": 323,
+        "p95_seats": 324,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 320,
+          "counts": [
+            3,
+            1,
+            1,
+            2,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "190": {
+        "mask": 190,
+        "parties": [
+          "L",
+          "C",
+          "KD",
+          "S",
+          "V",
+          "SD"
+        ],
+        "mean_seats": 258.5,
+        "median_seats": 260,
+        "p05_seats": 253,
+        "p10_seats": 253,
+        "p25_seats": 257,
+        "p75_seats": 260,
+        "p90_seats": 261,
+        "p95_seats": 261,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 253,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            3,
+            1,
+            1
+          ]
+        }
+      },
+      "191": {
+        "mask": 191,
+        "parties": [
+          "M",
+          "L",
+          "C",
+          "KD",
+          "S",
+          "V",
+          "SD"
+        ],
+        "mean_seats": 321.875,
+        "median_seats": 321,
+        "p05_seats": 320,
+        "p10_seats": 320,
+        "p25_seats": 320,
+        "p75_seats": 323,
+        "p90_seats": 323,
+        "p95_seats": 324,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 320,
+          "counts": [
+            3,
+            1,
+            1,
+            2,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "192": {
+        "mask": 192,
+        "parties": [
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 98.125,
+        "median_seats": 96,
+        "p05_seats": 92,
+        "p10_seats": 92,
+        "p25_seats": 94,
+        "p75_seats": 103,
+        "p90_seats": 104,
+        "p95_seats": 104,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 92,
+          "counts": [
+            1,
+            1,
+            0,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "193": {
+        "mask": 193,
+        "parties": [
+          "M",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 161.5,
+        "median_seats": 163,
+        "p05_seats": 153,
+        "p10_seats": 154,
+        "p25_seats": 161,
+        "p75_seats": 163,
+        "p90_seats": 166,
+        "p95_seats": 166,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 152,
+          "counts": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            4,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "194": {
+        "mask": 194,
+        "parties": [
+          "L",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 98.125,
+        "median_seats": 96,
+        "p05_seats": 92,
+        "p10_seats": 92,
+        "p25_seats": 94,
+        "p75_seats": 103,
+        "p90_seats": 104,
+        "p95_seats": 104,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 92,
+          "counts": [
+            1,
+            1,
+            0,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "195": {
+        "mask": 195,
+        "parties": [
+          "M",
+          "L",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 161.5,
+        "median_seats": 163,
+        "p05_seats": 153,
+        "p10_seats": 154,
+        "p25_seats": 161,
+        "p75_seats": 163,
+        "p90_seats": 166,
+        "p95_seats": 166,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 152,
+          "counts": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            4,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "196": {
+        "mask": 196,
+        "parties": [
+          "C",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 127.0,
+        "median_seats": 126,
+        "p05_seats": 122,
+        "p10_seats": 122,
+        "p25_seats": 122,
+        "p75_seats": 130,
+        "p90_seats": 133,
+        "p95_seats": 134,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 122,
+          "counts": [
+            2,
+            1,
+            1,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "197": {
+        "mask": 197,
+        "parties": [
+          "M",
+          "C",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 190.375,
+        "median_seats": 191,
+        "p05_seats": 182,
+        "p10_seats": 183,
+        "p25_seats": 187,
+        "p75_seats": 193,
+        "p90_seats": 195,
+        "p95_seats": 196,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 182,
+          "counts": [
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            1,
+            0,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "198": {
+        "mask": 198,
+        "parties": [
+          "L",
+          "C",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 127.0,
+        "median_seats": 126,
+        "p05_seats": 122,
+        "p10_seats": 122,
+        "p25_seats": 122,
+        "p75_seats": 130,
+        "p90_seats": 133,
+        "p95_seats": 134,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 122,
+          "counts": [
+            2,
+            1,
+            1,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "199": {
+        "mask": 199,
+        "parties": [
+          "M",
+          "L",
+          "C",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 190.375,
+        "median_seats": 191,
+        "p05_seats": 182,
+        "p10_seats": 183,
+        "p25_seats": 187,
+        "p75_seats": 193,
+        "p90_seats": 195,
+        "p95_seats": 196,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 182,
+          "counts": [
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            1,
+            0,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "200": {
+        "mask": 200,
+        "parties": [
+          "KD",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 121.125,
+        "median_seats": 121,
+        "p05_seats": 116,
+        "p10_seats": 117,
+        "p25_seats": 118,
+        "p75_seats": 124,
+        "p90_seats": 124,
+        "p95_seats": 125,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 116,
+          "counts": [
+            1,
+            0,
+            2,
+            1,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "201": {
+        "mask": 201,
+        "parties": [
+          "M",
+          "KD",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 184.5,
+        "median_seats": 184,
+        "p05_seats": 180,
+        "p10_seats": 181,
+        "p25_seats": 183,
+        "p75_seats": 186,
+        "p90_seats": 186,
+        "p95_seats": 187,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 179,
+          "counts": [
+            1,
+            0,
+            0,
+            0,
+            1,
+            2,
+            1,
+            2,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "202": {
+        "mask": 202,
+        "parties": [
+          "L",
+          "KD",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 121.125,
+        "median_seats": 121,
+        "p05_seats": 116,
+        "p10_seats": 117,
+        "p25_seats": 118,
+        "p75_seats": 124,
+        "p90_seats": 124,
+        "p95_seats": 125,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 116,
+          "counts": [
+            1,
+            0,
+            2,
+            1,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "203": {
+        "mask": 203,
+        "parties": [
+          "M",
+          "L",
+          "KD",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 184.5,
+        "median_seats": 184,
+        "p05_seats": 180,
+        "p10_seats": 181,
+        "p25_seats": 183,
+        "p75_seats": 186,
+        "p90_seats": 186,
+        "p95_seats": 187,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 179,
+          "counts": [
+            1,
+            0,
+            0,
+            0,
+            1,
+            2,
+            1,
+            2,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "204": {
+        "mask": 204,
+        "parties": [
+          "C",
+          "KD",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 150.0,
+        "median_seats": 151,
+        "p05_seats": 144,
+        "p10_seats": 144,
+        "p25_seats": 148,
+        "p75_seats": 153,
+        "p90_seats": 153,
+        "p95_seats": 153,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 144,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            1,
+            2,
+            1
+          ]
+        }
+      },
+      "205": {
+        "mask": 205,
+        "parties": [
+          "M",
+          "C",
+          "KD",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 213.375,
+        "median_seats": 213,
+        "p05_seats": 209,
+        "p10_seats": 209,
+        "p25_seats": 212,
+        "p75_seats": 215,
+        "p90_seats": 216,
+        "p95_seats": 216,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 209,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            2,
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "206": {
+        "mask": 206,
+        "parties": [
+          "L",
+          "C",
+          "KD",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 150.0,
+        "median_seats": 151,
+        "p05_seats": 144,
+        "p10_seats": 144,
+        "p25_seats": 148,
+        "p75_seats": 153,
+        "p90_seats": 153,
+        "p95_seats": 153,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 144,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            1,
+            2,
+            1
+          ]
+        }
+      },
+      "207": {
+        "mask": 207,
+        "parties": [
+          "M",
+          "L",
+          "C",
+          "KD",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 213.375,
+        "median_seats": 213,
+        "p05_seats": 209,
+        "p10_seats": 209,
+        "p25_seats": 212,
+        "p75_seats": 215,
+        "p90_seats": 216,
+        "p95_seats": 216,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 209,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            2,
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "208": {
+        "mask": 208,
+        "parties": [
+          "S",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 204.125,
+        "median_seats": 204,
+        "p05_seats": 197,
+        "p10_seats": 197,
+        "p25_seats": 202,
+        "p75_seats": 208,
+        "p90_seats": 209,
+        "p95_seats": 209,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 197,
+          "counts": [
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            3,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "209": {
+        "mask": 209,
+        "parties": [
+          "M",
+          "S",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 267.5,
+        "median_seats": 267,
+        "p05_seats": 264,
+        "p10_seats": 264,
+        "p25_seats": 264,
+        "p75_seats": 270,
+        "p90_seats": 271,
+        "p95_seats": 271,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 264,
+          "counts": [
+            3,
+            0,
+            0,
+            1,
+            1,
+            0,
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "210": {
+        "mask": 210,
+        "parties": [
+          "L",
+          "S",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 204.125,
+        "median_seats": 204,
+        "p05_seats": 197,
+        "p10_seats": 197,
+        "p25_seats": 202,
+        "p75_seats": 208,
+        "p90_seats": 209,
+        "p95_seats": 209,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 197,
+          "counts": [
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            3,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "211": {
+        "mask": 211,
+        "parties": [
+          "M",
+          "L",
+          "S",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 267.5,
+        "median_seats": 267,
+        "p05_seats": 264,
+        "p10_seats": 264,
+        "p25_seats": 264,
+        "p75_seats": 270,
+        "p90_seats": 271,
+        "p95_seats": 271,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 264,
+          "counts": [
+            3,
+            0,
+            0,
+            1,
+            1,
+            0,
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "212": {
+        "mask": 212,
+        "parties": [
+          "C",
+          "S",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 233.0,
+        "median_seats": 233,
+        "p05_seats": 227,
+        "p10_seats": 228,
+        "p25_seats": 229,
+        "p75_seats": 235,
+        "p90_seats": 238,
+        "p95_seats": 238,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 226,
+          "counts": [
+            1,
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            1,
+            1,
+            1,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "213": {
+        "mask": 213,
+        "parties": [
+          "M",
+          "C",
+          "S",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 296.375,
+        "median_seats": 296,
+        "p05_seats": 293,
+        "p10_seats": 293,
+        "p25_seats": 295,
+        "p75_seats": 297,
+        "p90_seats": 298,
+        "p95_seats": 299,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 293,
+          "counts": [
+            1,
+            1,
+            0,
+            3,
+            1,
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "214": {
+        "mask": 214,
+        "parties": [
+          "L",
+          "C",
+          "S",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 233.0,
+        "median_seats": 233,
+        "p05_seats": 227,
+        "p10_seats": 228,
+        "p25_seats": 229,
+        "p75_seats": 235,
+        "p90_seats": 238,
+        "p95_seats": 238,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 226,
+          "counts": [
+            1,
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            1,
+            1,
+            1,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "215": {
+        "mask": 215,
+        "parties": [
+          "M",
+          "L",
+          "C",
+          "S",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 296.375,
+        "median_seats": 296,
+        "p05_seats": 293,
+        "p10_seats": 293,
+        "p25_seats": 295,
+        "p75_seats": 297,
+        "p90_seats": 298,
+        "p95_seats": 299,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 293,
+          "counts": [
+            1,
+            1,
+            0,
+            3,
+            1,
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "216": {
+        "mask": 216,
+        "parties": [
+          "KD",
+          "S",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 227.125,
+        "median_seats": 228,
+        "p05_seats": 219,
+        "p10_seats": 219,
+        "p25_seats": 223,
+        "p75_seats": 231,
+        "p90_seats": 233,
+        "p95_seats": 233,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 219,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            2,
+            0,
+            0,
+            1,
+            0,
+            2
+          ]
+        }
+      },
+      "217": {
+        "mask": 217,
+        "parties": [
+          "M",
+          "KD",
+          "S",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 290.5,
+        "median_seats": 290,
+        "p05_seats": 286,
+        "p10_seats": 287,
+        "p25_seats": 289,
+        "p75_seats": 291,
+        "p90_seats": 293,
+        "p95_seats": 294,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 286,
+          "counts": [
+            1,
+            0,
+            1,
+            0,
+            2,
+            2,
+            0,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "218": {
+        "mask": 218,
+        "parties": [
+          "L",
+          "KD",
+          "S",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 227.125,
+        "median_seats": 228,
+        "p05_seats": 219,
+        "p10_seats": 219,
+        "p25_seats": 223,
+        "p75_seats": 231,
+        "p90_seats": 233,
+        "p95_seats": 233,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 219,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            2,
+            0,
+            0,
+            1,
+            0,
+            2
+          ]
+        }
+      },
+      "219": {
+        "mask": 219,
+        "parties": [
+          "M",
+          "L",
+          "KD",
+          "S",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 290.5,
+        "median_seats": 290,
+        "p05_seats": 286,
+        "p10_seats": 287,
+        "p25_seats": 289,
+        "p75_seats": 291,
+        "p90_seats": 293,
+        "p95_seats": 294,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 286,
+          "counts": [
+            1,
+            0,
+            1,
+            0,
+            2,
+            2,
+            0,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "220": {
+        "mask": 220,
+        "parties": [
+          "C",
+          "KD",
+          "S",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 256.0,
+        "median_seats": 258,
+        "p05_seats": 249,
+        "p10_seats": 250,
+        "p25_seats": 251,
+        "p75_seats": 258,
+        "p90_seats": 261,
+        "p95_seats": 261,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 249,
+          "counts": [
+            1,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            3,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "221": {
+        "mask": 221,
+        "parties": [
+          "M",
+          "C",
+          "KD",
+          "S",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 319.375,
+        "median_seats": 319,
+        "p05_seats": 317,
+        "p10_seats": 317,
+        "p25_seats": 318,
+        "p75_seats": 320,
+        "p90_seats": 321,
+        "p95_seats": 321,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 317,
+          "counts": [
+            1,
+            2,
+            1,
+            2,
+            1,
+            1
+          ]
+        }
+      },
+      "222": {
+        "mask": 222,
+        "parties": [
+          "L",
+          "C",
+          "KD",
+          "S",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 256.0,
+        "median_seats": 258,
+        "p05_seats": 249,
+        "p10_seats": 250,
+        "p25_seats": 251,
+        "p75_seats": 258,
+        "p90_seats": 261,
+        "p95_seats": 261,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 249,
+          "counts": [
+            1,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            3,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "223": {
+        "mask": 223,
+        "parties": [
+          "M",
+          "L",
+          "C",
+          "KD",
+          "S",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 319.375,
+        "median_seats": 319,
+        "p05_seats": 317,
+        "p10_seats": 317,
+        "p25_seats": 318,
+        "p75_seats": 320,
+        "p90_seats": 321,
+        "p95_seats": 321,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 317,
+          "counts": [
+            1,
+            2,
+            1,
+            2,
+            1,
+            1
+          ]
+        }
+      },
+      "224": {
+        "mask": 224,
+        "parties": [
+          "V",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 127.75,
+        "median_seats": 128,
+        "p05_seats": 120,
+        "p10_seats": 121,
+        "p25_seats": 122,
+        "p75_seats": 133,
+        "p90_seats": 134,
+        "p95_seats": 134,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 120,
+          "counts": [
+            1,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            2
+          ]
+        }
+      },
+      "225": {
+        "mask": 225,
+        "parties": [
+          "M",
+          "V",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 191.125,
+        "median_seats": 194,
+        "p05_seats": 180,
+        "p10_seats": 181,
+        "p25_seats": 190,
+        "p75_seats": 195,
+        "p90_seats": 195,
+        "p95_seats": 195,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 180,
+          "counts": [
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            2,
+            2,
+            1
+          ]
+        }
+      },
+      "226": {
+        "mask": 226,
+        "parties": [
+          "L",
+          "V",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 127.75,
+        "median_seats": 128,
+        "p05_seats": 120,
+        "p10_seats": 121,
+        "p25_seats": 122,
+        "p75_seats": 133,
+        "p90_seats": 134,
+        "p95_seats": 134,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 120,
+          "counts": [
+            1,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            2
+          ]
+        }
+      },
+      "227": {
+        "mask": 227,
+        "parties": [
+          "M",
+          "L",
+          "V",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 191.125,
+        "median_seats": 194,
+        "p05_seats": 180,
+        "p10_seats": 181,
+        "p25_seats": 190,
+        "p75_seats": 195,
+        "p90_seats": 195,
+        "p95_seats": 195,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 180,
+          "counts": [
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            2,
+            2,
+            1
+          ]
+        }
+      },
+      "228": {
+        "mask": 228,
+        "parties": [
+          "C",
+          "V",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 156.625,
+        "median_seats": 156,
+        "p05_seats": 150,
+        "p10_seats": 150,
+        "p25_seats": 151,
+        "p75_seats": 160,
+        "p90_seats": 164,
+        "p95_seats": 164,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 150,
+          "counts": [
+            1,
+            1,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            2
+          ]
+        }
+      },
+      "229": {
+        "mask": 229,
+        "parties": [
+          "M",
+          "C",
+          "V",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 220.0,
+        "median_seats": 221,
+        "p05_seats": 210,
+        "p10_seats": 210,
+        "p25_seats": 217,
+        "p75_seats": 224,
+        "p90_seats": 226,
+        "p95_seats": 226,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 210,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            0,
+            1,
+            0,
+            2
+          ]
+        }
+      },
+      "230": {
+        "mask": 230,
+        "parties": [
+          "L",
+          "C",
+          "V",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 156.625,
+        "median_seats": 156,
+        "p05_seats": 150,
+        "p10_seats": 150,
+        "p25_seats": 151,
+        "p75_seats": 160,
+        "p90_seats": 164,
+        "p95_seats": 164,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 150,
+          "counts": [
+            1,
+            1,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            2
+          ]
+        }
+      },
+      "231": {
+        "mask": 231,
+        "parties": [
+          "M",
+          "L",
+          "C",
+          "V",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 220.0,
+        "median_seats": 221,
+        "p05_seats": 210,
+        "p10_seats": 210,
+        "p25_seats": 217,
+        "p75_seats": 224,
+        "p90_seats": 226,
+        "p95_seats": 226,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 210,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            0,
+            1,
+            0,
+            2
+          ]
+        }
+      },
+      "232": {
+        "mask": 232,
+        "parties": [
+          "KD",
+          "V",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 150.75,
+        "median_seats": 150,
+        "p05_seats": 146,
+        "p10_seats": 146,
+        "p25_seats": 148,
+        "p75_seats": 153,
+        "p90_seats": 154,
+        "p95_seats": 155,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 146,
+          "counts": [
+            1,
+            1,
+            0,
+            1,
+            1,
+            1,
+            0,
+            1,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "233": {
+        "mask": 233,
+        "parties": [
+          "M",
+          "KD",
+          "V",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 214.125,
+        "median_seats": 215,
+        "p05_seats": 208,
+        "p10_seats": 209,
+        "p25_seats": 213,
+        "p75_seats": 216,
+        "p90_seats": 216,
+        "p95_seats": 217,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 207,
+          "counts": [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            1,
+            3,
+            0,
+            1
+          ]
+        }
+      },
+      "234": {
+        "mask": 234,
+        "parties": [
+          "L",
+          "KD",
+          "V",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 150.75,
+        "median_seats": 150,
+        "p05_seats": 146,
+        "p10_seats": 146,
+        "p25_seats": 148,
+        "p75_seats": 153,
+        "p90_seats": 154,
+        "p95_seats": 155,
+        "prob_majority": 0.0,
+        "seat_histogram": {
+          "min_seats": 146,
+          "counts": [
+            1,
+            1,
+            0,
+            1,
+            1,
+            1,
+            0,
+            1,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "235": {
+        "mask": 235,
+        "parties": [
+          "M",
+          "L",
+          "KD",
+          "V",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 214.125,
+        "median_seats": 215,
+        "p05_seats": 208,
+        "p10_seats": 209,
+        "p25_seats": 213,
+        "p75_seats": 216,
+        "p90_seats": 216,
+        "p95_seats": 217,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 207,
+          "counts": [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            1,
+            3,
+            0,
+            1
+          ]
+        }
+      },
+      "236": {
+        "mask": 236,
+        "parties": [
+          "C",
+          "KD",
+          "V",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 179.625,
+        "median_seats": 180,
+        "p05_seats": 175,
+        "p10_seats": 175,
+        "p25_seats": 176,
+        "p75_seats": 181,
+        "p90_seats": 183,
+        "p95_seats": 183,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 175,
+          "counts": [
+            1,
+            1,
+            1,
+            0,
+            0,
+            1,
+            2,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "237": {
+        "mask": 237,
+        "parties": [
+          "M",
+          "C",
+          "KD",
+          "V",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 243.0,
+        "median_seats": 243,
+        "p05_seats": 238,
+        "p10_seats": 239,
+        "p25_seats": 241,
+        "p75_seats": 245,
+        "p90_seats": 245,
+        "p95_seats": 246,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 237,
+          "counts": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            1,
+            2,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "238": {
+        "mask": 238,
+        "parties": [
+          "L",
+          "C",
+          "KD",
+          "V",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 179.625,
+        "median_seats": 180,
+        "p05_seats": 175,
+        "p10_seats": 175,
+        "p25_seats": 176,
+        "p75_seats": 181,
+        "p90_seats": 183,
+        "p95_seats": 183,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 175,
+          "counts": [
+            1,
+            1,
+            1,
+            0,
+            0,
+            1,
+            2,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "239": {
+        "mask": 239,
+        "parties": [
+          "M",
+          "L",
+          "C",
+          "KD",
+          "V",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 243.0,
+        "median_seats": 243,
+        "p05_seats": 238,
+        "p10_seats": 239,
+        "p25_seats": 241,
+        "p75_seats": 245,
+        "p90_seats": 245,
+        "p95_seats": 246,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 237,
+          "counts": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            1,
+            2,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "240": {
+        "mask": 240,
+        "parties": [
+          "S",
+          "V",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 233.75,
+        "median_seats": 234,
+        "p05_seats": 227,
+        "p10_seats": 227,
+        "p25_seats": 230,
+        "p75_seats": 238,
+        "p90_seats": 239,
+        "p95_seats": 239,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 227,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            2
+          ]
+        }
+      },
+      "241": {
+        "mask": 241,
+        "parties": [
+          "M",
+          "S",
+          "V",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 297.125,
+        "median_seats": 298,
+        "p05_seats": 291,
+        "p10_seats": 291,
+        "p25_seats": 294,
+        "p75_seats": 300,
+        "p90_seats": 301,
+        "p95_seats": 301,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 291,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "242": {
+        "mask": 242,
+        "parties": [
+          "L",
+          "S",
+          "V",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 233.75,
+        "median_seats": 234,
+        "p05_seats": 227,
+        "p10_seats": 227,
+        "p25_seats": 230,
+        "p75_seats": 238,
+        "p90_seats": 239,
+        "p95_seats": 239,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 227,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            2
+          ]
+        }
+      },
+      "243": {
+        "mask": 243,
+        "parties": [
+          "M",
+          "L",
+          "S",
+          "V",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 297.125,
+        "median_seats": 298,
+        "p05_seats": 291,
+        "p10_seats": 291,
+        "p25_seats": 294,
+        "p75_seats": 300,
+        "p90_seats": 301,
+        "p95_seats": 301,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 291,
+          "counts": [
+            1,
+            1,
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "244": {
+        "mask": 244,
+        "parties": [
+          "C",
+          "S",
+          "V",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 262.625,
+        "median_seats": 262,
+        "p05_seats": 257,
+        "p10_seats": 258,
+        "p25_seats": 260,
+        "p75_seats": 265,
+        "p90_seats": 268,
+        "p95_seats": 268,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 256,
+          "counts": [
+            1,
+            0,
+            0,
+            0,
+            2,
+            0,
+            2,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "245": {
+        "mask": 245,
+        "parties": [
+          "M",
+          "C",
+          "S",
+          "V",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 326.0,
+        "median_seats": 326,
+        "p05_seats": 320,
+        "p10_seats": 321,
+        "p25_seats": 325,
+        "p75_seats": 328,
+        "p90_seats": 329,
+        "p95_seats": 329,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 320,
+          "counts": [
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            2,
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "246": {
+        "mask": 246,
+        "parties": [
+          "L",
+          "C",
+          "S",
+          "V",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 262.625,
+        "median_seats": 262,
+        "p05_seats": 257,
+        "p10_seats": 258,
+        "p25_seats": 260,
+        "p75_seats": 265,
+        "p90_seats": 268,
+        "p95_seats": 268,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 256,
+          "counts": [
+            1,
+            0,
+            0,
+            0,
+            2,
+            0,
+            2,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "247": {
+        "mask": 247,
+        "parties": [
+          "M",
+          "L",
+          "C",
+          "S",
+          "V",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 326.0,
+        "median_seats": 326,
+        "p05_seats": 320,
+        "p10_seats": 321,
+        "p25_seats": 325,
+        "p75_seats": 328,
+        "p90_seats": 329,
+        "p95_seats": 329,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 320,
+          "counts": [
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            2,
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "248": {
+        "mask": 248,
+        "parties": [
+          "KD",
+          "S",
+          "V",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 256.75,
+        "median_seats": 258,
+        "p05_seats": 250,
+        "p10_seats": 250,
+        "p25_seats": 255,
+        "p75_seats": 259,
+        "p90_seats": 260,
+        "p95_seats": 261,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 250,
+          "counts": [
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            0,
+            2,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "249": {
+        "mask": 249,
+        "parties": [
+          "M",
+          "KD",
+          "S",
+          "V",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 320.125,
+        "median_seats": 319,
+        "p05_seats": 317,
+        "p10_seats": 318,
+        "p25_seats": 319,
+        "p75_seats": 320,
+        "p90_seats": 323,
+        "p95_seats": 323,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 317,
+          "counts": [
+            1,
+            0,
+            3,
+            2,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "250": {
+        "mask": 250,
+        "parties": [
+          "L",
+          "KD",
+          "S",
+          "V",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 256.75,
+        "median_seats": 258,
+        "p05_seats": 250,
+        "p10_seats": 250,
+        "p25_seats": 255,
+        "p75_seats": 259,
+        "p90_seats": 260,
+        "p95_seats": 261,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 250,
+          "counts": [
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            0,
+            2,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      "251": {
+        "mask": 251,
+        "parties": [
+          "M",
+          "L",
+          "KD",
+          "S",
+          "V",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 320.125,
+        "median_seats": 319,
+        "p05_seats": 317,
+        "p10_seats": 318,
+        "p25_seats": 319,
+        "p75_seats": 320,
+        "p90_seats": 323,
+        "p95_seats": 323,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 317,
+          "counts": [
+            1,
+            0,
+            3,
+            2,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      "252": {
+        "mask": 252,
+        "parties": [
+          "C",
+          "KD",
+          "S",
+          "V",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 285.625,
+        "median_seats": 287,
+        "p05_seats": 280,
+        "p10_seats": 281,
+        "p25_seats": 282,
+        "p75_seats": 289,
+        "p90_seats": 289,
+        "p95_seats": 289,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 279,
+          "counts": [
+            1,
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0,
+            2,
+            0,
+            3
+          ]
+        }
+      },
+      "253": {
+        "mask": 253,
+        "parties": [
+          "M",
+          "C",
+          "KD",
+          "S",
+          "V",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 349.0,
+        "median_seats": 349,
+        "p05_seats": 349,
+        "p10_seats": 349,
+        "p25_seats": 349,
+        "p75_seats": 349,
+        "p90_seats": 349,
+        "p95_seats": 349,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 349,
+          "counts": [
+            8
+          ]
+        }
+      },
+      "254": {
+        "mask": 254,
+        "parties": [
+          "L",
+          "C",
+          "KD",
+          "S",
+          "V",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 285.625,
+        "median_seats": 287,
+        "p05_seats": 280,
+        "p10_seats": 281,
+        "p25_seats": 282,
+        "p75_seats": 289,
+        "p90_seats": 289,
+        "p95_seats": 289,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 279,
+          "counts": [
+            1,
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0,
+            2,
+            0,
+            3
+          ]
+        }
+      },
+      "255": {
+        "mask": 255,
+        "parties": [
+          "M",
+          "L",
+          "C",
+          "KD",
+          "S",
+          "V",
+          "MP",
+          "SD"
+        ],
+        "mean_seats": 349.0,
+        "median_seats": 349,
+        "p05_seats": 349,
+        "p10_seats": 349,
+        "p25_seats": 349,
+        "p75_seats": 349,
+        "p90_seats": 349,
+        "p95_seats": 349,
+        "prob_majority": 1.0,
+        "seat_histogram": {
+          "min_seats": 349,
+          "counts": [
+            8
+          ]
+        }
+      }
+    }
+  },
+  "note": "Groups are configurable summaries over parliamentary-party seat draws; REST is never included as an eligible party.",
+  "deterministic_payload_sha256": "aa22a8e659e9b3d9f93720976f63838a89536d6d3dfe0fcf84ce5bc9e7953be8"
+}
