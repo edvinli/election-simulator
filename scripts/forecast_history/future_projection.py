@@ -452,8 +452,32 @@ def update_history_with_production_result(
         validate_secondary_projection_role,
     )
 
+    historical_payload: Mapping[str, Any] = existing_payload
+    persisted_series = existing_payload.get("series")
+    if isinstance(persisted_series, list):
+        historical_series = [
+            point
+            for point in persisted_series
+            if not (
+                isinstance(point, Mapping)
+                and point.get("source") == "future_projection"
+            )
+        ]
+        if len(historical_series) != len(persisted_series):
+            sanitized_payload = dict(existing_payload)
+            sanitized_payload["series"] = historical_series
+            existing_digest = existing_payload.get("deterministic_content_sha256")
+            if (
+                isinstance(existing_digest, str)
+                and existing_digest == deterministic_history_sha256(existing_payload)
+            ):
+                sanitized_payload["deterministic_content_sha256"] = (
+                    deterministic_history_sha256(sanitized_payload)
+                )
+            historical_payload = sanitized_payload
+
     history = _update_history_with_production_result(
-        existing_payload,
+        historical_payload,
         production_result,
         **history_kwargs,
     )
