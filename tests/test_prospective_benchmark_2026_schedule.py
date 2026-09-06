@@ -55,8 +55,10 @@ class TestFrozenCutoffIsUnchanged(unittest.TestCase):
         self.assertLess(SCHEDULED_START_LOCAL_TIME, CUTOFF_LOCAL_TIME)
         cutoff = scheduled_cutoff(SLOT)
         self.assertEqual(cutoff, _local(SLOT, "23:30"))
-        # 21:30Z during the window, exactly as protocol.json records it.
-        self.assertEqual(cutoff.astimezone(tz=None).utcoffset(), cutoff.utcoffset())
+        # 21:30Z during the window, exactly as protocol.json records it. Both
+        # assertions read the cutoff's own Stockholm offset (CEST, +02:00
+        # throughout the frozen window) rather than the machine's timezone.
+        self.assertEqual(cutoff.utcoffset(), timedelta(hours=2))
         self.assertEqual(cutoff.utctimetuple()[3:5], (21, 30))
 
 
