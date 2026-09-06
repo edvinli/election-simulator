@@ -5,7 +5,6 @@ from __future__ import annotations
 from copy import deepcopy
 import csv
 from datetime import date, datetime, timedelta, timezone
-import hashlib
 import json
 import os
 from pathlib import Path
@@ -49,6 +48,7 @@ from scripts.publication_pipeline.pipeline import run_publication_pipeline
 from scripts.site_publisher import GENERATION_FILES, publish_generation_to_site, sync_history_to_site
 from scripts.static_exporter import validate_published_directory
 from scripts.simulator.engine import SimulationResult, simulate_election
+from scripts.simulator.reproducibility import compute_file_sha256
 from scripts.simulator.exact_draw_sidecar import (
     collect_latest_certified_generation,
     load_verified_draw_sidecar,
@@ -59,6 +59,11 @@ from tests.history_fixtures import (
     FROZEN_ELECTION_DATE,
     freeze_poll_inputs,
     make_history_fixture,
+)
+from tests.site_publication_fixture import (
+    export_frozen_site_publication,
+    frozen_site_generation,
+    install_frozen_site_publication,
 )
 
 
@@ -300,8 +305,12 @@ class ElectionAutomationTests(unittest.TestCase):
         site = parent / "website"
         source.mkdir()
         site.mkdir()
-        shutil.copytree(REPOSITORY_ROOT / "files/election-simulator", source / "files/election-simulator")
-        shutil.copytree(REPOSITORY_ROOT / "files/election-simulator", site / "files/election-simulator")
+        # The frozen publication from tests/fixtures/site_publication, not the
+        # committed site tree: the prior generation these tests start from must
+        # not be whatever production last published, or a synthetic generation
+        # id can sort behind it.
+        for repository in (source, site):
+            install_frozen_site_publication(repository / "files/election-simulator")
 
         processed = source / "data/processed"
         processed.mkdir(parents=True)
@@ -350,55 +359,6 @@ class ElectionAutomationTests(unittest.TestCase):
             capture_output=True,
             text=True,
         ).stdout
-
-    @staticmethod
-    def _rewrite_certified_source_commit(publication_root: Path, source_commit: str) -> None:
-        """Update only audit provenance while preserving publication contracts."""
-
-        pointer_path = publication_root / "current.json"
-        pointer = json.loads(pointer_path.read_text(encoding="utf-8"))
-        version = publication_root / pointer["path"]
-        metadata_path = version / "metadata.json"
-        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
-        metadata["source_git_commit"] = source_commit
-        metadata_path.write_text(
-            json.dumps(metadata, indent=2, ensure_ascii=False) + "\n",
-            encoding="utf-8",
-        )
-
-        def canonical(value):
-            return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
-
-        def without_runtime_timestamps(value):
-            if isinstance(value, dict):
-                return {
-                    key: without_runtime_timestamps(item)
-                    for key, item in value.items()
-                    if key not in {"generated_at_utc", "published_at_utc", "updated_at_utc"}
-                }
-            if isinstance(value, list):
-                return [without_runtime_timestamps(item) for item in value]
-            return value
-
-        manifest_path = version / "manifest.json"
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        manifest["source_git_commit"] = source_commit
-        manifest["publication_files"]["metadata.json"] = hashlib.sha256(metadata_path.read_bytes()).hexdigest()
-        manifest["deterministic_content_hashes"]["metadata.json"] = hashlib.sha256(
-            canonical(without_runtime_timestamps(metadata))
-        ).hexdigest()
-        manifest["deterministic_content_sha256"] = hashlib.sha256(
-            canonical(manifest["deterministic_content_hashes"])
-        ).hexdigest()
-        manifest_path.write_text(
-            json.dumps(manifest, indent=2, ensure_ascii=False) + "\n",
-            encoding="utf-8",
-        )
-        pointer["manifest_sha256"] = hashlib.sha256(manifest_path.read_bytes()).hexdigest()
-        pointer_path.write_text(
-            json.dumps(pointer, indent=2, ensure_ascii=False) + "\n",
-            encoding="utf-8",
-        )
 
     def test_unchanged_source_content_does_not_trigger_intraday_simulation(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -636,7 +596,8 @@ class ElectionAutomationTests(unittest.TestCase):
                 "publication_state": "COMPLETE",
                 "publication_generation": old_generation,
                 "path": f"versions/{old_generation}",
-                "manifest_sha256": __import__("hashlib").sha256(old_manifest.read_bytes()).hexdigest(),
+                # The repository's own hash helper, not a second implementation.
+                "manifest_sha256": compute_file_sha256(old_manifest),
             }
             site_pointer_path = site / "files/election-simulator/current.json"
             site_pointer_path.write_text(json.dumps(stale_pointer, indent=2) + "\n", encoding="utf-8")
@@ -1233,12 +1194,16 @@ time.sleep(60)
                 ["git", "rev-parse", "HEAD"], cwd=source, check=True,
                 capture_output=True, text=True,
             ).stdout.strip()
-            self._rewrite_certified_source_commit(
-                source / "files/election-simulator", baseline_commit
-            )
-            self._rewrite_certified_source_commit(
-                site / "files/election-simulator", baseline_commit
-            )
+            # Re-published by the real exporter, certified from this
+            # fixture repository's own HEAD. The generation id does not move:
+            # the source commit is audit provenance and enters neither the
+            # frozen timestamp nor the deterministic payload hash the id is
+            # built from.
+            for repository in (source, site):
+                export_frozen_site_publication(
+                    repository / "files/election-simulator",
+                    source_git_commit=baseline_commit,
+                )
             subprocess.run(["git", "add", "files/election-simulator"], cwd=source, check=True)
             subprocess.run(["git", "commit", "-qm", "fixture: certify baseline"], cwd=source, check=True)
             subprocess.run(["git", "add", "files/election-simulator"], cwd=site, check=True)
@@ -1724,8 +1689,8 @@ time.sleep(60)
             root = Path(tmp)
             source = root / "simulator"
             site = root / "website"
-            shutil.copytree(REPOSITORY_ROOT / "files/election-simulator", source / "files/election-simulator")
-            shutil.copytree(REPOSITORY_ROOT / "files/election-simulator", site / "files/election-simulator")
+            for repository in (source, site):
+                install_frozen_site_publication(repository / "files/election-simulator")
             # The site starts with a prior generation; mirroring a new source
             # generation exercises the immutable-copy path and history sync.
             source_pointer = json.loads((source / "files/election-simulator/current.json").read_text())
@@ -1735,7 +1700,10 @@ time.sleep(60)
             )
             source_history = source / "files/election-simulator/history/coalition-timeseries.json"
             site_history = site / "files/election-simulator/history/coalition-timeseries.json"
-            site_history.unlink()
+            source_history.parent.mkdir(parents=True, exist_ok=True)
+            source_history.write_text(
+                json.dumps(make_history_fixture(), separators=(",", ":")), encoding="utf-8"
+            )
             publish_generation_to_site(site_repo=site, source_publication_dir=source / "files/election-simulator", generation=generation)
             sync_history_to_site(site_repo=site, source_history_path=source_history)
             validate_published_directory(site / "files/election-simulator")
@@ -1810,7 +1778,7 @@ time.sleep(60)
             source = root / "source"
             site = root / "site"
             (site / "files").mkdir(parents=True)
-            shutil.copytree(REPOSITORY_ROOT / "files/election-simulator", source / "files/election-simulator")
+            install_frozen_site_publication(source / "files/election-simulator")
             # Seed the website with a certified prior publication, then make a
             # staged source fail validation.  The previous pointer is retained.
             pointer_source = json.loads((source / "files/election-simulator/current.json").read_text())

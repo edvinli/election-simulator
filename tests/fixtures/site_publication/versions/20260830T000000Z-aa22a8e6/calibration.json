@@ -1,0 +1,8 @@
+{
+  "schema_version": "1.4",
+  "status": "NOT_AVAILABLE",
+  "evidence_type": "retrospective_historical_not_holdout",
+  "source_files": {},
+  "reason": "No validation summary artifacts were found",
+  "deterministic_payload_sha256": "aa22a8e659e9b3d9f93720976f63838a89536d6d3dfe0fcf84ce5bc9e7953be8"
+}
