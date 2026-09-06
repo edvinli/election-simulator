@@ -265,6 +265,66 @@ def _validate_iso_date(value: Any, *, name: str) -> date:
         raise ValueError(f"{name} must be an ISO date string") from exc
 
 
+def _coerce_publication_date(value: Any, *, name: str) -> date:
+    """Accept either an ISO date string or a real ``date``/``datetime``."""
+
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, date):
+        return value
+    return _validate_iso_date(value, name=name)
+
+
+def validate_publication_chronology(
+    history: Mapping[str, Any],
+    certified_as_of: Any,
+) -> None:
+    """A certified point may replace or extend published history, never precede it.
+
+    Publication chronology is a domain rule in its own right, and naming it is
+    the point: its violations used to surface only indirectly. A certified date
+    behind the artifact's latest published point makes the future projection
+    span days that already carry history, so the publication failed with
+    "future_projection points must never be mixed into historical series" --
+    which reads as data corruption and sent an investigation looking for a
+    leaked projection row that did not exist.
+
+    ``history`` must already have had leaked ``future_projection`` rows
+    discarded before this rule is applied. Those rows are hypothetical futures,
+    so counting them as published history would refuse a publication whose
+    chronology is in fact perfectly ordered.
+
+    Permitted: a same-day rerun (the certified date equals the latest published
+    point, which the roll-in replaces), a later publication, and a publication
+    on election day itself. Refused: a certified date behind published history,
+    and one after election day.
+    """
+
+    certified = _coerce_publication_date(certified_as_of, name="certified_as_of")
+    election_raw = history.get("election_date")
+    if election_raw is not None:
+        election = _coerce_publication_date(election_raw, name="history.election_date")
+        if certified > election:
+            raise ValueError(
+                f"certified production date {certified.isoformat()} occurs after election day "
+                f"{election.isoformat()}"
+            )
+    published = [
+        _coerce_publication_date(point.get("date"), name="history.series[].date")
+        for point in history.get("series") or []
+        if isinstance(point, Mapping)
+    ]
+    if not published:
+        return
+    latest = max(published)
+    if certified < latest:
+        raise ValueError(
+            f"certified production date {certified.isoformat()} is behind published history "
+            f"through {latest.isoformat()}: a future projection from that origin would span "
+            "days that already carry historical points -- republish for the latest date instead"
+        )
+
+
 def _validate_poll(value: Any, index: int, *, latest_date: date | None) -> None:
     if not isinstance(value, Mapping):
         raise ValueError(f"polls[{index}] must be an object")
@@ -562,5 +622,6 @@ __all__ = [
     "deterministic_history_sha256",
     "summarize_coalition_draws",
     "validate_history_contract",
+    "validate_publication_chronology",
     "write_history_json",
 ]

@@ -34,6 +34,7 @@ from .contract import (
     build_groups_from_matrices,
     deterministic_history_sha256,
     validate_history_contract,
+    validate_publication_chronology,
 )
 from .generate import update_history_with_production_result as _update_history_with_production_result
 from .projection_simulator import ELECTION_NOISE_RNG_POLICY, simulate_conditional_projection
@@ -548,6 +549,13 @@ def update_history_with_production_result(
     )
 
     historical_payload = _discard_persisted_projection_rows(existing_payload)
+    # Chronology is checked here, against the payload the base updater will
+    # actually ingest: before it, leaked projection rows would inflate the
+    # latest published date and refuse an ordered publication; after it, the
+    # projection overlap invariant reports the problem as corruption instead.
+    certified_as_of = getattr(getattr(production_result, "summary", None), "as_of", None)
+    if certified_as_of is not None:
+        validate_publication_chronology(historical_payload, certified_as_of)
 
     history = _update_history_with_production_result(
         historical_payload,
@@ -562,20 +570,10 @@ def update_history_with_production_result(
     if len(current_points) != 1:
         raise ValueError("history must contain exactly one current_production anchor")
     current = current_points[0]
-    # The projection spans every day after the certified origin, so a certified
-    # date behind the artifact's own latest point cannot produce a coherent
-    # future: the fan would cover days that already carry published history.
-    # That is a legitimate refusal, but the overlap invariant reports it as
-    # projection data leaking into history, which sends the reader looking for
-    # corruption instead of a backdated republication. Name it here.
-    latest_published = max(str(point.get("date")) for point in history["series"])
-    if latest_published > str(current["date"]):
-        raise ValueError(
-            "certified production date "
-            f"{current['date']} is behind published history through {latest_published}: "
-            "a future projection from that origin would span days that already carry "
-            "historical points -- republish for the latest date instead"
-        )
+    # Re-checked on the rolled-in payload: this is the guarantee the projection
+    # builder relies on, independent of how the base updater treated the
+    # incoming series.
+    validate_publication_chronology(history, current["date"])
     manifest = getattr(production_result, "manifest", None)
     manifest_map = manifest if isinstance(manifest, Mapping) else {}
     seed = manifest_map.get("base_seed", DEFAULT_SIMULATION_SEED)
