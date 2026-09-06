@@ -423,6 +423,101 @@ def _production_vote_shares_pct(production_result: Any) -> Any | None:
     return arr
 
 
+def _persisted_projection_dates(payload: Mapping[str, Any]) -> frozenset[str]:
+    """Dates the persisted artifact already published as hypothetical future.
+
+    Read from the artifact's own ``future_projection`` object rather than
+    inferred from the calendar, because the calendar cannot tell a leaked
+    projection row apart from a genuine certified point on a backdated
+    republication.
+    """
+
+    projection = payload.get("future_projection")
+    if not isinstance(projection, Mapping):
+        return frozenset()
+    series = projection.get("series")
+    if not isinstance(series, list):
+        return frozenset()
+    return frozenset(
+        str(point.get("date"))
+        for point in series
+        if isinstance(point, Mapping) and point.get("date") is not None
+    )
+
+
+def _is_persisted_projection_row(point: Any, projection_dates: frozenset[str]) -> bool:
+    """True when a persisted ``series`` row is leftover projection output.
+
+    Two signals, because the tag is advisory and the date is structural. A row
+    explicitly tagged ``source = "future_projection"`` says so itself. A row
+    dated inside the persisted projection window says so by construction:
+    :func:`validate_future_projection_contract` refuses to publish an artifact
+    whose ``series`` shares a date with its own ``future_projection``, so a
+    date inside that window cannot have been certified history when the
+    artifact was written -- it can only have been added afterwards.
+    """
+
+    if not isinstance(point, Mapping):
+        return False
+    if point.get("source") == "future_projection":
+        return True
+    return str(point.get("date")) in projection_dates
+
+
+def _discard_persisted_projection_rows(
+    existing_payload: Mapping[str, Any],
+) -> Mapping[str, Any]:
+    """Return the persisted payload with leaked projection rows removed.
+
+    The base historical updater copies every incoming ``series`` row forward,
+    so a hypothetical future row that reached ``series`` would be re-ingested
+    as resume data and collide with the freshly generated projection for the
+    same dates. Filtering here keeps that collision from reaching the
+    invariant, and leaves a permanent record of the repair in
+    ``archive_diagnostics``: rows are dropped and the deterministic hash is
+    re-minted, which would otherwise be an untraceable rewrite of a persisted
+    artifact. The base updater carries ``archive_diagnostics`` forward, so the
+    record travels with the artifact lineage.
+
+    A payload that never held a leaked row is returned unchanged, hash
+    included, so the ordinary publication path keeps failing closed on a
+    corrupt incoming hash.
+    """
+
+    persisted_series = existing_payload.get("series")
+    if not isinstance(persisted_series, list):
+        return existing_payload
+    projection_dates = _persisted_projection_dates(existing_payload)
+    discarded = [
+        str(point.get("date"))
+        for point in persisted_series
+        if _is_persisted_projection_row(point, projection_dates)
+    ]
+    if not discarded:
+        return existing_payload
+
+    sanitized_payload = dict(existing_payload)
+    sanitized_payload["series"] = [
+        point
+        for point in persisted_series
+        if not _is_persisted_projection_row(point, projection_dates)
+    ]
+    diagnostics = dict(sanitized_payload.get("archive_diagnostics") or {})
+    diagnostics["discarded_future_projection_series_dates"] = sorted(set(discarded))
+    sanitized_payload["archive_diagnostics"] = diagnostics
+    # Only a hash that was valid for the persisted payload is refreshed for the
+    # sanitized one. An already-invalid hash is left exactly as it was so the
+    # base history contract still rejects the artifact.
+    existing_digest = existing_payload.get("deterministic_content_sha256")
+    if isinstance(existing_digest, str) and existing_digest == deterministic_history_sha256(
+        existing_payload
+    ):
+        sanitized_payload["deterministic_content_sha256"] = deterministic_history_sha256(
+            sanitized_payload
+        )
+    return sanitized_payload
+
+
 def update_history_with_production_result(
     existing_payload: Mapping[str, Any],
     production_result: Any,
@@ -452,8 +547,10 @@ def update_history_with_production_result(
         validate_secondary_projection_role,
     )
 
+    historical_payload = _discard_persisted_projection_rows(existing_payload)
+
     history = _update_history_with_production_result(
-        existing_payload,
+        historical_payload,
         production_result,
         **history_kwargs,
     )
@@ -465,6 +562,20 @@ def update_history_with_production_result(
     if len(current_points) != 1:
         raise ValueError("history must contain exactly one current_production anchor")
     current = current_points[0]
+    # The projection spans every day after the certified origin, so a certified
+    # date behind the artifact's own latest point cannot produce a coherent
+    # future: the fan would cover days that already carry published history.
+    # That is a legitimate refusal, but the overlap invariant reports it as
+    # projection data leaking into history, which sends the reader looking for
+    # corruption instead of a backdated republication. Name it here.
+    latest_published = max(str(point.get("date")) for point in history["series"])
+    if latest_published > str(current["date"]):
+        raise ValueError(
+            "certified production date "
+            f"{current['date']} is behind published history through {latest_published}: "
+            "a future projection from that origin would span days that already carry "
+            "historical points -- republish for the latest date instead"
+        )
     manifest = getattr(production_result, "manifest", None)
     manifest_map = manifest if isinstance(manifest, Mapping) else {}
     seed = manifest_map.get("base_seed", DEFAULT_SIMULATION_SEED)

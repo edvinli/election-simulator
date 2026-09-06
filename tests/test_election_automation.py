@@ -59,6 +59,31 @@ from scripts.simulator.summary import compute_simulation_summary
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 COMMIT = "a" * 40
 
+# The end-to-end publication tests roll a certified point into the *committed*
+# history artifact, whose latest date advances with every publication commit.
+# A hardcoded forecast date therefore drifts behind that artifact, and the
+# future projection built from the certified origin then spans dates that
+# already carry a real archived point -- so the publication fails the
+# projection overlap invariant for a reason that has nothing to do with the
+# behaviour under test. Deriving the date from the artifact keeps these tests
+# pinned to the same scenario they were written for as the data moves.
+LIVE_HISTORY_ARTIFACT = (
+    REPOSITORY_ROOT / "files" / "election-simulator" / "history" / "coalition-timeseries.json"
+)
+FORECAST_AS_OF = max(
+    str(point["date"])
+    for point in json.loads(LIVE_HISTORY_ARTIFACT.read_text())["series"]
+)
+FORECAST_DAY = date.fromisoformat(FORECAST_AS_OF)
+
+
+def _forecast_utc(hour: int, minute: int = 0) -> datetime:
+    """A UTC instant on the forecast day the committed artifact implies."""
+
+    return datetime(
+        FORECAST_DAY.year, FORECAST_DAY.month, FORECAST_DAY.day, hour, minute, tzinfo=timezone.utc
+    )
+
 
 class ElectionAutomationTests(unittest.TestCase):
     @staticmethod
@@ -437,7 +462,7 @@ class ElectionAutomationTests(unittest.TestCase):
                 self._change_normalized_poll_support(path)
                 return {"messages": []}
 
-            production_result = self._production_result("2026-09-05")
+            production_result = self._production_result(FORECAST_AS_OF)
 
             def runner(**kwargs):
                 calls.append(int(kwargs["samples"]))
@@ -466,7 +491,7 @@ class ElectionAutomationTests(unittest.TestCase):
                     source,
                     site_repo=site,
                     schedule=INTRADAY_SCHEDULE_UTC,
-                    now=datetime(2026, 9, 5, 8, tzinfo=timezone.utc),
+                    now=_forecast_utc(8),
                     automation_enabled="true",
                     commit=True,
                     refresh_fn=refresh,
@@ -474,14 +499,18 @@ class ElectionAutomationTests(unittest.TestCase):
                     projection_runner=projection_runner,
                     campaign_path_simulator=self._campaign_path_simulator,
                     website_check_fn=lambda _: {"status": "PASS"},
-                    generated_at_utc="2026-09-05T06:00:00+00:00",
+                    generated_at_utc=f"{FORECAST_AS_OF}T06:00:00+00:00",
                 )
 
             self.assertEqual(result.status, "PUBLISHED")
             self.assertEqual(result.summary.run_type, "POLL_CHANGE")
             self.assertEqual(result.summary.simulation_samples, 100_000)
             self.assertEqual(calls, [100_000])
-            self.assertEqual(projection_calls, list(range(7, -1, -1)))
+            # One projection per remaining calendar day, shrinking to zero on
+            # election day. The count follows the forecast date, so it is
+            # derived rather than written out.
+            future_days = (ELECTION_DAY - FORECAST_DAY).days
+            self.assertEqual(projection_calls, list(range(future_days - 1, -1, -1)))
             current = next(
                 point for point in result.history["series"]
                 if point["provenance"] == "current_production"
@@ -531,7 +560,7 @@ class ElectionAutomationTests(unittest.TestCase):
             before_source_pointer = (source / "files/election-simulator/current.json").read_bytes()
             before_site_pointer = (site / "files/election-simulator/current.json").read_bytes()
             calls: list[int] = []
-            production_result = self._production_result("2026-09-05")
+            production_result = self._production_result(FORECAST_AS_OF)
 
             def refresh(raw, processed, **kwargs):
                 raw.mkdir(parents=True, exist_ok=True)
@@ -546,7 +575,7 @@ class ElectionAutomationTests(unittest.TestCase):
                 source,
                 site_repo=site,
                 schedule=INTRADAY_SCHEDULE_UTC,
-                now=datetime(2026, 9, 5, 8, tzinfo=timezone.utc),
+                now=_forecast_utc(8),
                 automation_enabled="true",
                 refresh_fn=refresh,
                 simulation_runner=runner,
@@ -554,7 +583,7 @@ class ElectionAutomationTests(unittest.TestCase):
                     campaign_path_simulator=self._campaign_path_simulator,
                 website_check_fn=lambda _: {"status": "PASS"},
                 mode="dry_run",
-                generated_at_utc="2026-09-05T08:00:00+00:00",
+                generated_at_utc=f"{FORECAST_AS_OF}T08:00:00+00:00",
             )
             self.assertEqual(result.status, "PUBLISHED")
             self.assertEqual(result.summary.deployment_status, "STAGED_NOT_INSTALLED")
@@ -602,7 +631,7 @@ class ElectionAutomationTests(unittest.TestCase):
             subprocess.run(["git", "commit", "-qm", "fixture: make website stale"], cwd=site, check=True)
             site_before = site_pointer_path.read_bytes()
             calls: list[int] = []
-            production_result = self._production_result("2026-09-05")
+            production_result = self._production_result(FORECAST_AS_OF)
 
             def runner(**kwargs):
                 calls.append(int(kwargs["samples"]))
@@ -612,7 +641,7 @@ class ElectionAutomationTests(unittest.TestCase):
                 source,
                 site_repo=site,
                 schedule=INTRADAY_SCHEDULE_UTC,
-                now=datetime(2026, 9, 5, 8, tzinfo=timezone.utc),
+                now=_forecast_utc(8),
                 automation_enabled="true",
                 mode="dry_run",
                 refresh_fn=lambda raw, processed, **kwargs: {"messages": []},
@@ -620,7 +649,7 @@ class ElectionAutomationTests(unittest.TestCase):
                 projection_runner=self._projection_runner,
                     campaign_path_simulator=self._campaign_path_simulator,
                 website_check_fn=lambda _: {"status": "PASS"},
-                generated_at_utc="2026-09-05T04:00:00+00:00",
+                generated_at_utc=f"{FORECAST_AS_OF}T04:00:00+00:00",
             )
             self.assertEqual(result.status, "PUBLISHED")
             self.assertEqual(calls, [100_000])
@@ -648,7 +677,7 @@ class ElectionAutomationTests(unittest.TestCase):
                 self._change_normalized_poll_support(path)
                 return {"messages": []}
 
-            production_result = self._production_result("2026-09-05")
+            production_result = self._production_result(FORECAST_AS_OF)
             calls: list[int] = []
 
             def runner(**kwargs):
@@ -675,7 +704,7 @@ class ElectionAutomationTests(unittest.TestCase):
                     source,
                     site_repo=site,
                     schedule=INTRADAY_SCHEDULE_UTC,
-                    now=datetime(2026, 9, 5, 8, tzinfo=timezone.utc),
+                    now=_forecast_utc(8),
                     automation_enabled="true",
                     commit=True,
                     refresh_fn=refresh,
@@ -683,7 +712,7 @@ class ElectionAutomationTests(unittest.TestCase):
                     projection_runner=self._projection_runner,
                     campaign_path_simulator=self._campaign_path_simulator,
                     website_check_fn=failed_website_check,
-                    generated_at_utc="2026-09-05T06:00:00+00:00",
+                    generated_at_utc=f"{FORECAST_AS_OF}T06:00:00+00:00",
                 )
 
             self.assertEqual(result.status, "FAILED")
@@ -702,7 +731,7 @@ class ElectionAutomationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             source, site = self._production_fixture(Path(tmp))
             calls: list[int] = []
-            production_result = self._production_result("2026-09-05")
+            production_result = self._production_result(FORECAST_AS_OF)
 
             def refresh(raw, processed, **kwargs):
                 return {"messages": []}
@@ -728,14 +757,14 @@ class ElectionAutomationTests(unittest.TestCase):
                     source,
                     site_repo=site,
                     schedule=DAILY_SCHEDULE_UTC,
-                    now=datetime(2026, 9, 5, 4, tzinfo=timezone.utc),
+                    now=_forecast_utc(4),
                     automation_enabled="true",
                     refresh_fn=refresh,
                     simulation_runner=runner,
                     projection_runner=self._projection_runner,
                     campaign_path_simulator=self._campaign_path_simulator,
                     website_check_fn=lambda _: {"status": "PASS"},
-                    generated_at_utc="2026-09-05T04:00:00+00:00",
+                    generated_at_utc=f"{FORECAST_AS_OF}T04:00:00+00:00",
                 )
 
             self.assertEqual(result.status, "PUBLISHED")
@@ -1208,7 +1237,7 @@ time.sleep(60)
             subprocess.run(["git", "commit", "-qm", "fixture: committed polling refresh"], cwd=source, check=True)
 
             calls: list[int] = []
-            production_result = self._production_result("2026-09-05")
+            production_result = self._production_result(FORECAST_AS_OF)
 
             def refresh(raw, processed, **kwargs):
                 return {"messages": []}
@@ -1225,14 +1254,14 @@ time.sleep(60)
                     source,
                     site_repo=site,
                     schedule=INTRADAY_SCHEDULE_UTC,
-                    now=datetime(2026, 9, 5, 8, tzinfo=timezone.utc),
+                    now=_forecast_utc(8),
                     automation_enabled="true",
                     mode="publish",
                     commit=True,
                     refresh_fn=refresh,
                     simulation_runner=failing_runner,
                     website_check_fn=lambda _: {"status": "PASS"},
-                    generated_at_utc="2026-09-05T08:00:00+00:00",
+                    generated_at_utc=f"{FORECAST_AS_OF}T08:00:00+00:00",
                 )
             self.assertEqual(first.status, "FAILED")
             self.assertEqual(first.summary.recovery_status, "POLLING_PUBLICATION_PENDING")
@@ -1256,7 +1285,7 @@ time.sleep(60)
                     source,
                     site_repo=site,
                     schedule=INTRADAY_SCHEDULE_UTC,
-                    now=datetime(2026, 9, 5, 8, tzinfo=timezone.utc),
+                    now=_forecast_utc(8),
                     automation_enabled="true",
                     mode="publish",
                     commit=True,
@@ -1265,7 +1294,7 @@ time.sleep(60)
                     projection_runner=self._projection_runner,
                     campaign_path_simulator=self._campaign_path_simulator,
                     website_check_fn=lambda _: {"status": "PASS"},
-                    generated_at_utc="2026-09-05T08:05:00+00:00",
+                    generated_at_utc=f"{FORECAST_AS_OF}T08:05:00+00:00",
                 )
             self.assertEqual(second.status, "PUBLISHED")
             self.assertEqual(calls, [100_000, 100_000])
@@ -1279,7 +1308,7 @@ time.sleep(60)
             source, site = self._production_fixture(Path(tmp))
             old_site_tree = Path(tmp) / "old-site-publication"
             shutil.copytree(site / "files/election-simulator", old_site_tree)
-            production_result = self._production_result("2026-09-05")
+            production_result = self._production_result(FORECAST_AS_OF)
 
             def runner(**kwargs):
                 commit = subprocess.run(
@@ -1297,12 +1326,12 @@ time.sleep(60)
                 first = run_production_event(
                     source,
                     site_repo=site,
-                    forecast_as_of="2026-09-05",
+                    forecast_as_of=FORECAST_AS_OF,
                     simulation_runner=runner,
                     projection_runner=self._projection_runner,
                     campaign_path_simulator=self._campaign_path_simulator,
                     website_check_fn=lambda _: {"status": "PASS"},
-                    generated_at_utc="2026-09-05T09:00:00+00:00",
+                    generated_at_utc=f"{FORECAST_AS_OF}T09:00:00+00:00",
                     commit=True,
                     push=False,
                     allow_duplicate_payload=True,
@@ -1348,7 +1377,7 @@ time.sleep(60)
                 source,
                 site_repo=site,
                 schedule=INTRADAY_SCHEDULE_UTC,
-                now=datetime(2026, 9, 5, 10, tzinfo=timezone.utc),
+                now=_forecast_utc(10),
                 automation_enabled="true",
                 mode="publish",
                 commit=True,
