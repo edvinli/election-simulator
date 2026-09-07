@@ -1,0 +1,45 @@
+# Cloudflare Worker: independent scheduled trigger for the frozen 2026
+# prospective benchmark capture.
+#
+# GitHub delivered the 2026-09-04, 05 and 06 capture ticks 1h42m, 1h41m and
+# 1h44m late. The third was already running amendment 005's 20:30Z pre-warm,
+# so starting earlier is not the remedy: the delay is applied to the start.
+# All three slots archived LATE_EXCLUDED. This Worker delivers the same
+# unchanged scheduled trigger on a scheduler GitHub does not control.
+#
+# THE TICKS ARE NOT ARBITRARY. Read before changing them.
+#
+#   20:30Z  the frozen scheduled start (22:30 Europe/Stockholm, amendment
+#           005). Preserves the full one-hour pre-warm before the cutoff.
+#   21:20Z  a second independent trigger that can still take the production
+#           lock BEFORE the 21:30Z cutoff if the first tick was lost.
+#   21:40Z  a final post-cutoff retry, with ~20 minutes still remaining in
+#           the timing-eligible window.
+#
+# NO TICK MAY PRECEDE 20:30Z. resolve_scheduled_slot() attributes a run to the
+# Stockholm date whose 22:30 local start it was created at or after; 22:30
+# local is 20:30Z during the frozen window. A tick at, say, 20:00Z would
+# resolve to the PREVIOUS day's slot and could durably occupy it with a
+# LATE_EXCLUDED record. tests/test_prospective_benchmark_2026_external_trigger.py
+# asserts this bound against these expressions.
+#
+# The timing-eligible window closes at 22:00Z (local midnight), so no tick may
+# fall at or after it either.
+#
+# Month-restricted like the GitHub cron it backs up; the workflow's own guard
+# is what actually restricts the frozen 2026-09-04..12 window, and stands down
+# green outside it.
+
+name = "election-benchmark-trigger"
+main = "worker.mjs"
+compatibility_date = "2026-09-01"
+
+[triggers]
+crons = ["30 20 * 9 *", "20 21 * 9 *", "40 21 * 9 *"]
+
+# Secrets, set with `wrangler secret put` and never committed:
+#   GITHUB_TOKEN     fine-grained PAT, single repo edvinli/election-simulator,
+#                    Actions: read and write. Nothing else. NOT the token used
+#                    by ops/publication-fallback-worker.
+#   TRIGGER_SECRET   shared secret for the manual POST verification endpoint.
+#   HEARTBEAT_URL    optional dead-man's-switch ping URL.

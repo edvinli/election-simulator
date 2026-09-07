@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 import hashlib
 import json
 from pathlib import Path
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -61,6 +62,72 @@ class TestCaptureTimeRules(unittest.TestCase):
         dry = classify_capture_time("2026-09-04", "2026-09-06T00:00:00Z", durable=False)
         self.assertEqual(dry.status, "RETROACTIVE_PROHIBITED")
         self.assertFalse(dry.eligible)
+
+
+class TestLiveArchiveSurvivesAmendmentSix(unittest.TestCase):
+    """Adding a delivery-mechanism amendment must not disturb the evidence.
+
+    Amendment 006 appends an amendment artifact and one index reference. It
+    touches no capture, so the append-only chain, the recorded timing labels
+    and the capture IDs -- which are derived from the frozen cutoff and are
+    what every downstream report joins on -- must all be exactly as before.
+    """
+
+    ARCHIVE = Path(__file__).resolve().parents[1] / "data" / "processed" / "prospective_benchmark_2026"
+
+    def setUp(self) -> None:
+        self.index = json.loads((self.ARCHIVE / "index.json").read_text())
+
+    def test_the_live_archive_still_validates(self) -> None:
+        report = validate_archive(self.ARCHIVE)
+        self.assertEqual(report["status"], "VALID")
+        self.assertEqual(
+            [ref["amendment_number"] for ref in report["active_amendments"]],
+            [1, 2, 3, 4, 5, 6],
+        )
+        self.assertEqual(report["unindexed_orphans"], [])
+
+    def test_capture_ids_remain_derived_from_the_frozen_cutoff(self) -> None:
+        for row in self.index["captures"]:
+            with self.subTest(slot=row["scheduled_date"]):
+                self.assertEqual(row["capture_id"], capture_id_for_date(row["scheduled_date"]))
+                self.assertEqual(
+                    row["capture_id"],
+                    scheduled_cutoff(row["scheduled_date"]).astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ"),
+                )
+
+    def test_the_append_only_chain_is_contiguous_and_unbroken(self) -> None:
+        previous = None
+        for expected, row in enumerate(self.index["captures"], start=1):
+            with self.subTest(sequence=expected):
+                self.assertEqual(row["sequence"], expected)
+                self.assertEqual(row["previous_entry_sha256"], previous)
+            previous = row["entry_sha256"]
+
+    def test_each_capture_keeps_the_amendments_in_force_when_it_was_taken(self) -> None:
+        # A capture records the amendments that existed at its own cutoff.
+        # Back-filling 006 into an earlier capture would be a rewrite of
+        # evidence, so no committed capture may reference it.
+        for row in self.index["captures"]:
+            numbers = [ref["amendment_number"] for ref in row["amendments"]]
+            with self.subTest(slot=row["scheduled_date"]):
+                self.assertNotIn(6, numbers)
+                self.assertEqual(numbers, sorted(numbers))
+
+    def test_no_committed_capture_directory_changed(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        resolved = subprocess.run(
+            ["git", "rev-parse", "--verify", "--quiet", "origin/main^{commit}"],
+            cwd=root, capture_output=True, text=True, check=False,
+        )
+        if resolved.returncode != 0:
+            self.skipTest("no origin/main baseline in this checkout")
+        committed = subprocess.run(
+            ["git", "diff", "--name-only", "origin/main", "--",
+             "data/processed/prospective_benchmark_2026/captures/"],
+            cwd=root, capture_output=True, text=True, check=True,
+        ).stdout.split()
+        self.assertEqual(committed, [], f"captures must be untouched: {committed}")
 
 
 class TestProspectiveBenchmarkArchive(unittest.TestCase):
