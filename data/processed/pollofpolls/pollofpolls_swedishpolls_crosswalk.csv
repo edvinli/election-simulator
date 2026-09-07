@@ -254,6 +254,7 @@ pop-29bf66fce2c79179852f,swp-f439c4c7baeb68007155,Novus,2020-03-30,2020-04-19,ex
 pop-29c9a8bf0d479c3b5533,swp-1b5aea7925599516493a,Sifo,2024-08-26,2024-09-08,exact_span_match,1,0.1,"{""MP"": 0.1}",True
 pop-29d86dddbd7c8352a96a,swp-18b3e199d9949e767370,Novus,2010-05-11,2010-05-24,exact_span_match,1,0.0,{},True
 pop-29e472ef3a6a015523f9,,Skop,2009-04-02,2009-04-18,no_match,0,,{},False
+pop-2a3a9ac99363ee91c68e,swp-00269d67af7cd9c73036,Novus,2026-07-06,2026-07-19,exact_span_match,1,0.0,{},True
 pop-2a774ec335b007a63ad1,,Inizio,2015-12-08,2015-12-16,no_match,0,,{},False
 pop-2ad4e291982dcfe71814,swp-15660d56ecf09879c54f,United Minds,2009-04-28,2009-05-25,exact_span_match,1,0.0,{},True
 pop-2ae9253cb276003ea01e,swp-cbdd62d67336e3cda42d,Ipsos,2014-01-09,2014-01-28,exact_span_match,1,0.0,{},True
@@ -383,7 +384,6 @@ pop-41565b130a0931d641bd,swp-557c204dad267dd2a61d,Demoskop,2013-03-26,2013-04-03
 pop-415b24d2f4e014690e3a,,Ipsos,2024-02-13,2024-02-25,no_match,0,,{},False
 pop-4163470bb611ed7b5be4,swp-ad930ca6626226b2770e,Demoskop,2025-09-12,2025-09-22,exact_span_match,1,0.1,"{""MP"": 0.1}",True
 pop-41a162d045ca5ae0f3a3,,Sifo,2022-08-28,2022-08-28,no_match,0,,{},False
-pop-41eb72b201136d6da593,swp-00269d67af7cd9c73036,Novus,2026-07-06,2026-07-19,exact_span_match,1,0.0,{},True
 pop-41f87cc5460356063ff1,swp-e896f27ca116dfc7ba72,Sifo,2013-06-03,2013-06-13,exact_span_match,1,0.0,{},True
 pop-422e8eca039b1c5f4f35,,Sifo,2018-08-24,2018-08-26,no_match,0,,{},False
 pop-426f9119bc7da73345f8,swp-bac75efc4efbd9f3837f,Novus,2015-09-28,2015-10-25,exact_span_match,1,0.0,{},True
@@ -547,6 +547,7 @@ pop-5f24fbf010918b61c043,swp-df2752375ec0f0770524,Novus,2016-02-22,2016-03-20,ex
 pop-5f35c434a130882ee199,swp-7632effaf980f64a6f68,Sentio,2010-06-01,2010-06-30,exact_span_match_approximate_supplementary_period,1,0.0,{},True
 pop-5f707756c4d6a7868f21,,Demoskop,2021-05-25,2021-06-02,no_match,0,,{},False
 pop-5f778059fe80d2bcb0d1,swp-4d1998bfd1c178075abb,Demoskop,2015-03-31,2015-04-08,exact_span_match,1,0.0,{},True
+pop-5fb4144eda1619699554,swp-6e818db884ff2a351658,Novus,2026-09-01,2026-09-05,exact_span_match,1,0.0,{},True
 pop-5fcb93605b6eb51660f0,swp-c82eece148dc0a9b9892,Skop,2010-03-18,2010-04-10,exact_span_match,1,0.0,{},True
 pop-5fdf3367a9725284b9a6,swp-0c32aa43dbb77954c129,Novus,2014-04-28,2014-05-25,exact_span_match,1,0.0,{},True
 pop-5ffb480114a28f696b26,swp-b9ab76ec0fc5668120fc,Novus,2010-08-24,2010-08-30,exact_span_match,1,0.0,{},True
