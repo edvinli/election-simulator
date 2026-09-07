@@ -12,7 +12,13 @@ import tempfile
 import unittest
 
 from scripts.forecast_history.contract import deterministic_history_sha256, validate_history_contract
-from scripts.forecast_history.effective_inputs import DATA_FILES, EffectiveInputs, ROOT, previous_fingerprints
+from scripts.forecast_history.effective_inputs import (
+    DATA_FILES,
+    EffectiveInputs,
+    ROOT,
+    VERSION,
+    previous_fingerprints,
+)
 from scripts.forecast_history.generate import build_history, first_changed_poll_date, update_history_with_production_result
 from scripts.pollofpolls.normalize import parse_swedishpolls_payloads
 from tests import test_forecast_history
@@ -209,13 +215,74 @@ class EffectiveInputReuseTests(unittest.TestCase):
         self.rebuild(first)
         self.assertEqual(self.calls, ['2026-05-23', '2026-05-24'])
 
+    @staticmethod
+    def _committed_history():
+        return json.loads(
+            (ROOT / 'files/election-simulator/history/coalition-timeseries.json').read_text())
+
+    @classmethod
+    def _legacy_payload(cls):
+        """The committed artifact as a pre-migration payload.
+
+        The committed artifact records a fingerprint per reconstructed point,
+        and previous_fingerprints returns those before it ever consults legacy
+        provenance -- correctly, because a migrated point carries its own
+        canonical identity. The two tests below are about the *fallback* path,
+        so they have to construct a payload that has no such record, exactly
+        as test_missing_legacy_source_fails_closed does.
+
+        The digest is recomputed for the same reason it is there: the result
+        should be a coherent legacy artifact, not one whose recorded hash
+        describes a payload it no longer is.
+        """
+
+        payload = cls._committed_history()
+        payload.pop('reconstruction_inputs')
+        payload['deterministic_content_sha256'] = deterministic_history_sha256(payload)
+        return payload
+
+    def test_modern_artifacts_prefer_recorded_reconstruction_inputs(self):
+        """The contract that makes the helper above necessary.
+
+        Asserted here so the two legacy tests cannot quietly start exercising
+        the modern path again -- which is how they came to pass vacuously
+        once a publication completed the migration.
+        """
+
+        payload = self._committed_history()
+        recorded = payload['reconstruction_inputs']
+        self.assertEqual(recorded['version'], VERSION)
+        reconstructed = sorted(point['date'] for point in payload['series']
+                               if point['provenance'] == 'reconstructed_current_model')
+        self.assertEqual(sorted(recorded['dates']), reconstructed)
+        self.assertEqual(previous_fingerprints(payload), dict(recorded['dates']))
+        # Legacy provenance is not consulted at all for a migrated artifact.
+        # Stated as a difference rather than an absence: the same corruption is
+        # fatal on the fallback path, so a check that only asserted "nothing
+        # changed" would hold just as well if the corruption were never
+        # applied.
+        legacy = self._legacy_payload()
+        for field, value in (('source_worktree_clean', False), ('model_commit', '0' * 40)):
+            with self.subTest(field=field):
+                dirty_modern = deepcopy(payload)
+                dirty_modern[field] = value
+                self.assertEqual(previous_fingerprints(dirty_modern), dict(recorded['dates']))
+                dirty_legacy = deepcopy(legacy)
+                dirty_legacy[field] = value
+                self.assertEqual(previous_fingerprints(dirty_legacy), {})
+
     def test_legacy_source_must_match_recorded_hashes(self):
-        payload = json.loads((ROOT / 'files/election-simulator/history/coalition-timeseries.json').read_text())
+        payload = self._legacy_payload()
+        # Non-vacuous: the legacy path has to resolve before the corruption,
+        # or "corrupting it yields nothing" would prove nothing. The unit job
+        # checks out with fetch-depth: 0 for exactly this reason.
+        self.assertNotEqual(previous_fingerprints(payload), {})
         payload['source_hashes']['timeseries_source_sha256'] = '0' * 64
         self.assertEqual(previous_fingerprints(payload), {})
 
     def test_dirty_legacy_provenance_cannot_be_recovered_from_git(self):
-        payload = json.loads((ROOT / 'files/election-simulator/history/coalition-timeseries.json').read_text())
+        payload = self._legacy_payload()
+        self.assertNotEqual(previous_fingerprints(payload), {})
         payload['source_worktree_clean'] = False
         self.assertEqual(previous_fingerprints(payload), {})
 
