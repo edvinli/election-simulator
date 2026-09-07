@@ -109,6 +109,61 @@ reconstruction a ~300-point rebuild after any refresh -- which is why the curve
 stopped being extended and the gap at the end of the chart grew by a day per
 publication.
 
+### What counts as a change, and what does not
+
+The comparison pairs polls by their **observed content** -- house, publication
+date, fieldwork window, sample size and party values -- and never by
+`poll_id`. A `poll_id` is a SHA-256 over an identity dict that includes the
+poll's row number in the upstream CSV, and SwedishPolls publishes
+newest-first, so a single appended poll renumbers every older row and changes
+every id in the file. Pairing on the id reintroduced the exact collapse the
+incremental rule was written to remove: no poll matched, every in-window date
+registered as changed, the window start came back, and the whole curve was
+re-simulated on every refresh. `2f29b61` is a worked example -- all 261 polls
+the artifact recorded were still present with byte-identical content, and not
+one `poll_id` among them survived.
+
+So the invalidation rule is:
+
+- **Not a change:** renumbered `poll_id` values, a different source hash, row
+  reordering, an excluded column, or a poll appended after the recorded
+  window. Every point is reused byte for byte.
+- **A change:** a revised party value, sample size or fieldwork date; an added
+  poll inside the window; a removed poll. Points from that publication date
+  onward are recomputed, and earlier ones are still reused.
+- **Exempt either way:** a `current_production` point is the published result
+  rather than something re-derived, so polls never invalidate it.
+
+A poll that arrives late -- published on a past date but absent from the
+artifact -- is a genuine change and correctly invalidates that date onward.
+The test for this property therefore asserts reuse *relative to*
+`first_changed_poll_date` rather than forbidding recomputation outright.
+
+The boundary itself is checked against an oracle recomputed in the test from
+the raw observations, not against a percentage of the curve. A "most of the
+curve must be reusable" threshold would catch the collapse above, but it would
+also fail a legitimate large revision, which is a real thing that can happen
+to a polling archive. Stating the boundary exactly costs nothing and cannot
+misfire. One cheap guard names the specific regression on top of that:
+rewriting every recorded `poll_id` and changing nothing else must leave the
+boundary at `None`.
+
+`pollster_original` has a negative control of its own, because it is the one
+omitted field that does appear on a model-adjacent surface -- it is part of the
+consensus pivot index. Varying only the alias, with the canonical `pollster`
+and every numeric field held fixed, leaves the serialized poll, the consensus
+composition, the eligible-poll count, the retained-pollster count and the reuse
+boundary all unchanged. The same test asserts the alias really does reach the
+consensus record, so it cannot pass by the field being ignored everywhere.
+
+The identity's completeness is pinned too. `serialize_swedishpolls` is the
+whole of what reaches the model from this file -- the columns it drops
+(`source_row`, `retrieved_at`, `support_status`, `uncertain_share`, the source
+URLs) never appear on the forecast path -- so a test varies each serialized
+field in turn and requires the identity to notice, and requires `poll_id`
+alone not to. Adding a field to the serialized poll therefore fails that test
+until someone decides whether it belongs in the identity.
+
 The archive's normal API still rejects duplicate information-set/payload
 identities. Production daily and manual publish runs explicitly mark a duplicate
 payload as an additional immutable generation, salted by its publication

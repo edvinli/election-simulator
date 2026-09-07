@@ -25,6 +25,7 @@ is never replaced by this reduced-sample history.
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import csv
 from datetime import date, datetime, timedelta, timezone
 import hashlib
@@ -726,26 +727,41 @@ def first_changed_poll_date(
     unchanged.  Comparing the two poll sets tells us exactly how far forward
     the previous artifact stays valid: every date strictly before the returned
     one is still reusable.  ``None`` means the two sources agree.
+
+    Polls are paired by their observed content, never by ``poll_id``.  A
+    ``poll_id`` is a SHA-256 over an identity dict that includes the poll's
+    row number in the upstream CSV (``scripts.pollofpolls.normalize``), and
+    SwedishPolls publishes newest-first -- so a single appended poll renumbers
+    every older row and changes every id in the file.  Pairing on the id made
+    that look like the entire recorded history had been replaced: no poll
+    matched, every date in the window registered as changed, and the window
+    start came back.  The whole curve was then re-simulated on every refresh,
+    which is precisely the collapse this function was written to prevent.
+
+    Content is the right key regardless: two polls with the same house, dates,
+    sample size and party values are the same observation as far as any point
+    on the curve is concerned, whatever the upstream file calls them.  A
+    multiset keeps a genuine duplicate or removal visible.
     """
 
     def indexed(
         polls: Iterable[Mapping[str, Any]],
-    ) -> tuple[dict[str, Mapping[str, Any]], dict[str, date]]:
-        by_id: dict[str, Mapping[str, Any]] = {}
-        dates: dict[str, date] = {}
+    ) -> tuple[Counter[tuple[Any, ...]], dict[tuple[Any, ...], date]]:
+        counts: Counter[tuple[Any, ...]] = Counter()
+        dates: dict[tuple[Any, ...], date] = {}
         for poll in polls:
-            poll_id = poll.get("poll_id")
-            if poll_id is None:
-                continue
             try:
                 published = _coerce_date(
                     poll.get("publication_date"), name="poll publication_date"
                 )
             except (TypeError, ValueError):
                 continue
-            by_id[str(poll_id)] = poll
-            dates[str(poll_id)] = published
-        return by_id, dates
+            identity = _poll_identity(poll)
+            counts[identity] += 1
+            # _poll_identity carries publication_date, so every occurrence of
+            # one identity shares one date.
+            dates[identity] = published
+        return counts, dates
 
     previous, previous_dates = indexed(previous_polls)
     current, current_dates = indexed(current_polls)
@@ -763,13 +779,11 @@ def first_changed_poll_date(
         return window_start <= published <= window_end
 
     changed: list[date] = []
-    for poll_id in set(previous) | set(current):
-        before = previous.get(poll_id)
-        after = current.get(poll_id)
-        published = previous_dates.get(poll_id, current_dates.get(poll_id))
-        if published is None or not in_window(published):
+    for identity in set(previous) | set(current):
+        if previous[identity] == current[identity]:
             continue
-        if before is not None and after is not None and _poll_identity(before) == _poll_identity(after):
+        published = previous_dates.get(identity, current_dates.get(identity))
+        if published is None or not in_window(published):
             continue
         changed.append(published)
     return min(changed) if changed else None

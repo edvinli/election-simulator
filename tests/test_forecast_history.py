@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 import csv
+import json
 from datetime import date
 from pathlib import Path
 from types import SimpleNamespace
@@ -28,6 +29,7 @@ from scripts.forecast_history.generate import (
     missing_curve_dates,
     serialize_poll_of_polls_timeseries,
     serialize_swedishpolls,
+    _poll_identity,
 )
 from scripts.simulator.config import PARLIAMENTARY_PARTIES_8
 
@@ -483,6 +485,398 @@ class ForecastHistoryTests(unittest.TestCase):
         self.assertEqual(nothing, [])
         self.assertEqual(calls, [])
         self.assertEqual(unchanged["series"], filled["series"])
+
+    # --- reconstruction reuse across an upstream refresh -------------------
+    #
+    # A poll_id is a SHA-256 over an identity dict that includes the poll's row
+    # number in the upstream CSV, and SwedishPolls publishes newest-first. One
+    # appended poll therefore renumbers every older row and changes every id in
+    # the file. Reuse must survive that: the observations are the same, so every
+    # point whose visible polls are unchanged has to be carried over.
+    #
+    # Pairing by poll_id made a single append look like the whole history had
+    # been replaced -- no poll matched, every in-window date registered as
+    # changed, the window start came back, and the entire curve was
+    # re-simulated. These tests pin the observable contract rather than the
+    # mechanism, so they hold whatever the id scheme does next.
+
+    @staticmethod
+    def _write_polls(path: Path, polls, *, id_prefix: str, alias: str = "Testinstitut") -> None:
+        """Write a SwedishPolls-shaped CSV, controlling the synthetic ids.
+
+        ``id_prefix`` stands in for upstream row renumbering: the same
+        observations written with a different prefix are the same polls with
+        different ``poll_id`` values, which is exactly what a refresh produces.
+        """
+
+        fields = [
+            "poll_id", "pollster", "pollster_original", "publication_date",
+            "interview_start", "interview_end", "party", "support",
+            "support_status", "sample_size",
+        ]
+        with path.open("w", newline="", encoding="utf-8") as handle:
+            writer = csv.DictWriter(handle, fieldnames=fields)
+            writer.writeheader()
+            for index, (published, values) in enumerate(polls):
+                for party, support in values.items():
+                    writer.writerow({
+                        "poll_id": f"{id_prefix}-{index}",
+                        "pollster": "Testinstitut",
+                        # The upstream display alias. Varying it is the
+                        # negative control below; it is never the canonical
+                        # name the model keys on.
+                        "pollster_original": alias,
+                        "publication_date": published,
+                        "interview_start": published,
+                        "interview_end": published,
+                        "party": party,
+                        "support": support,
+                        "support_status": "reported",
+                        "sample_size": 1000,
+                    })
+
+    # Three curve dates, and a poll on each of the first two. The last date is
+    # the official current point: build_history exempts a current_production
+    # point from poll-driven invalidation by design, since it is the published
+    # result rather than something re-derived. So the middle date is the one
+    # that has to demonstrate invalidation, and it needs a poll of its own.
+    CURVE_DATES = ("2026-05-23", "2026-05-24", "2026-05-25")
+    ORIGINAL_POLLS = (
+        ("2026-05-23", {"M": 20, "L": 5, "C": 10, "KD": 5, "S": 30, "V": 10, "MP": 8, "SD": 12}),
+        ("2026-05-24", {"M": 21, "L": 5, "C": 10, "KD": 5, "S": 29, "V": 10, "MP": 8, "SD": 12}),
+    )
+
+    @staticmethod
+    def _support(**overrides):
+        values = {"M": 20, "L": 5, "C": 10, "KD": 5, "S": 30, "V": 10, "MP": 8, "SD": 12}
+        values.update(overrides)
+        return values
+
+    def _build_then_refresh(self, refreshed_polls, *, id_prefix: str):
+        """Build a two-point curve, then rebuild against a refreshed source.
+
+        Returns the first payload, the rebuilt payload, and the dates the
+        simulation runner was asked for during the rebuild.
+        """
+
+        votes, seats = self._matrices()
+        # The payload records only polls inside the chart period, which starts
+        # at the first curve date -- so the fixture's polls sit on the curve
+        # dates themselves, as the real source's do.
+        original = list(self.ORIGINAL_POLLS)
+        dates = list(self.CURVE_DATES)
+        rebuild_calls: list[str] = []
+
+        def runner(*, as_of: str, election_date: str, samples: int, seed: int):
+            rebuild_calls.append(as_of)
+            return SimpleNamespace(
+                vote_shares_matrix=votes,
+                seats_matrix=seats,
+                manifest={"source_git_commit": "d" * 40},
+            )
+
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "polls.csv"
+            self._write_polls(path, original, id_prefix="orig")
+            first = build_history(
+                archive_dir=None,
+                dates=dates,
+                poll_file=path,
+                samples=4,
+                simulation_runner=runner,
+                model_commit="d" * 40,
+                source_worktree_clean=True,
+                production_latest_samples=4,
+            )
+            self.assertEqual(rebuild_calls, dates)
+            rebuild_calls.clear()
+
+            self._write_polls(path, refreshed_polls, id_prefix=id_prefix)
+            second = build_history(
+                archive_dir=None,
+                dates=dates,
+                poll_file=path,
+                samples=4,
+                existing_payload=first,
+                simulation_runner=runner,
+                model_commit="d" * 40,
+                source_worktree_clean=True,
+                production_latest_samples=4,
+            )
+        return first, second, rebuild_calls
+
+    def test_appended_polls_and_renumbered_ids_reuse_every_earlier_point(self) -> None:
+        """The regression: a later poll plus id churn must recompute nothing."""
+
+        # A poll published strictly after both curve dates, and every id
+        # rewritten, exactly as an upstream prepend does.
+        refreshed = [*self.ORIGINAL_POLLS, ("2026-05-30", self._support(M=22))]
+        first, second, calls = self._build_then_refresh(refreshed, id_prefix="renumbered")
+
+        self.assertEqual(
+            calls, [],
+            "an append after the curve, with renumbered ids, recomputed a point",
+        )
+        # Byte for byte, not merely equal-looking.
+        self.assertEqual(
+            json.dumps(second["series"], sort_keys=True),
+            json.dumps(first["series"], sort_keys=True),
+        )
+        self.assertEqual(
+            second["resume_diagnostics"]["existing_points_reused"], len(self.CURVE_DATES)
+        )
+        self.assertEqual(second["resume_diagnostics"]["new_points_generated"], 0)
+        # The source hash did change -- reuse survived that, which is the point.
+        self.assertNotEqual(second["poll_source_sha256"], first["poll_source_sha256"])
+
+    def test_renumbering_alone_reuses_every_point(self) -> None:
+        """Identical observations under new ids are not a change at all."""
+
+        first, second, calls = self._build_then_refresh(
+            list(self.ORIGINAL_POLLS), id_prefix="renumbered"
+        )
+        self.assertEqual(calls, [])
+        self.assertEqual(
+            json.dumps(second["series"], sort_keys=True),
+            json.dumps(first["series"], sort_keys=True),
+        )
+
+    def test_a_revision_at_or_before_a_point_recomputes_it(self) -> None:
+        """The other half of the contract: a real change must invalidate.
+
+        Revising the poll published on the first curve date invalidates that
+        date onward -- even though the ids are renumbered at the same time, so
+        a reuse rule that went by id could not tell this from the harmless
+        case above.
+        """
+
+        revised = [("2026-05-23", self._support(M=25)), self.ORIGINAL_POLLS[1]]
+        _first, _second, calls = self._build_then_refresh(revised, id_prefix="renumbered")
+        self.assertEqual(calls, ["2026-05-23", "2026-05-24"])
+
+    def test_a_revision_invalidates_only_from_its_own_date(self) -> None:
+        """Reuse is incremental, not all-or-nothing.
+
+        Revising the later poll leaves the earlier point untouched, which is
+        the property that makes a refresh cheap.
+        """
+
+        revised = [self.ORIGINAL_POLLS[0], ("2026-05-24", self._support(M=25))]
+        first, second, calls = self._build_then_refresh(revised, id_prefix="renumbered")
+        self.assertEqual(calls, ["2026-05-24"])
+        self.assertNotIn("2026-05-23", calls)
+        kept = next(p for p in second["series"] if p["date"] == "2026-05-23")
+        original_kept = next(p for p in first["series"] if p["date"] == "2026-05-23")
+        self.assertEqual(
+            json.dumps(kept, sort_keys=True), json.dumps(original_kept, sort_keys=True)
+        )
+
+    def test_a_removed_poll_recomputes_from_its_date(self) -> None:
+        remaining = [self.ORIGINAL_POLLS[1]]
+        _first, _second, calls = self._build_then_refresh(remaining, id_prefix="renumbered")
+        self.assertEqual(calls, ["2026-05-23", "2026-05-24"])
+
+    def test_the_identity_covers_every_serialized_field_but_the_identifier(self) -> None:
+        """Completeness, pinned so a new field cannot slip past the identity.
+
+        The reuse comparison is only sound if the identity carries everything
+        about a poll that can reach the model.  ``serialize_swedishpolls`` is
+        the whole of what reaches it -- the columns it drops (``source_row``,
+        ``retrieved_at``, ``support_status``, ``uncertain_share``, the source
+        URLs) never appear on the forecast path -- so the identity has to cover
+        every serialized field except the one deliberately excluded.
+
+        ``poll_id`` is that exclusion, and it is the point of the exercise: it
+        is a SHA-256 over an identity dict containing the poll's upstream row
+        number, so it changes for every poll whenever one is appended.  Its
+        *cardinality* still matters, because the model counts distinct polls,
+        and a multiset comparison preserves that.
+
+        If a field is ever added to ``_new_poll``, this fails and whoever adds
+        it has to decide whether it belongs in the identity rather than
+        silently widening what reuse ignores.
+        """
+
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "polls.csv"
+            self._write_polls(path, list(self.ORIGINAL_POLLS), id_prefix="orig")
+            polls = serialize_swedishpolls(path)
+        serialized_fields = set(polls[0])
+        self.assertEqual(
+            serialized_fields,
+            {
+                "poll_id", "company", "house", "publication_date",
+                "fieldwork_start", "fieldwork_end", "n", "parties",
+            },
+        )
+
+        # Vary one field at a time and require the identity to notice. The
+        # identity is opaque by design, so this asks the only question that
+        # matters: does changing this field change the identity?
+        baseline = dict(polls[0])
+        for field, altered in (
+            ("company", "Someone Else"),
+            ("house", "Another House"),
+            ("publication_date", date(2026, 5, 24)),
+            ("fieldwork_start", date(2026, 5, 21)),
+            ("fieldwork_end", date(2026, 5, 22)),
+            ("n", 2000),
+            ("parties", {**baseline["parties"], "M": 99.0}),
+        ):
+            with self.subTest(field=field):
+                self.assertNotEqual(
+                    _poll_identity({**baseline, field: altered}),
+                    _poll_identity(baseline),
+                    f"{field} can reach the model but does not affect the reuse identity",
+                )
+        # ...and the identifier alone must not.
+        self.assertEqual(
+            _poll_identity({**baseline, "poll_id": "swp-completely-different"}),
+            _poll_identity(baseline),
+        )
+        self.assertEqual(
+            serialized_fields - {"poll_id"},
+            {"company", "house", "publication_date", "fieldwork_start",
+             "fieldwork_end", "n", "parties"},
+            "a serialized field is neither in the identity nor deliberately excluded",
+        )
+
+    def test_the_display_alias_changes_no_model_input_and_no_boundary(self) -> None:
+        """Negative control for the one path-adjacent field the identity omits.
+
+        ``pollster_original`` is the upstream display name -- Synovate and TEMO
+        are both Ipsos, Gallup is Novus -- and it is not in the reuse identity.
+        It is worth encoding rather than arguing, because it *does* appear on
+        the consensus surface: it is part of the pivot index in
+        ``scripts.election_residuals.consensus``.
+
+        So vary only the alias, holding the canonical pollster and every
+        numeric field fixed, and require three things to be unchanged: what
+        the history path serializes, what the consensus computes, and the
+        reuse boundary. The test also asserts the alias really does reach the
+        consensus record, so it cannot pass by the field being ignored
+        everywhere -- which would make the control vacuous.
+        """
+
+        import pandas as pd
+
+        from scripts.election_residuals.consensus import build_election_polling_consensus
+
+        # --- what the history path serializes ---
+        with tempfile.TemporaryDirectory() as temporary:
+            plain = Path(temporary) / "plain.csv"
+            renamed = Path(temporary) / "renamed.csv"
+            self._write_polls(plain, list(self.ORIGINAL_POLLS), id_prefix="orig")
+            self._write_polls(
+                renamed, list(self.ORIGINAL_POLLS), id_prefix="orig", alias="Synovate Temo"
+            )
+            self.assertNotEqual(
+                plain.read_text(encoding="utf-8"), renamed.read_text(encoding="utf-8"),
+                "the fixture did not actually vary the alias",
+            )
+            before = serialize_swedishpolls(plain)
+            after = serialize_swedishpolls(renamed)
+
+        self.assertEqual(before, after, "the alias leaked into the serialized poll")
+        # ...so it cannot move the boundary either.
+        self.assertIsNone(first_changed_poll_date(before, after))
+
+        # --- what the consensus computes ---
+        def frame(alias: str) -> pd.DataFrame:
+            rows = []
+            for index, (published, values) in enumerate(self.ORIGINAL_POLLS):
+                for party, support in values.items():
+                    rows.append({
+                        "poll_id": f"orig-{index}",
+                        "pollster": "Testinstitut",
+                        "pollster_original": alias,
+                        "publication_date": published,
+                        "interview_start": published,
+                        "interview_end": published,
+                        "party": party,
+                        "support": float(support),
+                        "sample_size": 1000,
+                    })
+            return pd.DataFrame(rows)
+
+        election = date(2026, 6, 1)
+        plain_consensus = build_election_polling_consensus(election, frame("Testinstitut"))
+        renamed_consensus = build_election_polling_consensus(election, frame("Synovate Temo"))
+
+        self.assertEqual(
+            plain_consensus.consensus_composition,
+            renamed_consensus.consensus_composition,
+            "the display alias changed the consensus composition",
+        )
+        self.assertEqual(
+            (
+                plain_consensus.total_eligible_polls_in_window,
+                plain_consensus.retained_pollsters_count,
+            ),
+            (
+                renamed_consensus.total_eligible_polls_in_window,
+                renamed_consensus.retained_pollsters_count,
+            ),
+        )
+        # The control is only meaningful if the alias reaches the record at
+        # all. It does -- which is exactly why it is worth pinning that it
+        # changes nothing numeric.
+        self.assertEqual(
+            [poll.pollster_original for poll in renamed_consensus.contributing_polls],
+            ["Synovate Temo"] * len(renamed_consensus.contributing_polls),
+        )
+        self.assertNotEqual(
+            [poll.pollster_original for poll in plain_consensus.contributing_polls],
+            [poll.pollster_original for poll in renamed_consensus.contributing_polls],
+        )
+        # And the canonical name, which every numeric step keys on, is the one
+        # that stayed fixed.
+        self.assertEqual(
+            {poll.pollster for poll in renamed_consensus.contributing_polls},
+            {"Testinstitut"},
+        )
+
+    def test_first_changed_poll_date_pairs_on_content_not_identifier(self) -> None:
+        """The unit-level statement of the same rule."""
+
+        def poll(poll_id: str, published: str, m: float = 20.0) -> dict:
+            return {
+                "poll_id": poll_id,
+                "company": "Test",
+                "house": "Test",
+                "publication_date": published,
+                "fieldwork_start": published,
+                "fieldwork_end": published,
+                "n": 1000,
+                "parties": {"M": m, "S": 30.0},
+            }
+
+        previous = [poll("a", "2026-05-24"), poll("b", "2026-05-26")]
+        # Every id rewritten, nothing else: not a change.
+        renumbered = [poll("z1", "2026-05-24"), poll("z2", "2026-05-26")]
+        self.assertIsNone(first_changed_poll_date(previous, renumbered))
+        # Renumbered *and* appended past the window: still not a change.
+        self.assertIsNone(
+            first_changed_poll_date(
+                previous, [*renumbered, poll("z3", "2026-06-01")]
+            )
+        )
+        # Renumbering does not hide a revision.
+        self.assertEqual(
+            first_changed_poll_date(
+                previous, [poll("z1", "2026-05-24"), poll("z2", "2026-05-26", m=21.0)]
+            ),
+            date(2026, 5, 26),
+        )
+        # A duplicated observation is a change: the multiset differs even
+        # though the set does not.
+        self.assertEqual(
+            first_changed_poll_date(previous, [*previous, poll("z9", "2026-05-26")]),
+            date(2026, 5, 26),
+        )
+        # A poll with no id at all still participates.
+        idless = [dict(p, poll_id=None) for p in previous]
+        self.assertIsNone(first_changed_poll_date(previous, idless))
 
     def test_first_changed_poll_date_ignores_appends_after_the_window(self) -> None:
         def poll(poll_id: str, published: str, m: float = 20.0) -> dict:

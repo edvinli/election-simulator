@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import collections
 from copy import deepcopy
 import csv
 from datetime import date, datetime, timedelta, timezone
@@ -43,7 +44,12 @@ from scripts.election_automation import (
 )
 from scripts.forecast_history.campaign_paths import CampaignPathSimulation
 from scripts.forecast_history.contract import DEFAULT_COALITIONS, build_groups_from_matrices, validate_history_contract
-from scripts.forecast_history.generate import build_history, update_history_with_production_result
+from scripts.forecast_history.generate import (
+    build_history,
+    first_changed_poll_date,
+    serialize_swedishpolls,
+    update_history_with_production_result,
+)
 from scripts.publication_pipeline.pipeline import run_publication_pipeline
 from scripts.site_publisher import GENERATION_FILES, publish_generation_to_site, sync_history_to_site
 from scripts.static_exporter import validate_published_directory
@@ -1485,6 +1491,57 @@ time.sleep(60)
             self.assertEqual(result.status, "STOPPED_AFTER_ELECTION")
             self.assertFalse(called)
 
+    @staticmethod
+    def _earliest_differing_poll_date(previous, current):
+        """The earliest publication date whose observations differ.
+
+        A local oracle, written independently of the production comparison so
+        the two have to agree rather than the test restating the code. Polls
+        are counted as multisets of their observed content, and the comparison
+        is confined to the recorded window: the raw source reaches back decades
+        and a poll outside the window cannot have changed a point inside it.
+        """
+
+        def indexed(polls):
+            counts: collections.Counter = collections.Counter()
+            dates: dict = {}
+            for poll in polls:
+                published = poll.get("publication_date")
+                if not isinstance(published, str):
+                    continue
+                try:
+                    parsed = date.fromisoformat(published)
+                except ValueError:
+                    continue
+                identity = (
+                    str(poll.get("company") or ""),
+                    str(poll.get("house") or ""),
+                    published,
+                    str(poll.get("fieldwork_start") or ""),
+                    str(poll.get("fieldwork_end") or ""),
+                    poll.get("n"),
+                    tuple(sorted((str(k), v) for k, v in (poll.get("parties") or {}).items())),
+                )
+                counts[identity] += 1
+                dates[identity] = parsed
+            return counts, dates
+
+        previous_counts, previous_dates = indexed(previous)
+        current_counts, current_dates = indexed(current)
+        if not previous_dates:
+            return None
+        window_start = min(previous_dates.values())
+        window_end = max(previous_dates.values())
+        differing = []
+        for identity in set(previous_counts) | set(current_counts):
+            if previous_counts[identity] == current_counts[identity]:
+                continue
+            published = previous_dates.get(identity, current_dates.get(identity))
+            if published is None or not window_start <= published <= window_end:
+                continue
+            differing.append(published)
+        return min(differing) if differing else None
+
     def test_existing_reconstructed_points_are_reused_without_rerunning(self) -> None:
         """The live committed artifact, deliberately: this is the integration lane.
 
@@ -1500,14 +1557,52 @@ time.sleep(60)
 
         existing = json.loads(LIVE_HISTORY_ARTIFACT.read_text())
 
-        # Dates that already carry a reconstructed point must never be
-        # resimulated. A date carrying only an archived prospective point is
-        # not one of them: it has no curve point yet, and simulating it is how
-        # the hole each publication leaves gets closed.
+        # Dates that already carry a reconstructed point must not be
+        # resimulated *while the polls they can see are unchanged*. A date
+        # carrying only an archived prospective point is not one of them: it
+        # has no curve point yet, and simulating it is how the hole each
+        # publication leaves gets closed.
+        #
+        # "Unchanged" is the rule build_history implements, so the boundary is
+        # read from it rather than assumed to be "everything". A poll that
+        # genuinely arrives late -- published on a past date but absent from
+        # the artifact -- does invalidate that date onward, and forbidding
+        # that outright would forbid correct behaviour. What must never happen
+        # is the collapse this test was failing on: an upstream refresh that
+        # changes no observation invalidating the whole curve.
+        current_polls = serialize_swedishpolls(
+            REPOSITORY_ROOT / "data/processed/pollofpolls/swedishpolls_individual_polls.csv"
+        )
+        changed_from = first_changed_poll_date(existing.get("polls") or [], current_polls)
+
+        # The boundary is checked against an oracle computed here from the raw
+        # observations, not against a threshold. A percentage guard would
+        # catch the collapse this test was failing on, but it would also fail
+        # a legitimate large revision -- so the contract is stated exactly
+        # instead: the boundary is the earliest publication date whose
+        # observation multiset differs, and nothing else.
+        self.assertEqual(
+            changed_from,
+            self._earliest_differing_poll_date(existing.get("polls") or [], current_polls),
+            "the reuse boundary is not the earliest genuinely differing poll date",
+        )
+        # And the specific regression, named: rewriting every identifier and
+        # changing nothing else must not move the boundary at all. This is the
+        # cheap guard against identifier churn blowing the curve away again.
+        churned = [
+            {**poll, "poll_id": f"churn-{index}"}
+            for index, poll in enumerate(existing.get("polls") or [])
+        ]
+        self.assertIsNone(
+            first_changed_poll_date(existing.get("polls") or [], churned),
+            "renumbered poll_id values alone invalidated the curve",
+        )
+
         reconstructed_dates = {
             point["date"]
             for point in existing["series"]
             if point["provenance"] == "reconstructed_current_model"
+            and (changed_from is None or date.fromisoformat(point["date"]) < changed_from)
         }
         resimulated: list[str] = []
 
@@ -1545,6 +1640,7 @@ time.sleep(60)
             point["date"]: point
             for point in existing["series"]
             if point["provenance"] == "reconstructed_current_model"
+            and point["date"] in reconstructed_dates
         }
         after = {
             point["date"]: point
