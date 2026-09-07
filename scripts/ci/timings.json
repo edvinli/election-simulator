@@ -1,6 +1,6 @@
 {
   "_comment": "Measured single-module wall-clock in seconds, used only to balance shards. Recorded on macOS/Python 3.12 by running each module alone: `uv run python -m unittest tests.<module>`. Absolute values differ on CI runners; only the relative sizes matter here, so this needs refreshing when a suite's cost changes materially, not routinely. A module missing from this table is treated as average cost. IMPORTANT: sharding only ever happens in the pull-request and full layers, which run test_adversarial_mandates at ELECTIONSIM_ADVERSARIAL_CASES=700. Its entry here is therefore that reduced cost, not the exhaustive one. Nightly runs the exhaustive 20,000-case audit (~511s) as a single unsharded job, so that figure never needs to balance anything and is recorded in exhaustive_seconds below for reference only.",
-  "measured_total_seconds": 241.9,
+  "measured_total_seconds": 242.0,
   "seconds": {
     "test_opinion_precision_challenger": 35.1,
     "test_election_automation": 34.9,
@@ -27,6 +27,7 @@
     "test_opinion_state": 1.6,
     "test_pop_baseline_benchmark": 1.6,
     "test_production_freeze": 1.6,
+    "test_publication_fallback": 0.1,
     "test_publication_freeze": 1.6,
     "test_actual_browser_consumer": 1.5,
     "test_isolated_seat_path": 1.5,

@@ -71,6 +71,11 @@ from scripts.simulator.exact_draw_sidecar import (
     write_exact_draw_sidecar,
 )
 from scripts.simulator.reproducibility import compute_file_sha256, get_git_commit_hash
+from scripts.publication_fallback import (
+    FALLBACK_RUN_TYPE,
+    benchmark_window_conflict,
+    daily_publication_satisfied,
+)
 
 
 STOCKHOLM = ZoneInfo("Europe/Stockholm")
@@ -80,7 +85,12 @@ INTRADAY_SCHEDULE_UTC = "0 6,8,10,12,14,16,18,20 * * *"
 PRODUCTION_SAMPLES = 100_000
 BENCHMARK_SIDECAR_START = date(2026, 9, 4)
 BENCHMARK_SIDECAR_END = date(2026, 9, 12)
-VALID_MODES = ("probe", "dry_run", "publish")
+# publish_if_stale is the fallback boundary: it may publish, but only when
+# today's mandatory recalculation is missing.  It is a separate mode rather
+# than a flag on publish so the kill switch and the run-type label can treat
+# an automated trigger differently from an operator's explicit dispatch.
+VALID_MODES = ("probe", "dry_run", "publish", "publish_if_stale")
+MUTATING_MODES = ("publish", "publish_if_stale")
 AUTOMATION_ENABLED_ENV = "ELECTION_AUTOMATION_ENABLED"
 SOURCE_PROVENANCE_DIRECT_LIVE = "DIRECT_LIVE_FETCH"
 SOURCE_PROVENANCE_VERIFIED_FALLBACK = "VERIFIED_STALE_FALLBACK"
@@ -193,6 +203,7 @@ class AutomationSummary:
     website_commit: str = "NONE"
     deployment_status: str = "NOT_RUN"
     recovery_status: str = "NONE"
+    daily_publication_status: str = "UNKNOWN"
     failure: str | None = None
 
     def render(self) -> str:
@@ -211,6 +222,7 @@ class AutomationSummary:
             f"Website commit: {self.website_commit}",
             f"Deployment status: {self.deployment_status}",
             f"Recovery status: {self.recovery_status}",
+            f"Daily publication: {self.daily_publication_status}",
         ]
         if self.failure:
             lines.append(f"Failure: {self.failure}")
@@ -280,10 +292,19 @@ def classify_run_type(
     *,
     event_name: str | None = None,
     schedule: str | None = None,
+    mode: str | None = None,
 ) -> str:
-    """Map GitHub event context to the three public run-type labels."""
+    """Map GitHub event context to the public run-type labels.
+
+    ``FALLBACK_DAILY`` is a dispatch that stands in for a missing daily tick.
+    It is distinguished from ``MANUAL`` because the two differ in exactly the
+    places that matter: the kill switch applies to it, and it publishes only
+    when the daily is genuinely absent.
+    """
 
     if event_name == "workflow_dispatch":
+        if str(mode or "").strip().lower() == "publish_if_stale":
+            return FALLBACK_RUN_TYPE
         return "MANUAL"
     if schedule == DAILY_SCHEDULE_UTC:
         return "DAILY"
@@ -311,8 +332,8 @@ def resolve_mode(
         raise AutomationError("workflow_dispatch requires an explicit mode")
     if resolved in {"probe", "dry_run"} and (commit or push):
         raise AutomationError(f"{resolved} mode cannot commit or push")
-    if resolved == "publish" and not commit:
-        raise AutomationError("publish mode requires commit=True")
+    if resolved in MUTATING_MODES and not commit:
+        raise AutomationError(f"{resolved} mode requires commit=True")
     if push and not commit:
         raise AutomationError("push requires commit=True")
     return resolved
@@ -322,16 +343,21 @@ def automation_enabled_for_event(
     *,
     event_name: str | None,
     enabled: str | bool | None = None,
+    mode: str | None = None,
 ) -> bool:
-    """Apply the repository kill switch only to scheduled events.
+    """Apply the repository kill switch to every non-operator trigger.
 
     Manual dispatch is an explicit operator action and is therefore always
-    allowed.  The repository variable is fail-closed: a missing value is
-    treated as ``false``, and only an explicit non-false value enables
-    scheduled events.
+    allowed.  A ``publish_if_stale`` dispatch is not: it arrives from an
+    unattended external scheduler, so it is subject to the kill switch exactly
+    as a cron tick is.  Without this, adding a fallback would hand the
+    automated path a way around an operator's "stop publishing".
+
+    The repository variable is fail-closed: a missing value is treated as
+    ``false``, and only an explicit non-false value enables the trigger.
     """
 
-    if event_name == "workflow_dispatch":
+    if event_name == "workflow_dispatch" and str(mode or "").strip().lower() != "publish_if_stale":
         return True
     if enabled is None:
         enabled = os.environ.get(AUTOMATION_ENABLED_ENV, "false")
@@ -344,12 +370,38 @@ def should_publish(
     model_inputs_changed: bool,
     mode: str = "publish",
     pending_publication: bool = False,
+    daily_already_satisfied: bool = False,
 ) -> bool:
-    """Decide whether the already-validated snapshot merits production."""
+    """Decide whether the already-validated snapshot merits production.
+
+    ``daily_already_satisfied`` means a full publication carrying today's
+    Stockholm date is live on both the source and the website.  It exists so
+    the mandatory daily recalculation happens once per day rather than once
+    per trigger: without it, a fallback that covered a missing tick and a late
+    cron arriving afterwards would each force a publication, and the second
+    would re-simulate identical inputs.
+
+    The invariant is unchanged -- at least one mandatory recalculation per
+    Stockholm day.  Only the redundant repeat is dropped, and only when
+    nothing has changed since: a changed model input, or a durable pending
+    marker, still publishes.
+    """
 
     if mode == "probe":
         return False
-    if run_type == "DAILY" or run_type == "MANUAL":
+    if run_type == "MANUAL":
+        # An operator asked for this one explicitly.
+        return True
+    if run_type == FALLBACK_RUN_TYPE:
+        # The fallback exists only to cover an absent daily.  Once the daily
+        # is accounted for it must behave as a no-op, which is what makes a
+        # late primary trigger harmless.
+        if daily_already_satisfied:
+            return model_inputs_changed or pending_publication
+        return True
+    if run_type == "DAILY":
+        if daily_already_satisfied and not model_inputs_changed:
+            return pending_publication
         return True
     return model_inputs_changed or pending_publication
 
@@ -1127,6 +1179,32 @@ def _certified_current_generation(publication_dir: Path) -> dict[str, Any]:
     return {"pointer": pointer, "generation": generation, "version": version, "manifest": manifest}
 
 
+def _certified_generated_at(publication_dir: Path) -> datetime | None:
+    """The publication instant of a certified live pointer, or ``None``.
+
+    Fail-open would be the wrong direction here: an unreadable or invalid
+    pointer must read as "no publication today", so the worst case of a broken
+    check is a redundant recalculation and never a forecast left stale because
+    the checker could not tell.  Validation is deliberately the strict one the
+    publication path itself uses; this loosens nothing.
+    """
+
+    try:
+        current = _certified_current_generation(publication_dir)
+    except (AutomationError, OSError, ValueError):
+        return None
+    raw = current["manifest"].get("generated_at_utc")
+    if not isinstance(raw, str) or not raw:
+        return None
+    try:
+        parsed = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return None
+    return parsed
+
+
 def _is_ancestor(repo: Path, ancestor: str, descendant: str) -> bool:
     result = _run_git(
         repo,
@@ -1665,7 +1743,7 @@ def run_automation(
     site = Path(site_repo).resolve()
     election = election_date if isinstance(election_date, date) else date.fromisoformat(str(election_date))
     today = current_stockholm_date(now)
-    run_type = classify_run_type(event_name=event_name, schedule=schedule)
+    run_type = classify_run_type(event_name=event_name, schedule=schedule, mode=mode)
     resolved_mode = mode or ("publish" if commit else "dry_run")
     summary = AutomationSummary(
         run_type=run_type,
@@ -1690,6 +1768,7 @@ def run_automation(
         if not automation_enabled_for_event(
             event_name=event_name,
             enabled=automation_enabled,
+            mode=resolved_mode,
         ):
             summary.polling_source_status = "DISABLED_BY_REPOSITORY_KILL_SWITCH"
             summary.polling_source_provenance = "NOT_ACQUIRED"
@@ -1698,6 +1777,42 @@ def run_automation(
                 status="DISABLED_BY_REPOSITORY_KILL_SWITCH",
                 summary=summary,
             )
+
+        # Is today's mandatory recalculation already live?  Read both sides:
+        # the certified source generation and the website pointer.  A
+        # publication that simulated and then failed to sync leaves the public
+        # forecast stale, which is exactly the condition the fallback is for,
+        # so "satisfied" requires both to be dated today.
+        daily_satisfied = daily_publication_satisfied(
+            source_generated_at=_certified_generated_at(root / "files/election-simulator"),
+            site_generated_at=_certified_generated_at(site / "files/election-simulator"),
+            today=today,
+        )
+        summary.daily_publication_status = (
+            "SATISFIED_TODAY" if daily_satisfied else "MISSING_TODAY"
+        )
+
+        # A local safety net, and explicitly not the benchmark's protection.
+        #
+        # By the time this runs the publish job already holds
+        # election-simulator-production, so a capture may already be queued
+        # behind it; standing down here shortens that wait but cannot prevent
+        # it.  Protection is the fallback_preflight job's, which runs outside
+        # the group and asks GitHub whether a capture is queued or in flight.
+        #
+        # This still earns its place for the paths that never pass through
+        # that job: a direct Python caller, a local run, a test.  It stays
+        # scoped to FALLBACK_DAILY -- a scheduled or manual publication is
+        # part of the operating picture the protocol was written against, and
+        # suppressing one would be a publication-semantics change.
+        if run_type == FALLBACK_RUN_TYPE:
+            conflict = benchmark_window_conflict(now or datetime.now(timezone.utc))
+            if conflict is not None:
+                summary.deployment_status = "DEFERRED_BENCHMARK_WINDOW"
+                return AutomationResult(
+                    status="DEFERRED_BENCHMARK_WINDOW",
+                    summary=summary,
+                )
 
         acquisition_staging: Path | None = None
         acquisition_context = (
@@ -1708,7 +1823,7 @@ def run_automation(
         with acquisition_context as acquisition_name:
             if acquisition_name is not None:
                 acquisition_staging = Path(acquisition_name)
-            effective_commit = commit and resolved_mode == "publish"
+            effective_commit = commit and resolved_mode in MUTATING_MODES
             effective_push = push and effective_commit
             polling = refresh_polling_snapshot(
                 root,
@@ -1751,6 +1866,7 @@ def run_automation(
                 model_inputs_changed=polling.changed,
                 mode=resolved_mode,
                 pending_publication=pending_publication,
+                daily_already_satisfied=daily_satisfied,
             )
             # An explicitly selected manual dry-run is itself a request to
             # exercise the complete production path, even when the caller
@@ -1769,7 +1885,7 @@ def run_automation(
             # short-circuiting on a stale website generation from an older
             # failed run.
             recovery: dict[str, Any] | None = None
-            if not publication_needed and root != site and resolved_mode == "publish":
+            if not publication_needed and root != site and resolved_mode in MUTATING_MODES:
                 # Only skip the recovery probe when there is no certified
                 # source pointer to compare.  Once a source generation is
                 # certified, a website build/browser failure is a real gate
@@ -1911,7 +2027,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--mode",
         choices=VALID_MODES,
         required=False,
-        help="probe (acquire only), dry_run (full disposable gates), or publish (commit/push)",
+        help=(
+            "probe (acquire only), dry_run (full disposable gates), "
+            "publish (commit/push), or publish_if_stale (publish only when "
+            "today's mandatory recalculation is missing)"
+        ),
     )
     parser.add_argument(
         "--automation-enabled",
@@ -1925,7 +2045,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    if args.mode == "publish":
+    if args.mode in MUTATING_MODES:
         commit = True
         push = True
     else:
@@ -1954,6 +2074,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "SOURCE_CHECKED",
         "STOPPED_AFTER_ELECTION",
         "DISABLED_BY_REPOSITORY_KILL_SWITCH",
+        "DEFERRED_BENCHMARK_WINDOW",
         "WEBSITE_RECOVERED",
     } else 1
 
@@ -1977,6 +2098,9 @@ __all__ = [
     "automation_enabled_for_event",
     "classify_run_type",
     "current_stockholm_date",
+    "FALLBACK_RUN_TYPE",
+    "daily_publication_satisfied",
+    "benchmark_window_conflict",
     "guard_election_date",
     "latest_pop_observation_date",
     "model_relevant_snapshot_sha256",
