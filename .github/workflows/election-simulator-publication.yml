@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "probe, browser_diagnostic, dry_run, or publish"
+        description: "probe, browser_diagnostic, dry_run, publish, or publish_if_stale"
         required: true
         default: dry_run
         type: choice
@@ -18,6 +18,12 @@ on:
           - browser_diagnostic
           - dry_run
           - publish
+          # The fallback boundary. An external scheduler dispatches this when
+          # the 04:00Z daily tick did not arrive; the automation then decides
+          # whether today's mandatory recalculation is actually missing and
+          # no-ops when it is not. Unlike publish it is subject to the
+          # repository kill switch, because nobody is watching it.
+          - publish_if_stale
       website_ref:
         description: "Public website branch/ref used by browser_diagnostic"
         required: false
@@ -268,7 +274,11 @@ jobs:
           node browser-tests/government-builder.smoke.mjs _site
 
   publish:
-    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'publish')
+    if: >-
+      github.event_name == 'schedule' ||
+      (github.event_name == 'workflow_dispatch' &&
+       (github.event.inputs.mode == 'publish' ||
+        github.event.inputs.mode == 'publish_if_stale'))
     permissions:
       contents: write
     # Set repository variable ELECTION_SIMULATOR_RUNNER to a self-hosted label
@@ -291,12 +301,15 @@ jobs:
           AUTOMATION_ENABLED: ${{ vars.ELECTION_AUTOMATION_ENABLED || 'false' }}
           EVENT_NAME: ${{ github.event_name }}
           EVENT_SCHEDULE: ${{ github.event.schedule }}
-          MODE: publish
+          MODE: ${{ github.event_name == 'schedule' && 'publish' || github.event.inputs.mode }}
         run: |
-          if [[ "$EVENT_NAME" != "workflow_dispatch" && "${AUTOMATION_ENABLED,,}" == "false" ]]; then
+          if [[ ( "$EVENT_NAME" != "workflow_dispatch" || "$MODE" == "publish_if_stale" ) \
+                && "${AUTOMATION_ENABLED,,}" == "false" ]]; then
             echo "disabled=true" >> "$GITHUB_OUTPUT"
             {
-              if [[ "$EVENT_SCHEDULE" == "0 4 * * *" ]]; then RUN_TYPE="DAILY"; else RUN_TYPE="POLL_CHANGE"; fi
+              if [[ "$MODE" == "publish_if_stale" ]]; then RUN_TYPE="FALLBACK_DAILY"
+              elif [[ "$EVENT_SCHEDULE" == "0 4 * * *" ]]; then RUN_TYPE="DAILY"
+              else RUN_TYPE="POLL_CHANGE"; fi
               echo "Run type: $RUN_TYPE"
               echo "Mode: ${MODE^^}"
               echo "Forecast as_of: NOT_RUN"
@@ -311,6 +324,7 @@ jobs:
               echo "Website commit: NOT_CHECKED_OUT"
               echo "Deployment status: DISABLED_BY_REPOSITORY_KILL_SWITCH"
               echo "Recovery status: NONE"
+              echo "Daily publication: NOT_CHECKED"
             } >> "$GITHUB_STEP_SUMMARY"
             echo "ELECTION_AUTOMATION_ENABLED=false; scheduled run exits before acquisition."
             exit 0
@@ -429,12 +443,13 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           EVENT_SCHEDULE: ${{ github.event.schedule }}
           ELECTION_AUTOMATION_ENABLED: ${{ vars.ELECTION_AUTOMATION_ENABLED || 'false' }}
+          MODE: ${{ github.event_name == 'schedule' && 'publish' || github.event.inputs.mode }}
         run: |
           uv run python -m scripts.election_automation \
             --repo-root "$GITHUB_WORKSPACE/simulator" \
             --site-repo "$GITHUB_WORKSPACE/website" \
             --event-name "$EVENT_NAME" \
             --schedule "$EVENT_SCHEDULE" \
-            --mode publish \
+            --mode "$MODE" \
             --automation-enabled "$ELECTION_AUTOMATION_ENABLED" \
             --summary-path "$GITHUB_STEP_SUMMARY"

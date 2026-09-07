@@ -62,6 +62,92 @@ and never include response bodies. A semantic failure is scoped to that source;
 the Pollofpolls host circuit breaker remains reserved for transport/HTTP
 failures, so later source keys still receive their own live attempt.
 
+## Fallback trigger for a missing daily publication
+
+GitHub's cron is best-effort. When the `0 4 * * *` tick that carries the
+mandatory daily recalculation is delayed or dropped, the public forecast stays
+on the previous day's generation and nothing on the site says so. The remedy is
+a trigger outside GitHub Actions: a Cloudflare Worker
+(`ops/publication-fallback-worker/`) dispatches this workflow three times each
+morning with `mode=publish_if_stale`. A fallback hosted on the scheduler it is
+compensating for would not have fired in the case it exists for.
+
+The Worker holds no policy. It reads nothing, decides nothing, and does not
+know what a publication is; it POSTs one `workflow_dispatch` and lets the
+automation decide. Every decision stays here, with the tests:
+
+| question | answer |
+| --- | --- |
+| is today's recalculation live on both source and site | `daily_publication_satisfied` |
+| does the kill switch apply | `automation_enabled_for_event` |
+| could this collide with a benchmark cutoff | `benchmark_window_conflict` |
+| should this publish at all | `should_publish` |
+| may two publications overlap | the workflow's `election-simulator-production` group |
+
+The cost is a short workflow run that publishes nothing on a normal day. That
+is the intended trade: one tested implementation, and the no-op is visible in
+the Actions history rather than hidden in a Worker log.
+
+### Why `publish_if_stale` is its own mode
+
+It differs from `publish` in exactly the two places that matter.
+
+**It is subject to the kill switch.** An operator dispatch bypasses
+`ELECTION_AUTOMATION_ENABLED` because a human asked for it. An unattended
+external trigger must not, or adding a fallback would quietly grant the
+automated path a way around "stop publishing".
+
+**It only covers an absent daily.** `FALLBACK_DAILY` publishes unconditionally
+when today's recalculation is missing -- that is the mandatory recalculation,
+not a poll-change check -- and falls back to poll-change semantics once the
+daily is accounted for.
+
+### Publishing once per day rather than once per trigger
+
+`should_publish` takes `daily_already_satisfied`: a full publication carrying
+today's Stockholm date, live on *both* the source and the website. A `DAILY`
+tick that arrives after the fallback already covered the day, with no changed
+model input and no pending marker, therefore publishes nothing instead of
+re-simulating identical inputs.
+
+The invariant is unchanged: at least one mandatory recalculation per Stockholm
+day. Only the redundant repeat is dropped, and only when there is nothing new
+to say -- a changed input or a durable pending marker still publishes, and an
+operator dispatch always does.
+
+Requiring *both* pointers to be dated today is deliberate. A run that certified
+a generation and then failed to push it to the website leaves the public
+forecast stale, which is precisely the condition the fallback is for. An
+unreadable pointer counts as stale for the same reason: the worst case of a
+broken liveness check must be a redundant recalculation, never a forecast left
+stale because the checker could not tell.
+
+### Prospective benchmark: no protocol amendment required
+
+The prospective benchmark shares the `election-simulator-production`
+concurrency group on purpose, so a capture can never race a publication.
+Amendment 005 records what happens when a capture is not ready before its
+frozen cutoff: it archives LATE_EXCLUDED and the run fails. A publication
+holding that lock across the cutoff could cause exactly that.
+
+The fallback changes no protocol rule -- no cutoff, no timing-eligibility rule,
+no scoring rule, no party set -- and never dispatches the benchmark workflow.
+It is therefore not a protocol change, **on the condition that it never
+contends for the lock inside the benchmark's protected window**. That condition
+is enforced rather than assumed: `benchmark_window_conflict` derives the
+interval from the frozen protocol module itself, and a fallback inside it
+stands down with `DEFERRED_BENCHMARK_WINDOW` before acquiring anything. The
+Worker's own ticks are ~15 hours from that window, so the guard is an
+invariant, not a restatement of the schedule.
+
+Only the fallback stands down. The two existing crons are part of the operating
+picture the protocol was written against, and silently suppressing one would be
+a publication-semantics change rather than hardening.
+
+If the fallback were ever allowed to preempt a capture, that *would* need an
+append-only amendment 006, because it would change the operational conditions
+under which timing-eligibility is determined. This design does not do that.
+
 ## Required GitHub setup
 
 Enable Actions for the simulator repository and leave the workflow disabled

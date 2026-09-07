@@ -1,0 +1,24 @@
+# Cloudflare Worker: fallback trigger for the mandatory daily publication.
+#
+# The three ticks are 45, 90 and 150 minutes after the 04:00Z daily cron. Each
+# one dispatches unconditionally; the automation no-ops when today's mandatory
+# recalculation is already live, so a late primary trigger costs one cheap
+# workflow run rather than a second publication.
+#
+# All three are in the morning and the prospective benchmark's protected window
+# is 20:30-24:00 Europe/Stockholm, so they cannot contend for the production
+# lock with a capture. That separation is asserted independently in
+# scripts/publication_fallback.py rather than trusted to these expressions.
+
+name = "election-publication-fallback"
+main = "worker.mjs"
+compatibility_date = "2026-09-01"
+
+[triggers]
+crons = ["45 4 * * *", "30 5 * * *", "30 6 * * *"]
+
+# Secrets, set with `wrangler secret put` and never committed:
+#   GITHUB_TOKEN     fine-grained PAT, single repo edvinli/election-simulator,
+#                    Actions: read and write. Nothing else.
+#   FALLBACK_SECRET  shared secret for the manual POST verification endpoint.
+#   HEARTBEAT_URL    optional dead-man's-switch ping URL.

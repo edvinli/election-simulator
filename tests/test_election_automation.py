@@ -929,10 +929,15 @@ class ElectionAutomationTests(unittest.TestCase):
             "if: github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'dry_run'",
             dry_run,
         )
+        # The gate is folded across lines, so compare on normalised
+        # whitespace: publish runs for every schedule tick, for an operator
+        # dispatch, and for the external fallback -- and for nothing else.
         self.assertIn(
-            "if: github.event_name == 'schedule' || "
-            "(github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'publish')",
-            publish,
+            "if: >- github.event_name == 'schedule' || "
+            "(github.event_name == 'workflow_dispatch' && "
+            "(github.event.inputs.mode == 'publish' || "
+            "github.event.inputs.mode == 'publish_if_stale'))",
+            " ".join(publish.split()),
         )
         self.assertNotIn("github.event_name == 'schedule'", probe)
         self.assertNotIn("github.event_name == 'schedule'", dry_run)
@@ -952,7 +957,15 @@ class ElectionAutomationTests(unittest.TestCase):
         self.assertIn("GIT_CONFIG_NOSYSTEM: \"1\"", dry_run)
         self.assertIn("--mode probe", probe)
         self.assertIn("--mode dry_run", dry_run)
-        self.assertIn("--mode publish", publish)
+        # The publish job serves three triggers, so it forwards the resolved
+        # mode rather than a literal: a schedule tick is always a full
+        # publish, and a dispatch carries whichever mode it chose.
+        self.assertIn('--mode "$MODE"', publish)
+        self.assertIn(
+            "MODE: ${{ github.event_name == 'schedule' && 'publish' "
+            "|| github.event.inputs.mode }}",
+            publish,
+        )
         self.assertIn("github.event.inputs.mode == 'browser_diagnostic'", browser_diagnostic)
         self.assertIn("persist-credentials: false", browser_diagnostic)
         self.assertIn("forecast-timeseries.smoke.mjs", browser_diagnostic)
