@@ -1501,6 +1501,7 @@ def run_production_event(
             try:
                 history_for_update, backfilled = backfill_reconstructed_curve(
                     existing_history,
+                    model_data_dir=processed_root,
                     poll_file=processed_root / "pollofpolls" / "swedishpolls_individual_polls.csv",
                     timeseries_file=processed_root / "pollofpolls" / "pollofpolls_timeseries.csv",
                     archive_dir=staged_archive,

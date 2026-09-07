@@ -43,7 +43,7 @@ from scripts.election_automation import (
 )
 from scripts.forecast_history.campaign_paths import CampaignPathSimulation
 from scripts.forecast_history.contract import DEFAULT_COALITIONS, build_groups_from_matrices, validate_history_contract
-from scripts.forecast_history.generate import build_history, update_history_with_production_result
+from scripts.forecast_history.generate import build_history, missing_curve_dates, update_history_with_production_result
 from scripts.publication_pipeline.pipeline import run_publication_pipeline
 from scripts.site_publisher import GENERATION_FILES, publish_generation_to_site, sync_history_to_site
 from scripts.static_exporter import validate_published_directory
@@ -1558,6 +1558,7 @@ time.sleep(60)
             self.assertEqual(after.get(point_date), point, point_date)
         # Whatever was resimulated had no curve point to begin with.
         self.assertTrue(set(resimulated).isdisjoint(reconstructed_dates))
+        self.assertEqual(set(resimulated), {day.isoformat() for day in missing_curve_dates(existing)})
 
     def test_production_history_rollover_and_same_day_replacement(self) -> None:
         # The second half of the live-artifact integration lane; see the note on

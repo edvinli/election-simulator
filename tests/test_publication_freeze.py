@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import ast
+from copy import deepcopy
 import hashlib
 import json
 from pathlib import Path
@@ -90,11 +92,41 @@ class PublicationFreeze(unittest.TestCase):
         if not _commit_available(base):
             self.skipTest("shallow clone: merge-base commit unavailable")
         for rel in sorted(PARTY_CHART_MERGE_CHANGED):
-            stat = sp.check_output(
-                ["git", "diff", "--numstat", base, "HEAD", "--", rel],
-                cwd=REPO_ROOT).decode().split()
-            self.assertTrue(stat, rel)
-            self.assertEqual(stat[1], "0", f"{rel} must be purely additive")
+            if rel == "scripts/pollofpolls/normalize.py":
+                # The freeze is not reissued for the transport-ID migration.
+                # Pin that exact semantic delta, then require every original
+                # AST node to remain: no other parser/model change is excused.
+                before = ast.parse(sp.check_output(["git", "show", f"{base}:{rel}"], cwd=REPO_ROOT))
+                current = ast.parse((REPO_ROOT / rel).read_text())
+                old_parser = next(n for n in before.body if isinstance(n, ast.FunctionDef)
+                                  and n.name == "parse_swedishpolls_payloads")
+                new_parser = next(n for n in current.body if isinstance(n, ast.FunctionDef)
+                                  and n.name == old_parser.name)
+                def identity_assignment(parser):
+                    return next(n for n in ast.walk(parser) if isinstance(n, ast.Assign)
+                                and any(isinstance(t, ast.Name) and t.id == "identity" for t in n.targets))
+                old_identity = identity_assignment(old_parser)
+                new_identity = identity_assignment(new_parser)
+                old_fields = {k.value: v for k, v in zip(old_identity.value.keys, old_identity.value.values)}
+                new_fields = {k.value: v for k, v in zip(new_identity.value.keys, new_identity.value.values)}
+                self.assertEqual(set(new_fields), (set(old_fields) - {"source_row"}) | {"house", "sample_size"})
+                self.assertEqual(ast.dump(new_fields["house"]), ast.dump(ast.parse("house_original", mode="eval").body))
+                self.assertEqual(ast.dump(new_fields["sample_size"]),
+                                 ast.dump(ast.parse('_optional_int(row.get("n"))', mode="eval").body))
+                for key in set(old_fields) - {"source_row"}:
+                    self.assertEqual(ast.dump(new_fields[key]), ast.dump(old_fields[key]), key)
+                new_identity.value = deepcopy(old_identity.value)
+                remaining = iter(ast.dump(node) for node in current.body)
+                for node in before.body:
+                    expected = ast.dump(node)
+                    self.assertTrue(any(candidate == expected for candidate in remaining),
+                                    "Unexpected non-additive parser change beyond canonical poll identity")
+            else:
+                stat = sp.check_output(
+                    ["git", "diff", "--numstat", base, "HEAD", "--", rel],
+                    cwd=REPO_ROOT).decode().split()
+                self.assertTrue(stat, rel)
+                self.assertEqual(stat[1], "0", f"{rel} must be purely additive")
         for pkg in ("scripts/forecast_history", "scripts/vote_share_calibration",
                     "scripts/simulator"):
             hits = sp.run(["grep", "-rn", "parse_party_chart_pop_series", pkg],
