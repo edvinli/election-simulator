@@ -7,8 +7,9 @@ revision is a cache miss, never permission to assume fresh inputs are old ones.
 """
 from __future__ import annotations
 
+from bisect import bisect_right
 from contextlib import contextmanager
-from datetime import date
+from datetime import date, timedelta
 import hashlib
 import json
 from pathlib import Path
@@ -22,7 +23,11 @@ import pandas as pd
 from scripts.election_layer_v2.config import ALL_HISTORICAL_ELECTIONS, CANONICAL_WINDOW_DAYS
 from scripts.election_residuals.consensus import build_election_polling_consensus
 from scripts.elections.load import load_election_targets_for_forecasting
-from scripts.pollofpolls.state import load_individual_polls_dataset, load_timeseries_dataset
+from scripts.pollofpolls.state import load_individual_polls_dataset, load_timeseries_dataset, subtract_calendar_years
+from scripts.pollofpolls.state_config import (
+    COVARIANCE_LOOKBACK_YEARS, MAX_ESTIMATE_MATCH_LAG_DAYS, MIN_RESIDUAL_POLLS,
+    RECENT_POLL_LOOKBACK_DAYS,
+)
 from scripts.simulator.config import DEFAULT_GEOGRAPHY_BASELINE_YEAR
 
 VERSION = 1
@@ -64,10 +69,11 @@ def _ordered(values: Any) -> list[Any]:
 class EffectiveInputs:
     """Read once, then fingerprint the eligible inputs for each observation date.
 
-    The complete eligible opinion history is retained: the estimator can fall
-    back beyond its trailing covariance window. Dynamics likewise uses all
-    transitions ending on/before as_of. No future rows or undated polls enter
-    those identities. Election-noise windows follow the canonical selector.
+    Match OpinionState's active covariance window (including its backward
+    fallback), recent information count, and central estimate. Dynamics uses
+    only exact historical pairs in the selected horizon, ending on/before
+    as_of. No future rows or undated polls enter those identities. These
+    selectors are guarded by the numerical source identity above.
     """
 
     def __init__(self, data_dir: Path = ROOT / "data/processed", *,
@@ -75,6 +81,8 @@ class EffectiveInputs:
         self.election = election_date
         self.seed = seed
         self.timeseries = load_timeseries_dataset(data_dir / "pollofpolls/pollofpolls_timeseries.csv")
+        self.ts_dates = [row["date"] for row in self.timeseries]
+        self.ts_by_date = {row["date"]: row["composition"] for row in self.timeseries}
         self.polls, _ = load_individual_polls_dataset(data_dir / "pollofpolls/individual_polls.csv")
         polls_df = pd.read_csv(data_dir / "pollofpolls/swedishpolls_individual_polls.csv")
         targets = load_election_targets_for_forecasting(data_dir / "elections/riksdag_election_results.csv")
@@ -108,11 +116,18 @@ class EffectiveInputs:
         })
 
     def fingerprint(self, as_of: date) -> str:
+        return digest(self.for_date(as_of))
+
+    def for_date(self, as_of: date) -> dict[str, Any]:
         # The current engine trains election noise strictly before the target
         # election. Refuse to certify a history date predating that training.
         if any(election > as_of for election, _ in self.training):
             raise ValueError("Historical as_of precedes an election-noise training outcome")
-        polls = []
+        available = bisect_right(self.ts_dates, as_of)
+        if not available:
+            raise ValueError("No model time series available as of historical date")
+        residuals = []
+        recent = []
         for p in self.polls:
             if p.publication_date is None or p.publication_date > as_of:
                 continue
@@ -120,20 +135,46 @@ class EffectiveInputs:
                 continue
             if p.reference_date is None or p.reference_date > as_of:
                 continue
-            polls.append({
-                "pollster": p.pollster, "publication_date": p.publication_date.isoformat(),
-                "start": p.interview_start.isoformat() if p.interview_start else None,
-                "end": p.interview_end.isoformat() if p.interview_end else None,
-                "reference": p.reference_date.isoformat(), "sample_size": p.sample_size,
-                "composition": p.composition,
-            })
-        return digest({
+            # Recent polls affect n_eff through reference date and sample
+            # size, not through their reported party values. Publication-day
+            # residuals are strictly excluded by OpinionState.
+            if as_of - timedelta(days=RECENT_POLL_LOOKBACK_DAYS) <= p.reference_date:
+                recent.append({"reference": p.reference_date.isoformat(), "sample_size": p.sample_size})
+            if p.publication_date >= as_of or p.interview_end is None:
+                continue
+            matched = bisect_right(self.ts_dates, p.reference_date) - 1
+            if matched < 0:
+                continue
+            matched_day = self.ts_dates[matched]
+            if (p.reference_date - matched_day).days > MAX_ESTIMATE_MATCH_LAG_DAYS:
+                continue
+            residuals.append((p.publication_date, {
+                "pollster": p.pollster, "composition": p.composition,
+                "matched_composition": self.ts_by_date[matched_day],
+            }))
+        cutoff = subtract_calendar_years(as_of, COVARIANCE_LOOKBACK_YEARS)
+        window = [record for published, record in residuals if published >= cutoff]
+        active = window if len(window) >= MIN_RESIDUAL_POLLS else [r for _, r in residuals]
+
+        # The same horizon/fallback order as generate_national_vote_shares.
+        horizon = min(max(1, (self.election - as_of).days), 112)
+        eligible_dates = self.ts_dates[:available]
+        for selected_horizon in (horizon, 28, 14, 7):
+            delta = timedelta(days=selected_horizon)
+            pairs = [(end - delta, end) for end in eligible_dates if end - delta in self.ts_by_date]
+            if len(pairs) >= 30:
+                break
+        used_dates = {day for pair in pairs for day in pair}
+        return {
             "version": VERSION, "as_of": as_of.isoformat(), "election": self.election.isoformat(),
-            "seed": self.seed, "static": self.static, "opinion_polls": _ordered(polls),
-            "timeseries": [{"date": r["date"].isoformat(), "composition": r["composition"]}
-                           for r in self.timeseries if r["date"] <= as_of],
+            "seed": self.seed, "static": self.static,
+            "opinion": {"central": self.ts_by_date[self.ts_dates[available - 1]],
+                        "residuals": _ordered(active), "recent": _ordered(recent)},
+            "dynamics": {"horizon": selected_horizon,
+                         "observations": [{"date": day.isoformat(), "composition": self.ts_by_date[day]}
+                                          for day in sorted(used_dates)]},
             "training": [value for _, value in self.training],
-        })
+        }
 
 
 @contextmanager

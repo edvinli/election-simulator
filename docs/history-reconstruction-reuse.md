@@ -15,17 +15,19 @@ The versioned `reconstruction_inputs.dates` map is additive artifact metadata,
 covered by the artifact's deterministic self-hash. Its entries include:
 
 - observation date, target election, and random seed;
-- canonical complete opinion poll observations eligible by publication,
-  fieldwork end, and reference date; IDs and acquisition metadata are excluded;
-- historical time-series compositions on/before the observation date (including
-  history before the chart window, which the all-history dynamics can consume);
+- the opinion estimator's central estimate, active residual inputs, and recent
+  poll reference dates/sample sizes, with its distinct strict residual and
+  inclusive recent-poll publication boundaries;
+- time-series observations participating in the selected historical dynamics
+  horizon and fallback, with transition ends on/before the observation date;
 - the canonical selected polls, weights, and outcomes for the model's historical
   election-noise windows;
 - numerical model/configuration source identity and geography inputs.
 
-The eligible opinion history is deliberately retained beyond the usual trailing
-window because the canonical estimator can expand backward when residual counts
-are insufficient. Multiplicity is preserved when canonical records are sorted.
+The opinion residual pool expands beyond the usual trailing window only when
+its count requires the canonical backward fallback. Inactive old polls and
+publication-day party values (which have not entered residual estimation yet)
+do not invalidate points. Multiplicity is preserved when canonical records are sorted.
 There is no rounding or tolerance in the identity comparison. Numerical source
 identity is independent of the acquisition normalizer and presentation code;
 `MODEL_FILES` in `effective_inputs.py` enumerates the numerical implementation.
@@ -36,7 +38,7 @@ verifies the recorded SwedishPolls and time
 series SHA-256 values, and fingerprints that source revision's model inputs.
 It never substitutes HEAD for missing history and never fetches from the network.
 If the revision or matching hashes cannot be established, reconstructed points
-are cache misses. Full CI and publication checkouts retain Git history for this
+are cache misses. PR, Full CI, and publication checkouts retain Git history for this
 reason. A successful build persists the fingerprints, so later publications do
 not require the legacy source revision. Roll-in carries the original per-date
 identities; it must not stamp old points with today's fingerprints.

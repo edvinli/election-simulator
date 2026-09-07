@@ -106,6 +106,54 @@ class EffectiveInputReuseTests(unittest.TestCase):
         # The official point is an immutable publication, not a reconstructed cache entry.
         self.assertEqual(rebuilt['series'][-1], first['series'][-1])
 
+    def test_inactive_old_opinion_poll_does_not_invalidate(self):
+        first = build_history(**self.kwargs)
+        def revise(rows):
+            for row in rows:
+                if row['publication_date'] and row['publication_date'] < '2022-05-23' and row['support']:
+                    if row['party'] == 'M':
+                        row['support'] = str(float(row['support']) + 0.1)
+                    elif row['party'] == 'S':
+                        row['support'] = str(float(row['support']) - 0.1)
+            return rows
+        self.rewrite(DATA_FILES[0], revise)
+        self.assertEqual(self.rebuild(first)['series'], first['series'])
+        self.assertEqual(self.calls, [])
+
+    def test_publication_day_values_enter_residuals_only_the_next_day(self):
+        # A same-day poll contributes recent information through n/ref-date,
+        # but its values cannot enter the covariance residual pool yet.
+        def insert(rows):
+            poll = rows[0]['poll_id']
+            new = [dict(row) for row in rows if row['poll_id'] == poll]
+            for row in new:
+                row.update(poll_id='publication-day', publication_date='2026-05-23',
+                           interview_start='2026-05-20', interview_end='2026-05-22')
+            return new + rows
+        self.rewrite(DATA_FILES[0], insert)
+        first = build_history(**self.kwargs)
+        def revise(rows):
+            for row in rows:
+                if row['poll_id'] == 'publication-day' and row['support']:
+                    if row['party'] == 'M':
+                        row['support'] = str(float(row['support']) + 0.1)
+                    elif row['party'] == 'S':
+                        row['support'] = str(float(row['support']) - 0.1)
+            return rows
+        self.rewrite(DATA_FILES[0], revise)
+        self.rebuild(first)
+        self.assertEqual(self.calls, ['2026-05-24'])
+
+    def test_opinion_selection_matches_canonical_estimator(self):
+        from scripts.pollofpolls.state import estimate_opinion
+        inputs = EffectiveInputs(self.data, election_date=date(2026, 9, 13), seed=12345)
+        for day in (date(2022, 10, 2), date(2026, 5, 24), date(2026, 9, 5)):
+            state = estimate_opinion(as_of=day, data_dir=self.data / 'pollofpolls')
+            selected = inputs.for_date(day)['opinion']
+            self.assertEqual(len(selected['residuals']), state.residual_poll_count)
+            self.assertEqual(len(selected['recent']), state.recent_poll_count)
+            self.assertEqual(selected['central'], {**state.mean_pct, 'REST': state.rest_pct})
+
     def test_historical_individual_poll_value_change_invalidates(self):
         first = build_history(**self.kwargs)
         def revise(rows):
