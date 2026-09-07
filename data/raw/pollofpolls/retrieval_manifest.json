@@ -166,8 +166,8 @@
       "source_key": "party_FI"
     },
     {
-      "byte_length": 268968,
-      "bytes": 268968,
+      "byte_length": 269470,
+      "bytes": 269470,
       "content_type": "text/plain; charset=utf-8",
       "final_host": "raw.githubusercontent.com",
       "final_host_path": "raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv",
@@ -200,18 +200,18 @@
   "schema_version": 1,
   "source_outcomes": {
     "homepage": "saved",
-    "party_C": "saved",
-    "party_FI": "saved",
-    "party_KD": "saved",
-    "party_L": "saved",
-    "party_M": "saved",
-    "party_MP": "saved",
-    "party_S": "saved",
-    "party_SD": "saved",
-    "party_V": "saved",
+    "party_C": "unchanged",
+    "party_FI": "unchanged",
+    "party_KD": "unchanged",
+    "party_L": "unchanged",
+    "party_M": "unchanged",
+    "party_MP": "unchanged",
+    "party_S": "unchanged",
+    "party_SD": "unchanged",
+    "party_V": "unchanged",
     "swedishpolls": "saved",
-    "swedishpolls_sources": "saved",
-    "timeseries": "saved"
+    "swedishpolls_sources": "unchanged",
+    "timeseries": "unchanged"
   },
   "sources": {
     "homepage": {
@@ -221,15 +221,15 @@
       "final_url": "http://pollofpolls.se/",
       "http_headers": {
         "content-type": "text/html; charset=UTF-8",
-        "date": "Fri, 04 Sep 2026 11:07:45 GMT"
+        "date": "Mon, 07 Sep 2026 06:34:26 GMT"
       },
       "http_status": 200,
       "raw_filename": "homepage.html",
       "retrieval_method": "first_party_http",
       "retrieval_url": "http://pollofpolls.se/",
-      "retrieved_at": "2026-09-04T11:07:46+00:00",
+      "retrieved_at": "2026-09-07T06:34:26+00:00",
       "semantic_validation": "PASS",
-      "sha256": "f195b4cbf292dcec023c154995a60d9322a9ff63de2d223b2c80e0e7d7d6a89e",
+      "sha256": "32c1d9d8cbe40722c70d7090b39cdd33c78d27bcf89b1f5fd5e1b30a8c3c798f",
       "source_key": "homepage",
       "source_page_url": "http://pollofpolls.se/",
       "source_url": "http://pollofpolls.se/",
@@ -243,7 +243,7 @@
       "http_headers": {
         "content-length": "400480",
         "content-type": "text/csv",
-        "date": "Fri, 04 Sep 2026 11:07:51 GMT",
+        "date": "Mon, 07 Sep 2026 06:34:31 GMT",
         "etag": "\"61c60-65aa5caebecb1\"",
         "last-modified": "Fri, 04 Sep 2026 10:33:00 GMT"
       },
@@ -267,7 +267,7 @@
       "http_headers": {
         "content-length": "268163",
         "content-type": "text/csv",
-        "date": "Fri, 04 Sep 2026 11:08:01 GMT",
+        "date": "Mon, 07 Sep 2026 06:34:44 GMT",
         "etag": "\"41783-65aa5cb115ad3\"",
         "last-modified": "Fri, 04 Sep 2026 10:33:03 GMT"
       },
@@ -291,7 +291,7 @@
       "http_headers": {
         "content-length": "399892",
         "content-type": "text/csv",
-        "date": "Fri, 04 Sep 2026 11:07:52 GMT",
+        "date": "Mon, 07 Sep 2026 06:34:33 GMT",
         "etag": "\"61a14-65aa5caf20735\"",
         "last-modified": "Fri, 04 Sep 2026 10:33:01 GMT"
       },
@@ -315,7 +315,7 @@
       "http_headers": {
         "content-length": "398838",
         "content-type": "text/csv",
-        "date": "Fri, 04 Sep 2026 11:07:49 GMT",
+        "date": "Mon, 07 Sep 2026 06:34:29 GMT",
         "etag": "\"615f6-65aa5cae587f4\"",
         "last-modified": "Fri, 04 Sep 2026 10:33:00 GMT"
       },
@@ -339,7 +339,7 @@
       "http_headers": {
         "content-length": "425573",
         "content-type": "text/csv",
-        "date": "Fri, 04 Sep 2026 11:07:47 GMT",
+        "date": "Mon, 07 Sep 2026 06:34:28 GMT",
         "etag": "\"67e65-65aa5cadf3e8f\"",
         "last-modified": "Fri, 04 Sep 2026 10:32:59 GMT"
       },
@@ -363,7 +363,7 @@
       "http_headers": {
         "content-length": "402243",
         "content-type": "text/csv",
-        "date": "Fri, 04 Sep 2026 11:07:57 GMT",
+        "date": "Mon, 07 Sep 2026 06:34:39 GMT",
         "etag": "\"62343-65aa5cb04f6ea\"",
         "last-modified": "Fri, 04 Sep 2026 10:33:02 GMT"
       },
@@ -387,7 +387,7 @@
       "http_headers": {
         "content-length": "425399",
         "content-type": "text/csv",
-        "date": "Fri, 04 Sep 2026 11:07:54 GMT",
+        "date": "Mon, 07 Sep 2026 06:34:35 GMT",
         "etag": "\"67db7-65aa5caf87f7a\"",
         "last-modified": "Fri, 04 Sep 2026 10:33:01 GMT"
       },
@@ -411,7 +411,7 @@
       "http_headers": {
         "content-length": "415509",
         "content-type": "text/csv",
-        "date": "Fri, 04 Sep 2026 11:07:59 GMT",
+        "date": "Mon, 07 Sep 2026 06:34:41 GMT",
         "etag": "\"65715-65aa5cb0b24f7\"",
         "last-modified": "Fri, 04 Sep 2026 10:33:02 GMT"
       },
@@ -435,7 +435,7 @@
       "http_headers": {
         "content-length": "402003",
         "content-type": "text/csv",
-        "date": "Fri, 04 Sep 2026 11:07:56 GMT",
+        "date": "Mon, 07 Sep 2026 06:34:37 GMT",
         "etag": "\"62253-65aa5cafea5b6\"",
         "last-modified": "Fri, 04 Sep 2026 10:33:02 GMT"
       },
@@ -452,23 +452,23 @@
       "upstream_capture_at": null
     },
     "swedishpolls": {
-      "bytes": 268968,
+      "bytes": 269470,
       "final_host": "raw.githubusercontent.com",
       "final_path": "/MansMeg/SwedishPolls/master/Data/Polls.csv",
       "final_url": "https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv",
       "http_headers": {
-        "content-length": "268968",
+        "content-length": "269470",
         "content-type": "text/plain; charset=utf-8",
-        "date": "Fri, 04 Sep 2026 11:08:02 GMT",
-        "etag": "\"07b7e41bb3ca82f70c4b772e7cd77b81ff853a24c18993c0c37b7566be6df641\""
+        "date": "Mon, 07 Sep 2026 06:34:45 GMT",
+        "etag": "\"8791da0abe60ad29db530d420046a84e2a6621b2b7784595c2afb3cfab202fc5\""
       },
       "http_status": 200,
       "raw_filename": "swedishpolls_polls.csv",
       "retrieval_method": "direct_repository_http",
       "retrieval_url": "https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv",
-      "retrieved_at": "2026-09-04T11:08:02+00:00",
+      "retrieved_at": "2026-09-07T06:34:46+00:00",
       "semantic_validation": "PASS",
-      "sha256": "84a4a71264fd33a262169a80ac2cc5de83e26456fc5137b9b3f023c5cf721e97",
+      "sha256": "27012c05d1e948133a4a2558ec841df62c518b9122117a461ca1f8f6aa9d1608",
       "source_key": "swedishpolls",
       "source_page_url": "https://github.com/MansMeg/SwedishPolls/blob/master/Data/Polls.csv",
       "source_url": "https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv",
@@ -482,7 +482,7 @@
       "http_headers": {
         "content-length": "22726",
         "content-type": "text/plain; charset=utf-8",
-        "date": "Fri, 04 Sep 2026 11:08:03 GMT",
+        "date": "Mon, 07 Sep 2026 06:34:46 GMT",
         "etag": "\"8d575ef90c4f8cb29636a1541c97a85df5e5aa8d777ea99715aafdbcd5f725b2\""
       },
       "http_status": 200,
@@ -505,7 +505,7 @@
       "http_headers": {
         "content-length": "206064",
         "content-type": "text/csv",
-        "date": "Fri, 04 Sep 2026 11:07:44 GMT",
+        "date": "Mon, 07 Sep 2026 06:34:24 GMT",
         "etag": "\"324f0-65aa5cb38055f\"",
         "last-modified": "Fri, 04 Sep 2026 10:33:05 GMT"
       },
