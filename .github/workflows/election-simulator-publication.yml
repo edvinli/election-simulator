@@ -33,10 +33,20 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: election-simulator-production
-  cancel-in-progress: false
-
+# There is deliberately no workflow-level concurrency group.
+#
+# election-simulator-production is shared with the prospective benchmark so a
+# capture can never race a publication generation. Held at workflow level it
+# also gates every *non*-mutating job, and -- the reason this moved -- it gated
+# the fallback's own stand-down decision: a publish_if_stale run joined the
+# group before any job started, so by the time it could decide to defer it was
+# already holding the lock the benchmark was waiting for. An in-job check
+# cannot protect something it has already blocked.
+#
+# The group now sits on the publish job alone, which is the only job that
+# mutates anything. Scheduled and manual publication therefore serialize with
+# the benchmark exactly as before, and fallback_preflight runs outside the
+# group so it can stand down without ever queuing for it.
 jobs:
   probe:
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'probe'
@@ -273,14 +283,141 @@ jobs:
           timeout --signal=TERM --kill-after=5s 15m
           node browser-tests/government-builder.smoke.mjs _site
 
-  publish:
+  # The fallback's stand-down decision, outside election-simulator-production.
+  #
+  # This job exists because the decision has to be made *before* the fallback
+  # can enter or queue for the production group. It never joins that group; it
+  # takes a group of its own so two fallback ticks cannot preflight at once.
+  #
+  # It answers two questions the clock cannot answer on its own:
+  #
+  #   * is automation disabled? A publish_if_stale dispatch is unattended and
+  #     is subject to the kill switch, unlike an operator's publish.
+  #   * is a benchmark capture actually queued or running? GitHub has been
+  #     delivering the 20:30Z capture cron 1h43m-2h42m late, so a capture can
+  #     be live well outside its nominal window -- and a capture queued behind
+  #     something else shows as `queued`, which is exactly the case a clock
+  #     check misses.
+  #
+  # The frozen-window check is kept as a second, forward-looking guard: it
+  # catches a capture GitHub has not created yet but is about to, which no
+  # query of current runs can see. Neither guard is a widened blackout; the
+  # window is the protocol's own, read from time_rules.py.
+  fallback_preflight:
     if: >-
-      github.event_name == 'schedule' ||
-      (github.event_name == 'workflow_dispatch' &&
-       (github.event.inputs.mode == 'publish' ||
-        github.event.inputs.mode == 'publish_if_stale'))
+      github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.mode == 'publish_if_stale'
+    permissions:
+      actions: read
+      contents: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: election-simulator-fallback-preflight
+      cancel-in-progress: false
+    outputs:
+      proceed: ${{ steps.decide.outputs.proceed }}
+      reason: ${{ steps.decide.outputs.reason }}
+    steps:
+      - name: Check out simulator without persisted credentials
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      # The frozen window rule lives in scripts/publication_fallback.py, which
+      # reads the cutoff from the protocol module rather than restating it.
+      # Its import chain reaches numpy through the benchmark package's
+      # __init__, so the environment is installed rather than the rule copied
+      # into shell. This job is outside the production lock, so its runtime
+      # costs the benchmark nothing.
+      - name: Install simulator dependencies
+        run: uv sync --frozen
+
+      - name: Decide whether the fallback may take the production lock
+        id: decide
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          AUTOMATION_ENABLED: ${{ vars.ELECTION_AUTOMATION_ENABLED || 'false' }}
+          BENCHMARK_WORKFLOW: prospective-benchmark-2026.yml
+        run: |
+          set -euo pipefail
+          stand_down() {
+            echo "proceed=false" >> "$GITHUB_OUTPUT"
+            echo "reason=$1" >> "$GITHUB_OUTPUT"
+            {
+              echo "Run type: FALLBACK_DAILY"
+              echo "Mode: PUBLISH_IF_STALE"
+              echo "Deployment status: $1"
+              echo "Production lock: NOT_REQUESTED"
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "fallback stands down before the production lock: $1"
+            exit 0
+          }
+
+          # An unattended trigger is subject to the kill switch. An operator's
+          # explicit publish is not, and does not reach this job.
+          if [[ "${AUTOMATION_ENABLED,,}" == "false" ]]; then
+            stand_down "DISABLED_BY_REPOSITORY_KILL_SWITCH"
+          fi
+
+          # A capture that is queued or in flight, whenever it was created.
+          active="$(gh api \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/${BENCHMARK_WORKFLOW}/runs?per_page=50" \
+            --jq '[.workflow_runs[]
+                   | select(.status == "queued" or .status == "in_progress"
+                            or .status == "waiting" or .status == "pending"
+                            or .status == "requested")] | length')"
+          echo "benchmark runs queued or in flight: ${active}"
+          if [[ "${active}" != "0" ]]; then
+            stand_down "DEFERRED_BENCHMARK_RUN_ACTIVE"
+          fi
+
+          # A capture GitHub has not created yet but is about to. One line on
+          # purpose: an indented -c payload inside a YAML block scalar is an
+          # IndentationError waiting to happen.
+          if ! uv run python -c 'import sys; from datetime import datetime, timezone; from scripts.publication_fallback import benchmark_window_conflict; slot = benchmark_window_conflict(datetime.now(timezone.utc)); print("benchmark window slot:", slot); sys.exit(0 if slot is None else 1)'; then
+            stand_down "DEFERRED_BENCHMARK_WINDOW"
+          fi
+
+          echo "proceed=true" >> "$GITHUB_OUTPUT"
+          echo "reason=CLEAR" >> "$GITHUB_OUTPUT"
+          echo "fallback may request the production lock"
+
+  publish:
+    needs: [fallback_preflight]
+    # always(), so a non-fallback trigger runs with fallback_preflight skipped.
+    # A preflight that failed is not a pass: this fails closed rather than
+    # publishing when the stand-down decision could not be made.
+    if: >-
+      always() &&
+      (github.event_name == 'schedule' ||
+       (github.event_name == 'workflow_dispatch' &&
+        (github.event.inputs.mode == 'publish' ||
+         github.event.inputs.mode == 'publish_if_stale'))) &&
+      (needs.fallback_preflight.result == 'skipped' ||
+       (needs.fallback_preflight.result == 'success' &&
+        needs.fallback_preflight.outputs.proceed == 'true'))
     permissions:
       contents: write
+    # The only job that mutates anything, and so the only one that takes the
+    # production lock. Scheduled and manual publication serialize with the
+    # benchmark exactly as they did when this group sat at workflow level.
+    concurrency:
+      group: election-simulator-production
+      cancel-in-progress: false
     # Set repository variable ELECTION_SIMULATOR_RUNNER to a self-hosted label
     # when pollofpolls.se refuses GitHub-hosted runner traffic.
     runs-on: ${{ vars.ELECTION_SIMULATOR_RUNNER || 'ubuntu-latest' }}

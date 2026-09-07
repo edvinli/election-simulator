@@ -18,11 +18,19 @@ they are unit-tested:
 
 | decision | where it lives |
 | --- | --- |
+| does the kill switch apply | `fallback_preflight`, then `automation_enabled_for_event` |
+| is a benchmark capture queued or in flight | `fallback_preflight`, via the Actions API |
+| is a capture imminent but not yet created | `benchmark_window_conflict`, from the frozen protocol |
 | is today's publication live on both source and site | `daily_publication_satisfied` |
-| does the kill switch apply | `automation_enabled_for_event` |
-| would this collide with a benchmark cutoff | `benchmark_window_conflict` |
 | should this publish at all | `should_publish` |
-| may two publications run at once | the workflow's `election-simulator-production` group |
+| may two publications run at once | the **publish job's** `election-simulator-production` group |
+
+The first three run in `fallback_preflight`, which is deliberately **outside**
+the production concurrency group. That matters: the group is shared with the
+prospective benchmark, and a run that joins it before deciding to stand down
+is already holding the lock a capture is waiting for. Only the publish job
+takes that lock, so ordinary scheduled and manual publication still serialize
+with the benchmark exactly as before.
 
 The consequence is that a fallback tick on a normal day spends one short
 workflow run and publishes nothing. That is the intended trade: the rules stay

@@ -6,10 +6,12 @@ which is the failure this module exists to detect.  The remedy is a trigger
 outside GitHub Actions that pokes the existing publication workflow; a fallback
 that shares the scheduler it is compensating for is not a fallback.
 
-Everything here is pure and stdlib-only, in the manner of
-``scripts.prospective_benchmark_2026.time_rules``: the caller reads the
-artifacts and passes the two publication instants in, so the decisions can be
-tested without a repository, a network or a clock.  It deliberately contains no
+Everything here is pure: the caller reads the artifacts and passes the two
+publication instants in, so the decisions can be tested without a repository,
+a network or a clock.  The module's own code needs nothing but the standard
+library, though importing it reaches numpy through the benchmark package's
+``__init__`` -- the cutoff is read from the frozen protocol module rather than
+restated here, and that is worth an installed environment.  It deliberately contains no
 publication logic at all -- the fallback's whole design is to invoke the one
 existing workflow rather than to grow a second path into production.
 
@@ -21,16 +23,26 @@ generation and the website's live pointer to be dated today, so a publication
 that simulated successfully and then failed to sync still reads as unsatisfied
 and is repaired rather than reported as fresh.
 
-``benchmark_window_conflict`` keeps the fallback out of the prospective
-benchmark's protected window.  The benchmark shares the
-``election-simulator-production`` concurrency group precisely so a capture can
-never race a publication, and amendment 005 records that a capture which is not
-ready before its frozen cutoff archives LATE_EXCLUDED and fails the run.  A
-publication holding that lock across the cutoff could cause exactly that, so
-the fallback refuses to dispatch into the window instead.  The interval is
-derived from the frozen protocol module rather than restated here, and the
-fallback's own firing window is hours away from it -- the guard is the
-invariant, not the schedule.
+``benchmark_window_conflict`` reports whether an instant falls in the window
+around a frozen capture slot.  Read what it is and is not.
+
+It is *not* what protects the benchmark.  Protection has to happen before the
+fallback enters or queues for ``election-simulator-production``, and this
+function is called from inside the publication path -- by which point the lock
+is already held and a capture may already be waiting behind it.  That job
+belongs to the ``fallback_preflight`` job in the publication workflow, which
+runs outside the group and asks GitHub directly whether a capture is queued or
+in flight.  Late delivery is the norm rather than the exception: the 20:30Z
+capture cron has been arriving 1h43m to 2h42m late, so a capture can be live
+well outside any nominal window, and one queued behind another run is not
+visible to a clock at all.
+
+What this function is: the forward-looking half of that decision, and a local
+safety net.  A query of current runs cannot see a capture GitHub has not
+created yet but is about to, and the frozen window is exactly the interval in
+which that is imminent.  The interval is derived from the protocol module, so
+it cannot drift from the protocol it describes, and it is not a widened
+blackout -- widening it would trade one blind spot for a suppressed recovery.
 """
 
 from __future__ import annotations

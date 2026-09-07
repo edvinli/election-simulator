@@ -931,12 +931,18 @@ class ElectionAutomationTests(unittest.TestCase):
         )
         # The gate is folded across lines, so compare on normalised
         # whitespace: publish runs for every schedule tick, for an operator
-        # dispatch, and for the external fallback -- and for nothing else.
+        # dispatch, and for the external fallback -- and for nothing else. It
+        # is additionally gated on the fallback preflight, which runs outside
+        # the production concurrency group; the structural properties of that
+        # split are pinned in tests.test_publication_fallback.
         self.assertIn(
-            "if: >- github.event_name == 'schedule' || "
+            "if: >- always() && (github.event_name == 'schedule' || "
             "(github.event_name == 'workflow_dispatch' && "
             "(github.event.inputs.mode == 'publish' || "
-            "github.event.inputs.mode == 'publish_if_stale'))",
+            "github.event.inputs.mode == 'publish_if_stale'))) && "
+            "(needs.fallback_preflight.result == 'skipped' || "
+            "(needs.fallback_preflight.result == 'success' && "
+            "needs.fallback_preflight.outputs.proceed == 'true'))",
             " ".join(publish.split()),
         )
         self.assertNotIn("github.event_name == 'schedule'", probe)

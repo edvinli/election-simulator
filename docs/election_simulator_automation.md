@@ -133,12 +133,32 @@ holding that lock across the cutoff could cause exactly that.
 The fallback changes no protocol rule -- no cutoff, no timing-eligibility rule,
 no scoring rule, no party set -- and never dispatches the benchmark workflow.
 It is therefore not a protocol change, **on the condition that it never
-contends for the lock inside the benchmark's protected window**. That condition
-is enforced rather than assumed: `benchmark_window_conflict` derives the
-interval from the frozen protocol module itself, and a fallback inside it
-stands down with `DEFERRED_BENCHMARK_WINDOW` before acquiring anything. The
-Worker's own ticks are ~15 hours from that window, so the guard is an
-invariant, not a restatement of the schedule.
+contends for the lock while a capture needs it**.
+
+Enforcing that condition is a question of *where* the decision runs, not what
+it decides. `election-simulator-production` used to be held at workflow level,
+so a `publish_if_stale` run joined the group before any job started: by the
+time it could stand down it was already holding the lock, and a capture could
+already be queued behind it. An in-job check cannot protect what it has
+already blocked.
+
+The group therefore sits on the **publish job alone** -- the only job that
+mutates anything -- and the decision moved to a `fallback_preflight` job that
+runs outside it. Scheduled and manual publication serialize with the benchmark
+exactly as before, because the job that writes still takes the lock.
+
+The preflight asks two questions, because neither alone is sufficient:
+
+- **Is a capture queued or in flight?** Straight from the Actions API. This is
+  the one that matters in practice: GitHub has been delivering the 20:30Z
+  capture cron 1h43m to 2h42m late, so a capture can be live well outside any
+  nominal window, and one queued behind another run is invisible to a clock.
+- **Is a capture imminent but not yet created?** `benchmark_window_conflict`,
+  with the interval derived from the frozen protocol module. A query of
+  current runs cannot see a run GitHub has not created yet.
+
+Neither is a widened blackout. Widening the window would trade one blind spot
+for a suppressed recovery, which is the opposite of the point.
 
 Only the fallback stands down. The two existing crons are part of the operating
 picture the protocol was written against, and silently suppressing one would be

@@ -1792,15 +1792,19 @@ def run_automation(
             "SATISFIED_TODAY" if daily_satisfied else "MISSING_TODAY"
         )
 
-        # A fallback dispatch must never hold the production lock across a
-        # prospective-benchmark cutoff.  The benchmark shares this lock by
-        # design, and amendment 005 records that a capture which is not ready
-        # before its frozen cutoff is durably LATE_EXCLUDED and fails the run.
-        # So the fallback stands down here, beside the kill switch and before
-        # any acquisition: standing down after taking the lock and fetching
-        # would defeat the point.  The fallback's own firing window is hours
-        # from the benchmark's, which makes this an invariant rather than a
-        # restatement of the schedule.
+        # A local safety net, and explicitly not the benchmark's protection.
+        #
+        # By the time this runs the publish job already holds
+        # election-simulator-production, so a capture may already be queued
+        # behind it; standing down here shortens that wait but cannot prevent
+        # it.  Protection is the fallback_preflight job's, which runs outside
+        # the group and asks GitHub whether a capture is queued or in flight.
+        #
+        # This still earns its place for the paths that never pass through
+        # that job: a direct Python caller, a local run, a test.  It stays
+        # scoped to FALLBACK_DAILY -- a scheduled or manual publication is
+        # part of the operating picture the protocol was written against, and
+        # suppressing one would be a publication-semantics change.
         if run_type == FALLBACK_RUN_TYPE:
             conflict = benchmark_window_conflict(now or datetime.now(timezone.utc))
             if conflict is not None:

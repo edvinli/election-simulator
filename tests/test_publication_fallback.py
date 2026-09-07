@@ -623,5 +623,131 @@ class BenchmarkDeferralRunTests(unittest.TestCase):
         self.assertIn("acquisition must not run", str(result.summary.failure))
 
 
+PRODUCTION_GROUP = "election-simulator-production"
+WORKFLOW = (
+    Path(__file__).resolve().parents[1]
+    / ".github/workflows/election-simulator-publication.yml"
+)
+
+
+def _workflow_job(workflow: str, name: str) -> str:
+    """One top-level workflow job, without requiring a YAML package."""
+
+    lines = workflow.splitlines()
+    marker = f"  {name}:"
+    try:
+        start = lines.index(marker)
+    except ValueError as exc:  # pragma: no cover - a missing job is the failure
+        raise AssertionError(f"workflow job is missing: {name}") from exc
+    end = len(lines)
+    for index in range(start + 1, len(lines)):
+        line = lines[index]
+        if line.startswith("  ") and not line.startswith("    ") and line.endswith(":"):
+            end = index
+            break
+    return "\n".join(lines[start:end])
+
+
+class ProductionConcurrencyStructureTests(unittest.TestCase):
+    """Where the production lock is taken, and by which job.
+
+    This is a structural test on purpose.  The defect it pins is not a wrong
+    value anywhere -- every decision function was correct -- it is *where* the
+    decision ran.  ``election-simulator-production`` sat at workflow level, so
+    a publish_if_stale run joined the group before any job started and the
+    fallback's stand-down check ran while it already held the lock a capture
+    was waiting for.  No unit test of that check could see the problem,
+    because the check itself was right.
+    """
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.workflow = WORKFLOW.read_text(encoding="utf-8")
+        cls.defaults = cls.workflow.split("\njobs:\n", 1)[0]
+        cls.preflight = _workflow_job(cls.workflow, "fallback_preflight")
+        cls.publish = _workflow_job(cls.workflow, "publish")
+
+    def test_the_production_group_is_not_held_at_workflow_level(self) -> None:
+        """The whole point: a run must not join the group before a job runs."""
+
+        # The directive, not the name: the prose above `jobs:` explains why
+        # the group moved and necessarily mentions it.
+        self.assertNotIn(
+            f"group: {PRODUCTION_GROUP}", self.defaults,
+            "the production group is held at workflow level again, so the "
+            "fallback joins it before it can decide to stand down",
+        )
+
+    def test_the_mutating_job_alone_owns_the_production_group(self) -> None:
+        self.assertIn(f"group: {PRODUCTION_GROUP}", self.publish)
+        self.assertIn("cancel-in-progress: false", self.publish)
+        # Exactly one mention in the whole workflow, and it is that job's.
+        self.assertEqual(
+            self.workflow.count(f"group: {PRODUCTION_GROUP}"), 1,
+            "more than one job takes the production lock",
+        )
+        for name in ("probe", "dry_run", "browser_diagnostic", "fallback_preflight"):
+            with self.subTest(job=name):
+                self.assertNotIn(
+                    f"group: {PRODUCTION_GROUP}", _workflow_job(self.workflow, name),
+                    f"{name} does not mutate anything and must not take the lock",
+                )
+        # And it is still the job that writes, so ordinary publication keeps
+        # serializing with the benchmark exactly as before.
+        self.assertIn("contents: write", self.publish)
+        self.assertEqual(self.workflow.count("contents: write"), 1)
+
+    def test_the_preflight_runs_outside_the_group_and_gates_the_publish(self) -> None:
+        self.assertIn("concurrency:", self.preflight)
+        self.assertIn("group: election-simulator-fallback-preflight", self.preflight)
+        self.assertIn("needs: [fallback_preflight]", self.publish)
+        # always(), or a non-fallback trigger would be skipped along with the
+        # preflight it does not use.
+        self.assertIn("always()", self.publish)
+        # A preflight that failed is not a pass.
+        self.assertIn("needs.fallback_preflight.result == 'success'", self.publish)
+        self.assertIn("needs.fallback_preflight.outputs.proceed == 'true'", self.publish)
+        self.assertIn("needs.fallback_preflight.result == 'skipped'", self.publish)
+
+    def test_the_preflight_is_the_fallback_path_only(self) -> None:
+        self.assertIn("github.event.inputs.mode == 'publish_if_stale'", self.preflight)
+        self.assertNotIn("github.event_name == 'schedule'", self.preflight)
+        # It reads runs, and writes nothing.
+        self.assertIn("actions: read", self.preflight)
+        self.assertNotIn("contents: write", self.preflight)
+        self.assertIn("persist-credentials: false", self.preflight)
+
+    def test_the_preflight_enforces_the_kill_switch_and_asks_about_real_runs(self) -> None:
+        """Both guards, and the reason there are two.
+
+        A query of current runs cannot see a capture GitHub has not created
+        yet; the frozen window can. A clock cannot see a capture delivered
+        hours late or queued behind something else; the query can.
+        """
+
+        self.assertIn("ELECTION_AUTOMATION_ENABLED", self.preflight)
+        self.assertIn("DISABLED_BY_REPOSITORY_KILL_SWITCH", self.preflight)
+        self.assertIn("prospective-benchmark-2026.yml", self.preflight)
+        for status in ("queued", "in_progress", "waiting"):
+            with self.subTest(status=status):
+                self.assertIn(f'.status == "{status}"', self.preflight)
+        self.assertIn("DEFERRED_BENCHMARK_RUN_ACTIVE", self.preflight)
+        self.assertIn("benchmark_window_conflict", self.preflight)
+        self.assertIn("DEFERRED_BENCHMARK_WINDOW", self.preflight)
+
+    def test_an_operator_publish_never_reaches_the_preflight(self) -> None:
+        """The generic manual bypass is preserved.
+
+        mode=publish is an explicit operator action: it skips the preflight
+        entirely, so the kill-switch enforcement added there cannot leak into
+        it.
+        """
+
+        self.assertNotIn("inputs.mode == 'publish'\n", self.preflight)
+        self.assertIn("github.event.inputs.mode == 'publish'", self.publish)
+        self.assertIn("github.event.inputs.mode == 'publish_if_stale'", self.publish)
+        self.assertIn("github.event_name == 'schedule'", self.publish)
+
+
 if __name__ == "__main__":
     unittest.main()
