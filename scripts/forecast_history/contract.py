@@ -588,6 +588,18 @@ def validate_history_contract(payload: Mapping[str, Any]) -> None:
 
     validate_parties_view(payload)
 
+    inputs = payload.get("reconstruction_inputs")
+    if inputs is not None:
+        if not isinstance(inputs, Mapping) or inputs.get("version") != 1:
+            raise ValueError("Unsupported reconstruction_inputs version")
+        fingerprints = inputs.get("dates")
+        if not isinstance(fingerprints, Mapping):
+            raise ValueError("reconstruction_inputs.dates must be an object")
+        reconstructed = {p["date"] for p in payload["series"] if p["provenance"] == "reconstructed_current_model"}
+        for day, fingerprint in fingerprints.items():
+            if day not in reconstructed or not _valid_sha256(fingerprint):
+                raise ValueError("Invalid reconstructed date or effective input fingerprint")
+
     digest = payload.get("deterministic_content_sha256")
     if digest is not None:
         if not _valid_sha256(digest):

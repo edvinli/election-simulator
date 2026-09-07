@@ -454,6 +454,7 @@ class ForecastHistoryTests(unittest.TestCase):
             for point in holed["series"]:
                 if point["date"] == "2026-05-25":
                     point["provenance"] = "prospective_archived"
+            holed["reconstruction_inputs"]["dates"].pop("2026-05-25")
             holed.pop("deterministic_content_sha256", None)
             self.assertEqual(missing_curve_dates(holed), [date(2026, 5, 25)])
 

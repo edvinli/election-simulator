@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+from collections import Counter
 from datetime import date, datetime, timedelta, timezone
 import hashlib
 import json
@@ -48,6 +49,8 @@ from scripts.simulator.reproducibility import (
     get_git_commit_hash,
     is_git_worktree_clean,
 )
+
+from .effective_inputs import EffectiveInputs, VERSION as INPUT_VERSION, previous_fingerprints
 
 from .contract import (
     DEFAULT_COALITIONS,
@@ -678,14 +681,15 @@ def _result_as_of(result: Any) -> date | None:
 
 
 def _worker_simulate_date(
-    args: tuple[str, str, int, int],
+    args: tuple[str, str, int, int, str],
 ) -> tuple[str, np.ndarray, np.ndarray, Any]:
-    as_of, election_date, samples, seed = args
+    as_of, election_date, samples, seed, model_data_dir = args
     result = simulate_election(
         as_of=as_of,
         election_date=election_date,
         samples=samples,
         seed=seed,
+        data_dir=model_data_dir,
     )
     return (
         as_of,
@@ -719,60 +723,24 @@ def first_changed_poll_date(
     previous_polls: Iterable[Mapping[str, Any]],
     current_polls: Iterable[Mapping[str, Any]],
 ) -> date | None:
-    """The earliest publication date whose polls differ between two sources.
+    """Compare chart observations in the recorded window, including legacy IDs.
 
-    A reconstructed point for date *D* is a function of the polls visible on
-    *D* and nothing later, so a poll appended after *D* leaves that point
-    unchanged.  Comparing the two poll sets tells us exactly how far forward
-    the previous artifact stays valid: every date strictly before the returned
-    one is still reusable.  ``None`` means the two sources agree.
+    This is a semantic multiset comparison, not model-cache invalidation: the
+    SwedishPolls chart feed is distinct from the model's opinion inputs.
     """
 
-    def indexed(
-        polls: Iterable[Mapping[str, Any]],
-    ) -> tuple[dict[str, Mapping[str, Any]], dict[str, date]]:
-        by_id: dict[str, Mapping[str, Any]] = {}
-        dates: dict[str, date] = {}
-        for poll in polls:
-            poll_id = poll.get("poll_id")
-            if poll_id is None:
-                continue
-            try:
-                published = _coerce_date(
-                    poll.get("publication_date"), name="poll publication_date"
-                )
-            except (TypeError, ValueError):
-                continue
-            by_id[str(poll_id)] = poll
-            dates[str(poll_id)] = published
-        return by_id, dates
+    def dated(polls: Iterable[Mapping[str, Any]]) -> list[Mapping[str, Any]]:
+        return [poll for poll in polls if poll.get("publication_date")]
 
-    previous, previous_dates = indexed(previous_polls)
-    current, current_dates = indexed(current_polls)
-    if not previous_dates:
+    previous, current = dated(previous_polls), dated(current_polls)
+    if not previous:
         return None
-    # The recorded poll list is filtered to the chart period, so the comparison
-    # has to be too: the raw source reaches back to 2006 and every poll outside
-    # the recorded window would otherwise register as an addition. A poll
-    # published after the window ends is later than every point in the series
-    # and so cannot have changed one.
-    window_start = min(previous_dates.values())
-    window_end = max(previous_dates.values())
-
-    def in_window(published: date) -> bool:
-        return window_start <= published <= window_end
-
-    changed: list[date] = []
-    for poll_id in set(previous) | set(current):
-        before = previous.get(poll_id)
-        after = current.get(poll_id)
-        published = previous_dates.get(poll_id, current_dates.get(poll_id))
-        if published is None or not in_window(published):
-            continue
-        if before is not None and after is not None and _poll_identity(before) == _poll_identity(after):
-            continue
-        changed.append(published)
-    return min(changed) if changed else None
+    start = min(str(p["publication_date"]) for p in previous)
+    end = max(str(p["publication_date"]) for p in previous)
+    before = Counter(_poll_identity(p) for p in previous)
+    after = Counter(_poll_identity(p) for p in current if start <= str(p["publication_date"]) <= end)
+    changes = (before - after) + (after - before)
+    return min(date.fromisoformat(identity[2]) for identity in changes) if changes else None
 
 
 def missing_curve_dates(
@@ -834,6 +802,7 @@ def build_history(
     generated_at_utc: str | None = None,
     source_worktree_clean: bool | None = None,
     production_metadata: Mapping[str, Any] | None = None,
+    model_data_dir: Path | str = DEFAULT_PROCESSED_ROOT,
     workers: int = 1,
     progress_callback: Callable[[int, int, str], None] | None = None,
 ) -> dict[str, Any]:
@@ -918,31 +887,21 @@ def build_history(
     poll_hash = compute_file_sha256(poll_path)
     if not isinstance(poll_hash, str) or len(poll_hash) != 64:
         raise FileNotFoundError(f"SwedishPolls source file not found: {poll_path}")
-    if existing_payload is not None and existing_payload["poll_source_sha256"] != poll_hash:
-        # A refreshed poll file is not grounds for discarding the whole cache.
-        # A point's forecast reads only the polls visible on its own date, so
-        # appending a new poll -- what a daily refresh almost always is --
-        # leaves every earlier point valid.  Reuse those and re-simulate from
-        # the first date whose visible polls actually changed.  Rejecting the
-        # artifact outright instead made reconstruction a ~300-point rebuild
-        # after any refresh, which is why the curve stopped being extended.
-        changed_from = first_changed_poll_date(
-            existing_payload.get("polls") or [], all_polls
-        )
-        if changed_from is None:
-            # The file differs but the poll observations it yields do not
-            # (whitespace, row order, an excluded column): nothing to redo.
-            pass
-        else:
-            # Only the reconstructed curve is recomputed from polls. An
-            # archived prospective point is a record of what was published on
-            # its date and is never re-derived, so it survives a refresh.
-            existing_points = {
-                point_date: point
-                for point_date, point in existing_points.items()
-                if point_date < changed_from
-                or str(point.get("provenance")) == "current_production"
-            }
+    # The chart's SwedishPolls file is not the model's opinion input. Compare
+    # each point's canonical eligible model inputs, independently of chart
+    # transport IDs and the hash of today's acquisition snapshot.
+    effective_inputs = EffectiveInputs(Path(model_data_dir), election_date=election, seed=seed)
+    input_fingerprints = {
+        point_date.isoformat(): effective_inputs.fingerprint(point_date)
+        for point_date in observation_dates
+    }
+    if existing_payload is not None:
+        previous_inputs = previous_fingerprints(existing_payload)
+        existing_points = {
+            point_date: point for point_date, point in existing_points.items()
+            if str(point.get("provenance")) == "current_production"
+            or previous_inputs.get(point_date.isoformat()) == input_fingerprints[point_date.isoformat()]
+        }
     if existing_payload is not None and model_commit is not None and existing_payload["model_commit"] != model_commit:
         raise ValueError("existing_payload uses a different model_commit")
     records = list(archived_points or []) + _load_archive_records(archive_dir)
@@ -1027,7 +986,7 @@ def build_history(
     if workers_count > 1 and simulation_runner is None and len(dates_to_simulate) > 1:
         import concurrent.futures
         tasks = [
-            (point_date.isoformat(), election.isoformat(), req_samples, seed)
+            (point_date.isoformat(), election.isoformat(), req_samples, seed, str(model_data_dir))
             for point_date, req_samples in dates_to_simulate
         ]
         with concurrent.futures.ProcessPoolExecutor(max_workers=workers_count) as executor:
@@ -1131,6 +1090,7 @@ def build_history(
             election_date=election.isoformat(),
             samples=requested_samples,
             seed=seed,
+            **({"data_dir": model_data_dir} if simulation_runner is None else {}),
         )
         point_provenance = (
             "current_production"
@@ -1241,6 +1201,12 @@ def build_history(
             "legacy_or_incomplete_archives_skipped": skipped_archives,
         },
     }
+    payload["reconstruction_inputs"] = {
+        "version": INPUT_VERSION,
+        "dates": {point["date"]: input_fingerprints.get(point["date"])
+                  or effective_inputs.fingerprint(date.fromisoformat(point["date"]))
+                  for point in series if point["provenance"] == "reconstructed_current_model"},
+    }
     # Declared only when the series actually carries party summaries. Resuming
     # from an artifact generated before this contract regenerates nothing, so
     # such a run legitimately produces no party family at all.
@@ -1249,12 +1215,12 @@ def build_history(
     if existing_payload is not None:
         payload["resume_diagnostics"] = {
             "existing_points_reused": sum(
-                1 for point in series if point["date"] in {item["date"] for item in existing_payload["series"]}
+                point is existing_points.get(date.fromisoformat(point["date"])) for point in series
             ),
-            "new_points_generated": sum(
-                1 for point in series if point["date"] not in {item["date"] for item in existing_payload["series"]}
-            ),
+            "new_points_generated": len(dates_to_simulate),
+            "simulated_dates": [point_date.isoformat() for point_date, _ in dates_to_simulate],
         }
+
     if generated_at_utc is not None:
         parsed = datetime.fromisoformat(generated_at_utc.replace("Z", "+00:00"))
         if parsed.tzinfo is None:
@@ -1434,6 +1400,15 @@ def update_history_with_production_result(
             else bool(manifest_map.get("source_worktree_clean"))
         ),
     }
+    # Carry the original per-date identities; never recertify yesterday's
+    # points against today's inputs simply because a new publication rolls in.
+    previous_inputs = previous_fingerprints(existing_payload)
+    payload["reconstruction_inputs"] = {
+        "version": INPUT_VERSION,
+        "dates": {point["date"]: previous_inputs[point["date"]]
+                  for point in series if point["provenance"] == "reconstructed_current_model"
+                  and point["date"] in previous_inputs},
+    }
     payload["model"].update(
         {
             "name": "ElectionSimulator",
@@ -1484,6 +1459,7 @@ def backfill_reconstructed_curve(
     seed: int = DEFAULT_SIMULATION_SEED,
     production_latest_samples: int | None = None,
     simulation_runner: Callable[..., Any] | None = None,
+    model_data_dir: Path | str = DEFAULT_PROCESSED_ROOT,
     workers: int = 1,
     progress_callback: Callable[[int, int, str], None] | None = None,
 ) -> tuple[dict[str, Any], list[date]]:
@@ -1523,6 +1499,7 @@ def backfill_reconstructed_curve(
         production_latest_samples=official_samples,
         model_commit=str(payload["model_commit"]),
         simulation_runner=simulation_runner,
+        model_data_dir=model_data_dir,
         workers=workers,
         progress_callback=progress_callback,
     )
@@ -1532,6 +1509,7 @@ def backfill_reconstructed_curve(
     # touch -- would be dropped by a rebuild. Adding curve points must not
     # silently remove published views, so carry across whatever the rebuild
     # does not produce itself.
+    simulated_dates = [date.fromisoformat(day) for day in filled["resume_diagnostics"]["simulated_dates"]]
     carried = False
     # A rebuild-only diagnostic that the daily roll-in never writes: publishing
     # it here would make a backfilled artifact differ in shape from every other
@@ -1548,7 +1526,7 @@ def backfill_reconstructed_curve(
     # carried-across views are back in place.
     if carried:
         filled["deterministic_content_sha256"] = deterministic_history_sha256(filled)
-    return filled, dates
+    return filled, simulated_dates
 
 
 def main(argv: Sequence[str] | None = None) -> int:

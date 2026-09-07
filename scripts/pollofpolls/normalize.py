@@ -650,7 +650,8 @@ def parse_swedishpolls_payloads(
             "interview_start": interview_start.isoformat() if interview_start else None,
             "interview_end": interview_end.isoformat() if interview_end else None,
             "values": values,
-            "source_row": source_row_number,
+            "house": house_original,
+            "sample_size": _optional_int(row.get("n")),
         }
         poll_id = "swp-" + hashlib.sha256(
             json.dumps(identity, sort_keys=True, ensure_ascii=False).encode("utf-8")
