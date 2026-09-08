@@ -1981,6 +1981,14 @@ class HistoryInputRevisionReuseTests(unittest.TestCase):
 
         # It is detected at all: a real input change must not be reused away.
         self.assertTrue(changed, "a revised historical estimate went undetected")
+        # And it is detected on the revised date itself, which is what makes
+        # "only from its own date" literal rather than merely "somewhere at or
+        # after it". The date's own opinion.central reads that very row, so
+        # this is the strongest single point in the assertion.
+        self.assertIn(
+            revised_date, changed,
+            f"the revised date {revised_date} was not itself invalidated",
+        )
         # And it is contained: nothing before the revision is invalidated.
         self.assertTrue(
             all(probe >= revised_date for probe in changed),
