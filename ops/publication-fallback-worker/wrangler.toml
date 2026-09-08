@@ -1,13 +1,35 @@
 # Cloudflare Worker: fallback trigger for the mandatory daily publication.
 #
-# The three ticks are 45, 90 and 150 minutes after the 04:00Z daily cron. Each
-# one dispatches unconditionally; the automation no-ops when today's mandatory
-# recalculation is already live, so a late primary trigger costs one cheap
-# workflow run rather than a second publication.
+# THREE LOGICAL RETRIES, ONE CLOUDFLARE CRON.
 #
-# All three are in the morning and the prospective benchmark's protected window
-# is 20:30-24:00 Europe/Stockholm, so they cannot contend for the production
-# lock with a capture. That separation is asserted independently in
+# The intended dispatch times are unchanged: 04:45Z, 05:30Z and 06:30Z -- 45,
+# 90 and 150 minutes after the 04:00Z daily cron. Each dispatch is
+# unconditional; the automation no-ops when today's mandatory recalculation is
+# already live, so a late primary trigger costs one cheap workflow run rather
+# than a second publication.
+#
+# What changed is only how those three times are delivered. Cloudflare's
+# Workers Free plan allows 5 cron triggers per ACCOUNT, not per Worker, and
+# ops/benchmark-trigger-worker holds three of them for the frozen 2026
+# benchmark campaign (20:30Z, 21:20Z, 21:40Z). Three expressions here would
+# need six in total, and Cloudflare rejects that outright -- the schedules call
+# is all-or-nothing per script, so the effect is NO crons registered rather
+# than some of them (observed: HTTP 400, code 10072).
+#
+# So this Worker deploys ONE coarse cron and selects the three intended times
+# from its twelve daily invocations in the scheduled handler, via
+# isDispatchTick() in worker.mjs. One account cron slot; three logical retries;
+# the same three dispatch times as before. The other nine invocations are a
+# clean no-op -- no dispatch, no heartbeat, no publication action.
+#
+# That selection is scheduler plumbing, not publication policy. Staleness, the
+# kill switch, the benchmark window, double-publish and concurrency all remain
+# decisions of the GitHub workflow, asserted in scripts/publication_fallback.py
+# rather than restated here or in worker.mjs.
+#
+# All three times are in the morning and the prospective benchmark's protected
+# window is 20:30-24:00 Europe/Stockholm, so they cannot contend for the
+# production lock with a capture. That separation is asserted independently in
 # scripts/publication_fallback.py rather than trusted to these expressions.
 
 name = "election-publication-fallback"
@@ -15,7 +37,12 @@ main = "worker.mjs"
 compatibility_date = "2026-09-01"
 
 [triggers]
-crons = ["45 4 * * *", "30 5 * * *", "30 6 * * *"]
+# One coarse cron implementing three logical retries. Fires at :00/:15/:30/:45
+# across 04-06Z; worker.mjs dispatches only at 04:45Z, 05:30Z and 06:30Z and
+# no-ops on the other nine invocations. Costs one of the account's five cron
+# slots instead of three. Do not narrow this expression to the three exact
+# times -- that is what exceeds the account limit.
+crons = ["*/15 4-6 * * *"]
 
 # Secrets, set with `wrangler secret put` and never committed:
 #   GITHUB_TOKEN     fine-grained PAT, single repo edvinli/election-simulator,

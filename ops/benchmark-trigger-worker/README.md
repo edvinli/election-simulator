@@ -119,6 +119,12 @@ credential**, and the two must not be merged.
   production lock with a capture. Putting a 20:30Z tick on that Worker would
   place a publication-capable credential on a cron inside the benchmark's own
   protected window — the precise coupling that design avoids.
+- **Account cron capacity.** Workers Free allows 5 cron triggers per *account*,
+  not per Worker. This Worker's three expressions are held for the frozen
+  campaign; the fallback therefore deploys **one** coarse cron and selects its
+  three logical retries in its own scheduled handler. This Worker's schedules
+  are unaffected and stay as the three exact expressions above — the campaign
+  depends on them, so the coarse-cron trick belongs on the other side.
 - **Different failure semantics.** A missed publication is repaired by
   publishing later. A missed capture is a permanently empty frozen slot.
 

@@ -394,15 +394,55 @@ class WorkerIsSeparateFromPublicationFallback(unittest.TestCase):
         self.assertIn('const WORKFLOW = "election-simulator-publication.yml";', theirs)
         self.assertNotIn("prospective-benchmark-2026.yml", theirs)
 
-    def test_the_publication_fallback_worker_is_untouched(self) -> None:
-        baseline = _baseline_ref()
-        if baseline is None:
-            self.skipTest("no origin/main baseline in this checkout")
-        changed = subprocess.run(
-            ["git", "diff", "--name-only", baseline, "--", "ops/publication-fallback-worker/"],
-            cwd=ROOT, capture_output=True, text=True, check=True,
-        ).stdout.split()
-        self.assertEqual(changed, [], f"the publication fallback must be untouched: {changed}")
+    def test_the_publication_fallback_keeps_its_own_blast_radius(self) -> None:
+        """Structural separation, not a freeze on the other Worker.
+
+        This began as "the whole fallback directory is byte-identical to
+        origin/main", which was good evidence that amendment 006 touched
+        nothing of the fallback's.  As a standing invariant it was the wrong
+        shape twice over: it forbade any future operational change to the
+        fallback -- Workers Free allows only five cron triggers per account,
+        so the fallback had to move to one coarse cron and select its three
+        dispatch times in its handler -- and it would have failed a *benchmark*
+        test for a reason with nothing to do with the benchmark.
+
+        What matters for blast radius is not that the fallback never changes.
+        It is that the fallback stays pointed at its own workflow, through its
+        own credential, and that neither Worker can reach the other's. That is
+        what is asserted here, against the code rather than against a hash, so
+        it keeps holding while the fallback is maintained.
+        """
+
+        theirs = _strip_js_comments(
+            (PUBLICATION_WORKER_DIR / "worker.mjs").read_text(encoding="utf-8")
+        )
+        mine = _strip_js_comments(
+            (WORKER_DIR / "worker.mjs").read_text(encoding="utf-8")
+        )
+
+        # One target workflow, and it is the publication's.
+        self.assertEqual(theirs.count("const WORKFLOW ="), 1)
+        self.assertIn(
+            'const WORKFLOW = "election-simulator-publication.yml";', theirs
+        )
+        self.assertNotIn("prospective-benchmark-2026.yml", theirs)
+        self.assertIn('mode: "publish_if_stale"', theirs)
+        self.assertNotIn("scheduled_capture", theirs)
+
+        # Its own credential, and its own manual-endpoint guard.
+        self.assertIn("env.GITHUB_TOKEN", theirs)
+        self.assertIn("env.FALLBACK_SECRET", theirs)
+        self.assertNotIn("TRIGGER_SECRET", theirs)
+
+        # And the benchmark Worker never reaches for the fallback's secret.
+        self.assertNotIn("FALLBACK_SECRET", mine)
+        self.assertNotIn("election-simulator-publication.yml", mine)
+
+        # Two deployments, not one: separate directories, and the distinct
+        # names and schedules asserted in
+        # test_the_two_workers_are_distinct_deployments.
+        self.assertNotEqual(WORKER_DIR, PUBLICATION_WORKER_DIR)
+        self.assertTrue((PUBLICATION_WORKER_DIR / "wrangler.toml").is_file())
 
     def test_the_worker_reports_to_a_dead_mans_switch(self) -> None:
         # The failure this Worker exists to catch is "nothing ran at all",

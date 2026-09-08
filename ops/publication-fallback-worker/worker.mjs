@@ -21,6 +21,24 @@
 // happened. That is the right trade: it is cheap, it is visible in the Actions
 // history, and it keeps the rules in one place with the tests.
 //
+// ONE COARSE CRON, THREE LOGICAL RETRIES.
+//
+// Cloudflare's Workers Free plan allows 5 cron triggers per ACCOUNT, not per
+// Worker, and ops/benchmark-trigger-worker holds three of them for the frozen
+// 2026 benchmark campaign. Three separate expressions here would need six in
+// total, which Cloudflare rejects outright -- the schedules call is
+// all-or-nothing, so the effect is no crons at all rather than some of them.
+//
+// So the deployed schedule is a single coarse cron, "*/15 4-6 * * *", and the
+// three intended dispatch times are selected from its twelve invocations by
+// isDispatchTick() below. One account cron slot, three logical retries, and
+// the dispatch times are unchanged: 04:45Z, 05:30Z, 06:30Z.
+//
+// That filtering is SCHEDULER PLUMBING, not publication policy. It answers
+// only "is this the tick I meant?" -- never "should anything be published?".
+// Every rule in the list above still lives in the workflow, and the manual
+// POST endpoint deliberately bypasses the filter entirely.
+//
 // Deploy: see README.md in this directory.
 
 const WORKFLOW = "election-simulator-publication.yml";
@@ -28,6 +46,40 @@ const OWNER = "edvinli";
 const REPO = "election-simulator";
 const REF = "main";
 const UA = "election-simulator-publication-fallback";
+
+// The three intended dispatch times, as "HH:MM" in UTC: 45, 90 and 150 minutes
+// after the 04:00Z daily cron. These are the schedule; "*/15 4-6 * * *" is
+// merely the delivery mechanism that can afford one account cron slot.
+export const DISPATCH_TICKS_UTC = ["04:45", "05:30", "06:30"];
+
+/**
+ * The "HH:MM" of a Cloudflare scheduledTime, in UTC, or null if unreadable.
+ *
+ * Cloudflare passes event.scheduledTime as milliseconds since the epoch. UTC
+ * is read explicitly with getUTCHours/getUTCMinutes rather than getHours: the
+ * Worker's local zone is not guaranteed and the schedule is defined in UTC, so
+ * a local-time reading would drift the dispatch times by the offset.
+ */
+export function scheduledTickUtc(scheduledTime) {
+  const instant =
+    scheduledTime instanceof Date ? scheduledTime : new Date(scheduledTime);
+  if (Number.isNaN(instant.getTime())) return null;
+  const hours = String(instant.getUTCHours()).padStart(2, "0");
+  const minutes = String(instant.getUTCMinutes()).padStart(2, "0");
+  return `${hours}:${minutes}`;
+}
+
+/**
+ * Is this invocation one of the three intended dispatch times?
+ *
+ * Pure, and the only thing standing between the coarse cron's twelve daily
+ * invocations and the three that mean something. Anything else -- including a
+ * missing or unreadable scheduledTime -- is false, so the handler no-ops
+ * rather than guessing at a dispatch nobody asked for.
+ */
+export function isDispatchTick(scheduledTime) {
+  return DISPATCH_TICKS_UTC.includes(scheduledTickUtc(scheduledTime));
+}
 
 /**
  * Ask GitHub to run the publication workflow in fallback mode.
@@ -90,6 +142,15 @@ export async function reportOutcome(env, result, fetchImpl = fetch) {
 
 export default {
   async scheduled(event, env, ctx) {
+    // Scheduler plumbing only. Nine of the coarse cron's twelve daily
+    // invocations are not one of the intended times, and each of those must be
+    // a clean no-op: no dispatch, no heartbeat, nothing observable. In
+    // particular NOT a heartbeat -- a dead-man's-switch ping from a tick that
+    // was never meant to publish would report health this Worker has not
+    // established, and a /fail ping would invent an incident.
+    if (!isDispatchTick(event && event.scheduledTime)) {
+      return;
+    }
     const result = await dispatchFallback(env);
     if (!result.ok) {
       console.error(
