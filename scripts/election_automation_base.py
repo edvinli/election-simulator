@@ -39,7 +39,10 @@ from scripts.forecast_history.contract import (
     write_history_json,
 )
 from scripts.forecast_history.generate import (
+    DEFAULT_HISTORY_WORKERS,
+    PRODUCTION_HISTORY_WORKERS,
     backfill_reconstructed_curve,
+    resolve_history_workers,
     update_history_with_production_result,
 )
 from scripts.pollofpolls.__main__ import (
@@ -1471,6 +1474,7 @@ def run_production_event(
     website_push_ref: str = "master",
     stage_callback: StageCallback | None = None,
     pipeline_observer: Callable[[PipelineRun], None] | None = None,
+    history_workers: int = DEFAULT_HISTORY_WORKERS,
 ) -> tuple[PipelineRun, dict[str, Any], dict[str, Any] | None]:
     """Run exactly one production simulation and stage all consumers.
 
@@ -1575,6 +1579,16 @@ def run_production_event(
         # curve is already continuous, and a failure here must never block a
         # certified forecast: the curve is a presentation of history, not the
         # forecast itself.
+        # Announced before the work starts and carrying the count the
+        # reconstruction actually resolved, so an over-long backfill is
+        # diagnosable from the first log lines rather than from a job that
+        # died at its timeout with nothing to show. See the 2026-09-08
+        # incident: one hole, 119 fingerprint-invalidated points, no signal.
+        def _log_backfill_plan(dates: int, workers: int) -> None:
+            _log_stage(
+                "history curve backfill", f"START dates={dates} workers={workers}"
+            )
+
         with _timed_stage("history curve backfill", stage_callback):
             try:
                 history_for_update, backfilled = backfill_reconstructed_curve(
@@ -1584,6 +1598,8 @@ def run_production_event(
                     timeseries_file=processed_root / "pollofpolls" / "pollofpolls_timeseries.csv",
                     archive_dir=staged_archive,
                     election_date=election,
+                    workers=resolve_history_workers(history_workers),
+                    workload_callback=_log_backfill_plan,
                 )
             except Exception as error:  # noqa: BLE001 - never block publication
                 history_for_update = existing_history
@@ -1730,6 +1746,7 @@ def run_automation(
     campaign_path_simulator: Callable[..., Any] | None = None,
     generated_at_utc: str | None = None,
     stage_callback: StageCallback | None = None,
+    history_workers: int = DEFAULT_HISTORY_WORKERS,
 ) -> AutomationResult:
     """Execute one explicit probe, dry-run, or publish event.
 
@@ -1953,6 +1970,7 @@ def run_automation(
                         allow_custom_processed_root=True,
                         stage_callback=stage_callback,
                         pipeline_observer=observe_pipeline,
+                        history_workers=history_workers,
                     )
             else:
                 _assert_clean(root, label="simulator before production")
@@ -1974,6 +1992,7 @@ def run_automation(
                     allow_duplicate_payload=True,
                     stage_callback=stage_callback,
                     pipeline_observer=observe_pipeline,
+                    history_workers=history_workers,
                 )
         summary.simulation_samples = int(run.simulation_validation["samples"]) if run.simulation_validation else 0
         summary.publication_generation = str(run.snapshot["generation_id"]) if run.snapshot else "NONE"
@@ -2040,6 +2059,17 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--election-date", default=ELECTION_DAY.isoformat())
     parser.add_argument("--summary-path", type=Path, default=None)
+    parser.add_argument(
+        "--history-workers",
+        type=int,
+        default=DEFAULT_HISTORY_WORKERS,
+        help=(
+            "Processes used to backfill the reconstructed history curve. "
+            f"Serial by default; production passes {PRODUCTION_HISTORY_WORKERS}. "
+            "Capped by os.cpu_count(). Only the curve is affected: the "
+            "certified forecast is a single simulation either way."
+        ),
+    )
     return parser
 
 
@@ -2062,6 +2092,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         commit=commit,
         push=push,
         stage_callback=_log_stage,
+        history_workers=args.history_workers,
     )
     rendered = result.summary.render()
     if args.summary_path:

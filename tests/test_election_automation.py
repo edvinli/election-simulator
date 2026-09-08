@@ -5,10 +5,13 @@ from __future__ import annotations
 from copy import deepcopy
 import csv
 from datetime import date, datetime, timedelta, timezone
+import contextlib
+import io
 import json
 import os
 from pathlib import Path
 import signal
+import re
 import shutil
 import subprocess
 import sys
@@ -2042,6 +2045,123 @@ class HistoryInputRevisionReuseTests(unittest.TestCase):
                 baseline[probe], after[probe],
                 f"{probe} was invalidated by identity/order/metadata churn alone",
             )
+
+
+
+PUBLICATION_WORKFLOW = (
+    REPOSITORY_ROOT / ".github/workflows/election-simulator-publication.yml"
+)
+
+
+class HistoryWorkersPlumbingTests(unittest.TestCase):
+    """One named path from the CLI to the backfill, and a serial default.
+
+    The 2026-09-08 publication died because the reconstructed-curve backfill
+    ran 119 points on one core and exhausted the job timeout. The remedy is a
+    worker count production can ask for -- but only production, and only
+    explicitly: forking processes is not something a library does behind an
+    in-process caller's back.
+    """
+
+    def test_every_hop_defaults_to_serial(self) -> None:
+        """A default that forked would change behaviour for every caller."""
+
+        import inspect
+
+        from scripts import election_automation_base as base
+        from scripts.forecast_history import generate
+
+        self.assertEqual(generate.DEFAULT_HISTORY_WORKERS, 1)
+        for function, name in (
+            (generate.build_history, "workers"),
+            (generate.backfill_reconstructed_curve, "workers"),
+            (base.run_automation, "history_workers"),
+        ):
+            with self.subTest(function=function.__name__):
+                parameter = inspect.signature(function).parameters[name]
+                self.assertEqual(parameter.default, 1)
+        # run_production_event is reached through the facade's projection
+        # wrapper, which forwards **kwargs and so reports no signature of its
+        # own. Its default is asserted at the definition instead.
+        source = Path(base.__file__).read_text(encoding="utf-8")
+        self.assertIn("    history_workers: int = DEFAULT_HISTORY_WORKERS,\n", source)
+        self.assertIn("history_workers=history_workers,", source)
+        self.assertIn("workers=resolve_history_workers(history_workers),", source)
+
+    def test_the_cli_exposes_the_flag_and_defaults_to_serial(self) -> None:
+        from scripts.election_automation_base import build_parser
+
+        parsed = build_parser().parse_args(["--site-repo", "/tmp/site"])
+        self.assertEqual(parsed.history_workers, 1)
+        parsed = build_parser().parse_args(
+            ["--site-repo", "/tmp/site", "--history-workers", "4"]
+        )
+        self.assertEqual(parsed.history_workers, 4)
+
+    def test_main_forwards_the_flag_to_run_automation(self) -> None:
+        from scripts import election_automation_base as base
+
+        captured: dict[str, object] = {}
+
+        def fake_run_automation(*args, **kwargs):
+            captured.update(kwargs)
+            return SimpleNamespace(
+                summary=SimpleNamespace(render=lambda: ""),
+                to_dict=lambda: {},
+                status="SOURCE_CHECKED",
+            )
+
+        # main() prints the rendered summary and the result JSON; swallow both
+        # so the suite's output stays readable.
+        with patch.object(base, "run_automation", fake_run_automation), \
+                contextlib.redirect_stdout(io.StringIO()):
+            base.main([
+                "--site-repo", "/tmp/site", "--mode", "probe", "--history-workers", "4",
+            ])
+        self.assertEqual(captured.get("history_workers"), 4)
+
+    def test_production_requests_a_bounded_count(self) -> None:
+        from scripts.forecast_history.generate import (
+            PRODUCTION_HISTORY_WORKERS,
+            resolve_history_workers,
+        )
+
+        workflow = PUBLICATION_WORKFLOW.read_text(encoding="utf-8")
+        self.assertIn(
+            f"--history-workers {PRODUCTION_HISTORY_WORKERS}", workflow,
+            "the publication workflow must request the production worker count",
+        )
+        # Bounded, not "all cores": the runner also has the publication to do.
+        self.assertLessEqual(PRODUCTION_HISTORY_WORKERS, 8)
+        self.assertGreater(PRODUCTION_HISTORY_WORKERS, 1)
+        self.assertLessEqual(
+            resolve_history_workers(PRODUCTION_HISTORY_WORKERS), os.cpu_count() or 1
+        )
+
+    def test_the_job_timeout_still_matches_the_benchmark_guard(self) -> None:
+        """The constraint that makes parallelism the right fix, not more time.
+
+        publication_fallback.PUBLICATION_MAX_RUNTIME is not an independent
+        constant: it is this job's timeout, and the benchmark's protected
+        interval is derived by subtracting it from the 20:30Z pre-warm to get
+        18:30Z. Raising the timeout without raising that value would let a
+        publication hold election-simulator-production across a frozen
+        capture, which is exactly the contention the preflight guard exists to
+        prevent -- so the two must move together or not at all.
+        """
+
+        from scripts.publication_fallback import PUBLICATION_MAX_RUNTIME
+
+        workflow = PUBLICATION_WORKFLOW.read_text(encoding="utf-8")
+        publish = workflow.split("\n  publish:\n", 1)[1]
+        declared = re.search(r"timeout-minutes:\s*(\d+)", publish)
+        self.assertIsNotNone(declared, "the publish job must declare a timeout")
+        self.assertEqual(
+            int(declared.group(1)),
+            int(PUBLICATION_MAX_RUNTIME.total_seconds() // 60),
+            "publish timeout-minutes and PUBLICATION_MAX_RUNTIME disagree; the "
+            "benchmark protected interval is computed from the latter",
+        )
 
 
 if __name__ == "__main__":

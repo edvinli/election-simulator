@@ -5,6 +5,7 @@ from __future__ import annotations
 from copy import deepcopy
 import csv
 from datetime import date
+import os
 from pathlib import Path
 from types import SimpleNamespace
 import tempfile
@@ -14,11 +15,14 @@ import numpy as np
 
 from scripts.forecast_history.contract import (
     DEFAULT_COALITIONS,
+    HISTORY_PARTY_ORDER,
     build_groups_from_matrices,
     coalition_seat_draws,
     coalition_vote_draws,
 )
 from scripts.forecast_history.generate import (
+    DEFAULT_HISTORY_WORKERS,
+    PRODUCTION_HISTORY_WORKERS,
     backfill_reconstructed_curve,
     build_history,
     build_history_dates,
@@ -26,6 +30,7 @@ from scripts.forecast_history.generate import (
     filter_swedishpolls_period,
     first_changed_poll_date,
     missing_curve_dates,
+    resolve_history_workers,
     serialize_poll_of_polls_timeseries,
     serialize_swedishpolls,
 )
@@ -740,6 +745,206 @@ class ForecastHistoryTests(unittest.TestCase):
             serial["deterministic_content_sha256"],
             parallel["deterministic_content_sha256"],
         )
+
+
+
+REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _stub_result(as_of, samples: int, seed: int):
+    """A deterministic joint result in the shape the contract requires."""
+
+    # The two matrices are deliberately different widths: a vote share is
+    # defined on the nine-category model composition (the eight parties plus
+    # REST), while seats exist only for the eight that can hold them.
+    width = len(HISTORY_PARTY_ORDER)
+    votes = np.tile(np.full(width + 1, 100 / (width + 1)), (samples, 1))
+    # Every seat draw must total exactly 349, so the remainder is distributed
+    # rather than dropped: 8 * 43 is 344, not a chamber.
+    row = np.full(width, 349 // width, dtype=int)
+    row[: 349 - (349 // width) * width] += 1
+    seats = np.tile(row, (samples, 1))
+    return SimpleNamespace(
+        summary=SimpleNamespace(as_of=as_of, total_samples=samples),
+        vote_shares_matrix=votes,
+        seats_matrix=seats,
+        manifest={"source_git_commit": "0" * 40, "source_worktree_clean": True,
+                  "base_seed": seed},
+    )
+
+
+class HistoryBackfillWorkersTests(unittest.TestCase):
+    """Parallel backfill must be an execution detail, never a result detail.
+
+    The reconstructed curve is the one part of a publication whose cost is
+    unbounded by the schedule: a retroactive upstream revision can invalidate a
+    hundred points at once. On 2026-09-08 that ran 119 points serially and
+    exhausted the 120-minute job timeout, so the certified forecast never
+    published at all.
+
+    Parallelism is the remedy, which makes the load-bearing question not "is it
+    faster" but "is it the same". These tests pin that, and pin that an injected
+    runner still cannot be handed to a subprocess.
+
+    ``production_latest_samples`` is pinned down to the reconstruction draw
+    count throughout. Its 100_000 default applies to whichever date is the
+    latest, and simulating that exercises the exact-Fraction allocator fallback
+    for ~200s -- the certified forecast's cost, not the backfill's, and not
+    this suite's subject.
+    """
+
+    ELECTION = "2026-09-13"
+    POLL_FILE = REPOSITORY_ROOT / "data/processed/pollofpolls/swedishpolls_individual_polls.csv"
+    TIMESERIES = REPOSITORY_ROOT / "data/processed/pollofpolls/pollofpolls_timeseries.csv"
+    # Small but real: the parallel path refuses an injected runner by design, so
+    # proving equivalence requires the actual simulator.
+    DATES = ("2026-03-01", "2026-03-08", "2026-03-15")
+    SAMPLES = 300
+    SEED = 12345
+
+    def _build(self, *, workers: int, **extra):
+        return build_history(
+            election_date=self.ELECTION,
+            dates=list(self.DATES),
+            samples=self.SAMPLES,
+            production_latest_samples=self.SAMPLES,
+            seed=self.SEED,
+            poll_file=self.POLL_FILE,
+            timeseries_file=self.TIMESERIES,
+            archive_dir=None,
+            workers=workers,
+            **extra,
+        )
+
+    def test_the_resolver_bounds_a_request_by_available_cpus(self) -> None:
+        self.assertEqual(DEFAULT_HISTORY_WORKERS, 1, "callers must default to serial")
+        self.assertEqual(resolve_history_workers(None), DEFAULT_HISTORY_WORKERS)
+        self.assertEqual(resolve_history_workers(1), 1)
+        available = os.cpu_count() or 1
+        self.assertEqual(resolve_history_workers(available + 64), available)
+        self.assertLessEqual(resolve_history_workers(PRODUCTION_HISTORY_WORKERS), available)
+        for refused in (0, -1):
+            with self.subTest(refused=refused):
+                with self.assertRaises(ValueError):
+                    resolve_history_workers(refused)
+        with self.assertRaises(ValueError):
+            resolve_history_workers("four")
+
+    def test_the_same_seed_and_inputs_give_the_same_artifact_either_way(self) -> None:
+        """The whole justification for enabling parallelism in production.
+
+        Compared on the artifact's own deterministic hash and then on the full
+        payload, so a difference anywhere -- draws, ordering, resume
+        diagnostics -- fails, not only a difference this test thought to name.
+        """
+
+        serial_plan: list[tuple[int, int]] = []
+        parallel_plan: list[tuple[int, int]] = []
+        serial = self._build(
+            workers=1,
+            workload_callback=lambda dates, workers: serial_plan.append((dates, workers)),
+        )
+        parallel = self._build(
+            workers=4,
+            workload_callback=lambda dates, workers: parallel_plan.append((dates, workers)),
+        )
+        # Without this the test could pass vacuously: a request that quietly
+        # fell back to serial would trivially agree with serial.
+        self.assertEqual(serial_plan, [(len(self.DATES), 1)])
+        self.assertEqual(
+            parallel_plan,
+            [(len(self.DATES), min(4, os.cpu_count() or 1))],
+            "the parallel path was not entered, so equivalence proves nothing",
+        )
+        self.assertEqual(
+            serial["deterministic_content_sha256"],
+            parallel["deterministic_content_sha256"],
+        )
+        self.assertEqual(serial, parallel)
+        # The comparison is only worth anything if work actually happened, and
+        # on more than one date, or the parallel path was never entered.
+        self.assertEqual(
+            [point["date"] for point in serial["series"]], list(self.DATES)
+        )
+        reconstructed = [
+            point for point in serial["series"]
+            if point["provenance"] == "reconstructed_current_model"
+        ]
+        # The latest date is the certified point; the rest are reconstruction.
+        self.assertEqual(len(reconstructed), len(self.DATES) - 1)
+        self.assertGreater(len(reconstructed), 1)
+
+    def test_an_injected_runner_stays_on_the_serial_seam(self) -> None:
+        """A closure cannot cross a process boundary.
+
+        Every test here that injects a runner relies on it being called
+        in-process. Requesting workers must not silently move that work into a
+        subprocess, where the injected runner would not exist and the real
+        simulator would run instead.
+        """
+
+        seen: list[str] = []
+
+        def runner(**kwargs):
+            seen.append(str(kwargs.get("as_of")))
+            return _stub_result(kwargs.get("as_of"), int(kwargs["samples"]), self.SEED)
+
+        observed: list[tuple[int, int]] = []
+        self._build(
+            workers=8,
+            simulation_runner=runner,
+            workload_callback=lambda dates, workers: observed.append((dates, workers)),
+        )
+        self.assertEqual(sorted(seen), sorted(self.DATES))
+        # Reported as serial, because that is what it was.
+        self.assertEqual(observed, [(len(self.DATES), 1)])
+
+    def test_the_workload_is_reported_before_any_simulation_runs(self) -> None:
+        """What makes the next incident diagnosable.
+
+        The count has to come from inside the reconstruction: a caller counting
+        holes sees only the gaps, and on 2026-09-08 the gap was one day while
+        the real workload was 119 points.
+        """
+
+        order: list[str] = []
+
+        def runner(**kwargs):
+            order.append("simulate")
+            return _stub_result(kwargs.get("as_of"), int(kwargs["samples"]), self.SEED)
+
+        self._build(
+            workers=1,
+            simulation_runner=runner,
+            workload_callback=lambda dates, workers: order.append(
+                f"plan dates={dates} workers={workers}"
+            ),
+        )
+        self.assertEqual(order[0], f"plan dates={len(self.DATES)} workers=1")
+        self.assertEqual(order.count("simulate"), len(self.DATES))
+
+    def test_a_continuous_curve_reports_nothing_and_simulates_nothing(self) -> None:
+        """Backfill runs on every publication; silence is the normal case."""
+
+        def runner(**kwargs):
+            return _stub_result(kwargs.get("as_of"), int(kwargs["samples"]), self.SEED)
+
+        built = self._build(workers=1, simulation_runner=runner)
+        observed: list[tuple[int, int]] = []
+        payload, backfilled = backfill_reconstructed_curve(
+            built,
+            poll_file=self.POLL_FILE,
+            timeseries_file=self.TIMESERIES,
+            archive_dir=None,
+            election_date=self.ELECTION,
+            samples=self.SAMPLES,
+            production_latest_samples=self.SAMPLES,
+            workers=PRODUCTION_HISTORY_WORKERS,
+            workload_callback=lambda dates, workers: observed.append((dates, workers)),
+        )
+        self.assertEqual(backfilled, [])
+        self.assertEqual(observed, [], "a continuous curve must not announce work")
+        self.assertEqual(payload, built)
 
 
 if __name__ == "__main__":

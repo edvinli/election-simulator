@@ -637,6 +637,22 @@ jobs:
           ELECTION_AUTOMATION_ENABLED: ${{ vars.ELECTION_AUTOMATION_ENABLED || 'false' }}
           MODE: ${{ github.event_name == 'schedule' && 'publish' || github.event.inputs.mode }}
         run: |
+          # --history-workers parallelises the reconstructed-curve backfill
+          # only. The certified forecast is one simulation either way.
+          #
+          # It is 4 because the backfill is the one part of a publication whose
+          # cost is unbounded by the schedule: a retroactive upstream revision
+          # can invalidate a hundred points at once, and on 2026-09-08 that ran
+          # 119 points serially and exhausted the 120-minute job timeout, so no
+          # forecast published at all. resolve_history_workers() caps this by
+          # os.cpu_count(), so the same value is valid on any runner.
+          #
+          # DO NOT raise timeout-minutes to solve that instead. The 120 minutes
+          # is not only this job's budget: publication_fallback.py takes it as
+          # PUBLICATION_MAX_RUNTIME and subtracts it from the benchmark
+          # pre-warm to place the protected interval at 18:30Z. Raising one
+          # without the other lets a publication hold
+          # election-simulator-production across a frozen capture.
           uv run python -m scripts.election_automation \
             --repo-root "$GITHUB_WORKSPACE/simulator" \
             --site-repo "$GITHUB_WORKSPACE/website" \
@@ -644,4 +660,5 @@ jobs:
             --schedule "$EVENT_SCHEDULE" \
             --mode "$MODE" \
             --automation-enabled "$ELECTION_AUTOMATION_ENABLED" \
+            --history-workers 4 \
             --summary-path "$GITHUB_STEP_SUMMARY"
