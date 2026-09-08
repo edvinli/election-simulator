@@ -224,6 +224,61 @@ class LivenessTests(unittest.TestCase):
             stockholm_date_of(datetime(2026, 9, 7, 4, 0))
 
 
+FALLBACK_WORKER_DIR = (
+    Path(__file__).resolve().parents[1] / "ops/publication-fallback-worker"
+)
+FALLBACK_WRANGLER = FALLBACK_WORKER_DIR / "wrangler.toml"
+FALLBACK_WORKER_MJS = FALLBACK_WORKER_DIR / "worker.mjs"
+
+
+def _fallback_dispatch_ticks() -> list[tuple[int, int]]:
+    """(hour, minute) UTC of the three times the fallback actually dispatches.
+
+    Read from ``DISPATCH_TICKS_UTC`` in the Worker's own source, because that
+    is where the schedule now lives: the deployed cron is a coarse
+    ``*/15 4-6 * * *`` costing one of the account's five cron slots, and the
+    Worker selects the intended times from its twelve daily invocations.
+    """
+
+    source = FALLBACK_WORKER_MJS.read_text(encoding="utf-8")
+    body = source.split("DISPATCH_TICKS_UTC = [")[1].split("]")[0]
+    return [(int(h), int(m)) for h, m in re.findall(r'"(\d{2}):(\d{2})"', body)]
+
+
+def _expand_cron_field(field: str, low: int, high: int) -> list[int]:
+    """The values a cron field matches, for the ``*``, ``a-b`` and ``*/n`` forms."""
+
+    values: set[int] = set()
+    for part in field.split(","):
+        step = 1
+        if "/" in part:
+            part, raw_step = part.split("/")
+            step = int(raw_step)
+        if part == "*":
+            start, end = low, high
+        elif "-" in part:
+            raw_start, raw_end = part.split("-")
+            start, end = int(raw_start), int(raw_end)
+        else:
+            start = end = int(part)
+        values.update(range(start, end + 1, step))
+    return sorted(values)
+
+
+def _fallback_cron_invocations() -> set[tuple[int, int]]:
+    """Every (hour, minute) UTC at which the deployed cron wakes the Worker."""
+
+    body = FALLBACK_WRANGLER.read_text(encoding="utf-8").split("crons = [")[1]
+    invocations: set[tuple[int, int]] = set()
+    for expression in re.findall(r'"([^"]+)"', body.split("]")[0]):
+        minute, hour, dom, month, dow = expression.split()
+        assert (dom, month, dow) == ("*", "*", "*"), f"unexpected cron: {expression}"
+        for h in _expand_cron_field(hour, 0, 23):
+            for m in _expand_cron_field(minute, 0, 59):
+                invocations.add((h, m))
+    return invocations
+
+
 class BenchmarkWindowTests(unittest.TestCase):
     """The fallback must never hold the production lock across a cutoff.
 
@@ -253,10 +308,19 @@ class BenchmarkWindowTests(unittest.TestCase):
         )
 
     def test_the_actual_fallback_ticks_never_conflict(self) -> None:
-        """The guard is an invariant, not a restatement of the schedule."""
+        """The guard is an invariant, not a restatement of the schedule.
 
-        for hour, minute in ((4, 45), (5, 30), (6, 30)):
-            for day in range(4, 13):
+        The ticks are read from the Worker's own ``DISPATCH_TICKS_UTC`` rather
+        than listed here, so this cannot drift from the schedule it claims to
+        check.  All three intended times are intact -- 04:45Z, 05:30Z and
+        06:30Z -- and are delivered by one coarse cron because Workers Free
+        allows only five cron triggers per account.
+        """
+
+        ticks = _fallback_dispatch_ticks()
+        self.assertTrue(ticks, "no dispatch ticks were found in worker.mjs")
+        for hour, minute in ticks:
+            for day in range(FIRST_CAPTURE_DATE.day, FINAL_CAPTURE_DATE.day + 1):
                 tick = datetime(2026, 9, day, hour, minute, tzinfo=timezone.utc)
                 self.assertIsNone(
                     benchmark_window_conflict(tick),
@@ -983,6 +1047,196 @@ class ScheduledPublicationDeferralTests(unittest.TestCase):
         for literal in ("22:30", "23:30", "20:30", "120", "minutes=120"):
             with self.subTest(literal=literal):
                 self.assertNotIn(f"timedelta({literal}", self.preflight)
+
+
+# A Node driver that imports the real Worker, stubs global fetch, and reports
+# every outbound call per invocation.  The tick filter's whole contract is
+# about calls NOT made, which source inspection cannot establish -- so the
+# module is executed rather than pattern-matched.
+_TICK_PROBE = r"""
+import { pathToFileURL } from "node:url";
+
+const calls = [];
+globalThis.fetch = async (url, init) => {
+  calls.push(String(url));
+  return { status: 204, text: async () => "" };
+};
+
+const mod = await import(pathToFileURL(process.argv[2]).href);
+const worker = mod.default;
+const env = {
+  GITHUB_TOKEN: "token",
+  FALLBACK_SECRET: "secret",
+  HEARTBEAT_URL: "https://heartbeat.example/ping",
+};
+
+// Every invocation the deployed "*/15 4-6 * * *" cron produces in one day.
+const invocations = {};
+for (const hour of [4, 5, 6]) {
+  for (const minute of [0, 15, 30, 45]) {
+    const label =
+      String(hour).padStart(2, "0") + ":" + String(minute).padStart(2, "0");
+    calls.length = 0;
+    const pending = [];
+    await worker.scheduled(
+      { scheduledTime: Date.UTC(2026, 8, 8, hour, minute), cron: "*/15 4-6 * * *" },
+      env,
+      { waitUntil: (p) => pending.push(p) },
+    );
+    await Promise.all(pending);
+    invocations[label] = [...calls];
+  }
+}
+
+// The guarded POST must dispatch immediately, whatever the clock says.
+calls.length = 0;
+const response = await worker.fetch(
+  new Request("https://worker.example/", {
+    method: "POST",
+    headers: { "X-Fallback-Secret": "secret" },
+  }),
+  env,
+);
+const manual = { status: response.status, calls: [...calls] };
+
+console.log(
+  JSON.stringify({
+    invocations,
+    manual,
+    ticks: mod.DISPATCH_TICKS_UTC,
+    utc_of_0445: mod.scheduledTickUtc(Date.UTC(2026, 8, 8, 4, 45)),
+    unreadable: {
+      undefined: mod.isDispatchTick(undefined),
+      null: mod.isDispatchTick(null),
+      empty: mod.isDispatchTick(""),
+      garbage: mod.isDispatchTick("not a time"),
+    },
+    tz: process.env.TZ || "",
+  }),
+);
+"""
+
+
+class FallbackTickFilterTests(unittest.TestCase):
+    """One coarse cron, three logical retries.
+
+    Workers Free allows five cron triggers per *account* and the benchmark
+    Worker holds three, so three expressions here would make six -- which
+    Cloudflare rejects outright, registering none.  The deployed schedule is
+    therefore one coarse ``*/15 4-6 * * *`` and the Worker selects the three
+    intended times from its twelve daily invocations.
+
+    The dispatch times are unchanged.  What these tests pin is that the
+    selection is exact and that the nine other invocations are *clean*: the
+    contract is largely about calls that must not happen, so the Worker is
+    executed under Node with ``fetch`` stubbed rather than inspected as text.
+    """
+
+    GITHUB = (
+        "https://api.github.com/repos/edvinli/election-simulator/actions"
+        "/workflows/election-simulator-publication.yml/dispatches"
+    )
+    HEARTBEAT = "https://heartbeat.example/ping"
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        if not shutil.which("node"):
+            raise unittest.SkipTest("node is unavailable")
+        cls.utc = cls._probe("UTC")
+        # Same matrix in a +09:00 zone. If the Worker read local time anywhere,
+        # every result would shift by the offset.
+        cls.tokyo = cls._probe("Asia/Tokyo")
+
+    @classmethod
+    def _probe(cls, timezone_name: str) -> dict:
+        with tempfile.TemporaryDirectory() as tmp:
+            driver = Path(tmp) / "probe.mjs"
+            driver.write_text(_TICK_PROBE, encoding="utf-8")
+            environment = {**os.environ, "TZ": timezone_name}
+            completed = subprocess.run(
+                ["node", str(driver), str(FALLBACK_WORKER_MJS)],
+                capture_output=True, text=True, check=True, env=environment,
+            )
+        return json.loads(completed.stdout)
+
+    def test_the_three_intended_times_dispatch(self) -> None:
+        for label in ("04:45", "05:30", "06:30"):
+            with self.subTest(tick=label):
+                self.assertIn(self.GITHUB, self.utc["invocations"][label])
+
+    def test_every_other_invocation_is_a_clean_no_op(self) -> None:
+        """No dispatch and no heartbeat -- not even a /fail one."""
+
+        for label, calls in self.utc["invocations"].items():
+            if label in ("04:45", "05:30", "06:30"):
+                continue
+            with self.subTest(tick=label):
+                self.assertEqual(
+                    calls, [], f"{label} must make no outbound call, got {calls}"
+                )
+
+    def test_the_coarse_cron_produces_exactly_twelve_invocations(self) -> None:
+        """The nine no-ops are the cost of the one cron slot, and are bounded."""
+
+        self.assertEqual(len(self.utc["invocations"]), 12)
+        dispatching = [
+            label for label, calls in self.utc["invocations"].items() if calls
+        ]
+        self.assertEqual(sorted(dispatching), ["04:45", "05:30", "06:30"])
+
+    def test_a_dispatching_tick_also_reports_to_the_heartbeat(self) -> None:
+        """The heartbeat belongs to real ticks only, which is why it is here."""
+
+        self.assertIn(self.HEARTBEAT, self.utc["invocations"]["04:45"])
+
+    def test_scheduled_time_is_interpreted_as_utc(self) -> None:
+        self.assertEqual(self.utc["tz"], "UTC")
+        self.assertEqual(self.tokyo["tz"], "Asia/Tokyo")
+        self.assertEqual(self.utc["utc_of_0445"], "04:45")
+        self.assertEqual(self.tokyo["utc_of_0445"], "04:45")
+        self.assertEqual(self.utc["invocations"], self.tokyo["invocations"])
+
+    def test_the_worker_and_the_config_agree_on_the_ticks(self) -> None:
+        self.assertEqual(self.utc["ticks"], ["04:45", "05:30", "06:30"])
+        self.assertEqual(
+            [(int(h), int(m)) for h, m in (t.split(":") for t in self.utc["ticks"])],
+            _fallback_dispatch_ticks(),
+        )
+
+    def test_an_unreadable_scheduled_time_does_not_dispatch(self) -> None:
+        """Defensive: a cron always supplies one, and a guess is not a schedule."""
+
+        self.assertEqual(
+            self.utc["unreadable"],
+            {"undefined": False, "null": False, "empty": False, "garbage": False},
+        )
+
+    def test_the_guarded_post_still_dispatches_immediately(self) -> None:
+        """An operator dispatch is not a scheduled tick and skips the filter."""
+
+        self.assertEqual(self.utc["manual"]["status"], 202)
+        self.assertIn(self.GITHUB, self.utc["manual"]["calls"])
+
+    def test_the_coarse_cron_delivers_every_intended_tick(self) -> None:
+        """A narrowed cron must not silently drop a retry."""
+
+        invocations = _fallback_cron_invocations()
+        self.assertEqual(len(invocations), 12)
+        for tick in _fallback_dispatch_ticks():
+            with self.subTest(tick=tick):
+                self.assertIn(tick, invocations)
+
+    def test_the_filter_carries_no_publication_policy(self) -> None:
+        """Plumbing, not policy: every rule stays in the workflow."""
+
+        source = FALLBACK_WORKER_MJS.read_text(encoding="utf-8")
+        body = source.split("export default {")[1]
+        for policy in (
+            "daily_publication_satisfied", "should_publish", "stale",
+            "kill", "ELECTION_AUTOMATION_ENABLED", "benchmark",
+        ):
+            with self.subTest(policy=policy):
+                self.assertNotIn(policy, body)
 
 
 if __name__ == "__main__":

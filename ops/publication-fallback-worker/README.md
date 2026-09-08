@@ -36,6 +36,46 @@ The consequence is that a fallback tick on a normal day spends one short
 workflow run and publishes nothing. That is the intended trade: the rules stay
 in one tested place, and the no-op is visible in the Actions history.
 
+## Schedule: three logical retries, one Cloudflare cron
+
+The dispatch times are **04:45Z, 05:30Z and 06:30Z** -- 45, 90 and 150 minutes
+after the `0 4 * * *` daily cron. They are delivered by a single coarse
+trigger:
+
+```toml
+crons = ["*/15 4-6 * * *"]
+```
+
+Cloudflare's Workers Free plan allows **5 cron triggers per _account_**, not
+per Worker, and `ops/benchmark-trigger-worker` holds three for the frozen 2026
+benchmark campaign. Three expressions here would make six, which Cloudflare
+rejects outright -- the schedules call is all-or-nothing per script, so the
+result is *no* crons registered rather than some of them (observed: HTTP 400,
+`code: 10072`). One coarse expression costs one slot and carries all three
+times.
+
+`isDispatchTick()` in `worker.mjs` selects them from the trigger's twelve daily
+invocations, reading `event.scheduledTime` as **UTC** (`getUTCHours` /
+`getUTCMinutes`, never the local-time getters -- the Worker's zone is not
+guaranteed). The other nine invocations are a clean no-op:
+
+| | |
+| --- | --- |
+| GitHub dispatch | none |
+| heartbeat, success **or** `/fail` | none |
+| publication action | none |
+
+The heartbeat exclusion is deliberate. A ping from a tick that was never meant
+to publish would report health this Worker has not established, and a `/fail`
+ping would invent an incident.
+
+**This selection is scheduler plumbing, not publication policy.** It answers
+only "is this the tick I meant?". Staleness, the kill switch, the benchmark
+window, double-publish and concurrency remain decisions of the GitHub workflow
+-- see the table above. The guarded `POST` endpoint bypasses the filter
+entirely and dispatches immediately, because an operator asking for a dispatch
+is not a scheduled tick.
+
 ## Publication semantics
 
 `publish_if_stale` is a distinct mode, not a flag on `publish`, because it
