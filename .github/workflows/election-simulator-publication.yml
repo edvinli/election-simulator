@@ -283,16 +283,46 @@ jobs:
           timeout --signal=TERM --kill-after=5s 15m
           node browser-tests/government-builder.smoke.mjs _site
 
-  # The fallback's stand-down decision, outside election-simulator-production.
+  # The unattended stand-down decision, outside election-simulator-production.
   #
-  # This job exists because the decision has to be made *before* the fallback
-  # can enter or queue for the production group. It never joins that group; it
-  # takes a group of its own so two fallback ticks cannot preflight at once.
+  # This job exists because the decision has to be made *before* an unattended
+  # publication can enter or queue for the production group. It never joins
+  # that group; it takes a group of its own so two ticks cannot preflight at
+  # once.
+  #
+  # It now covers the SCHEDULED crons as well as the publish_if_stale
+  # fallback. It previously ran for the fallback alone, on the reasoning that
+  # the two crons were part of the operating picture the benchmark protocol
+  # was written against and that suppressing one would be a publication
+  # semantics change rather than hardening. What that reasoning missed is that
+  # one of those crons collides with the benchmark by the clock alone:
+  #
+  #   * the capture's pre-warm starts at 20:30Z (22:30 Stockholm, amendment
+  #     005), and publish may hold election-simulator-production for up to its
+  #     120-minute timeout, so the protected interval has to begin 120 minutes
+  #     before the pre-warm -- 18:30Z -- and runs to 22:00Z;
+  #   * the intraday schedule fires at 20:00Z, which is ALREADY INSIDE that
+  #     interval. No delivery lateness is needed for the collision.
+  #
+  # Once a publication holds the lock there, an otherwise punctual capture
+  # waits behind it and archives LATE_EXCLUDED.
+  #
+  # Delivery lateness strengthens the case rather than creating it: GitHub has
+  # been delivering ticks 1h43m-2h42m late, so EARLIER nominal ticks can land
+  # inside the interval too -- the 18:00Z one needs only 31 minutes of it.
+  # But the 20:00Z collision stands with a perfectly punctual scheduler.
+  #
+  # The asymmetry decides it: a deferred poll-change publication is repaired
+  # by the next tick, and a missed capture slot is frozen empty forever. The
+  # mandatory daily publication is unaffected -- its 04:00Z tick is ~14.5
+  # hours clear of the interval start, so no plausible lateness reaches it.
   #
   # It answers two questions the clock cannot answer on its own:
   #
   #   * is automation disabled? A publish_if_stale dispatch is unattended and
-  #     is subject to the kill switch, unlike an operator's publish.
+  #     is subject to the kill switch, unlike an operator's publish. This
+  #     check stays scoped to that dispatch: a scheduled run's kill-switch
+  #     handling remains in publish's own automation_gate, unchanged.
   #   * is a benchmark capture actually queued or running? GitHub has been
   #     delivering the 20:30Z capture cron 1h43m-2h42m late, so a capture can
   #     be live well outside its nominal window -- and a capture queued behind
@@ -305,8 +335,9 @@ jobs:
   # window is the protocol's own, read from time_rules.py.
   fallback_preflight:
     if: >-
-      github.event_name == 'workflow_dispatch' &&
-      github.event.inputs.mode == 'publish_if_stale'
+      github.event_name == 'schedule' ||
+      (github.event_name == 'workflow_dispatch' &&
+       github.event.inputs.mode == 'publish_if_stale')
     permissions:
       actions: read
       contents: read
@@ -352,24 +383,36 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           AUTOMATION_ENABLED: ${{ vars.ELECTION_AUTOMATION_ENABLED || 'false' }}
           BENCHMARK_WORKFLOW: prospective-benchmark-2026.yml
+          IS_FALLBACK: ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
         run: |
           set -euo pipefail
+          if [[ "$IS_FALLBACK" == "true" ]]; then
+            run_type="FALLBACK_DAILY"
+            mode_label="PUBLISH_IF_STALE"
+          else
+            run_type="SCHEDULED"
+            mode_label="SCHEDULE"
+          fi
           stand_down() {
             echo "proceed=false" >> "$GITHUB_OUTPUT"
             echo "reason=$1" >> "$GITHUB_OUTPUT"
             {
-              echo "Run type: FALLBACK_DAILY"
-              echo "Mode: PUBLISH_IF_STALE"
+              echo "Run type: $run_type"
+              echo "Mode: $mode_label"
               echo "Deployment status: $1"
               echo "Production lock: NOT_REQUESTED"
             } >> "$GITHUB_STEP_SUMMARY"
-            echo "fallback stands down before the production lock: $1"
+            echo "unattended publication stands down before the production lock: $1"
             exit 0
           }
 
-          # An unattended trigger is subject to the kill switch. An operator's
-          # explicit publish is not, and does not reach this job.
-          if [[ "${AUTOMATION_ENABLED,,}" == "false" ]]; then
+          # The kill switch governs the unattended publish_if_stale dispatch,
+          # as before. It is deliberately NOT extended to the scheduled path:
+          # a scheduled run's kill-switch handling stays in publish's own
+          # automation_gate, so this change adds benchmark deferral and alters
+          # nothing else about how a cron behaves. An operator's explicit
+          # publish is subject to neither, and does not reach this job.
+          if [[ "$IS_FALLBACK" == "true" && "${AUTOMATION_ENABLED,,}" == "false" ]]; then
             stand_down "DISABLED_BY_REPOSITORY_KILL_SWITCH"
           fi
 
@@ -394,13 +437,25 @@ jobs:
 
           echo "proceed=true" >> "$GITHUB_OUTPUT"
           echo "reason=CLEAR" >> "$GITHUB_OUTPUT"
-          echo "fallback may request the production lock"
+          echo "unattended publication may request the production lock"
 
   publish:
     needs: [fallback_preflight]
-    # always(), so a non-fallback trigger runs with fallback_preflight skipped.
+    # always(), so an operator's explicit publish runs with fallback_preflight
+    # skipped. The scheduled crons and publish_if_stale now both go through
+    # the preflight, so for them this is a real gate rather than a skip.
+    #
     # A preflight that failed is not a pass: this fails closed rather than
-    # publishing when the stand-down decision could not be made.
+    # publishing when the stand-down decision could not be made. That now
+    # applies to the scheduled path too, so a broken preflight defers a cron
+    # instead of letting it race the benchmark. The recovery for a deferred
+    # or blocked daily publication is the publish_if_stale fallback, which
+    # republishes when daily_publication_satisfied() is false -- deliberately
+    # the same repair path a late or dropped cron already relies on.
+    #
+    # This condition is unchanged by that: it already distinguished
+    # "preflight skipped" from "preflight passed", and generalizing which
+    # events reach the preflight is what changed.
     if: >-
       always() &&
       (github.event_name == 'schedule' ||
