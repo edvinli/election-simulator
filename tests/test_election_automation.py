@@ -43,7 +43,13 @@ from scripts.election_automation import (
 )
 from scripts.forecast_history.campaign_paths import CampaignPathSimulation
 from scripts.forecast_history.contract import DEFAULT_COALITIONS, build_groups_from_matrices, validate_history_contract
-from scripts.forecast_history.generate import build_history, missing_curve_dates, update_history_with_production_result
+from scripts.forecast_history.effective_inputs import EffectiveInputs, previous_fingerprints
+from scripts.forecast_history.generate import (
+    DEFAULT_SIMULATION_SEED,
+    build_history,
+    missing_curve_dates,
+    update_history_with_production_result,
+)
 from scripts.publication_pipeline.pipeline import run_publication_pipeline
 from scripts.site_publisher import GENERATION_FILES, publish_generation_to_site, sync_history_to_site
 from scripts.static_exporter import validate_published_directory
@@ -81,6 +87,35 @@ LIVE_HISTORY_ARTIFACT = (
 )
 FORECAST_AS_OF = FROZEN_AS_OF
 FORECAST_DAY = date.fromisoformat(FORECAST_AS_OF)
+
+
+def _reuse_partition(existing: dict) -> tuple[set[str], set[str]]:
+    """Split an artifact's reconstructed dates by whether its inputs still hold.
+
+    Derived with the very mechanism ``build_history`` gates reuse on rather
+    than restated, so it cannot drift from the rule under test and cannot
+    freeze today's data into an expectation.
+
+    Returns ``(input_stable, input_revised)``: dates whose recorded
+    effective-inputs fingerprint still matches what the current sources
+    produce, and dates where it genuinely differs.
+    """
+
+    recorded = previous_fingerprints(existing)
+    inputs = EffectiveInputs(
+        REPOSITORY_ROOT / "data/processed",
+        election_date=date.fromisoformat(existing["election_date"]),
+        seed=int(existing["model"]["seed"]),
+    )
+    stable: set[str] = set()
+    revised: set[str] = set()
+    for point in existing["series"]:
+        if point["provenance"] != "reconstructed_current_model":
+            continue
+        day = str(point["date"])
+        current = inputs.fingerprint(date.fromisoformat(day))
+        (stable if recorded.get(day) == current else revised).add(day)
+    return stable, revised
 
 
 def _forecast_utc(hour: int, minute: int = 0) -> datetime:
@@ -1519,21 +1554,26 @@ time.sleep(60)
 
         existing = json.loads(LIVE_HISTORY_ARTIFACT.read_text())
 
-        # Dates that already carry a reconstructed point must never be
-        # resimulated. A date carrying only an archived prospective point is
-        # not one of them: it has no curve point yet, and simulating it is how
-        # the hole each publication leaves gets closed.
-        reconstructed_dates = {
-            point["date"]
-            for point in existing["series"]
-            if point["provenance"] == "reconstructed_current_model"
-        }
+        # A date that already carries a reconstructed point must not be
+        # resimulated *while its effective model inputs are unchanged*. That
+        # qualifier is the invariant, not a softening of it: reconstruction is
+        # a function of those inputs, so a point whose inputs were genuinely
+        # revised upstream is stale and reusing it would publish a curve built
+        # from numbers that no longer exist. The partition is derived from the
+        # same fingerprint the production gate uses.
+        #
+        # A date carrying only an archived prospective point is in neither
+        # set: it has no curve point yet, and simulating it is how the hole
+        # each publication leaves gets closed.
+        input_stable, input_revised = _reuse_partition(existing)
         resimulated: list[str] = []
 
         def unexpected_runner(**kwargs):
             as_of = str(kwargs.get("as_of"))
-            if as_of in reconstructed_dates:
-                raise AssertionError(f"existing point was rerun: {kwargs}")
+            if as_of in input_stable:
+                raise AssertionError(
+                    f"point with unchanged effective inputs was rerun: {kwargs}"
+                )
             resimulated.append(as_of)
             votes, seats = self._matrices()
             requested = int(kwargs["samples"])
@@ -1570,14 +1610,31 @@ time.sleep(60)
             for point in rebuilt["series"]
             if point["provenance"] == "reconstructed_current_model"
         }
-        # Every point that existed is carried over byte for byte. The rebuild
-        # may legitimately *add* points on dates the curve was missing, so the
-        # two sets are compared per date rather than as whole lists.
+        # Every point whose inputs still hold is carried over byte for byte.
+        # The rebuild may legitimately *add* points on dates the curve was
+        # missing, so the two sets are compared per date rather than as whole
+        # lists.
         for point_date, point in before.items():
-            self.assertEqual(after.get(point_date), point, point_date)
-        # Whatever was resimulated had no curve point to begin with.
-        self.assertTrue(set(resimulated).isdisjoint(reconstructed_dates))
-        self.assertEqual(set(resimulated), {day.isoformat() for day in missing_curve_dates(existing)})
+            if point_date in input_stable:
+                self.assertEqual(after.get(point_date), point, point_date)
+        # Nothing with unchanged inputs was resimulated, and everything that
+        # was resimulated is accounted for: either it had no curve point, or
+        # its inputs were genuinely revised.
+        self.assertTrue(set(resimulated).isdisjoint(input_stable))
+        self.assertEqual(
+            set(resimulated),
+            {day.isoformat() for day in missing_curve_dates(existing)} | input_revised,
+        )
+        # The reuse cache must still be doing its job. A refresh that
+        # invalidated everything would satisfy the assertions above while
+        # making reconstruction a full rebuild -- the failure mode the resume
+        # cache exists to prevent -- so the reused majority is asserted too.
+        self.assertTrue(
+            input_stable,
+            "no point survived the refresh; the resume cache reused nothing",
+        )
+        for point_date in input_stable:
+            self.assertEqual(after.get(point_date), before[point_date], point_date)
 
     def test_production_history_rollover_and_same_day_replacement(self) -> None:
         # The second half of the live-artifact integration lane; see the note on
@@ -1819,6 +1876,164 @@ time.sleep(60)
             finally:
                 bad_manifest.write_bytes(original)
             self.assertEqual(pointer_path.read_bytes(), pointer_before)
+
+
+
+class HistoryInputRevisionReuseTests(unittest.TestCase):
+    """What a polling refresh may and may not invalidate.
+
+    Reproduces the shape of ``9007c19 chore: refresh polling snapshot``, which
+    took the publication down. That refresh rewrote the whole poll-of-polls
+    table, and buried in it were two *retroactive revisions* of historical
+    trend estimates -- 2026-02-18 SD 21.0 -> 21.1 and 2026-02-20 M 17.8 -> 17.9
+    with L 2.0 -> 2.1. Those are effective model inputs, so every
+    reconstructed point whose dynamics window reaches them became stale, and
+    the gate's absolute "an existing point is never rerun" was violated for a
+    legitimate reason.
+
+    The two halves of the rule are asserted separately, because the incident
+    turned on telling them apart:
+
+    * a genuine revision invalidates the affected dates and *only* those,
+      leaving everything earlier reusable -- otherwise a refresh degenerates
+      into a ~300-point rebuild, which is how the curve stopped being
+      extended before the resume cache existed;
+    * churn in transport identity, row order and acquisition metadata --
+      ``poll_id``, ``source_row``, ``retrieved_at`` -- invalidates nothing,
+      even though it rewrites most bytes in the file.
+
+    Hermetic: the real input tables are copied to a temporary tree and edited
+    there, so nothing in the repository is touched and the assertions do not
+    depend on today's snapshot.
+    """
+
+    INPUT_FILES = (
+        "pollofpolls/individual_polls.csv",
+        "pollofpolls/pollofpolls_timeseries.csv",
+        "pollofpolls/swedishpolls_individual_polls.csv",
+        "elections/riksdag_election_results.csv",
+        "geography/constituency_party_votes_2014_2022.csv",
+        "geography/constituency_electorates_2014_2026.csv",
+    )
+    TIMESERIES = "pollofpolls/pollofpolls_timeseries.csv"
+    ELECTION = date(2026, 9, 13)
+
+    def _inputs_tree(self) -> Path:
+        destination = Path(self.enterContext(tempfile.TemporaryDirectory())) / "processed"
+        for relative in self.INPUT_FILES:
+            target = destination / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(REPOSITORY_ROOT / "data/processed" / relative, target)
+        return destination
+
+    def _fingerprints(self, data_dir: Path, probes: list[date]) -> dict[date, str]:
+        inputs = EffectiveInputs(
+            data_dir, election_date=self.ELECTION, seed=DEFAULT_SIMULATION_SEED
+        )
+        return {probe: inputs.fingerprint(probe) for probe in probes}
+
+    @staticmethod
+    def _timeseries_rows(path: Path) -> tuple[list[str], list[dict[str, str]]]:
+        with path.open(newline="", encoding="utf-8") as handle:
+            reader = csv.DictReader(handle)
+            return list(reader.fieldnames or []), list(reader)
+
+    @staticmethod
+    def _write_rows(path: Path, fieldnames: list[str], rows: list[dict[str, str]]) -> None:
+        with path.open("w", newline="", encoding="utf-8") as handle:
+            writer = csv.DictWriter(handle, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(rows)
+
+    def _probe_dates(self, path: Path) -> list[date]:
+        """Observation dates spread across the campaign year, from the data."""
+
+        _, rows = self._timeseries_rows(path)
+        campaign = [
+            date.fromisoformat(row["date"])
+            for row in rows
+            if row["date"].startswith("2026-")
+        ]
+        self.assertGreater(len(campaign), 40, "too few 2026 rows to probe")
+        return campaign[:: max(1, len(campaign) // 12)]
+
+    def test_a_retroactive_revision_invalidates_only_from_its_own_date(self) -> None:
+        data_dir = self._inputs_tree()
+        timeseries = data_dir / self.TIMESERIES
+        probes = self._probe_dates(timeseries)
+        baseline = self._fingerprints(data_dir, probes)
+
+        # The incident's shape: one historical estimate nudged by 0.1, exactly
+        # as pollofpolls.se revised 2026-02-18. REST is derived, so it absorbs
+        # the change the way the real refresh did.
+        fieldnames, rows = self._timeseries_rows(timeseries)
+        revised_date = probes[len(probes) // 2]
+        for row in rows:
+            if row["date"] == revised_date.isoformat():
+                row["SD"] = f"{float(row['SD']) + 0.1:.1f}"
+                break
+        else:  # pragma: no cover - the probe came from this file
+            self.fail(f"no timeseries row for {revised_date}")
+        self._write_rows(timeseries, fieldnames, rows)
+
+        after = self._fingerprints(data_dir, probes)
+        changed = {probe for probe in probes if baseline[probe] != after[probe]}
+
+        # It is detected at all: a real input change must not be reused away.
+        self.assertTrue(changed, "a revised historical estimate went undetected")
+        # And it is contained: nothing before the revision is invalidated.
+        self.assertTrue(
+            all(probe >= revised_date for probe in changed),
+            f"a point before {revised_date} was invalidated: {sorted(changed)}",
+        )
+        earlier = [probe for probe in probes if probe < revised_date]
+        self.assertTrue(earlier, "no probe precedes the revision")
+        for probe in earlier:
+            self.assertEqual(baseline[probe], after[probe], probe)
+
+    def test_identity_order_and_refresh_metadata_churn_invalidates_nothing(self) -> None:
+        """The half that makes a daily refresh survivable.
+
+        A refresh rewrites nearly every row of both poll files: ``poll_id`` is
+        a hash that includes ``source_row``, so inserting one poll renumbers
+        and re-identifies thousands of unrelated observations. None of that is
+        a model input, and treating it as one would rebuild the curve daily.
+        """
+
+        data_dir = self._inputs_tree()
+        probes = self._probe_dates(data_dir / self.TIMESERIES)
+        baseline = self._fingerprints(data_dir, probes)
+
+        for relative in ("pollofpolls/swedishpolls_individual_polls.csv",
+                         "pollofpolls/individual_polls.csv"):
+            path = data_dir / relative
+            fieldnames, rows = self._timeseries_rows(path)
+            # One new id per poll, kept consistent across that poll's rows so
+            # the file stays loadable -- this is churn, not corruption.
+            remapped = {
+                old: f"churn-{index:08d}"
+                for index, old in enumerate(sorted({row["poll_id"] for row in rows}))
+            }
+            for offset, row in enumerate(rows):
+                row["poll_id"] = remapped[row["poll_id"]]
+                if "source_row" in row and row["source_row"]:
+                    row["source_row"] = str(offset + 10_000)
+                if "retrieved_at" in row and row["retrieved_at"]:
+                    row["retrieved_at"] = "2026-09-08T04:15:00Z"
+            rows.reverse()
+            self._write_rows(path, fieldnames, rows)
+            self.assertNotEqual(
+                compute_file_sha256(path),
+                compute_file_sha256(REPOSITORY_ROOT / "data/processed" / relative),
+                "the churn fixture must actually change the file",
+            )
+
+        after = self._fingerprints(data_dir, probes)
+        for probe in probes:
+            self.assertEqual(
+                baseline[probe], after[probe],
+                f"{probe} was invalidated by identity/order/metadata churn alone",
+            )
 
 
 if __name__ == "__main__":
