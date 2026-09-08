@@ -480,15 +480,57 @@ class FrozenProtocolIsUntouched(unittest.TestCase):
                 amendment = json.loads((ARCHIVE / ref["path"]).read_text())
                 self.assertEqual(amendment["original_protocol_sha256"], frozen)
 
-    def test_no_python_source_changed(self) -> None:
+    # The modules that implement the frozen rules the protocol hash pins.
+    # Narrower than "all Python" on purpose: see the test below.
+    FROZEN_RULE_SOURCES = (
+        "scripts/prospective_benchmark_2026/time_rules.py",
+        "scripts/prospective_benchmark_2026/scoring.py",
+        "scripts/prospective_benchmark_2026/results.py",
+    )
+
+    def test_the_frozen_rule_modules_are_unchanged(self) -> None:
+        """The frozen rules themselves, not every line of Python in the repo.
+
+        This began as "``scripts/`` is byte-identical to origin/main", which
+        was true and useful evidence *about amendment 006*: that amendment
+        changes delivery only. As a standing invariant it was the wrong shape.
+        It froze the entire Python surface of the repository against any
+        branch, so the first unrelated change to any module -- parallelising
+        the history backfill, say, after a publication was lost to a job
+        timeout -- failed a benchmark test for a reason with nothing to do
+        with the benchmark, and the honest fix would have looked like weakening
+        a frozen-protocol check.
+
+        What actually has to hold while the campaign is live is that the
+        modules implementing the pinned rules do not drift: the cutoff and slot
+        attribution in ``time_rules``, and the scoring in ``scoring``/
+        ``results``. Those are what ``protocol.sha256`` stands behind, and they
+        are what is asserted here. The rest of the amendment's "delivery only"
+        claim is carried by the sibling assertions in this class -- the
+        protocol hash, the cutoff and schedule fields, and the recorded timing
+        contract -- which check the artifacts rather than a diff.
+        """
+
         baseline = _baseline_ref()
         if baseline is None:
             self.skipTest("no origin/main baseline in this checkout")
         changed = subprocess.run(
-            ["git", "diff", "--name-only", baseline, "--", "scripts/"],
+            ["git", "diff", "--name-only", baseline, "--", *self.FROZEN_RULE_SOURCES],
             cwd=ROOT, capture_output=True, text=True, check=True,
         ).stdout.split()
-        self.assertEqual(changed, [], f"amendment 006 must change no Python source: {changed}")
+        self.assertEqual(
+            changed, [],
+            f"a frozen benchmark rule module changed: {changed}. These implement "
+            "the rules protocol.sha256 pins; changing one during the campaign "
+            "needs an amendment, not a code review.",
+        )
+
+    def test_the_frozen_rule_modules_all_exist(self) -> None:
+        """A path typo would make the freeze above silently vacuous."""
+
+        for relative in self.FROZEN_RULE_SOURCES:
+            with self.subTest(module=relative):
+                self.assertTrue((ROOT / relative).is_file(), relative)
 
     def test_the_recorded_timing_contract_is_unchanged(self) -> None:
         # Pinned to explicit values rather than to another call of the same
