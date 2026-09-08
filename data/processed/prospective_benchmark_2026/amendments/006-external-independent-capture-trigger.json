@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0",
+  "amendment_number": 6,
+  "amendment_id": "006-external-independent-capture-trigger",
+  "created_at_utc": "2026-09-07T13:45:33Z",
+  "original_protocol_sha256": "16f920a88eb956b42f24307e4ada3b5b1133bffb11a6561e5a9e9ce75c5e3b23",
+  "reason": "Amendment 005 moved the scheduled job's operational start from 21:30:00Z to 20:30:00Z so that preparation would complete before the frozen cutoff. Continued operation shows this does not achieve its purpose. GitHub Actions delivered the 2026-09-06 scheduled trigger at 22:13:47Z, 1h43m47s after its 20:30:00Z cron, and that capture was again LATE_EXCLUDED. The three scheduled triggers delivered to date were late by 1h42m, 1h41m and 1h44m, and 2026-09-04, 2026-09-05 and 2026-09-06 all archived LATE_EXCLUDED records, leaving the campaign with no timing-eligible evidence. The timing-eligible window is thirty minutes wide, from 21:30:00Z to 22:00:00Z, and the capture job completes in under one minute, so the failure is in trigger delivery and not in the capture. Starting earlier cannot compensate for an unbounded delay applied to the start. This amendment introduces an independent external scheduler as an additional delivery mechanism for the same unchanged scheduled trigger. It is created before election results are known and changes no scientific, statistical or scoring rule.",
+  "primary_scoring_effect": "NONE. The cutoff, the timing-eligibility rule, the late-capture limit, the capture dates, the fair CRPS primary metric and its availability condition, the amendment 002 standard WIS formula, the amendment 003 and 004 exact-draw rules, the eight-party set, the final forecast date and the winner hierarchy are all unchanged. Only the mechanism by which the scheduled trigger is delivered changes.",
+  "replacement_rule": {
+    "scope": "Delivery mechanism of the scheduled capture trigger only.",
+    "external_trigger": "An independent external scheduler outside GitHub Actions may deliver the scheduled trigger by workflow_dispatch to the same capture workflow with mode=scheduled_capture. It supplies no scheduled date, no timestamp and no other input.",
+    "slot_attribution": "Unchanged, and identical to the GitHub cron path. The Stockholm slot is derived from GitHub's recorded workflow-run created_at by the frozen rule in scripts/prospective_benchmark_2026/time_rules.py: the date whose 22:30 Europe/Stockholm scheduled start the run was created at or after, and otherwise the previous date. No externally supplied value participates in slot attribution. If created_at cannot be retrieved, the run fails closed.",
+    "authoritative_timing_evidence": "Scientific timing eligibility is determined solely by retrieved_at_utc, taken from the capture process clock at retrieval and compared with the frozen cutoff for the resolved slot. No externally supplied timestamp or scheduled date participates in eligibility. GitHub run created_at is the authoritative, GitHub-recorded timestamp used for slot attribution; it is not evidence of scheduler identity, because an authorized operator can choose when to initiate a workflow_dispatch. This amendment makes no claim that a given run was initiated by any particular scheduler.",
+    "external_trigger_schedule": "20:30:00Z, 21:20:00Z and 21:40:00Z. 20:30:00Z preserves the amendment 005 pre-warm; 21:20:00Z is a second independent trigger able to acquire the production lock before the cutoff; 21:40:00Z is a final post-cutoff retry with approximately twenty minutes remaining in the eligible window.",
+    "external_trigger_lower_bound": "No external tick may be configured earlier than 20:30:00Z. The slot-attribution boundary is 22:30 Europe/Stockholm, which is 20:30:00Z during the frozen window, so an earlier trigger would resolve to the previous Stockholm slot and could durably occupy it. No tick may fall at or after 22:00:00Z, when the eligible window closes at local midnight.",
+    "prewarm_and_cutoff_unchanged": "Preparation remains offline and pre-cutoff and must neither retrieve nor durably record any benchmark evidence. The job blocks until the frozen 21:30:00Z cutoff for its resolved slot, and run_capture independently refuses a durable capture before it.",
+    "duplicate_triggers": "A trigger whose resolved slot already holds a timing-eligible durable capture stands down without capturing and without failing the run. A slot holding an ineligible durable record is not stood down, so that collision remains loud. One durable capture per scheduled date is unchanged.",
+    "late_triggers": "An external trigger whose retrieval falls on the Stockholm calendar date after its resolved slot is durably LATE_EXCLUDED under amendment 001, exactly as a late cron trigger is, and is never relabelled on-time. A trigger delayed past local midnight resolves to the previous slot by the unchanged rule.",
+    "missed_triggers": "A scheduled date with no durable capture remains empty. Retroactive capture remains prohibited and no external trigger may create one.",
+    "github_cron_status": "RETAINED as a secondary trigger, not disabled and not demoted. Disabling it would move the single point of failure from GitHub's scheduler to the external one rather than removing it. When both deliver, whichever run reaches the slot first captures it and the other stands down.",
+    "operational_reporting": "A slot reached by an unattended trigger, whether the GitHub cron or the external scheduler, whose durable capture is not timing-eligible fails the workflow run. An operator-initiated dry_run or capture reports the same outcome without failing.",
+    "archive_semantics": "Unchanged. No manifest or index field is added, removed or redefined. Capture IDs, the append-only hash chain, one durable slot per scheduled date and the evidence hierarchy are untouched. Trigger provenance continues to live in GitHub's own workflow-run record, which is where it lives for the cron path."
+  },
+  "unchanged_rules": [
+    "The frozen cutoff is 23:30:00 Europe/Stockholm, 21:30:00Z during the window, for every scheduled date.",
+    "The nine scheduled capture dates 2026-09-04 through 2026-09-12 are unchanged, and 2026-09-12 remains the primary final forecast.",
+    "A durable capture before its scheduled cutoff remains prohibited and fails closed before any source request.",
+    "The amendment 001 late-capture limit is unchanged: a delayed run may create its LATE_EXCLUDED record only on the immediately following Europe/Stockholm calendar date.",
+    "The amendment 005 slot-attribution rule and its 22:30 Europe/Stockholm boundary are unchanged and are now used by both delivery mechanisms.",
+    "LATE_EXCLUDED captures remain excluded from primary scoring. The existing 2026-09-04, 2026-09-05 and 2026-09-06 records keep that label. This amendment does not make them timing-eligible and does not permit their recapture.",
+    "One durable slot per scheduled date, and the append-only archive and index chain, are unchanged.",
+    "The fair CRPS primary metric, the amendment 002 standard WIS formula, and the amendment 003 and 004 exact-draw rules are unchanged.",
+    "The eight-party set M, L, C, KD, S, V, MP, SD in the frozen order is unchanged.",
+    "The final forecast date 2026-09-12 and the winner hierarchy are unchanged.",
+    "The Botten Ada evidence hierarchy, parity requirements and source-failure policy are unchanged."
+  ],
+  "immutable": true
+}

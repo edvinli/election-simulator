@@ -1,6 +1,16 @@
 name: Prospective benchmark 2026 capture
 
 on:
+  # Two delivery mechanisms for one unchanged scheduled trigger.
+  #
+  # GitHub's cron is retained, and is no longer relied upon alone: it delivered
+  # the 2026-09-04, 05 and 06 ticks 1h42m, 1h41m and 1h44m late, and the third
+  # of those was already running the 20:30Z pre-warm. The timing-eligible
+  # window is thirty minutes wide (21:30:00Z to 22:00:00Z) and this job takes
+  # under a minute, so the failure is in delivery, not in the capture. An
+  # independent external scheduler (ops/benchmark-trigger-worker) therefore
+  # dispatches the same workflow with mode=scheduled_capture. See amendment
+  # 006. Keeping the cron means neither scheduler is a single point of failure.
   schedule:
     # 22:30 Europe/Stockholm during the frozen Sep 4–12 campaign window: one
     # hour before the frozen 23:30 cutoff, so checkout, dependency install and
@@ -12,15 +22,16 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "Non-durable dry run or one real append-only capture"
+        description: "Dry run, one operator capture, or an unattended external scheduled trigger"
         required: true
         default: dry_run
         type: choice
         options:
           - dry_run
           - capture
+          - scheduled_capture
       scheduled_date:
-        description: "Frozen Stockholm slot (YYYY-MM-DD); required for manual capture"
+        description: "Frozen Stockholm slot (YYYY-MM-DD); required for manual capture, IGNORED by scheduled_capture"
         required: false
         default: "2026-09-04"
         type: string
@@ -42,6 +53,11 @@ jobs:
   # only and is invoked by path, so this job needs no dependency install, and
   # the attribution rule has exactly one tested implementation instead of a
   # shell copy that has to be kept in step with it.
+  #
+  # An external scheduled_capture dispatch takes exactly that branch. It
+  # supplies no date and no timestamp, so its slot provenance is identical to
+  # the cron's rather than merely equivalent to it, and there is no operator
+  # claim for the frozen rules to have to distrust.
   schedule_guard:
     permissions:
       actions: read
@@ -52,6 +68,7 @@ jobs:
       mode: ${{ steps.resolve.outputs.mode }}
       scheduled_date: ${{ steps.resolve.outputs.scheduled_date }}
       capture_id: ${{ steps.resolve.outputs.capture_id }}
+      unattended: ${{ steps.resolve.outputs.unattended }}
     steps:
       - name: Check out the frozen scheduling rules
         uses: actions/checkout@v4
@@ -76,43 +93,103 @@ jobs:
           MANUAL_MODE: ${{ github.event.inputs.mode || '' }}
           MANUAL_DATE: ${{ github.event.inputs.scheduled_date || '' }}
         run: |
+          # Two trigger classes reach this workflow.
+          #
+          #   unattended -- GitHub's cron, and the external scheduler's
+          #     dispatch with mode=scheduled_capture. Neither names a slot, so
+          #     both resolve one identically, from GitHub's recorded run
+          #     creation time. No dispatch input participates.
+          #
+          #   operator -- a human dry_run or capture, which names its own slot
+          #     and is held to the existing manual rules.
+          UNATTENDED=false
           if [[ "$EVENT_NAME" == "schedule" ]]; then
+            UNATTENDED=true
+            MODE="capture"
+          else
+            case "$MANUAL_MODE" in
+              scheduled_capture)
+                # The unattended external trigger. It runs the capture job,
+                # and is held to the scheduled path's strict rules below.
+                UNATTENDED=true
+                MODE="capture"
+                ;;
+              dry_run|capture)
+                MODE="$MANUAL_MODE"
+                ;;
+              *)
+                echo "Manual mode must be dry_run, capture or scheduled_capture: $MANUAL_MODE" >&2
+                exit 2
+                ;;
+            esac
+          fi
+          if [[ "$UNATTENDED" == "true" ]]; then
             # Bind the slot to GitHub's externally recorded workflow-run
-            # creation time, not the possibly delayed runner wall clock.
-            # If that evidence cannot be retrieved, fail closed.
+            # creation time, not the possibly delayed runner wall clock and
+            # never a dispatch input. If that evidence cannot be retrieved,
+            # fail closed.
             RUN_CREATED_AT="$(gh api "repos/$REPOSITORY/actions/runs/$RUN_ID" --jq .created_at)"
             if [[ ! "$RUN_CREATED_AT" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T ]]; then
               echo "Cannot establish the scheduled run creation time." >&2
               exit 2
             fi
-            # A run created at or after the scheduled start belongs to that
-            # Stockholm date even when the scheduler delays it past the cutoff.
-            # A run created before the scheduled start has been delayed across
-            # local midnight and belongs to the previous slot, which will be
-            # durably LATE_EXCLUDED.
+            # A run created at or after the 22:30 Europe/Stockholm scheduled
+            # start belongs to that Stockholm date even when the scheduler
+            # delays it past the cutoff. A run created before that local start
+            # has been delayed across local midnight and belongs to the
+            # PREVIOUS slot, which will be durably LATE_EXCLUDED.
+            #
+            # That boundary is 20:30Z during the frozen window, and it is why
+            # no external tick may be configured earlier than 20:30Z: an
+            # earlier one would resolve to, and could durably occupy, the
+            # previous day's slot. ops/benchmark-trigger-worker asserts it.
             if ! SCHEDULED_DATE="$(python scripts/prospective_benchmark_2026/time_rules.py \
               resolve-slot --run-created-at "$RUN_CREATED_AT")"; then
               echo "Cannot resolve the intended Stockholm slot from $RUN_CREATED_AT." >&2
               exit 2
             fi
-            MODE="capture"
           else
             SCHEDULED_DATE="$MANUAL_DATE"
-            MODE="$MANUAL_MODE"
-            if [[ "$MODE" != "dry_run" && "$MODE" != "capture" ]]; then
-              echo "Manual mode must be dry_run or capture: $MODE" >&2
-              exit 2
-            fi
           fi
           if [[ ! "$SCHEDULED_DATE" =~ ^2026-09-(0[4-9]|1[0-2])$ ]]; then
-            if [[ "$EVENT_NAME" == "schedule" ]]; then
+            if [[ "$UNATTENDED" == "true" ]]; then
+              # The external cron, like GitHub's, has no year field, so ticks
+              # outside the frozen window are expected and are a green no-op.
               echo "active=false" >> "$GITHUB_OUTPUT"
               echo "mode=$MODE" >> "$GITHUB_OUTPUT"
-              echo "Scheduled event is outside the frozen 2026-09-04..12 window." >> "$GITHUB_STEP_SUMMARY"
+              echo "unattended=$UNATTENDED" >> "$GITHUB_OUTPUT"
+              echo "Unattended trigger is outside the frozen 2026-09-04..12 window." >> "$GITHUB_STEP_SUMMARY"
               exit 0
             fi
             echo "Manual scheduled_date is outside the frozen window: $SCHEDULED_DATE" >&2
             exit 2
+          fi
+          # A slot that already holds a timing-eligible durable capture is
+          # finished. Redundant external ticks exist precisely so that one of
+          # them lands, so the ones that arrive afterwards must be a cheap,
+          # visible no-op rather than a red run.
+          #
+          # This reads the recorded timing_eligible field; it does not
+          # re-derive eligibility, and it is not what enforces one capture per
+          # slot -- append_capture still refuses an occupied slot. A slot
+          # holding an INELIGIBLE record is deliberately NOT stood down: that
+          # collision must stay loud.
+          if [[ "$UNATTENDED" == "true" ]] && jq -e --arg slot "$SCHEDULED_DATE" \
+            '[.captures[] | select(.scheduled_date == $slot and .timing_eligible == true)] | length > 0' \
+            data/processed/prospective_benchmark_2026/index.json >/dev/null; then
+            {
+              echo "active=false"
+              echo "mode=$MODE"
+              echo "unattended=$UNATTENDED"
+            } >> "$GITHUB_OUTPUT"
+            {
+              echo "### Prospective benchmark slot guard"
+              echo "- Event: $EVENT_NAME"
+              echo "- Workflow run created at: ${RUN_CREATED_AT:-manual dispatch}"
+              echo "- Scheduled Stockholm date: $SCHEDULED_DATE"
+              echo "- Stand-down: SLOT_ALREADY_TIMING_ELIGIBLE"
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
           fi
           CAPTURE_ID="$(date -u --date="$SCHEDULED_DATE 21:30:00" +%Y%m%dT%H%M%SZ)"
           {
@@ -120,10 +197,12 @@ jobs:
             echo "mode=$MODE"
             echo "scheduled_date=$SCHEDULED_DATE"
             echo "capture_id=$CAPTURE_ID"
+            echo "unattended=$UNATTENDED"
           } >> "$GITHUB_OUTPUT"
           {
             echo "### Prospective benchmark slot guard"
             echo "- Event: $EVENT_NAME"
+            echo "- Unattended scheduled trigger: $UNATTENDED"
             echo "- Workflow run created at: ${RUN_CREATED_AT:-manual dispatch}"
             echo "- Guard evaluated at: $(TZ=Europe/Stockholm date --iso-8601=seconds)"
             echo "- Scheduled Stockholm date: $SCHEDULED_DATE"
@@ -312,11 +391,13 @@ jobs:
         if: always()
         shell: bash
         env:
-          EVENT_NAME: ${{ github.event_name }}
+          # Both unattended delivery mechanisms are held to this. An operator
+          # dry_run or capture is attended and only warns.
+          UNATTENDED: ${{ needs.schedule_guard.outputs.unattended }}
           SCHEDULED_DATE: ${{ needs.schedule_guard.outputs.scheduled_date }}
         run: |
           ARGS=(--scheduled-date "$SCHEDULED_DATE" --summary-path "$GITHUB_STEP_SUMMARY")
-          if [[ "$EVENT_NAME" != "schedule" ]]; then
+          if [[ "$UNATTENDED" != "true" ]]; then
             ARGS+=(--warn-only)
           fi
           uv run python -m scripts.prospective_benchmark_2026 assert-eligible "${ARGS[@]}"

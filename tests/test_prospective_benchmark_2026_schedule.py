@@ -14,10 +14,11 @@ frozen cutoff, and fail the run if the slot did not produce eligible evidence.
 
 from __future__ import annotations
 
-from datetime import date, datetime, time, timedelta
+from datetime import date, datetime, time, timedelta, timezone
 import hashlib
 import json
 from pathlib import Path
+import re
 import tempfile
 import unittest
 
@@ -261,6 +262,31 @@ class TestWorkflowSchedulingContract(unittest.TestCase):
             "the job must be allowed to outlive its longest permitted cutoff wait",
         )
 
+    def test_the_external_trigger_shares_the_scheduled_slot_rule(self) -> None:
+        # An external dispatch is a different event with different provenance,
+        # so the one thing it must not do is name its own slot. It takes the
+        # same created_at branch, which is why its slot provenance is
+        # identical to the cron's rather than merely equivalent to it.
+        self.assertIn("scheduled_capture", self.text)
+        self.assertIn('if [[ "$UNATTENDED" == "true" ]]; then', self.text)
+        guard = self.text[self.text.index("Resolve intended scheduled slot"):self.text.index("  dry_run:")]
+        unattended = guard[guard.index('if [[ "$UNATTENDED" == "true" ]]; then'):]
+        self.assertIn("resolve-slot --run-created-at", unattended[:unattended.index("else")])
+
+    def test_no_external_tick_may_precede_the_slot_attribution_boundary(self) -> None:
+        # The boundary is SCHEDULED_START_LOCAL_TIME, 20:30Z in-window. A tick
+        # before it resolves the PREVIOUS slot and could durably occupy it.
+        boundary = _local(SLOT, SCHEDULED_START_LOCAL_TIME.isoformat()).astimezone(timezone.utc)
+        crons = re.findall(
+            r'"(\d+) (\d+) [^"]*"',
+            (ROOT / "ops" / "benchmark-trigger-worker" / "wrangler.toml").read_text(),
+        )
+        self.assertTrue(crons, "the external Worker declares no crons")
+        for minute, hour in crons:
+            with self.subTest(cron=f"{minute} {hour}"):
+                self.assertGreaterEqual(
+                    (int(hour), int(minute)), (boundary.hour, boundary.minute))
+
     def test_an_ineligible_scheduled_slot_fails_the_run(self) -> None:
         push = self.text.index("Commit and push the append-only capture")
         assertion = self.text.index("Require a timing-eligible capture for the scheduled slot")
@@ -295,6 +321,56 @@ class TestAmendmentRecordsTheOperationalChange(unittest.TestCase):
         protocol = json.loads((ARCHIVE / "protocol.json").read_text())
         self.assertEqual(protocol["schedule"]["local_cutoff_time"], "23:30:00")
         self.assertEqual(protocol["schedule"]["scheduled_utc_time_during_window"], "21:30:00Z")
+
+    def test_amendment_006_is_append_only_and_changes_no_scoring_rule(self) -> None:
+        # Amendment 005 moved the start and the slot was still lost, because
+        # the delay is applied to the start. 006 adds a second deliverer of
+        # the same trigger; it must change nothing else.
+        path = ARCHIVE / "amendments" / "006-external-independent-capture-trigger.json"
+        amendment = json.loads(path.read_text())
+        index = json.loads((ARCHIVE / "index.json").read_text())
+        self.assertEqual(amendment["amendment_number"], 6)
+        self.assertIs(amendment["immutable"], True)
+        # protocol.json is superseded additively, never rewritten.
+        self.assertEqual(amendment["original_protocol_sha256"], index["protocol_sha256"])
+        self.assertTrue(amendment["primary_scoring_effect"].startswith("NONE"))
+        rule = amendment["replacement_rule"]
+        self.assertIn("retrieved_at_utc", rule["authoritative_timing_evidence"])
+        # created_at attributes the slot; it is not proof of who fired the run.
+        self.assertIn("not evidence of scheduler identity", rule["authoritative_timing_evidence"])
+        self.assertIn("RETAINED", rule["github_cron_status"])
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        sidecar = (ARCHIVE / "amendments" / "006-external-independent-capture-trigger.sha256").read_text()
+        self.assertTrue(sidecar.startswith(digest))
+        self.assertIn(
+            {"amendment_number": 6, "path": f"amendments/{path.name}", "sha256": digest,
+             "primary_scoring_effect": amendment["primary_scoring_effect"]},
+            index["amendments"],
+        )
+
+    def test_amendment_006_does_not_rewrite_its_predecessors(self) -> None:
+        directory = ARCHIVE / "amendments"
+        for number, stem in enumerate(
+            ("001-operational-clarifications", "002-standard-wis-normalization",
+             "003-exact-deterministic-replay", "004-intraday-exact-draw-sidecar-retention",
+             "005-prewarmed-capture-start"),
+            start=1,
+        ):
+            with self.subTest(amendment=number):
+                amendment = json.loads((directory / f"{stem}.json").read_text())
+                self.assertEqual(amendment["amendment_number"], number)
+                digest = hashlib.sha256((directory / f"{stem}.json").read_bytes()).hexdigest()
+                self.assertTrue((directory / f"{stem}.sha256").read_text().startswith(digest))
+
+    def test_the_september_4_to_6_records_keep_their_late_label(self) -> None:
+        # Amendment 006 must not reclassify, recapture or disturb them.
+        recorded = {
+            row["scheduled_date"]: (row["timing_status"], row["timing_eligible"])
+            for row in json.loads((ARCHIVE / "index.json").read_text())["captures"]
+        }
+        for slot in ("2026-09-04", "2026-09-05", "2026-09-06"):
+            with self.subTest(slot=slot):
+                self.assertEqual(recorded[slot], ("LATE_EXCLUDED", False))
 
 
 if __name__ == "__main__":
