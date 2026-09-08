@@ -662,7 +662,6 @@ pop-719195ec46166ec8f4b2,swp-3fe3189314f534c177ea,Sifo,2019-04-01,2019-04-11,exa
 pop-71c754e0033457697502,swp-a122353d837c9dd67fc3,Demoskop,2017-02-28,2017-03-07,exact_span_match,1,0.0,{},True
 pop-71f60ff6c39d94d13890,swp-28d5cbecb99f0810d2f4,Novus,2014-12-03,2014-12-14,exact_span_match,1,0.0,{},True
 pop-7207583410b0b5b71861,swp-137428f47361289e1bff,Sifo,2021-09-06,2021-09-16,exact_span_match,1,0.0,{},True
-pop-721daa1c79aafa044584,swp-4921d7228734c1ee48de,Demoskop,2026-07-29,2026-08-10,exact_span_match,1,0.0,{},True
 pop-7285f129305d961b8746,swp-422404d467b1fad3d750,Sifo,2023-12-25,2024-01-07,exact_span_match,1,0.0,{},True
 pop-72d790d6566a95473a86,swp-512cf7862a4f3a7640e3,Demoskop,2023-09-23,2023-10-07,exact_span_match,1,0.0,{},True
 pop-72de8b5d95f368c5d7ce,swp-46c22b5b871af1d178c5,Skop,2023-10-09,2023-10-22,exact_span_match,1,0.0,{},True
@@ -1066,6 +1065,7 @@ pop-ba9839be4fcab42bf1e9,swp-78718949fea9e37546eb,Ipsos,2013-02-07,2013-02-26,ex
 pop-baba6b0f712486cff9be,swp-c201135464ed37b2847a,Sifo,2020-03-30,2020-04-08,exact_span_match,1,0.0,{},True
 pop-bac4ea3ffdce52d38884,swp-72b133799beb14314ce7,Sifo,2010-03-01,2010-03-11,exact_span_match,1,0.0,{},True
 pop-bad09d75397327150a14,swp-9416bc06a9d26d0c10b5,Novus,2022-09-12,2022-10-02,exact_span_match,1,0.0,{},True
+pop-bb22fe2e5cd2c357d3a9,swp-4921d7228734c1ee48de,Demoskop,2026-07-29,2026-08-10,exact_span_match,1,0.0,{},True
 pop-bb855bf34bd7a73c46c9,swp-017997b91e1eacad033b,Ipsos,2022-09-01,2022-09-06,exact_span_match,1,0.0,{},True
 pop-bba1af93d0e653eb2259,,Sifo,2022-09-04,2022-09-04,no_match,0,,{},False
 pop-bbb00943d861d0d01630,swp-18990e35fa6b6447c054,YouGov,2015-09-10,2015-09-14,exact_span_match,1,0.0,{},True
@@ -1171,6 +1171,7 @@ pop-d00e01395e31ec37511b,,Sentio,2023-10-03,2023-10-10,no_match,0,,{},False
 pop-d01cc3da6566b5979c57,swp-04d100b1301fbd0e4645,Novus,2025-08-11,2025-08-24,exact_span_match,1,0.0,{},True
 pop-d04aed419f8c76e57ae4,swp-740a70c82c0057eb2c96,United Minds,2011-10-11,2011-11-06,exact_span_match,1,0.0,{},True
 pop-d0513f7e161ce57ff852,swp-92662683b8506b54b8f3,Sifo,2024-11-25,2024-12-08,exact_span_match,1,0.0,{},True
+pop-d08fed92ec601082eaa8,swp-d1e93be64088dee0b785,Ipsos,2026-08-25,2026-09-07,exact_span_match,1,0.0,{},True
 pop-d09df6cb6906083258d2,swp-06fdde8ff0119c2f4f41,Ipsos,2013-08-08,2013-08-27,exact_span_match,1,0.0,{},True
 pop-d0a2294ddc2ccdef6f89,swp-d3ce4fe6763b4c34e7a3,United Minds,2011-02-14,2011-03-13,exact_span_match,1,0.0,{},True
 pop-d0b93d3164f528ca1373,swp-343043e534f42cbe9ebc,Ipsos,2020-08-11,2020-08-23,exact_span_match,1,1.0,"{""KD"": 1.0, ""L"": 1.0}",True

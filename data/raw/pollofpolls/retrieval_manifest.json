@@ -1,8 +1,8 @@
 {
   "acquisition_diagnostics": [
     {
-      "byte_length": 206104,
-      "bytes": 206104,
+      "byte_length": 206188,
+      "bytes": 206188,
       "content_type": "text/csv",
       "final_host": "pollofpolls.se",
       "final_host_path": "pollofpolls.se/poll_img/data_table_tot.csv",
@@ -16,8 +16,8 @@
       "source_key": "timeseries"
     },
     {
-      "byte_length": 69395,
-      "bytes": 69395,
+      "byte_length": 69391,
+      "bytes": 69391,
       "content_type": "text/html; charset=UTF-8",
       "final_host": "pollofpolls.se",
       "final_host_path": "pollofpolls.se/",
@@ -31,8 +31,8 @@
       "source_key": "homepage"
     },
     {
-      "byte_length": 425642,
-      "bytes": 425642,
+      "byte_length": 425784,
+      "bytes": 425784,
       "content_type": "text/csv",
       "final_host": "pollofpolls.se",
       "final_host_path": "pollofpolls.se/poll_img/data_big_2.csv",
@@ -46,8 +46,8 @@
       "source_key": "party_M"
     },
     {
-      "byte_length": 398895,
-      "bytes": 398895,
+      "byte_length": 399025,
+      "bytes": 399025,
       "content_type": "text/csv",
       "final_host": "pollofpolls.se",
       "final_host_path": "pollofpolls.se/poll_img/data_big_3.csv",
@@ -61,8 +61,8 @@
       "source_key": "party_L"
     },
     {
-      "byte_length": 400539,
-      "bytes": 400539,
+      "byte_length": 400661,
+      "bytes": 400661,
       "content_type": "text/csv",
       "final_host": "pollofpolls.se",
       "final_host_path": "pollofpolls.se/poll_img/data_big_4.csv",
@@ -76,8 +76,8 @@
       "source_key": "party_C"
     },
     {
-      "byte_length": 399949,
-      "bytes": 399949,
+      "byte_length": 400075,
+      "bytes": 400075,
       "content_type": "text/csv",
       "final_host": "pollofpolls.se",
       "final_host_path": "pollofpolls.se/poll_img/data_big_5.csv",
@@ -91,8 +91,8 @@
       "source_key": "party_KD"
     },
     {
-      "byte_length": 425454,
-      "bytes": 425454,
+      "byte_length": 425596,
+      "bytes": 425596,
       "content_type": "text/csv",
       "final_host": "pollofpolls.se",
       "final_host_path": "pollofpolls.se/poll_img/data_big_6.csv",
@@ -106,8 +106,8 @@
       "source_key": "party_S"
     },
     {
-      "byte_length": 402064,
-      "bytes": 402064,
+      "byte_length": 402190,
+      "bytes": 402190,
       "content_type": "text/csv",
       "final_host": "pollofpolls.se",
       "final_host_path": "pollofpolls.se/poll_img/data_big_7.csv",
@@ -121,8 +121,8 @@
       "source_key": "party_V"
     },
     {
-      "byte_length": 402308,
-      "bytes": 402308,
+      "byte_length": 402432,
+      "bytes": 402432,
       "content_type": "text/csv",
       "final_host": "pollofpolls.se",
       "final_host_path": "pollofpolls.se/poll_img/data_big_8.csv",
@@ -136,8 +136,8 @@
       "source_key": "party_MP"
     },
     {
-      "byte_length": 415580,
-      "bytes": 415580,
+      "byte_length": 415712,
+      "bytes": 415712,
       "content_type": "text/csv",
       "final_host": "pollofpolls.se",
       "final_host_path": "pollofpolls.se/poll_img/data_big_9.csv",
@@ -151,8 +151,8 @@
       "source_key": "party_SD"
     },
     {
-      "byte_length": 268214,
-      "bytes": 268214,
+      "byte_length": 268308,
+      "bytes": 268308,
       "content_type": "text/csv",
       "final_host": "pollofpolls.se",
       "final_host_path": "pollofpolls.se/poll_img/data_big_10.csv",
@@ -166,8 +166,8 @@
       "source_key": "party_FI"
     },
     {
-      "byte_length": 269470,
-      "bytes": 269470,
+      "byte_length": 269578,
+      "bytes": 269578,
       "content_type": "text/plain; charset=utf-8",
       "final_host": "raw.githubusercontent.com",
       "final_host_path": "raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv",
@@ -209,266 +209,266 @@
     "party_S": "saved",
     "party_SD": "saved",
     "party_V": "saved",
-    "swedishpolls": "unchanged",
+    "swedishpolls": "saved",
     "swedishpolls_sources": "unchanged",
     "timeseries": "saved"
   },
   "sources": {
     "homepage": {
-      "bytes": 69395,
+      "bytes": 69391,
       "final_host": "pollofpolls.se",
       "final_path": "/",
       "final_url": "http://pollofpolls.se/",
       "http_headers": {
         "content-type": "text/html; charset=UTF-8",
-        "date": "Mon, 07 Sep 2026 18:43:02 GMT"
+        "date": "Tue, 08 Sep 2026 10:05:39 GMT"
       },
       "http_status": 200,
       "raw_filename": "homepage.html",
       "retrieval_method": "first_party_http",
       "retrieval_url": "http://pollofpolls.se/",
-      "retrieved_at": "2026-09-07T18:43:03+00:00",
+      "retrieved_at": "2026-09-08T10:05:39+00:00",
       "semantic_validation": "PASS",
-      "sha256": "c92dd43635abf6a739054b7841ad503cc03650b776bbaefaacf7c3ac8f78ee69",
+      "sha256": "be656808258586e56979be090ad5ca6872b4c4a4d0f905a27b96432c6a8c617a",
       "source_key": "homepage",
       "source_page_url": "http://pollofpolls.se/",
       "source_url": "http://pollofpolls.se/",
       "upstream_capture_at": null
     },
     "party_C": {
-      "bytes": 400539,
+      "bytes": 400661,
       "final_host": "pollofpolls.se",
       "final_path": "/poll_img/data_big_4.csv",
       "final_url": "http://pollofpolls.se/poll_img/data_big_4.csv",
       "http_headers": {
-        "content-length": "400539",
+        "content-length": "400661",
         "content-type": "text/csv",
-        "date": "Mon, 07 Sep 2026 18:43:08 GMT",
-        "etag": "\"61c9b-65ae4e986609d\"",
-        "last-modified": "Mon, 07 Sep 2026 13:51:17 GMT"
+        "date": "Tue, 08 Sep 2026 10:05:45 GMT",
+        "etag": "\"61d15-65ae936b4135b\"",
+        "last-modified": "Mon, 07 Sep 2026 18:59:11 GMT"
       },
       "http_status": 200,
       "raw_filename": "party_C.csv",
       "retrieval_method": "first_party_http",
       "retrieval_url": "http://pollofpolls.se/poll_img/data_big_4.csv",
-      "retrieved_at": "2026-09-07T18:43:09+00:00",
+      "retrieved_at": "2026-09-08T10:05:46+00:00",
       "semantic_validation": "PASS",
-      "sha256": "828d752437dcd968d51102486a7b045c59002432120a869bdf4ac84ff748794e",
+      "sha256": "dc357f4a2a1fa22d5d83495bdc68073fbd44e84b9ea5837a44c4b949dc72ba7d",
       "source_key": "party_C",
       "source_page_url": "http://pollofpolls.se/centerpartiet/",
       "source_url": "http://pollofpolls.se/poll_img/data_big_4.csv",
       "upstream_capture_at": null
     },
     "party_FI": {
-      "bytes": 268214,
+      "bytes": 268308,
       "final_host": "pollofpolls.se",
       "final_path": "/poll_img/data_big_10.csv",
       "final_url": "http://pollofpolls.se/poll_img/data_big_10.csv",
       "http_headers": {
-        "content-length": "268214",
+        "content-length": "268308",
         "content-type": "text/csv",
-        "date": "Mon, 07 Sep 2026 18:43:21 GMT",
-        "etag": "\"417b6-65ae4e9ae7a5a\"",
-        "last-modified": "Mon, 07 Sep 2026 13:51:19 GMT"
+        "date": "Tue, 08 Sep 2026 10:05:57 GMT",
+        "etag": "\"41814-65ae936de01da\"",
+        "last-modified": "Mon, 07 Sep 2026 18:59:14 GMT"
       },
       "http_status": 200,
       "raw_filename": "party_FI.csv",
       "retrieval_method": "first_party_http",
       "retrieval_url": "http://pollofpolls.se/poll_img/data_big_10.csv",
-      "retrieved_at": "2026-09-07T18:43:22+00:00",
+      "retrieved_at": "2026-09-08T10:05:58+00:00",
       "semantic_validation": "PASS",
-      "sha256": "a6ae1f1d7f29e1ba8abb2d49ed15bc322ec1f42ab0539cdd2a3268a356eb324f",
+      "sha256": "868f10ef880a67f4a5e72764b09ae7b1559195ad0b9083abf9991c3aa02986d9",
       "source_key": "party_FI",
       "source_page_url": "http://pollofpolls.se/feministiskt-initiativ/",
       "source_url": "http://pollofpolls.se/poll_img/data_big_10.csv",
       "upstream_capture_at": null
     },
     "party_KD": {
-      "bytes": 399949,
+      "bytes": 400075,
       "final_host": "pollofpolls.se",
       "final_path": "/poll_img/data_big_5.csv",
       "final_url": "http://pollofpolls.se/poll_img/data_big_5.csv",
       "http_headers": {
-        "content-length": "399949",
+        "content-length": "400075",
         "content-type": "text/csv",
-        "date": "Mon, 07 Sep 2026 18:43:10 GMT",
-        "etag": "\"61a4d-65ae4e98cfff2\"",
-        "last-modified": "Mon, 07 Sep 2026 13:51:17 GMT"
+        "date": "Tue, 08 Sep 2026 10:05:47 GMT",
+        "etag": "\"61acb-65ae936bc1a11\"",
+        "last-modified": "Mon, 07 Sep 2026 18:59:12 GMT"
       },
       "http_status": 200,
       "raw_filename": "party_KD.csv",
       "retrieval_method": "first_party_http",
       "retrieval_url": "http://pollofpolls.se/poll_img/data_big_5.csv",
-      "retrieved_at": "2026-09-07T18:43:11+00:00",
+      "retrieved_at": "2026-09-08T10:05:48+00:00",
       "semantic_validation": "PASS",
-      "sha256": "983b1cf0ec3c4c8c7262b341084de9e9e7f7849600b6868d10f6bcc1c4c361d0",
+      "sha256": "346ca8cbf22285069f543d3cd1247f928003c525afc7d214e3fe8b5c8cfac7a3",
       "source_key": "party_KD",
       "source_page_url": "http://pollofpolls.se/kristdemokraterna/",
       "source_url": "http://pollofpolls.se/poll_img/data_big_5.csv",
       "upstream_capture_at": null
     },
     "party_L": {
-      "bytes": 398895,
+      "bytes": 399025,
       "final_host": "pollofpolls.se",
       "final_path": "/poll_img/data_big_3.csv",
       "final_url": "http://pollofpolls.se/poll_img/data_big_3.csv",
       "http_headers": {
-        "content-length": "398895",
+        "content-length": "399025",
         "content-type": "text/csv",
-        "date": "Mon, 07 Sep 2026 18:43:06 GMT",
-        "etag": "\"6162f-65ae4e97fd0e9\"",
-        "last-modified": "Mon, 07 Sep 2026 13:51:16 GMT"
+        "date": "Tue, 08 Sep 2026 10:05:43 GMT",
+        "etag": "\"616b1-65ae936ad54c6\"",
+        "last-modified": "Mon, 07 Sep 2026 18:59:11 GMT"
       },
       "http_status": 200,
       "raw_filename": "party_L.csv",
       "retrieval_method": "first_party_http",
       "retrieval_url": "http://pollofpolls.se/poll_img/data_big_3.csv",
-      "retrieved_at": "2026-09-07T18:43:07+00:00",
+      "retrieved_at": "2026-09-08T10:05:44+00:00",
       "semantic_validation": "PASS",
-      "sha256": "d2989f2217253be67c7c39ed4fb323cbbd87c5073205ca565ef66bf1d7c1b280",
+      "sha256": "1d3fa2696b82cec35b33e29b3e04919cf05e04a6f7ff43510f978aaa12e62902",
       "source_key": "party_L",
       "source_page_url": "http://pollofpolls.se/liberalerna/",
       "source_url": "http://pollofpolls.se/poll_img/data_big_3.csv",
       "upstream_capture_at": null
     },
     "party_M": {
-      "bytes": 425642,
+      "bytes": 425784,
       "final_host": "pollofpolls.se",
       "final_path": "/poll_img/data_big_2.csv",
       "final_url": "http://pollofpolls.se/poll_img/data_big_2.csv",
       "http_headers": {
-        "content-length": "425642",
+        "content-length": "425784",
         "content-type": "text/csv",
-        "date": "Mon, 07 Sep 2026 18:43:04 GMT",
-        "etag": "\"67eaa-65ae4e9794cec\"",
-        "last-modified": "Mon, 07 Sep 2026 13:51:16 GMT"
+        "date": "Tue, 08 Sep 2026 10:05:40 GMT",
+        "etag": "\"67f38-65ae936a6a9b9\"",
+        "last-modified": "Mon, 07 Sep 2026 18:59:11 GMT"
       },
       "http_status": 200,
       "raw_filename": "party_M.csv",
       "retrieval_method": "first_party_http",
       "retrieval_url": "http://pollofpolls.se/poll_img/data_big_2.csv",
-      "retrieved_at": "2026-09-07T18:43:05+00:00",
+      "retrieved_at": "2026-09-08T10:05:41+00:00",
       "semantic_validation": "PASS",
-      "sha256": "8770a94c4a2de3d5533dee751700e7b9f9c973c0481b5b3b3e39ad0b7c78ea33",
+      "sha256": "c4a241f35b8daf2951468af2c133412d9abdc95eb1834c28a6439b941c913b0f",
       "source_key": "party_M",
       "source_page_url": "http://pollofpolls.se/opinionsutveckling-for-moderaterna/",
       "source_url": "http://pollofpolls.se/poll_img/data_big_2.csv",
       "upstream_capture_at": null
     },
     "party_MP": {
-      "bytes": 402308,
+      "bytes": 402432,
       "final_host": "pollofpolls.se",
       "final_path": "/poll_img/data_big_8.csv",
       "final_url": "http://pollofpolls.se/poll_img/data_big_8.csv",
       "http_headers": {
-        "content-length": "402308",
+        "content-length": "402432",
         "content-type": "text/csv",
-        "date": "Mon, 07 Sep 2026 18:43:16 GMT",
-        "etag": "\"62384-65ae4e9a17648\"",
-        "last-modified": "Mon, 07 Sep 2026 13:51:18 GMT"
+        "date": "Tue, 08 Sep 2026 10:05:53 GMT",
+        "etag": "\"62400-65ae936cffbf8\"",
+        "last-modified": "Mon, 07 Sep 2026 18:59:13 GMT"
       },
       "http_status": 200,
       "raw_filename": "party_MP.csv",
       "retrieval_method": "first_party_http",
       "retrieval_url": "http://pollofpolls.se/poll_img/data_big_8.csv",
-      "retrieved_at": "2026-09-07T18:43:17+00:00",
+      "retrieved_at": "2026-09-08T10:05:54+00:00",
       "semantic_validation": "PASS",
-      "sha256": "3479e78dea93eaaec9d0dd54b64ca23ead3395fb307571acd5fc32fdbac89c03",
+      "sha256": "a917c8a4adc3076dff2dd6f49f339ac544505eb6957229e6e8743671c4a077de",
       "source_key": "party_MP",
       "source_page_url": "http://pollofpolls.se/miljopartiet/",
       "source_url": "http://pollofpolls.se/poll_img/data_big_8.csv",
       "upstream_capture_at": null
     },
     "party_S": {
-      "bytes": 425454,
+      "bytes": 425596,
       "final_host": "pollofpolls.se",
       "final_path": "/poll_img/data_big_6.csv",
       "final_url": "http://pollofpolls.se/poll_img/data_big_6.csv",
       "http_headers": {
-        "content-length": "425454",
+        "content-length": "425596",
         "content-type": "text/csv",
-        "date": "Mon, 07 Sep 2026 18:43:12 GMT",
-        "etag": "\"67dee-65ae4e993f14f\"",
-        "last-modified": "Mon, 07 Sep 2026 13:51:18 GMT"
+        "date": "Tue, 08 Sep 2026 10:05:49 GMT",
+        "etag": "\"67e7c-65ae936c29e0e\"",
+        "last-modified": "Mon, 07 Sep 2026 18:59:12 GMT"
       },
       "http_status": 200,
       "raw_filename": "party_S.csv",
       "retrieval_method": "first_party_http",
       "retrieval_url": "http://pollofpolls.se/poll_img/data_big_6.csv",
-      "retrieved_at": "2026-09-07T18:43:13+00:00",
+      "retrieved_at": "2026-09-08T10:05:50+00:00",
       "semantic_validation": "PASS",
-      "sha256": "ae5cc5abddfa4efdcd49eb66bab73babeaaea6be74f845b81aa6088b64b71a8b",
+      "sha256": "a0775f03a36886d3dd8112d3035b54ff3912d3a7ec8cde7a944724b99be3958e",
       "source_key": "party_S",
       "source_page_url": "http://pollofpolls.se/socialdemokraterna/",
       "source_url": "http://pollofpolls.se/poll_img/data_big_6.csv",
       "upstream_capture_at": null
     },
     "party_SD": {
-      "bytes": 415580,
+      "bytes": 415712,
       "final_host": "pollofpolls.se",
       "final_path": "/poll_img/data_big_9.csv",
       "final_url": "http://pollofpolls.se/poll_img/data_big_9.csv",
       "http_headers": {
-        "content-length": "415580",
+        "content-length": "415712",
         "content-type": "text/csv",
-        "date": "Mon, 07 Sep 2026 18:43:19 GMT",
-        "etag": "\"6575c-65ae4e9a8159d\"",
-        "last-modified": "Mon, 07 Sep 2026 13:51:19 GMT"
+        "date": "Tue, 08 Sep 2026 10:05:55 GMT",
+        "etag": "\"657e0-65ae936d7d7b5\"",
+        "last-modified": "Mon, 07 Sep 2026 18:59:14 GMT"
       },
       "http_status": 200,
       "raw_filename": "party_SD.csv",
       "retrieval_method": "first_party_http",
       "retrieval_url": "http://pollofpolls.se/poll_img/data_big_9.csv",
-      "retrieved_at": "2026-09-07T18:43:20+00:00",
+      "retrieved_at": "2026-09-08T10:05:56+00:00",
       "semantic_validation": "PASS",
-      "sha256": "2908a4028425a58a20feb8da1254b68c96cb3f53066bc6cd8a6386c8e467b496",
+      "sha256": "16ab0ae5aecc97e5367e8930f6d1dc81a0ff3dd9e962035d1f1d6c12cac4c7a8",
       "source_key": "party_SD",
       "source_page_url": "http://pollofpolls.se/sverigedemokraterna/",
       "source_url": "http://pollofpolls.se/poll_img/data_big_9.csv",
       "upstream_capture_at": null
     },
     "party_V": {
-      "bytes": 402064,
+      "bytes": 402190,
       "final_host": "pollofpolls.se",
       "final_path": "/poll_img/data_big_7.csv",
       "final_url": "http://pollofpolls.se/poll_img/data_big_7.csv",
       "http_headers": {
-        "content-length": "402064",
+        "content-length": "402190",
         "content-type": "text/csv",
-        "date": "Mon, 07 Sep 2026 18:43:14 GMT",
-        "etag": "\"62290-65ae4e99acf24\"",
-        "last-modified": "Mon, 07 Sep 2026 13:51:18 GMT"
+        "date": "Tue, 08 Sep 2026 10:05:51 GMT",
+        "etag": "\"6230e-65ae936c906b2\"",
+        "last-modified": "Mon, 07 Sep 2026 18:59:13 GMT"
       },
       "http_status": 200,
       "raw_filename": "party_V.csv",
       "retrieval_method": "first_party_http",
       "retrieval_url": "http://pollofpolls.se/poll_img/data_big_7.csv",
-      "retrieved_at": "2026-09-07T18:43:15+00:00",
+      "retrieved_at": "2026-09-08T10:05:52+00:00",
       "semantic_validation": "PASS",
-      "sha256": "634f9ce1244548f4508aa9f7185fa707af8c90509abb048fd78931c09e7d385d",
+      "sha256": "235f350b4ff489cfc514a01a008b44a12733cd8d09120b83d158e4a96624c7f2",
       "source_key": "party_V",
       "source_page_url": "http://pollofpolls.se/vansterpartiet/",
       "source_url": "http://pollofpolls.se/poll_img/data_big_7.csv",
       "upstream_capture_at": null
     },
     "swedishpolls": {
-      "bytes": 269470,
+      "bytes": 269578,
       "final_host": "raw.githubusercontent.com",
       "final_path": "/MansMeg/SwedishPolls/master/Data/Polls.csv",
       "final_url": "https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv",
       "http_headers": {
-        "content-length": "269470",
+        "content-length": "269578",
         "content-type": "text/plain; charset=utf-8",
-        "date": "Mon, 07 Sep 2026 18:43:22 GMT",
-        "etag": "\"8791da0abe60ad29db530d420046a84e2a6621b2b7784595c2afb3cfab202fc5\""
+        "date": "Tue, 08 Sep 2026 10:05:59 GMT",
+        "etag": "\"f6f9934ed50e658ef3356025e94826a858bd65a109a8d687b881a8840b9bda03\""
       },
       "http_status": 200,
       "raw_filename": "swedishpolls_polls.csv",
       "retrieval_method": "direct_repository_http",
       "retrieval_url": "https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv",
-      "retrieved_at": "2026-09-07T06:34:46+00:00",
+      "retrieved_at": "2026-09-08T10:05:59+00:00",
       "semantic_validation": "PASS",
-      "sha256": "27012c05d1e948133a4a2558ec841df62c518b9122117a461ca1f8f6aa9d1608",
+      "sha256": "19ab9940f9c0e023022978f4c9ad49814beb198ce4bd6c410bb5cc6479e04801",
       "source_key": "swedishpolls",
       "source_page_url": "https://github.com/MansMeg/SwedishPolls/blob/master/Data/Polls.csv",
       "source_url": "https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv",
@@ -482,7 +482,7 @@
       "http_headers": {
         "content-length": "22726",
         "content-type": "text/plain; charset=utf-8",
-        "date": "Mon, 07 Sep 2026 18:43:23 GMT",
+        "date": "Tue, 08 Sep 2026 10:06:00 GMT",
         "etag": "\"8d575ef90c4f8cb29636a1541c97a85df5e5aa8d777ea99715aafdbcd5f725b2\""
       },
       "http_status": 200,
@@ -498,24 +498,24 @@
       "upstream_capture_at": null
     },
     "timeseries": {
-      "bytes": 206104,
+      "bytes": 206188,
       "final_host": "pollofpolls.se",
       "final_path": "/poll_img/data_table_tot.csv",
       "final_url": "http://pollofpolls.se/poll_img/data_table_tot.csv",
       "http_headers": {
-        "content-length": "206104",
+        "content-length": "206188",
         "content-type": "text/csv",
-        "date": "Mon, 07 Sep 2026 18:43:00 GMT",
-        "etag": "\"32518-65ae4e9d7f3a7\"",
-        "last-modified": "Mon, 07 Sep 2026 13:51:22 GMT"
+        "date": "Tue, 08 Sep 2026 10:05:36 GMT",
+        "etag": "\"3256c-65ae9370fdf9f\"",
+        "last-modified": "Mon, 07 Sep 2026 18:59:17 GMT"
       },
       "http_status": 200,
       "raw_filename": "pollofpolls_timeseries_source.dat",
       "retrieval_method": "first_party_http",
       "retrieval_url": "http://pollofpolls.se/poll_img/data_table_tot.csv",
-      "retrieved_at": "2026-09-07T18:43:01+00:00",
+      "retrieved_at": "2026-09-08T10:05:37+00:00",
       "semantic_validation": "PASS",
-      "sha256": "c9e979f2fc8684658472c7d4b7a9205ba124cb7dc61ef78962d925424c89e639",
+      "sha256": "299887f81efd1aa7c383eb53e2a328d913f4b41fb001928d92a48ff617535bd7",
       "source_key": "timeseries",
       "source_page_url": "http://pollofpolls.se/skattat-opinionslage-for-poll-of-polls-fran-och-med-15-september-2014/",
       "source_url": "http://pollofpolls.se/poll_img/data_table_tot.csv",
