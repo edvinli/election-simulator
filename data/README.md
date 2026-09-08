@@ -5,19 +5,19 @@ Swedish election project. It does **not** contain forecasting or simulation code
 
 ## Snapshot summary
 
-- Poll of Polls estimates: **4,373** daily observations,
-  2014-09-15 through 2026-09-04.
-- Reconstructed individual polls: **1,441** polls
-  (14,410 long-format rows), with interview spans from
+- Poll of Polls estimates: **4,374** daily observations,
+  2014-09-15 through 2026-09-05.
+- Reconstructed individual polls: **1,442** polls
+  (14,420 long-format rows), with interview spans from
   2009-01-02 through
-  2026-09-04.
+  2026-09-05.
 - Supplementary SwedishPolls dataset: **2,650** polls
   (26,500 long-format rows), published from
   1944-08-30 through
   2026-09-07; available interview spans run from
   1944-08-13 through
   2026-09-05.
-- Unique pollster/interview-span metadata matches: **1,187**;
+- Unique pollster/interview-span metadata matches: **1,188**;
   unmatched or ambiguous Pollofpolls polls: **254**.
 - Supplementary field coverage: publication date on
   **2,299** polls, interview span on
