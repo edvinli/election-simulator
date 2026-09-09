@@ -219,6 +219,9 @@ def load_certified_generation(
     # point built from this reports the generation's own source revision rather
     # than whatever the renderer happens to be running.
     manifest = {
+        # `_result_as_of` reads the date from the manifest, not from an
+        # attribute, so the certified as_of travels here.
+        "as_of": as_of,
         "source_git_commit": source_commit,
         "git_commit": source_commit,
         "model_version": publication_manifest.get("model_version"),
@@ -237,3 +240,61 @@ def load_certified_generation(
         as_of=as_of,
         source_git_commit=source_commit,
     )
+
+MODEL_INPUT_PATHS = (
+    "data/processed/pollofpolls/swedishpolls_individual_polls.csv",
+    "data/processed/pollofpolls/pollofpolls_timeseries.csv",
+    "data/processed/pollofpolls/individual_polls.csv",
+)
+
+
+def materialize_pinned_model_inputs(
+    repo_root: Path | str, *, source_git_commit: str, destination: Path | str
+) -> Path:
+    """Write the model inputs as they were at the certified revision.
+
+    Rendering must not read current `main`. The polling snapshot moves several
+    times a day, and a history curve reconstructed from newer inputs than the
+    forecast saw is not that forecast's history -- the reconstructed points
+    would be answering a different question from the certified point beside
+    them.
+
+    Returns the processed root to hand to the history builder. A missing input
+    at that revision is an error rather than a silent fall-through to whatever
+    the working tree holds.
+    """
+
+    repo = Path(repo_root)
+    processed = Path(destination) / "processed"
+    resolved = subprocess.run(
+        ["git", "rev-parse", "--verify", "--quiet", f"{source_git_commit}^{{commit}}"],
+        cwd=repo, capture_output=True, text=True, check=False,
+    )
+    if resolved.returncode != 0:
+        raise CertifiedGenerationError(
+            f"certified source revision {source_git_commit[:12]} is not in this "
+            "checkout, so the model inputs it used cannot be pinned"
+        )
+    written = 0
+    for relative in MODEL_INPUT_PATHS:
+        shown = subprocess.run(
+            ["git", "show", f"{source_git_commit}:{relative}"],
+            cwd=repo, capture_output=True, check=False,
+        )
+        if shown.returncode != 0:
+            # individual_polls.csv is not present in every revision; the two
+            # files the history builder actually reads are required.
+            if relative.endswith("individual_polls.csv") and "swedishpolls" not in relative:
+                continue
+            raise CertifiedGenerationError(
+                f"model input {relative} is absent at certified revision "
+                f"{source_git_commit[:12]}"
+            )
+        target = processed / Path(relative).relative_to("data/processed")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(shown.stdout)
+        written += 1
+    if written == 0:
+        raise CertifiedGenerationError(
+            f"no model inputs could be pinned at {source_git_commit[:12]}")
+    return processed

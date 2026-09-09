@@ -344,16 +344,29 @@ class WebsitePushGateTests(unittest.TestCase):
 
         source = Path(base.__file__).read_text(encoding="utf-8")
         calls = source.count("website_push_check(staged_site)")
-        self.assertEqual(calls, 2, "one call per publication mode")
-        dry_run_return = source.index('website["deployment"] = "dry-run"')
-        certify = source.index('f"chore: publish election forecast {as_of.isoformat()}"')
-        sync = source.index('f"chore: sync election forecast {generation}"')
-        first = source.index("website_push_check(staged_site)")
-        second = source.index("website_push_check(staged_site)", first + 1)
+        # Three call sites, one per path that can deploy a website: the
+        # dry-run branch, the committed publication path after certification,
+        # and `render_certified_generation`, which reaches the same gate when
+        # rendering runs on its own.
+        self.assertEqual(calls, 3, "one call per path that can deploy a website")
+
+        # Ordering is asserted inside `run_production_event` only. The
+        # renderer is defined earlier in the module, so a file-wide index would
+        # mistake its call for the publication path's first one.
+        publication = source[source.index("def run_production_event("):]
+        publication = publication[:publication.index("\ndef ")]
+        self.assertEqual(
+            publication.count("website_push_check(staged_site)"), 2,
+            "one call per publication mode",
+        )
+        dry_run_return = publication.index('website["deployment"] = "dry-run"')
+        certify = publication.index("_certify_generation(")
+        sync = publication.index('f"chore: sync election forecast {generation}"')
+        first = publication.index("website_push_check(staged_site)")
+        second = publication.index("website_push_check(staged_site)", first + 1)
         # The dry-run gate precedes that branch's return.
         self.assertLess(first, dry_run_return)
-        # The committed gate sits between the two commits: after the forecast
-        # is durable, before the website is pushed.
+        # The committed gate sits after certification and before the push.
         self.assertLess(certify, second)
         self.assertLess(second, sync)
 

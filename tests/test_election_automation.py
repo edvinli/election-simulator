@@ -2685,6 +2685,172 @@ time.sleep(60)
 
 
 
+class KilledBackfillRecoveryTests(unittest.TestCase):
+    """The 2026-09-09 incident, reproduced by actually killing the process.
+
+    A backfill *exception* is caught and tolerated, so raising one proves
+    nothing about that incident: what happened was the job timeout killing the
+    process inside the backfill, with nothing pushed. No handler runs for a
+    SIGKILL, so the surviving state is whatever had already reached the
+    remotes.
+
+    These tests publish in a real subprocess against real bare remotes, kill it
+    with SIGKILL at backfill entry -- after certification, before any history
+    commit -- and then recover from fresh clones with the authoritative
+    simulator disabled.
+    """
+
+    DRIVER = "tests.support.publish_until_backfill"
+
+    def _kill_at_backfill(self, root: Path, as_of: str) -> tuple[Path, Path, Path, Path]:
+        checkouts = root / "checkouts"
+        checkouts.mkdir()
+        source, site = ElectionAutomationTests._production_fixture(checkouts)
+        source_remote = root / "simulator.git"
+        site_remote = root / "website.git"
+        ElectionAutomationTests._publish_to_bare_remote(source, source_remote, "main")
+        ElectionAutomationTests._publish_to_bare_remote(site, site_remote, "master")
+
+        signal_path = root / "backfill-entered"
+        payload = json.dumps({
+            "source": str(source), "site": str(site), "as_of": as_of,
+            "signal": str(signal_path), "samples": 64,
+        })
+        completed = subprocess.run(
+            [sys.executable, "-m", self.DRIVER, payload],
+            cwd=REPOSITORY_ROOT, capture_output=True, text=True,
+        )
+        # SIGKILL, not a clean exit and not an exception.
+        self.assertEqual(completed.returncode, -signal.SIGKILL,
+                         f"rc={completed.returncode}\n{completed.stderr[-2000:]}")
+        self.assertTrue(signal_path.is_file(),
+                        f"backfill was never entered\n{completed.stderr[-2000:]}")
+        return source, site, source_remote, site_remote
+
+    def _assert_certified_and_unrendered(
+        self, source_remote: Path, site_remote: Path
+    ) -> str:
+        subjects = ElectionAutomationTests._remote_subjects(source_remote, "main")
+        self.assertTrue(
+            any(s.startswith("chore: publish election forecast") for s in subjects),
+            subjects,
+        )
+        # No render commit: the kill landed before history was committed.
+        self.assertFalse(
+            any(s.startswith("chore: render forecast history") for s in subjects),
+            subjects,
+        )
+        generation = ElectionAutomationTests._remote_pointer(
+            source_remote, "main")["publication_generation"]
+        # The website remote never saw it.
+        self.assertFalse(
+            any(s.startswith("chore: sync election forecast")
+                for s in ElectionAutomationTests._remote_subjects(site_remote, "master")),
+            "the website remote was updated despite the kill",
+        )
+        self.assertNotEqual(
+            ElectionAutomationTests._remote_pointer(
+                site_remote, "master")["publication_generation"],
+            generation,
+        )
+        return generation
+
+    def _render_from_fresh_clones(
+        self, root: Path, source_remote: Path, site_remote: Path, generation: str
+    ) -> Path:
+        fresh_source = ElectionAutomationTests._clone_from_remote(
+            source_remote, "main", root / "fresh-simulator")
+        fresh_site = ElectionAutomationTests._clone_from_remote(
+            site_remote, "master", root / "fresh-website")
+        self.assertEqual(ElectionAutomationTests._git_status(fresh_source), "")
+
+        # The old history is still there, and still belongs to the previous
+        # generation -- CERTIFIED_NOT_RENDERED, not RENDERED_NOT_DEPLOYED.
+        history = fresh_source / "files/election-simulator/history/coalition-timeseries.json"
+        self.assertTrue(history.is_file(), "the old history was lost")
+        self.assertNotEqual(base._history_generation(history), generation)
+        needs_mirror, probe = base._website_needs_recovery(
+            source_repo=fresh_source, site_repo=fresh_site)
+        self.assertFalse(needs_mirror, "a stale history must never be mirrored")
+        self.assertEqual(probe.get("render_state"), "CERTIFIED_NOT_RENDERED")
+
+        def must_not_simulate(**kwargs):
+            raise AssertionError("rendering must not run the authoritative simulator")
+
+        with patch(
+            "scripts.publication_pipeline.pipeline.DEFAULT_PROCESSED_ROOT",
+            fresh_source / "data/processed",
+        ), patch("scripts.simulator.engine.simulate_election", must_not_simulate):
+            rendered = base.render_certified_generation(
+                root=fresh_source,
+                site=fresh_site,
+                generation=generation,
+                commit=True,
+                push=True,
+                website_check_fn=lambda _root: {"status": "PASS"},
+                website_push_check_fn=lambda _root: {"status": "PASS"},
+            )
+        self.assertEqual(rendered["status"], "RENDERED_AND_DEPLOYED", rendered)
+        self.assertEqual(
+            ElectionAutomationTests._remote_pointer(
+                site_remote, "master")["publication_generation"],
+            generation,
+        )
+        # And the rendered history names the generation it belongs to.
+        self.assertEqual(
+            base._history_generation(
+                fresh_source / "files/election-simulator/history/coalition-timeseries.json"),
+            generation,
+        )
+        return fresh_site
+
+    def test_a_kill_at_backfill_leaves_a_certified_renderable_generation(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _source, _site, source_remote, site_remote = self._kill_at_backfill(
+                root, FORECAST_AS_OF)
+            generation = self._assert_certified_and_unrendered(source_remote, site_remote)
+            self._render_from_fresh_clones(root, source_remote, site_remote, generation)
+
+    def test_election_day_certification_then_a_later_rendering_retry(self) -> None:
+        """September 13: certified on election day, rendered afterwards.
+
+        Amendment 007 exists so this is possible at all -- amendment 004's
+        window would have denied this generation its draws. Rendering is also
+        not date-restricted: creating a forecast after election day is refused,
+        but rendering one certified on it must still work.
+        """
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _source, _site, source_remote, site_remote = self._kill_at_backfill(
+                root, "2026-09-13")
+            generation = self._assert_certified_and_unrendered(source_remote, site_remote)
+            self.assertTrue(generation.startswith("20260913T"), generation)
+            self._render_from_fresh_clones(root, source_remote, site_remote, generation)
+
+    def test_a_stale_rendering_attempt_cannot_replace_a_newer_deployment(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _source, _site, source_remote, site_remote = self._kill_at_backfill(
+                root, FORECAST_AS_OF)
+            generation = self._assert_certified_and_unrendered(source_remote, site_remote)
+            fresh_site = self._render_from_fresh_clones(
+                root, source_remote, site_remote, generation)
+            fresh_source = root / "fresh-simulator"
+
+            # The website now serves `generation`. A retry for an older one --
+            # a rendering attempt that was queued behind this - must refuse.
+            older = "20260101T000000Z-0000aaaa"
+            with self.assertRaises(AutomationError) as ctx:
+                base._reject_stale_render(site_repo=fresh_site, generation=older)
+            self.assertIn("newer than", str(ctx.exception))
+            # And the same generation is still allowed, so the guard is not
+            # simply refusing everything.
+            base._reject_stale_render(site_repo=fresh_site, generation=generation)
+            self.assertTrue((fresh_source).is_dir())
+
+
 class CertifiedGenerationLoaderTests(unittest.TestCase):
     """Loading a certified generation for rendering, and refusing the rest.
 

@@ -62,6 +62,10 @@ from scripts.site_publisher.publisher import (
     publish_generation_to_site,
     sync_history_to_site,
 )
+from scripts.rendering import (
+    load_certified_generation,
+    materialize_pinned_model_inputs,
+)
 from scripts.static_exporter import (
     validate_publication_version,
     validate_published_directory,
@@ -1531,6 +1535,206 @@ def _website_needs_recovery(*, source_repo: Path, site_repo: Path) -> tuple[bool
     return needs_recovery, source
 
 
+def _reject_stale_render(
+    *, site_repo: Path, generation: str
+) -> None:
+    """Refuse to replace a website deployment newer than what we are rendering.
+
+    Generation ids are UTC timestamps followed by a payload prefix, so they
+    order lexicographically by publication instant. A rendering retry that was
+    queued behind a newer certification must not walk the website backwards:
+    the retry is stale, not the deployment.
+    """
+
+    site_publication = site_repo / SITE_PUBLICATION_RELATIVE
+    try:
+        deployed = _certified_current_generation(site_publication)["generation"]
+    except (AutomationError, OSError, ValueError):
+        return
+    if str(deployed) > generation:
+        raise AutomationError(
+            f"website already serves generation {deployed}, which is newer than "
+            f"{generation}; refusing to publish a stale rendering"
+        )
+
+
+def render_certified_generation(
+    *,
+    root: Path,
+    site: Path,
+    generation: str,
+    certification_commit: str | None = None,
+    election_date: date | str = ELECTION_DAY,
+    history_workers: int | None = None,
+    website_check_fn: Callable[[Path], dict[str, Any]] | None = None,
+    website_push_check_fn: Callable[[Path], dict[str, Any]] | None = None,
+    commit: bool = False,
+    push: bool = False,
+    source_push_ref: str = "main",
+    website_push_ref: str = "master",
+    stage_callback: StageCallback | None = _log_stage,
+) -> dict[str, Any]:
+    """Render and deploy an already-certified generation.
+
+    The second stage of publication, callable on its own. It consumes an
+    explicit generation -- never "whatever is latest" -- and never runs the
+    authoritative simulator: the certified current point comes from that
+    generation's archived joint draws. Historical reconstruction and the
+    projections may simulate, because those are presentation of history rather
+    than the certified forecast.
+
+    Date restrictions on *creating* a forecast do not apply here. Rendering a
+    generation certified on election day must remain possible after it, which
+    is why nothing in this path calls `guard_election_date`.
+    """
+
+    certified = load_certified_generation(
+        root, generation=generation, certification_commit=certification_commit)
+    election = election_date if isinstance(election_date, date) else date.fromisoformat(str(election_date))
+    _reject_stale_render(site_repo=site, generation=generation)
+
+    publication_destination = root / "files" / "election-simulator"
+    history_destination = publication_destination / "history" / "coalition-timeseries.json"
+    if not history_destination.is_file():
+        raise AutomationError(
+            f"Existing history artifact is required: {history_destination}")
+    existing_history = _load_history(history_destination)
+    archive_destination = root / "data" / "processed" / "prospective_forecasts"
+
+    result: dict[str, Any] = {
+        "generation": generation,
+        "certification_commit": certification_commit,
+        "source_git_commit": certified.source_git_commit,
+        "status": "RENDER_STAGED",
+    }
+    with tempfile.TemporaryDirectory(prefix="election-render-") as temporary_name:
+        temporary = Path(temporary_name)
+        # Pinned to the certified revision, not current main: a curve
+        # reconstructed from newer polling than the forecast saw is not that
+        # forecast's history.
+        with _timed_stage("pinned model inputs", stage_callback):
+            processed_root = materialize_pinned_model_inputs(
+                root,
+                source_git_commit=certified.source_git_commit,
+                destination=temporary / "pinned",
+            )
+        poll_file = processed_root / "pollofpolls" / "swedishpolls_individual_polls.csv"
+        timeseries_file = processed_root / "pollofpolls" / "pollofpolls_timeseries.csv"
+
+        def _log_backfill_plan(dates: int, workers: int) -> None:
+            _log_stage("history curve backfill", f"START dates={dates} workers={workers}")
+
+        with _timed_stage("history curve backfill", stage_callback):
+            try:
+                history_for_update, backfilled = backfill_reconstructed_curve(
+                    existing_history,
+                    model_data_dir=processed_root,
+                    poll_file=poll_file,
+                    timeseries_file=timeseries_file,
+                    archive_dir=archive_destination,
+                    election_date=election,
+                    workers=resolve_history_workers(history_workers),
+                    workload_callback=_log_backfill_plan,
+                )
+            except Exception as error:  # noqa: BLE001 - the curve never blocks
+                history_for_update = existing_history
+                backfilled = []
+                _log_stage("history curve backfill", f"SKIPPED {error}")
+        result["backfilled"] = [d.isoformat() for d in backfilled]
+
+        with _timed_stage("history update", stage_callback):
+            # `certified` duck-types the certified SimulationResult, so the
+            # current point is built from the archived joint draws and is exact.
+            history = update_history_with_production_result(
+                history_for_update,
+                certified,
+                poll_file=poll_file,
+                timeseries_file=timeseries_file,
+                archive_dir=archive_destination,
+                election_date=election,
+                publication_generation=generation,
+                deterministic_payload_sha256=certified.manifest[
+                    "deterministic_payload_sha256"],
+                generated_at_utc=str(
+                    certified.publication_manifest.get("generated_at_utc") or ""),
+                model_commit=certified.source_git_commit,
+                source_worktree_clean=True,
+            )
+        staged_history = temporary / "coalition-timeseries.json"
+        write_history_json(staged_history, history)
+        validate_history_contract(_load_json_object(staged_history))
+
+        website_check = website_check_fn or run_website_checks
+        website_push_check = (
+            website_push_check_fn or website_check_fn or run_website_push_checks)
+        staged_site = temporary / "website"
+        _copy_site_tree(site, staged_site)
+        website = _stage_site(
+            site_root=staged_site,
+            staged_publication=publication_destination,
+            staged_history=staged_history,
+            generation=generation,
+            website_check_fn=website_check,
+            stage_callback=stage_callback,
+        )
+        website["push_gate"] = website_push_check(staged_site)
+        result.update(website)
+
+        if not commit:
+            result["status"] = "RENDER_STAGED_NOT_INSTALLED"
+            result["deployment"] = "dry-run"
+            return result
+
+        _copy_file_atomic(staged_history, history_destination)
+        validate_history_contract(_load_json_object(history_destination))
+        _git_commit_paths(
+            root,
+            [SOURCE_HISTORY_RELATIVE],
+            f"chore: render forecast history {generation}",
+            commit=True,
+            push=push,
+            push_ref=source_push_ref,
+        )
+        website_pointer = site / SITE_PUBLICATION_RELATIVE / "current.json"
+        website_pointer_before = _capture_pointer(website_pointer)
+        try:
+            result.update(_install_site_outputs(
+                site_repo=site,
+                source_publication=publication_destination,
+                source_history=history_destination,
+                generation=generation,
+                update_pointer=True,
+            ))
+            validate_published_directory(site / SITE_PUBLICATION_RELATIVE)
+            validate_history_contract(
+                _load_json_object(site / SITE_HISTORY_RELATIVE))
+            _verify_website_artifacts(
+                source_publication=publication_destination,
+                source_history=history_destination,
+                site_root=site,
+                generation=generation,
+            )
+        except Exception:
+            try:
+                _restore_pointer(website_pointer, website_pointer_before)
+            except Exception as restore_error:
+                raise AutomationError(
+                    "failed to restore the website pointer after a failed render"
+                ) from restore_error
+            raise
+        _git_commit_paths(
+            site,
+            ["files/election-simulator"],
+            f"chore: sync election forecast {generation}",
+            commit=True,
+            push=push,
+            push_ref=website_push_ref,
+        )
+        result["status"] = "RENDERED_AND_DEPLOYED"
+        result["deployment"] = "PUSHED" if push else "COMMITTED_NOT_PUSHED"
+        return result
+
+
 def _recover_website_from_source(
     *,
     source_repo: Path,
@@ -2460,16 +2664,56 @@ def run_automation(
                         push=effective_push,
                     )
             if recovery is None and source_is_certified:
-                # `_website_needs_recovery` declines to mirror when the
-                # simulator's history predates the certified generation. That
-                # is a real, actionable state -- certified but not rendered --
-                # and must not be reported as a healthy no-op.
+                # `_website_needs_recovery` declines to MIRROR when the
+                # simulator's history predates the certified generation --
+                # mirroring would deploy an older forecast's curve. The fix is
+                # to render, which is a different action, so it is routed here
+                # rather than reported as a healthy no-op.
                 probed, probe = _website_needs_recovery(
                     source_repo=root, site_repo=site)
                 if not probed and probe.get("render_state") == "CERTIFIED_NOT_RENDERED":
-                    summary.recovery_status = "CERTIFIED_NOT_RENDERED"
-                    summary.deployment_status = "WEBSITE_STALE_PENDING_RENDER"
-                    summary.publication_generation = str(probe.get("generation", "NONE"))
+                    pending = str(probe.get("generation", ""))
+                    summary.publication_generation = pending or "NONE"
+                    try:
+                        rendered = render_certified_generation(
+                            root=root,
+                            site=site,
+                            generation=pending,
+                            election_date=election,
+                            history_workers=history_workers,
+                            website_check_fn=website_check_fn,
+                            website_push_check_fn=website_push_check_fn,
+                            commit=effective_commit,
+                            push=effective_push,
+                            stage_callback=stage_callback,
+                        )
+                    except Exception as error:  # noqa: BLE001 - one summary
+                        # The forecast stays certified; only its presentation
+                        # failed, and that distinction is the whole point.
+                        summary.recovery_status = "CERTIFIED_NOT_RENDERED"
+                        summary.deployment_status = "RENDER_FAILED"
+                        summary.failure = str(error)
+                    else:
+                        summary.recovery_status = (
+                            "WEBSITE_RENDERED" if effective_commit
+                            else "WEBSITE_RENDER_STAGED"
+                        )
+                        summary.deployment_status = str(
+                            rendered.get("deployment", "STAGED_NOT_INSTALLED"))
+                        summary.website_commit = (
+                            get_git_commit_hash(site) if effective_commit
+                            else "NOT_COMMITTED"
+                        )
+                        # Deliberately NOT assigned to `recovery`: the block
+                        # below labels its outcome WEBSITE_RECOVERED, and a
+                        # render is not a mirror. Reporting them apart is the
+                        # point -- one rebuilt the curve, the other copied it.
+                        return AutomationResult(
+                            status="WEBSITE_RENDERED",
+                            summary=summary,
+                            polling=polling,
+                            website=rendered,
+                        )
             if recovery is not None:
                 summary.recovery_status = "WEBSITE_RECOVERED" if effective_commit else "WEBSITE_RECOVERY_STAGED"
                 summary.publication_generation = str(recovery.get("generation", "NONE"))
@@ -2660,6 +2904,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         "DISABLED_BY_REPOSITORY_KILL_SWITCH",
         "DEFERRED_BENCHMARK_WINDOW",
         "WEBSITE_RECOVERED",
+        # A render that deployed is a success, exactly as a mirror is.
+        "WEBSITE_RENDERED",
     } else 1
 
 
