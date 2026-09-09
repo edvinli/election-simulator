@@ -8,6 +8,7 @@ from datetime import date
 import os
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import patch
 import tempfile
 import unittest
 
@@ -830,6 +831,58 @@ class HistoryBackfillWorkersTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             resolve_history_workers("four")
 
+    def test_build_history_caps_the_request_itself(self) -> None:
+        """The cap belongs to the execution, not to one caller's diligence.
+
+        `resolve_history_workers` was applied by the publication path only,
+        which left the CLI with an explicit `--workers` and any direct caller
+        free to oversubscribe a smaller machine -- and made this class's
+        equivalence test machine-dependent, since it asked for four workers and
+        expected the capped number. Sizing the pool through the resolver at the
+        one place the pool is created fixes both.
+
+        Asserted with a patched core count so the assertion means the same
+        thing on a laptop and on a two-core runner. No simulation runs: the
+        workload callback reports the resolved count before any work starts,
+        and an injected runner keeps every date on the serial seam.
+        """
+
+        for cores, requested, expected in ((2, 64, 2), (2, 1, 1), (8, 4, 4)):
+            with self.subTest(cores=cores, requested=requested):
+                seen: list[tuple[int, int]] = []
+                votes, seats = ForecastHistoryTests._matrices()
+
+                def runner(*, as_of: str, election_date: str, samples: int, seed: int):
+                    return SimpleNamespace(
+                        vote_shares_matrix=votes,
+                        seats_matrix=seats,
+                        manifest={"source_git_commit": "8" * 40},
+                    )
+
+                with patch.object(os, "cpu_count", return_value=cores):
+                    self.assertEqual(resolve_history_workers(requested), expected)
+                    # Called directly rather than through `_build`, whose 300
+                    # real draws are unrelated to what is being asserted here.
+                    build_history(
+                        election_date=self.ELECTION,
+                        dates=list(self.DATES),
+                        samples=4,
+                        production_latest_samples=4,
+                        seed=self.SEED,
+                        poll_file=self.POLL_FILE,
+                        timeseries_file=self.TIMESERIES,
+                        archive_dir=None,
+                        workers=requested,
+                        simulation_runner=runner,
+                        workload_callback=lambda dates, workers: seen.append(
+                            (dates, workers)),
+                    )
+                # An injected runner forces the serial seam, so the *effective*
+                # count is 1 by design. What matters here is that nothing
+                # raised and no pool wider than the machine was ever sized;
+                # the resolved value is asserted directly above.
+                self.assertEqual(seen, [(len(self.DATES), 1)], seen)
+
     def test_the_same_seed_and_inputs_give_the_same_artifact_either_way(self) -> None:
         """The whole justification for enabling parallelism in production.
 
@@ -838,6 +891,19 @@ class HistoryBackfillWorkersTests(unittest.TestCase):
         diagnostics -- fails, not only a difference this test thought to name.
         """
 
+        # What the request resolves to on *this* machine, asked of the resolver
+        # rather than restated as min(4, cpu_count) here. A machine with fewer
+        # than two usable cores cannot run this comparison at all: the request
+        # resolves to serial, and "parallel equals serial" would then be true
+        # by tautology rather than by evidence.
+        requested = PRODUCTION_HISTORY_WORKERS
+        effective = resolve_history_workers(requested)
+        if effective < 2:
+            self.skipTest(
+                f"{os.cpu_count()} usable core(s): the parallel path cannot be "
+                "exercised here, and passing without it would prove nothing"
+            )
+
         serial_plan: list[tuple[int, int]] = []
         parallel_plan: list[tuple[int, int]] = []
         serial = self._build(
@@ -845,7 +911,7 @@ class HistoryBackfillWorkersTests(unittest.TestCase):
             workload_callback=lambda dates, workers: serial_plan.append((dates, workers)),
         )
         parallel = self._build(
-            workers=4,
+            workers=requested,
             workload_callback=lambda dates, workers: parallel_plan.append((dates, workers)),
         )
         # Without this the test could pass vacuously: a request that quietly
@@ -853,9 +919,12 @@ class HistoryBackfillWorkersTests(unittest.TestCase):
         self.assertEqual(serial_plan, [(len(self.DATES), 1)])
         self.assertEqual(
             parallel_plan,
-            [(len(self.DATES), min(4, os.cpu_count() or 1))],
+            [(len(self.DATES), effective)],
             "the parallel path was not entered, so equivalence proves nothing",
         )
+        # Belt and braces: whatever the machine, more than one worker really
+        # did the work.
+        self.assertGreater(parallel_plan[0][1], 1)
         self.assertEqual(
             serial["deterministic_content_sha256"],
             parallel["deterministic_content_sha256"],

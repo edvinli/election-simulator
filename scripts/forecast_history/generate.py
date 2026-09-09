@@ -1015,7 +1015,14 @@ def build_history(
         dates_to_simulate.append((point_date, requested_samples))
 
     computed_results: dict[date, tuple[np.ndarray, np.ndarray, Any]] = {}
-    workers_count = max(1, int(workers)) if isinstance(workers, int) else 1
+    # Resolved here, at the one place the pool is actually sized, rather than
+    # in each caller. `resolve_history_workers` was already applied by the
+    # publication path, which left every other entry point -- the CLI with an
+    # explicit `--workers`, and any direct caller -- free to oversubscribe a
+    # smaller machine. Applying it at this boundary makes the cap a property of
+    # the execution rather than of one caller's diligence, and it is idempotent
+    # for anything the publication path has already resolved.
+    workers_count = resolve_history_workers(workers if workers is not None else None)
     # An injected runner keeps every date on the serial seam: the parallel path
     # sends work to a subprocess, which cannot see a caller's closure.
     parallel = workers_count > 1 and simulation_runner is None and len(dates_to_simulate) > 1
