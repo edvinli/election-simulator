@@ -62,6 +62,10 @@ from scripts.site_publisher.publisher import (
     publish_generation_to_site,
     sync_history_to_site,
 )
+from scripts.rendering import (
+    load_certified_generation,
+    materialize_pinned_model_inputs,
+)
 from scripts.static_exporter import (
     validate_publication_version,
     validate_published_directory,
@@ -86,13 +90,16 @@ ELECTION_DAY = date.fromisoformat(DEFAULT_ELECTION_DATE)
 DAILY_SCHEDULE_UTC = "0 4 * * *"
 INTRADAY_SCHEDULE_UTC = "0 6,8,10,12,14,16,18,20 * * *"
 PRODUCTION_SAMPLES = 100_000
+#: Amendment 004's bounded retention window, kept as the historical record.
+#: Amendment 007 extended retention to every newly certified generation, so
+#: these no longer gate whether a sidecar is written.
 BENCHMARK_SIDECAR_START = date(2026, 9, 4)
 BENCHMARK_SIDECAR_END = date(2026, 9, 12)
 # publish_if_stale is the fallback boundary: it may publish, but only when
 # today's mandatory recalculation is missing.  It is a separate mode rather
 # than a flag on publish so the kill switch and the run-type label can treat
 # an automated trigger differently from an operator's explicit dispatch.
-VALID_MODES = ("probe", "dry_run", "publish", "publish_if_stale")
+VALID_MODES = ("probe", "dry_run", "publish", "publish_if_stale", "render")
 MUTATING_MODES = ("publish", "publish_if_stale")
 AUTOMATION_ENABLED_ENV = "ELECTION_AUTOMATION_ENABLED"
 SOURCE_PROVENANCE_DIRECT_LIVE = "DIRECT_LIVE_FETCH"
@@ -206,6 +213,12 @@ class AutomationSummary:
     website_commit: str = "NONE"
     deployment_status: str = "NOT_RUN"
     recovery_status: str = "NONE"
+    #: Set the instant certification completes, so a later rendering failure
+    #: still reports "forecast certified; website update failed" rather than a
+    #: bare FAILED that reads as "the forecast failed".
+    certification_status: str = "NOT_REACHED"
+    certification_commit: str = "NONE"
+    certification_remote_verified: bool = False
     daily_publication_status: str = "UNKNOWN"
     failure: str | None = None
 
@@ -225,6 +238,8 @@ class AutomationSummary:
             f"Website commit: {self.website_commit}",
             f"Deployment status: {self.deployment_status}",
             f"Recovery status: {self.recovery_status}",
+            f"Certification: {self.certification_status}"
+            + (" (remote verified)" if self.certification_remote_verified else ""),
             f"Daily publication: {self.daily_publication_status}",
         ]
         if self.failure:
@@ -1422,6 +1437,36 @@ def _has_unpublished_polling_commit(repo: Path, publication_dir: Path) -> bool:
     return not _is_ancestor(repo, latest_input_commit, source_commit)
 
 
+def _history_generation(path: Path) -> str | None:
+    """The generation a rendered history artifact says it belongs to.
+
+    Rendering output has to identify its own generation, or "is this history
+    the one for the certified forecast?" cannot be answered and a stale curve
+    can be deployed against a new forecast.
+    """
+
+    try:
+        payload = _load_json_object(path)
+    except (OSError, ValueError, AutomationError):
+        return None
+    series = payload.get("series")
+    if not isinstance(series, list):
+        return None
+    # The certified point is the one the forecast published; the reconstructed
+    # points behind it belong to no single generation. Each point already
+    # carries `publication_generation`, so this reads the artifact's own claim
+    # rather than adding a new field to the contract.
+    certified = [
+        point for point in series
+        if isinstance(point, Mapping)
+        and point.get("provenance") == "current_production"
+    ]
+    if len(certified) != 1:
+        return None
+    value = certified[0].get("publication_generation")
+    return str(value) if value not in (None, "") else None
+
+
 def _website_needs_recovery(*, source_repo: Path, site_repo: Path) -> tuple[bool, dict[str, Any]]:
     """Compare durable source/site artifacts for a no-simulation recovery."""
 
@@ -1452,13 +1497,242 @@ def _website_needs_recovery(*, source_repo: Path, site_repo: Path) -> tuple[bool
             ).read_bytes() != (source_version / filename).read_bytes():
                 needs_recovery = True
                 break
-    if (
-        not site_history.is_file()
-        or not source_history.is_file()
+    # History is a rendering output, so a byte comparison alone cannot say
+    # whether recovery is warranted. The simulator's copy may be OLDER than the
+    # certified generation -- that is the normal state after certification
+    # pushed without rendering -- and copying it to the website would deploy a
+    # history that does not belong to the new generation.
+    #
+    # So the two states are separated. Both are recoverable, but only one is
+    # recoverable by mirroring:
+    #
+    #   CERTIFIED_NOT_RENDERED  the source history predates the certified
+    #                           generation. Nothing to mirror; the fix is to
+    #                           render, which needs the backfill.
+    #   RENDERED_NOT_DEPLOYED   the source history names the certified
+    #                           generation and the website does not have it.
+    #                           Mirroring is exactly right.
+    source_history_generation = _history_generation(source_history)
+    site_history_generation = _history_generation(site_history)
+    rendered = source_history_generation == generation
+    if not rendered:
+        source["render_state"] = "CERTIFIED_NOT_RENDERED"
+        source["source_history_generation"] = source_history_generation
+        # Not mirrorable -- mirroring would deploy a history that predates the
+        # certified generation. It is emphatically NOT "nothing to do" either:
+        # the website is stale and the fix is to render, which needs the
+        # backfill and so a renderer entry point. Until that exists the state
+        # is surfaced rather than swallowed, because a silent
+        # NO_PUBLICATION_NEEDED here leaves a stale site with no signal.
+        return False, source
+    source["render_state"] = "RENDERED_NOT_DEPLOYED" if (
+        site_history_generation != generation
+        or not site_history.is_file()
         or site_history.read_bytes() != source_history.read_bytes()
-    ):
+    ) else "DEPLOYED"
+    if source["render_state"] == "RENDERED_NOT_DEPLOYED":
         needs_recovery = True
     return needs_recovery, source
+
+
+def _reject_stale_render(
+    *, site_repo: Path, generation: str
+) -> None:
+    """Refuse to replace a website deployment newer than what we are rendering.
+
+    Generation ids are UTC timestamps followed by a payload prefix, so they
+    order lexicographically by publication instant. A rendering retry that was
+    queued behind a newer certification must not walk the website backwards:
+    the retry is stale, not the deployment.
+    """
+
+    site_publication = site_repo / SITE_PUBLICATION_RELATIVE
+    try:
+        deployed = _certified_current_generation(site_publication)["generation"]
+    except (AutomationError, OSError, ValueError):
+        return
+    if str(deployed) > generation:
+        raise AutomationError(
+            f"website already serves generation {deployed}, which is newer than "
+            f"{generation}; refusing to publish a stale rendering"
+        )
+
+
+def render_certified_generation(
+    *,
+    root: Path,
+    site: Path,
+    generation: str,
+    certification_commit: str | None = None,
+    election_date: date | str = ELECTION_DAY,
+    history_workers: int | None = None,
+    website_check_fn: Callable[[Path], dict[str, Any]] | None = None,
+    website_push_check_fn: Callable[[Path], dict[str, Any]] | None = None,
+    commit: bool = False,
+    push: bool = False,
+    source_push_ref: str = "main",
+    website_push_ref: str = "master",
+    stage_callback: StageCallback | None = _log_stage,
+) -> dict[str, Any]:
+    """Render and deploy an already-certified generation.
+
+    The second stage of publication, callable on its own. It consumes an
+    explicit generation -- never "whatever is latest" -- and never runs the
+    authoritative simulator: the certified current point comes from that
+    generation's archived joint draws. Historical reconstruction and the
+    projections may simulate, because those are presentation of history rather
+    than the certified forecast.
+
+    Date restrictions on *creating* a forecast do not apply here. Rendering a
+    generation certified on election day must remain possible after it, which
+    is why nothing in this path calls `guard_election_date`.
+    """
+
+    certified = load_certified_generation(
+        root, generation=generation, certification_commit=certification_commit)
+    election = election_date if isinstance(election_date, date) else date.fromisoformat(str(election_date))
+    _reject_stale_render(site_repo=site, generation=generation)
+
+    publication_destination = root / "files" / "election-simulator"
+    history_destination = publication_destination / "history" / "coalition-timeseries.json"
+    if not history_destination.is_file():
+        raise AutomationError(
+            f"Existing history artifact is required: {history_destination}")
+    existing_history = _load_history(history_destination)
+    archive_destination = root / "data" / "processed" / "prospective_forecasts"
+
+    result: dict[str, Any] = {
+        "generation": generation,
+        "certification_commit": certification_commit,
+        "source_git_commit": certified.source_git_commit,
+        "status": "RENDER_STAGED",
+    }
+    with tempfile.TemporaryDirectory(prefix="election-render-") as temporary_name:
+        temporary = Path(temporary_name)
+        # Pinned to the certified revision, not current main: a curve
+        # reconstructed from newer polling than the forecast saw is not that
+        # forecast's history.
+        with _timed_stage("pinned model inputs", stage_callback):
+            processed_root = materialize_pinned_model_inputs(
+                root,
+                source_git_commit=certified.source_git_commit,
+                destination=temporary / "pinned",
+            )
+        poll_file = processed_root / "pollofpolls" / "swedishpolls_individual_polls.csv"
+        timeseries_file = processed_root / "pollofpolls" / "pollofpolls_timeseries.csv"
+
+        def _log_backfill_plan(dates: int, workers: int) -> None:
+            _log_stage("history curve backfill", f"START dates={dates} workers={workers}")
+
+        with _timed_stage("history curve backfill", stage_callback):
+            try:
+                history_for_update, backfilled = backfill_reconstructed_curve(
+                    existing_history,
+                    model_data_dir=processed_root,
+                    poll_file=poll_file,
+                    timeseries_file=timeseries_file,
+                    archive_dir=archive_destination,
+                    election_date=election,
+                    workers=resolve_history_workers(history_workers),
+                    workload_callback=_log_backfill_plan,
+                )
+            except Exception as error:  # noqa: BLE001 - the curve never blocks
+                history_for_update = existing_history
+                backfilled = []
+                _log_stage("history curve backfill", f"SKIPPED {error}")
+        result["backfilled"] = [d.isoformat() for d in backfilled]
+
+        with _timed_stage("history update", stage_callback):
+            # `certified` duck-types the certified SimulationResult, so the
+            # current point is built from the archived joint draws and is exact.
+            history = update_history_with_production_result(
+                history_for_update,
+                certified,
+                poll_file=poll_file,
+                timeseries_file=timeseries_file,
+                archive_dir=archive_destination,
+                election_date=election,
+                publication_generation=generation,
+                deterministic_payload_sha256=certified.manifest[
+                    "deterministic_payload_sha256"],
+                generated_at_utc=str(
+                    certified.publication_manifest.get("generated_at_utc") or ""),
+                model_commit=certified.source_git_commit,
+                source_worktree_clean=True,
+            )
+        staged_history = temporary / "coalition-timeseries.json"
+        write_history_json(staged_history, history)
+        validate_history_contract(_load_json_object(staged_history))
+
+        website_check = website_check_fn or run_website_checks
+        website_push_check = (
+            website_push_check_fn or website_check_fn or run_website_push_checks)
+        staged_site = temporary / "website"
+        _copy_site_tree(site, staged_site)
+        website = _stage_site(
+            site_root=staged_site,
+            staged_publication=publication_destination,
+            staged_history=staged_history,
+            generation=generation,
+            website_check_fn=website_check,
+            stage_callback=stage_callback,
+        )
+        website["push_gate"] = website_push_check(staged_site)
+        result.update(website)
+
+        if not commit:
+            result["status"] = "RENDER_STAGED_NOT_INSTALLED"
+            result["deployment"] = "dry-run"
+            return result
+
+        _copy_file_atomic(staged_history, history_destination)
+        validate_history_contract(_load_json_object(history_destination))
+        _git_commit_paths(
+            root,
+            [SOURCE_HISTORY_RELATIVE],
+            f"chore: render forecast history {generation}",
+            commit=True,
+            push=push,
+            push_ref=source_push_ref,
+        )
+        website_pointer = site / SITE_PUBLICATION_RELATIVE / "current.json"
+        website_pointer_before = _capture_pointer(website_pointer)
+        try:
+            result.update(_install_site_outputs(
+                site_repo=site,
+                source_publication=publication_destination,
+                source_history=history_destination,
+                generation=generation,
+                update_pointer=True,
+            ))
+            validate_published_directory(site / SITE_PUBLICATION_RELATIVE)
+            validate_history_contract(
+                _load_json_object(site / SITE_HISTORY_RELATIVE))
+            _verify_website_artifacts(
+                source_publication=publication_destination,
+                source_history=history_destination,
+                site_root=site,
+                generation=generation,
+            )
+        except Exception:
+            try:
+                _restore_pointer(website_pointer, website_pointer_before)
+            except Exception as restore_error:
+                raise AutomationError(
+                    "failed to restore the website pointer after a failed render"
+                ) from restore_error
+            raise
+        _git_commit_paths(
+            site,
+            ["files/election-simulator"],
+            f"chore: sync election forecast {generation}",
+            commit=True,
+            push=push,
+            push_ref=website_push_ref,
+        )
+        result["status"] = "RENDERED_AND_DEPLOYED"
+        result["deployment"] = "PUSHED" if push else "COMMITTED_NOT_PUSHED"
+        return result
 
 
 def _recover_website_from_source(
@@ -1541,18 +1815,190 @@ def _recover_website_from_source(
         raise
 
 
+#: The paths a certification commit stages, named individually.
+#:
+#: `files/election-simulator` as a whole is deliberately NOT staged. That
+#: directory also holds `history/coalition-timeseries.json`, which is a
+#: rendering output produced after certification; staging the directory would
+#: sweep an older history into the certification commit and imply it belongs to
+#: the new generation. Certification leaves that file untouched.
+#:
+#: The archive path carries both the immutable snapshot and, inside the
+#: benchmark window, its exact-draw sidecar. They are staged together here so
+#: they continue to appear first in the same commit, which the archive contract
+#: requires.
+CERTIFICATION_ARCHIVE_PATH = "data/processed/prospective_forecasts"
+CERTIFICATION_POINTER_PATH = "files/election-simulator/current.json"
+#: The rendering output, committed separately and never by certification.
+SOURCE_HISTORY_RELATIVE = "files/election-simulator/history/coalition-timeseries.json"
+
+
+def certification_commit_paths(generation: str) -> list[str]:
+    """Exactly what a certification commit stages, for one generation."""
+
+    return [
+        CERTIFICATION_ARCHIVE_PATH,
+        f"files/election-simulator/versions/{generation}",
+        CERTIFICATION_POINTER_PATH,
+    ]
+
+
+def _assert_certification_on_remote(
+    repo: Path, *, generation: str, push_ref: str, commit_hash: str
+) -> None:
+    """Confirm the certified generation is actually retrievable from origin.
+
+    A local commit only records intent. What the next fresh checkout -- and so
+    every retry of rendering -- can rely on is what the remote holds, so the
+    push is verified rather than assumed.
+    """
+
+    remote = _run_git(repo, ["ls-remote", "origin", f"refs/heads/{push_ref}"])
+    head = remote.stdout.split()[0] if remote.stdout.split() else ""
+    if not head:
+        raise AutomationError(
+            f"origin/{push_ref} has no head, so certification "
+            f"{commit_hash[:12]} cannot be confirmed as remote"
+        )
+    # Exact head equality would report failure after a legitimate concurrent
+    # push -- another workflow committing a polling snapshot a second later is
+    # normal. What has to hold is that the certification is *reachable* from
+    # the remote head and that the generation is intact there, which is what a
+    # retry from a fresh clone actually depends on.
+    if head != commit_hash:
+        _run_git(repo, ["fetch", "--quiet", "origin", push_ref])
+        descends = _run_git(
+            repo, ["merge-base", "--is-ancestor", commit_hash, head], check=False)
+        if descends.returncode != 0:
+            raise AutomationError(
+                f"certification commit {commit_hash[:12]} is not reachable from "
+                f"origin/{push_ref} (head {head[:12]}): the push did not survive"
+            )
+    # Intact at the remote head, not merely inside our own commit: a later push
+    # that reverted the generation would leave a reachable but useless
+    # certification.
+    manifest = f"files/election-simulator/versions/{generation}/manifest.json"
+    listed = _run_git(repo, ["cat-file", "-e", f"{head}:{manifest}"], check=False)
+    if listed.returncode != 0:
+        raise AutomationError(
+            f"generation {generation} is not present at origin/{push_ref} "
+            f"({head[:12]}), so the certification is not usable"
+        )
+
+
+def _certify_generation(
+    *,
+    root: Path,
+    staged_archive: Path,
+    archive_destination: Path,
+    staged_publication: Path,
+    publication_destination: Path,
+    generation: str,
+    as_of: date,
+    commit: bool,
+    push: bool,
+    source_push_ref: str,
+    stage_callback: StageCallback | None,
+) -> dict[str, Any]:
+    """Install, validate, commit and push the immutable generation.
+
+    This is the boundary the whole split exists for. Everything before it is
+    the authoritative forecast; everything after it is presentation. On
+    2026-09-09 a completed 100_000-draw simulation finished at 16:36:33 and was
+    discarded at 18:20:02 when the job timed out inside the history backfill,
+    because nothing had been pushed yet. After this returns, that outcome costs
+    a website update rather than the forecast.
+
+    No website checkout, browser tooling or history is involved: the
+    validations here cover the publication bundle and the archive contract.
+    """
+
+    if not commit:
+        # A dry run must leave the live simulator byte-for-byte untouched, so
+        # it installs nothing. The bundle it would have installed has already
+        # been validated in the staging tree by `validate_published_directory`
+        # and `_validate_archive_directory` above, which is the part a dry run
+        # can honestly exercise.
+        return {
+            "generation": generation,
+            "status": "STAGED_NOT_INSTALLED",
+            "commit": None,
+            "pushed": False,
+        }
+
+    pointer = publication_destination / "current.json"
+    pointer_before = _capture_pointer(pointer)
+    with _timed_stage("certification install", stage_callback):
+        try:
+            _install_source_outputs(
+                staged_archive=staged_archive,
+                destination_archive=archive_destination,
+                staged_publication=staged_publication,
+                destination_publication=publication_destination,
+                staged_history=None,
+                destination_history=None,
+                generation=generation,
+                update_pointer=True,
+            )
+        except Exception:
+            try:
+                _restore_pointer(pointer, pointer_before)
+            except Exception as restore_error:
+                raise AutomationError(
+                    "failed to restore the certified pointer after a failed install"
+                ) from restore_error
+            raise
+
+    certification: dict[str, Any] = {
+        "generation": generation,
+        "status": "STAGED_NOT_COMMITTED",
+        "commit": None,
+        "pushed": False,
+    }
+    with _timed_stage("certification commit", stage_callback):
+        commit_hash, pushed = _git_commit_paths(
+            root,
+            certification_commit_paths(generation),
+            f"chore: publish election forecast {as_of.isoformat()}",
+            commit=True,
+            push=push,
+            push_ref=source_push_ref,
+        )
+    certification["commit"] = commit_hash
+    certification["pushed"] = pushed
+    certification["status"] = "CERTIFIED_AND_PUSHED" if pushed else "CERTIFIED_LOCALLY"
+    if pushed and commit_hash:
+        with _timed_stage("certification remote check", stage_callback):
+            _assert_certification_on_remote(
+                root,
+                generation=generation,
+                push_ref=source_push_ref,
+                commit_hash=commit_hash,
+            )
+        certification["remote_verified"] = True
+    return certification
+
+
 def _install_source_outputs(
     *,
     staged_archive: Path,
     destination_archive: Path,
     staged_publication: Path,
     destination_publication: Path,
-    staged_history: Path,
-    destination_history: Path,
+    staged_history: Path | None,
+    destination_history: Path | None,
     generation: str,
     update_pointer: bool = True,
 ) -> None:
-    """Install archive/history/version, then optionally switch current.json."""
+    """Install archive/version, optionally history, then current.json.
+
+    ``staged_history`` is ``None`` for a certification install. The history
+    artifact is a rendering output: it is produced by the backfill that runs
+    *after* certification, so at certification time there is nothing to copy
+    and nothing about the existing file that belongs to the new generation.
+    Certification therefore leaves whatever history the repository already has
+    exactly as it is -- neither rewritten nor claimed.
+    """
 
     _stage_copy_archive(staged_archive, destination_archive)
     _stage_copy_generation(
@@ -1560,8 +2006,13 @@ def _install_source_outputs(
         destination_publication=destination_publication,
         generation=generation,
     )
-    # The history file is validated in the temporary tree before this point.
-    _copy_file_atomic(staged_history, destination_history)
+    if (staged_history is None) != (destination_history is None):
+        raise AutomationError(
+            "history staging and destination must be supplied together"
+        )
+    if staged_history is not None and destination_history is not None:
+        # The history file is validated in the temporary tree before this point.
+        _copy_file_atomic(staged_history, destination_history)
     if update_pointer:
         _write_publication_pointer(destination_publication, generation)
         validate_published_directory(destination_publication)
@@ -1570,7 +2021,8 @@ def _install_source_outputs(
             destination_publication / "versions" / generation,
             expected_generation=generation,
         )
-    validate_history_contract(_load_json_object(destination_history))
+    if destination_history is not None:
+        validate_history_contract(_load_json_object(destination_history))
     _validate_archive_directory(destination_archive, expected_generation=generation)
 
 
@@ -1647,6 +2099,7 @@ def run_production_event(
     website_push_ref: str = "master",
     stage_callback: StageCallback | None = None,
     pipeline_observer: Callable[[PipelineRun], None] | None = None,
+    certification_observer: Callable[[Mapping[str, Any]], None] | None = None,
     history_workers: int = DEFAULT_HISTORY_WORKERS,
 ) -> tuple[PipelineRun, dict[str, Any], dict[str, Any] | None]:
     """Run exactly one production simulation and stage all consumers.
@@ -1728,7 +2181,27 @@ def run_production_event(
             )
         generation = str(run.snapshot["generation_id"])
         result = run.simulation_result
-        retain_exact_draws = BENCHMARK_SIDECAR_START <= as_of <= BENCHMARK_SIDECAR_END
+        # Retained for EVERY newly certified generation, not only inside the
+        # benchmark window, under amendment 007.
+        #
+        # Rendering an already-certified generation without rerunning the
+        # authoritative forecast needs that generation's joint draw matrices: a
+        # history point's coalition intervals come from joint draws and cannot
+        # be recovered from published marginal quantiles. Amendment 004
+        # permitted per-generation sidecars only for 2026-09-04..2026-09-12,
+        # after which amendment 003's prohibition would return -- so the
+        # renderer would have lost its input on 2026-09-13.
+        #
+        # Prospective only, and operational only. No sidecar is written for a
+        # generation that did not export one from its own SimulationResult;
+        # retroactive backfill stays prohibited; and the archive's sidecar
+        # requirement applies to the generation being certified, so archived
+        # generations without one remain valid. Benchmark scoring, selection,
+        # eligibility, weighting and dates are unchanged.
+        #
+        # `BENCHMARK_SIDECAR_START`/`_END` are kept as the record of amendment
+        # 004's window; they no longer gate retention.
+        retain_exact_draws = True
         if retain_exact_draws:
             write_exact_draw_sidecar(
                 result,
@@ -1744,6 +2217,29 @@ def run_production_event(
         )
         payload_hash = str(run.snapshot["deterministic_payload_sha256"])
         source_commit = str(result.manifest.get("source_git_commit", ""))
+
+        # THE BOUNDARY. The authoritative forecast is complete and validated;
+        # everything below is presentation. Certify and push here, before any
+        # history, projection or browser work, so an overrunning chart can no
+        # longer erase a finished forecast run.
+        certification = _certify_generation(
+            root=root,
+            staged_archive=staged_archive,
+            archive_destination=archive_destination,
+            staged_publication=staged_publication,
+            publication_destination=publication_destination,
+            generation=generation,
+            as_of=as_of,
+            commit=commit,
+            push=push,
+            source_push_ref=source_push_ref,
+            stage_callback=stage_callback,
+        )
+        # Reported before anything else can fail. Everything after this point
+        # is presentation, and a presentation failure must not erase the fact
+        # that the forecast exists.
+        if certification_observer is not None:
+            certification_observer(certification)
         # Close yesterday's hole before rolling today's point in.  The roll-in
         # relabels the previous official point `prospective_archived` and
         # cannot simulate a replacement, so without this the reconstructed
@@ -1845,6 +2341,7 @@ def run_production_event(
             website["push_gate"] = website_push_check(staged_site)
             website["status"] = "STAGED_NOT_INSTALLED"
             website["deployment"] = "dry-run"
+            website["certification"] = certification
             return run, history, website
 
         # All publication gates passed.  The source pointer remains untouched
@@ -1854,16 +2351,11 @@ def run_production_event(
         website_pointer = site / SITE_PUBLICATION_RELATIVE / "current.json"
         source_pointer_before = _capture_pointer(source_pointer)
         website_pointer_before = _capture_pointer(website_pointer)
-        _install_source_outputs(
-            staged_archive=staged_archive,
-            destination_archive=archive_destination,
-            staged_publication=staged_publication,
-            destination_publication=publication_destination,
-            staged_history=staged_history,
-            destination_history=history_destination,
-            generation=generation,
-            update_pointer=False,
-        )
+        # The generation, archive and certified pointer are already installed
+        # and pushed. What remains is the rendering output: the reconstructed
+        # history, which is written here and committed on its own below.
+        _copy_file_atomic(staged_history, history_destination)
+        validate_history_contract(_load_json_object(history_destination))
         website_live = _install_site_outputs(
             site_repo=site,
             source_publication=publication_destination,
@@ -1898,10 +2390,13 @@ def run_production_event(
                 raise AutomationError("failed to restore live publication pointers") from restore_error
             raise
 
+        # Certification already committed and pushed the generation, archive
+        # and pointer. This commit carries only the rendering output, so a
+        # rendering failure leaves the certified forecast exactly as it is.
         _git_commit_paths(
             root,
-            ["data/processed/prospective_forecasts", "files/election-simulator"],
-            f"chore: publish election forecast {as_of.isoformat()}",
+            [SOURCE_HISTORY_RELATIVE],
+            f"chore: render forecast history {generation}",
             commit=True,
             push=push,
             push_ref=source_push_ref,
@@ -1950,6 +2445,9 @@ def run_production_event(
             push=push,
             push_ref=website_push_ref,
         )
+        # Two outcomes, reported apart: "forecast certified; website update
+        # failed" must never be indistinguishable from "forecast failed".
+        website["certification"] = certification
         return run, history, website
 
 
@@ -1999,6 +2497,18 @@ def run_automation(
     def observe_pipeline(run: PipelineRun) -> None:
         if run.simulation_validation is not None:
             summary.simulation_samples = int(run.simulation_validation.get("samples", 0))
+
+    def observe_certification(record: Mapping[str, Any]) -> None:
+        # Written onto the summary as soon as certification returns, so the
+        # generic failure handler below reports it too. Without this the
+        # distinction between "forecast failed" and "forecast certified,
+        # rendering failed" is absent exactly when it is needed.
+        summary.certification_status = str(record.get("status", "UNKNOWN"))
+        summary.certification_commit = str(record.get("commit") or "NONE")
+        summary.certification_remote_verified = bool(record.get("remote_verified"))
+        generation = record.get("generation")
+        if generation and summary.publication_generation in ("", "NONE"):
+            summary.publication_generation = str(generation)
 
     try:
         guard_election_date(today, election)
@@ -2129,6 +2639,7 @@ def run_automation(
             # short-circuiting on a stale website generation from an older
             # failed run.
             recovery: dict[str, Any] | None = None
+            source_is_certified = False
             if not publication_needed and root != site and resolved_mode in MUTATING_MODES:
                 # Only skip the recovery probe when there is no certified
                 # source pointer to compare.  Once a source generation is
@@ -2152,6 +2663,57 @@ def run_automation(
                         commit=effective_commit,
                         push=effective_push,
                     )
+            if recovery is None and source_is_certified:
+                # `_website_needs_recovery` declines to MIRROR when the
+                # simulator's history predates the certified generation --
+                # mirroring would deploy an older forecast's curve. The fix is
+                # to render, which is a different action, so it is routed here
+                # rather than reported as a healthy no-op.
+                probed, probe = _website_needs_recovery(
+                    source_repo=root, site_repo=site)
+                if not probed and probe.get("render_state") == "CERTIFIED_NOT_RENDERED":
+                    pending = str(probe.get("generation", ""))
+                    summary.publication_generation = pending or "NONE"
+                    try:
+                        rendered = render_certified_generation(
+                            root=root,
+                            site=site,
+                            generation=pending,
+                            election_date=election,
+                            history_workers=history_workers,
+                            website_check_fn=website_check_fn,
+                            website_push_check_fn=website_push_check_fn,
+                            commit=effective_commit,
+                            push=effective_push,
+                            stage_callback=stage_callback,
+                        )
+                    except Exception as error:  # noqa: BLE001 - one summary
+                        # The forecast stays certified; only its presentation
+                        # failed, and that distinction is the whole point.
+                        summary.recovery_status = "CERTIFIED_NOT_RENDERED"
+                        summary.deployment_status = "RENDER_FAILED"
+                        summary.failure = str(error)
+                    else:
+                        summary.recovery_status = (
+                            "WEBSITE_RENDERED" if effective_commit
+                            else "WEBSITE_RENDER_STAGED"
+                        )
+                        summary.deployment_status = str(
+                            rendered.get("deployment", "STAGED_NOT_INSTALLED"))
+                        summary.website_commit = (
+                            get_git_commit_hash(site) if effective_commit
+                            else "NOT_COMMITTED"
+                        )
+                        # Deliberately NOT assigned to `recovery`: the block
+                        # below labels its outcome WEBSITE_RECOVERED, and a
+                        # render is not a mirror. Reporting them apart is the
+                        # point -- one rebuilt the curve, the other copied it.
+                        return AutomationResult(
+                            status="WEBSITE_RENDERED",
+                            summary=summary,
+                            polling=polling,
+                            website=rendered,
+                        )
             if recovery is not None:
                 summary.recovery_status = "WEBSITE_RECOVERED" if effective_commit else "WEBSITE_RECOVERY_STAGED"
                 summary.publication_generation = str(recovery.get("generation", "NONE"))
@@ -2202,6 +2764,7 @@ def run_automation(
                         allow_custom_processed_root=True,
                         stage_callback=stage_callback,
                         pipeline_observer=observe_pipeline,
+                        certification_observer=observe_certification,
                         history_workers=history_workers,
                     )
             else:
@@ -2225,6 +2788,7 @@ def run_automation(
                     allow_duplicate_payload=True,
                     stage_callback=stage_callback,
                     pipeline_observer=observe_pipeline,
+                    certification_observer=observe_certification,
                     history_workers=history_workers,
                 )
         summary.simulation_samples = int(run.simulation_validation["samples"]) if run.simulation_validation else 0
@@ -2303,11 +2867,69 @@ def build_parser() -> argparse.ArgumentParser:
             "certified forecast is a single simulation either way."
         ),
     )
+    parser.add_argument(
+        "--render-generation",
+        default=None,
+        help=(
+            "Render this already-certified generation instead of producing a "
+            "new forecast. The authoritative simulator is never invoked: the "
+            "certified point comes from that generation's archived joint "
+            "draws. Requires --mode render."
+        ),
+    )
+    parser.add_argument(
+        "--render-certification-commit",
+        default=None,
+        help=(
+            "The commit that certified --render-generation. When given, the "
+            "generation's manifest, snapshot and exact-draw sidecar must all "
+            "be present in it, so a retry cannot pick up another "
+            "generation's files after a concurrent push."
+        ),
+    )
     return parser
+
+
+def _render_from_cli(args: argparse.Namespace) -> int:
+    """`--mode render`: the second publication stage, on its own.
+
+    Deliberately separate from `run_automation`: rendering acquires no
+    polling, runs no authoritative simulation, and is not subject to the
+    election-day guard that governs creating a forecast.
+    """
+
+    if not args.render_generation:
+        raise AutomationError("--mode render requires --render-generation")
+    rendered = render_certified_generation(
+        root=args.repo_root,
+        site=args.site_repo,
+        generation=args.render_generation,
+        certification_commit=args.render_certification_commit,
+        election_date=args.election_date,
+        history_workers=args.history_workers,
+        commit=True,
+        push=True,
+        stage_callback=_log_stage,
+    )
+    print(json.dumps(rendered, ensure_ascii=False, allow_nan=False, default=str))
+    if args.summary_path:
+        args.summary_path.parent.mkdir(parents=True, exist_ok=True)
+        args.summary_path.write_text(
+            "Render status: {status}\nGeneration: {generation}\n"
+            "Deployment: {deployment}\n".format(
+                status=rendered.get("status"),
+                generation=rendered.get("generation"),
+                deployment=rendered.get("deployment", "NONE"),
+            ),
+            encoding="utf-8",
+        )
+    return 0 if rendered.get("status") == "RENDERED_AND_DEPLOYED" else 1
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if args.mode == "render":
+        return _render_from_cli(args)
     if args.mode in MUTATING_MODES:
         commit = True
         push = True
@@ -2340,6 +2962,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         "DISABLED_BY_REPOSITORY_KILL_SWITCH",
         "DEFERRED_BENCHMARK_WINDOW",
         "WEBSITE_RECOVERED",
+        # A render that deployed is a success, exactly as a mirror is.
+        "WEBSITE_RENDERED",
     } else 1
 
 

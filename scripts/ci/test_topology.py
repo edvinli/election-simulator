@@ -53,6 +53,12 @@ ALWAYS_RUN = (
     "test_production_freeze",
     "test_prospective_benchmark_2026_workflow",
     "test_publication_freeze",
+    # Asserts the rendering workflow's trigger, its concurrency group and that
+    # it renders an explicit generation. It reads workflow YAML and imports
+    # nothing from scripts/, so no scripts change can select it -- and a
+    # silently dead workflow_run trigger is exactly the failure it exists to
+    # catch.
+    "test_render_workflow",
 )
 
 # Modules that the nightly schedule re-runs in a heavier configuration than the

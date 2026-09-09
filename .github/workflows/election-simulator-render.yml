@@ -1,0 +1,183 @@
+# Rendering, as its own workflow.
+#
+# Publication is two stages. The certification workflow acquires polling, runs
+# the single authoritative 100,000-draw simulation, validates it and pushes the
+# immutable generation. This workflow is everything after that: the history
+# curve, the projections, the website gates and the deployment.
+#
+# The split exists because of a real incident. On 2026-09-09 a completed
+# 100,000-draw forecast finished at 16:36:33 and was discarded at 18:20:02 when
+# the publish job hit its 120-minute timeout inside the history backfill, having
+# pushed nothing. The same shape cost 2026-09-08. Rendering is the expensive,
+# retryable half; certification is the half that must never be lost.
+name: Election Simulator rendering
+
+on:
+  # A push made with GITHUB_TOKEN does NOT trigger other workflows, so the
+  # certification workflow's push cannot start this one. `workflow_run` is not
+  # subject to that restriction: it fires on the completion of the named
+  # workflow regardless of which token made its commits. That is the whole
+  # reason this trigger is used rather than `push`.
+  #
+  # `workflow_run` only runs from the default branch's copy of this file, which
+  # is intended: rendering follows production, not a feature branch.
+  workflow_run:
+    workflows: ["Election Simulator publication"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      generation:
+        description: "Certified generation id to render (required)"
+        required: true
+        type: string
+      certification_commit:
+        description: "Commit that certified it; verified to contain its snapshot, bundle and draws"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+# Deliberately NOT election-simulator-production. Rendering must never hold the
+# lock the benchmark capture serializes against: the capture's protected
+# interval is derived from the publish job's 120-minute timeout, and a rendering
+# retry queued inside that window must not be able to delay a capture. Renders
+# serialize only against each other.
+concurrency:
+  group: election-simulator-render
+  cancel-in-progress: false
+
+jobs:
+  render:
+    # For a workflow_run trigger, only follow a successful certification. A
+    # failed publication may still have certified -- that is the point of the
+    # split -- so the generation is resolved from the simulator's certified
+    # pointer rather than assumed from the run's outcome.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ${{ vars.ELECTION_SIMULATOR_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 90
+    permissions:
+      contents: write
+    steps:
+      - name: Check out simulator
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: simulator
+          # The renderer resolves model inputs out of the certified revision,
+          # so the full history has to be present.
+          fetch-depth: 0
+
+      - name: Check out website
+        uses: actions/checkout@v4
+        with:
+          repository: edvinli/edvinli.github.io
+          ref: master
+          path: website
+          token: ${{ secrets.WEBSITE_REPO_TOKEN }}
+          fetch-depth: 0
+
+      - name: Configure git identity for both checkouts
+        run: |
+          set -euo pipefail
+          for repo in simulator website; do
+            git -C "$repo" config user.name "github-actions[bot]"
+            git -C "$repo" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          done
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Set up Ruby and Jekyll
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+
+      - name: Install Jekyll and a browser
+        run: |
+          set -euo pipefail
+          gem install --no-document jekyll
+          sudo apt-get update
+          sudo apt-get install -y chromium-browser || sudo apt-get install -y chromium
+          for candidate in chromium chromium-browser google-chrome; do
+            if command -v "$candidate" >/dev/null; then
+              echo "CHROME_BIN=$(command -v "$candidate")" >> "$GITHUB_ENV"
+              break
+            fi
+          done
+
+      - name: Install simulator dependencies
+        working-directory: simulator
+        run: uv sync --frozen
+
+      - name: Resolve the generation to render
+        id: target
+        working-directory: simulator
+        env:
+          INPUT_GENERATION: ${{ github.event.inputs.generation }}
+          INPUT_COMMIT: ${{ github.event.inputs.certification_commit }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${INPUT_GENERATION:-}" ]]; then
+            generation="$INPUT_GENERATION"
+            commit="${INPUT_COMMIT:-}"
+          else
+            # Whatever certification actually left behind, read from the
+            # durable pointer rather than inferred from the run.
+            generation="$(python -c 'import json,sys; print(json.load(open("files/election-simulator/current.json"))["publication_generation"])')"
+            commit="$(git log --format=%H --grep '^chore: publish election forecast' -1)"
+          fi
+          echo "generation=$generation" >> "$GITHUB_OUTPUT"
+          echo "commit=$commit" >> "$GITHUB_OUTPUT"
+          echo "rendering $generation (certified by ${commit:-unknown})"
+
+      - name: Skip when the website already serves this generation
+        id: needed
+        run: |
+          set -euo pipefail
+          deployed="$(python -c 'import json; print(json.load(open("website/files/election-simulator/current.json"))["publication_generation"])' || echo "")"
+          if [[ "$deployed" == "${{ steps.target.outputs.generation }}" ]]; then
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+            echo "website already serves $deployed; nothing to render"
+          else
+            echo "needed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Render and deploy
+        if: steps.needed.outputs.needed == 'true'
+        working-directory: simulator
+        env:
+          RENDER_GENERATION: ${{ steps.target.outputs.generation }}
+          RENDER_COMMIT: ${{ steps.target.outputs.commit }}
+        run: |
+          set -euo pipefail
+          args=(--site-repo "$GITHUB_WORKSPACE/website"
+                --mode render
+                --render-generation "$RENDER_GENERATION"
+                --summary-path "$GITHUB_WORKSPACE/render-summary.txt")
+          if [[ -n "${RENDER_COMMIT:-}" ]]; then
+            args+=(--render-certification-commit "$RENDER_COMMIT")
+          fi
+          uv run python -m scripts.election_automation "${args[@]}"
+
+      - name: Report
+        if: always()
+        run: |
+          set -euo pipefail
+          if [[ -f "$GITHUB_WORKSPACE/render-summary.txt" ]]; then
+            cat "$GITHUB_WORKSPACE/render-summary.txt" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No render summary was produced." >> "$GITHUB_STEP_SUMMARY"
+          fi

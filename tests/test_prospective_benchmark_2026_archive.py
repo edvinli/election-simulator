@@ -83,7 +83,7 @@ class TestLiveArchiveSurvivesAmendmentSix(unittest.TestCase):
         self.assertEqual(report["status"], "VALID")
         self.assertEqual(
             [ref["amendment_number"] for ref in report["active_amendments"]],
-            [1, 2, 3, 4, 5, 6],
+            [1, 2, 3, 4, 5, 6, 7],
         )
         self.assertEqual(report["unindexed_orphans"], [])
 

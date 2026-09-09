@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 import csv
+import hashlib
 from datetime import date, datetime, timedelta, timezone
 import contextlib
 import io
@@ -22,6 +23,7 @@ from unittest.mock import Mock, call, patch
 
 import numpy as np
 
+from scripts import election_automation_base as base
 from scripts.election_automation import (
     DAILY_SCHEDULE_UTC,
     ELECTION_DAY,
@@ -58,9 +60,16 @@ from scripts.site_publisher import GENERATION_FILES, publish_generation_to_site,
 from scripts.static_exporter import validate_published_directory
 from scripts.simulator.engine import SimulationResult, simulate_election
 from scripts.simulator.reproducibility import compute_file_sha256
+from scripts.rendering import (
+    CertifiedGenerationError,
+    load_certified_generation,
+)
 from scripts.simulator.exact_draw_sidecar import (
+    SIDECAR_DRAWS_FILENAME,
+    SIDECAR_METADATA_FILENAME,
     collect_latest_certified_generation,
     load_verified_draw_sidecar,
+    validate_exact_draw_sidecar,
 )
 from scripts.simulator.summary import compute_simulation_summary
 from tests.history_fixtures import (
@@ -673,8 +682,311 @@ class ElectionAutomationTests(unittest.TestCase):
             self.assertEqual(self._git_status(source), "")
             self.assertEqual(self._git_status(site), "")
 
-    def test_website_gate_failure_keeps_both_live_current_pointers_byte_identical(self) -> None:
-        """A late website failure cannot publish a partially staged forecast."""
+    def test_a_generation_certified_after_the_benchmark_window_retains_its_draws(self) -> None:
+        """Amendment 007, at the date that motivated it.
+
+        Amendment 004 permitted per-generation exact-draw sidecars only through
+        2026-09-12, after which amendment 003's prohibition would return. A
+        renderer needs those joint draws -- coalition intervals are computed
+        from them and cannot be recovered from published marginal quantiles --
+        so on 2026-09-13, election day, rendering an already-certified
+        generation would have had no valid input.
+
+        Certified here on 2026-09-13 -- election day, and the day after the
+        benchmark's final scheduled date of 2026-09-12 -- asserting the sidecar
+        is exported and hash-linked from the archive entry rather than merely
+        present. The history contract permits a publication on election day
+        itself and refuses one after it, so 2026-09-13 is both the last date a
+        forecast can be certified and the first date amendment 004's window
+        would have denied it a sidecar.
+        """
+
+        for as_of in ("2026-09-13",):
+            with self.subTest(as_of=as_of):
+                with tempfile.TemporaryDirectory() as tmp:
+                    source, site = self._production_fixture(Path(tmp))
+                    production_result = self._production_result(as_of)
+
+                    def refresh(raw, processed, **kwargs):
+                        raw.mkdir(parents=True, exist_ok=True)
+                        self._change_normalized_poll_support(
+                            processed / "individual_polls.csv")
+                        return {"messages": []}
+
+                    def runner(**kwargs):
+                        commit = subprocess.run(
+                            ["git", "rev-parse", "HEAD"], cwd=source, check=True,
+                            capture_output=True, text=True,
+                        ).stdout.strip()
+                        production_result.manifest["source_git_commit"] = commit
+                        production_result.manifest["git_commit"] = commit
+                        return production_result
+
+                    with patch(
+                        "scripts.publication_pipeline.pipeline.DEFAULT_PROCESSED_ROOT",
+                        source / "data/processed",
+                    ):
+                        result = run_automation(
+                            source,
+                            site_repo=site,
+                            schedule=INTRADAY_SCHEDULE_UTC,
+                            now=datetime.fromisoformat(f"{as_of}T08:00:00+00:00"),
+                            automation_enabled="true",
+                            mode="publish",
+                            commit=True,
+                            refresh_fn=refresh,
+                            simulation_runner=runner,
+                            projection_runner=self._projection_runner,
+                            campaign_path_simulator=self._campaign_path_simulator,
+                            website_check_fn=lambda _root: {"status": "PASS"},
+                            website_push_check_fn=lambda _root: {"status": "PASS"},
+                            generated_at_utc=f"{as_of}T08:00:00+00:00",
+                        )
+                    self.assertEqual(result.status, "PUBLISHED", result.summary.render())
+
+                    generation = json.loads(
+                        (source / "files/election-simulator/current.json").read_text()
+                    )["publication_generation"]
+                    archive = source / "data/processed/prospective_forecasts" / generation
+                    draws = archive / SIDECAR_DRAWS_FILENAME
+                    meta = archive / SIDECAR_METADATA_FILENAME
+                    self.assertTrue(draws.is_file(), f"no exact draws for {generation}")
+                    self.assertTrue(meta.is_file(), f"no sidecar metadata for {generation}")
+
+                    # VERIFIED, not merely present: the archive's own
+                    # validator ties the sidecar to the certified snapshot, so
+                    # this runs that check rather than re-deriving a hash.
+                    snapshot = json.loads((archive / "snapshot.json").read_text())
+                    validate_exact_draw_sidecar(
+                        draws, meta, certified_snapshot=snapshot)
+                    index = json.loads(
+                        (source / "data/processed/prospective_forecasts/index.json").read_text())
+                    entry = next(e for e in index["snapshots"]
+                                 if e.get("generation_id") == generation)
+                    self.assertEqual(entry["path"], f"{generation}/snapshot.json", entry)
+
+                    # And the snapshot it belongs to is in the same commit.
+                    files = subprocess.run(
+                        ["git", "show", "--name-only", "--format=", "HEAD~1"],
+                        cwd=source, check=True, capture_output=True, text=True,
+                    ).stdout.split()
+                    relative = f"data/processed/prospective_forecasts/{generation}"
+                    self.assertIn(f"{relative}/snapshot.json", files, files)
+                    self.assertIn(f"{relative}/{SIDECAR_DRAWS_FILENAME}", files, files)
+
+    def test_backfill_failure_after_certification_keeps_the_forecast_on_the_remote(self) -> None:
+        """The 2026-09-09 incident, as an acceptance test.
+
+        That run finished its 100_000-draw simulation at 16:36:33, exported the
+        snapshot, entered the history backfill, and was killed by the job
+        timeout at 18:20:02 having pushed nothing. The forecast was complete and
+        was thrown away.
+
+        Here the backfill is failed deliberately at its first call -- the
+        earliest point after certification -- and the surviving state is
+        asserted from FRESH CLONES of both remotes, which is the only tree
+        production ever gives a retry:
+
+          * the simulator's remote holds the certified generation;
+          * its certification commit excludes the history artifact;
+          * the website's remote is untouched;
+          * rendering republishes that same generation with no second
+            authoritative simulation.
+        """
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            checkouts = root / "checkouts"
+            checkouts.mkdir()
+            source, site = self._production_fixture(checkouts)
+            source_remote = root / "simulator.git"
+            site_remote = root / "website.git"
+            self._publish_to_bare_remote(source, source_remote, "main")
+            self._publish_to_bare_remote(site, site_remote, "master")
+            site_tree_before = subprocess.run(
+                ["git", "rev-parse", "master^{tree}"], cwd=site_remote, check=True,
+                capture_output=True, text=True,
+            ).stdout.strip()
+            site_subjects_before = self._remote_subjects(site_remote, "master")
+
+            simulations: list[int] = []
+            production_result = self._production_result(FORECAST_AS_OF)
+
+            def refresh(raw, processed, **kwargs):
+                raw.mkdir(parents=True, exist_ok=True)
+                self._change_normalized_poll_support(processed / "individual_polls.csv")
+                return {"messages": []}
+
+            def runner(**kwargs):
+                simulations.append(int(kwargs["samples"]))
+                commit = subprocess.run(
+                    ["git", "rev-parse", "HEAD"], cwd=source, check=True,
+                    capture_output=True, text=True,
+                ).stdout.strip()
+                production_result.manifest["source_git_commit"] = commit
+                production_result.manifest["git_commit"] = commit
+                return production_result
+
+            # What the incident actually was: the process was KILLED inside the
+            # backfill, so no in-process handler ran. A backfill exception is
+            # already tolerated here, which is why merely raising proves
+            # nothing. The property that makes a kill survivable is that the
+            # certified generation is on the remote BEFORE this point, so the
+            # probe records the remote's state at backfill entry.
+            remote_at_backfill: list[str | None] = []
+
+            def exploding_backfill(*args, **kwargs):
+                shown = subprocess.run(
+                    ["git", "show", "main:files/election-simulator/current.json"],
+                    cwd=source_remote, capture_output=True, text=True, check=False,
+                )
+                remote_at_backfill.append(
+                    json.loads(shown.stdout)["publication_generation"]
+                    if shown.returncode == 0 else None
+                )
+                raise AutomationError("history curve backfill exhausted its budget")
+
+            with patch(
+                "scripts.publication_pipeline.pipeline.DEFAULT_PROCESSED_ROOT",
+                source / "data/processed",
+            ), patch.object(base, "backfill_reconstructed_curve", exploding_backfill):
+                blocked = run_automation(
+                    source,
+                    site_repo=site,
+                    schedule=INTRADAY_SCHEDULE_UTC,
+                    now=_forecast_utc(8),
+                    automation_enabled="true",
+                    mode="publish",
+                    commit=True,
+                    push=True,
+                    refresh_fn=refresh,
+                    simulation_runner=runner,
+                    projection_runner=self._projection_runner,
+                    campaign_path_simulator=self._campaign_path_simulator,
+                    website_check_fn=lambda _root: {"status": "PASS"},
+                    website_push_check_fn=lambda _root: (_ for _ in ()).throw(
+                        AutomationError("website command failed: changes-baseline.smoke.mjs")),
+                    generated_at_utc=f"{FORECAST_AS_OF}T08:00:00+00:00",
+                )
+            self.assertNotEqual(blocked.status, "PUBLISHED")
+            self.assertEqual(simulations, [100_000], "one authoritative simulation")
+
+            # "Forecast certified; website update failed" has to be
+            # distinguishable from "forecast failed", and it has to survive the
+            # generic failure handler -- which is the only path a rendering
+            # exception takes.
+            self.assertEqual(blocked.summary.certification_status, "CERTIFIED_AND_PUSHED")
+            self.assertTrue(
+                blocked.summary.certification_remote_verified,
+                blocked.summary.render(),
+            )
+            self.assertNotEqual(blocked.summary.certification_commit, "NONE")
+            self.assertIn("Certification: CERTIFIED_AND_PUSHED", blocked.summary.render())
+
+            # THE LOAD-BEARING ASSERTION. When the backfill began, the
+            # certified generation was already retrievable from the simulator's
+            # remote. Had the process been killed at that instant -- as it was
+            # on 2026-09-09 at 18:20:02 -- the forecast would still exist.
+            self.assertEqual(len(remote_at_backfill), 1, remote_at_backfill)
+            self.assertIsNotNone(
+                remote_at_backfill[0],
+                "no certified pointer on the remote when the backfill started: a "
+                "process kill here would discard the finished forecast again",
+            )
+
+            # Certified, and durable on the remote.
+            certified = self._remote_pointer(
+                source_remote, "main")["publication_generation"]
+            self.assertEqual(
+                remote_at_backfill[0], certified,
+                "the generation on the remote at backfill entry is the certified one",
+            )
+            subjects = self._remote_subjects(source_remote, "main")
+            self.assertTrue(
+                any(s.startswith("chore: publish election forecast") for s in subjects),
+                subjects,
+            )
+            # The CERTIFICATION commit specifically -- not HEAD, which by now
+            # is the separate render commit. That separation is the point: the
+            # certification commit carries the generation and never the
+            # history, so a rendering failure cannot have touched it.
+            certification_sha = subprocess.run(
+                ["git", "log", "--format=%H", "--grep",
+                 "^chore: publish election forecast", "main"],
+                cwd=source_remote, check=True, capture_output=True, text=True,
+            ).stdout.split()[0]
+            files = subprocess.run(
+                ["git", "show", "--name-only", "--format=", certification_sha],
+                cwd=source_remote, check=True, capture_output=True, text=True,
+            ).stdout.split()
+            self.assertTrue(
+                any(f.startswith(f"files/election-simulator/versions/{certified}/")
+                    for f in files), files)
+            self.assertNotIn(
+                "files/election-simulator/history/coalition-timeseries.json", files, files)
+
+            # The website remote is untouched.
+            self.assertEqual(self._remote_subjects(site_remote, "master"),
+                             site_subjects_before)
+            self.assertEqual(
+                subprocess.run(
+                    ["git", "rev-parse", "master^{tree}"], cwd=site_remote,
+                    check=True, capture_output=True, text=True,
+                ).stdout.strip(),
+                site_tree_before,
+            )
+
+            # Rendering retried from fresh clones publishes that generation,
+            # with a runner that raises if any simulation is attempted.
+            fresh_source = self._clone_from_remote(
+                source_remote, "main", root / "fresh-simulator")
+            fresh_site = self._clone_from_remote(
+                site_remote, "master", root / "fresh-website")
+
+            def must_not_simulate(**kwargs):
+                raise AssertionError("rendering must not run a simulation")
+
+            with patch(
+                "scripts.publication_pipeline.pipeline.DEFAULT_PROCESSED_ROOT",
+                fresh_source / "data/processed",
+            ):
+                rendered = run_automation(
+                    fresh_source,
+                    site_repo=fresh_site,
+                    schedule=INTRADAY_SCHEDULE_UTC,
+                    now=_forecast_utc(10),
+                    automation_enabled="true",
+                    mode="publish",
+                    commit=True,
+                    push=True,
+                    refresh_fn=lambda raw, processed, **kwargs: {"messages": []},
+                    simulation_runner=must_not_simulate,
+                    website_check_fn=lambda _root: {"status": "PASS"},
+                    website_push_check_fn=lambda _root: {"status": "PASS"},
+                    generated_at_utc=f"{FORECAST_AS_OF}T10:00:00+00:00",
+                )
+            self.assertNotEqual(rendered.status, "FAILED", rendered.summary.render())
+            self.assertEqual(
+                self._remote_pointer(site_remote, "master")["publication_generation"],
+                certified,
+            )
+
+    def test_website_gate_failure_certifies_the_forecast_and_leaves_the_site(self) -> None:
+        """The boundary, at the pointers.
+
+        This asserted that BOTH live pointers stayed byte-identical after a
+        late website failure, which was the right guarantee while certification
+        and rendering were one transaction: a half-published forecast was the
+        only other outcome.
+
+        Certification now pushes before any rendering runs, so the source
+        pointer *must* move -- that is the whole point, and on 2026-09-09 a
+        completed 100_000-draw simulation was discarded precisely because it
+        did not. The website pointer must still not move, and the guarantee
+        the original name protected -- that no partially staged forecast is
+        ever published -- is now stronger, not weaker: the forecast is fully
+        certified and the website is untouched.
+        """
 
         with tempfile.TemporaryDirectory() as tmp:
             source, site = self._production_fixture(Path(tmp))
@@ -732,8 +1044,40 @@ class ElectionAutomationTests(unittest.TestCase):
             self.assertEqual(result.summary.simulation_samples, 100_000)
             self.assertIn("Simulation samples: 100000", result.summary.render())
             self.assertEqual(calls, [100_000])
-            self.assertEqual(source_current.read_bytes(), source_before)
+
+            # The forecast is certified: the source pointer advanced, and it
+            # names the generation the run produced.
+            self.assertNotEqual(source_current.read_bytes(), source_before)
+            certified = json.loads(source_current.read_text())["publication_generation"]
+            self.assertIn(
+                f"chore: publish election forecast",
+                self._git_subjects(source)[0],
+            )
+            self.assertTrue(
+                (source / "files/election-simulator/versions" / certified).is_dir(),
+                certified,
+            )
+
+            # The website is untouched, by pointer and by commit subject.
             self.assertEqual(site_current.read_bytes(), site_before)
+            self.assertFalse(
+                any(subject.startswith("chore: sync election forecast")
+                    for subject in self._git_subjects(site)),
+                self._git_subjects(site),
+            )
+
+            # And the history was NOT swept into the certification commit: it
+            # is a rendering output, and rendering is what failed.
+            certification_files = subprocess.run(
+                ["git", "show", "--name-only", "--format=", "HEAD"],
+                cwd=source, check=True, capture_output=True, text=True,
+            ).stdout.split()
+            self.assertNotIn(
+                "files/election-simulator/history/coalition-timeseries.json",
+                certification_files,
+                certification_files,
+            )
+
             self.assertEqual(self._git_status(source), "")
             self.assertEqual(self._git_status(site), "")
 
@@ -2339,6 +2683,323 @@ time.sleep(60)
                 bad_manifest.write_bytes(original)
             self.assertEqual(pointer_path.read_bytes(), pointer_before)
 
+
+
+class KilledBackfillRecoveryTests(unittest.TestCase):
+    """The 2026-09-09 incident, reproduced by actually killing the process.
+
+    A backfill *exception* is caught and tolerated, so raising one proves
+    nothing about that incident: what happened was the job timeout killing the
+    process inside the backfill, with nothing pushed. No handler runs for a
+    SIGKILL, so the surviving state is whatever had already reached the
+    remotes.
+
+    These tests publish in a real subprocess against real bare remotes, kill it
+    with SIGKILL at backfill entry -- after certification, before any history
+    commit -- and then recover from fresh clones with the authoritative
+    simulator disabled.
+    """
+
+    DRIVER = "tests.support.publish_until_backfill"
+
+    def _kill_at_backfill(self, root: Path, as_of: str) -> tuple[Path, Path, Path, Path]:
+        checkouts = root / "checkouts"
+        checkouts.mkdir()
+        source, site = ElectionAutomationTests._production_fixture(checkouts)
+        source_remote = root / "simulator.git"
+        site_remote = root / "website.git"
+        ElectionAutomationTests._publish_to_bare_remote(source, source_remote, "main")
+        ElectionAutomationTests._publish_to_bare_remote(site, site_remote, "master")
+
+        signal_path = root / "backfill-entered"
+        payload = json.dumps({
+            "source": str(source), "site": str(site), "as_of": as_of,
+            "signal": str(signal_path), "samples": 64,
+        })
+        completed = subprocess.run(
+            [sys.executable, "-m", self.DRIVER, payload],
+            cwd=REPOSITORY_ROOT, capture_output=True, text=True,
+        )
+        # SIGKILL, not a clean exit and not an exception.
+        self.assertEqual(completed.returncode, -signal.SIGKILL,
+                         f"rc={completed.returncode}\n{completed.stderr[-2000:]}")
+        self.assertTrue(signal_path.is_file(),
+                        f"backfill was never entered\n{completed.stderr[-2000:]}")
+        return source, site, source_remote, site_remote
+
+    def _assert_certified_and_unrendered(
+        self, source_remote: Path, site_remote: Path
+    ) -> str:
+        subjects = ElectionAutomationTests._remote_subjects(source_remote, "main")
+        self.assertTrue(
+            any(s.startswith("chore: publish election forecast") for s in subjects),
+            subjects,
+        )
+        # No render commit: the kill landed before history was committed.
+        self.assertFalse(
+            any(s.startswith("chore: render forecast history") for s in subjects),
+            subjects,
+        )
+        generation = ElectionAutomationTests._remote_pointer(
+            source_remote, "main")["publication_generation"]
+        # The website remote never saw it.
+        self.assertFalse(
+            any(s.startswith("chore: sync election forecast")
+                for s in ElectionAutomationTests._remote_subjects(site_remote, "master")),
+            "the website remote was updated despite the kill",
+        )
+        self.assertNotEqual(
+            ElectionAutomationTests._remote_pointer(
+                site_remote, "master")["publication_generation"],
+            generation,
+        )
+        return generation
+
+    def _render_from_fresh_clones(
+        self, root: Path, source_remote: Path, site_remote: Path, generation: str
+    ) -> Path:
+        fresh_source = ElectionAutomationTests._clone_from_remote(
+            source_remote, "main", root / "fresh-simulator")
+        fresh_site = ElectionAutomationTests._clone_from_remote(
+            site_remote, "master", root / "fresh-website")
+        self.assertEqual(ElectionAutomationTests._git_status(fresh_source), "")
+
+        # The old history is still there, and still belongs to the previous
+        # generation -- CERTIFIED_NOT_RENDERED, not RENDERED_NOT_DEPLOYED.
+        history = fresh_source / "files/election-simulator/history/coalition-timeseries.json"
+        self.assertTrue(history.is_file(), "the old history was lost")
+        self.assertNotEqual(base._history_generation(history), generation)
+        needs_mirror, probe = base._website_needs_recovery(
+            source_repo=fresh_source, site_repo=fresh_site)
+        self.assertFalse(needs_mirror, "a stale history must never be mirrored")
+        self.assertEqual(probe.get("render_state"), "CERTIFIED_NOT_RENDERED")
+
+        def must_not_simulate(**kwargs):
+            raise AssertionError("rendering must not run the authoritative simulator")
+
+        with patch(
+            "scripts.publication_pipeline.pipeline.DEFAULT_PROCESSED_ROOT",
+            fresh_source / "data/processed",
+        ), patch("scripts.simulator.engine.simulate_election", must_not_simulate):
+            rendered = base.render_certified_generation(
+                root=fresh_source,
+                site=fresh_site,
+                generation=generation,
+                commit=True,
+                push=True,
+                website_check_fn=lambda _root: {"status": "PASS"},
+                website_push_check_fn=lambda _root: {"status": "PASS"},
+            )
+        self.assertEqual(rendered["status"], "RENDERED_AND_DEPLOYED", rendered)
+        self.assertEqual(
+            ElectionAutomationTests._remote_pointer(
+                site_remote, "master")["publication_generation"],
+            generation,
+        )
+        # And the rendered history names the generation it belongs to.
+        self.assertEqual(
+            base._history_generation(
+                fresh_source / "files/election-simulator/history/coalition-timeseries.json"),
+            generation,
+        )
+        return fresh_site
+
+    def test_a_kill_at_backfill_leaves_a_certified_renderable_generation(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _source, _site, source_remote, site_remote = self._kill_at_backfill(
+                root, FORECAST_AS_OF)
+            generation = self._assert_certified_and_unrendered(source_remote, site_remote)
+            self._render_from_fresh_clones(root, source_remote, site_remote, generation)
+
+    def test_election_day_certification_then_a_later_rendering_retry(self) -> None:
+        """September 13: certified on election day, rendered afterwards.
+
+        Amendment 007 exists so this is possible at all -- amendment 004's
+        window would have denied this generation its draws. Rendering is also
+        not date-restricted: creating a forecast after election day is refused,
+        but rendering one certified on it must still work.
+        """
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _source, _site, source_remote, site_remote = self._kill_at_backfill(
+                root, "2026-09-13")
+            generation = self._assert_certified_and_unrendered(source_remote, site_remote)
+            self.assertTrue(generation.startswith("20260913T"), generation)
+            self._render_from_fresh_clones(root, source_remote, site_remote, generation)
+
+    def test_a_stale_rendering_attempt_cannot_replace_a_newer_deployment(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _source, _site, source_remote, site_remote = self._kill_at_backfill(
+                root, FORECAST_AS_OF)
+            generation = self._assert_certified_and_unrendered(source_remote, site_remote)
+            fresh_site = self._render_from_fresh_clones(
+                root, source_remote, site_remote, generation)
+            fresh_source = root / "fresh-simulator"
+
+            # The website now serves `generation`. A retry for an older one --
+            # a rendering attempt that was queued behind this - must refuse.
+            older = "20260101T000000Z-0000aaaa"
+            with self.assertRaises(AutomationError) as ctx:
+                base._reject_stale_render(site_repo=fresh_site, generation=older)
+            self.assertIn("newer than", str(ctx.exception))
+            # And the same generation is still allowed, so the guard is not
+            # simply refusing everything.
+            base._reject_stale_render(site_repo=fresh_site, generation=generation)
+            self.assertTrue((fresh_source).is_dir())
+
+
+class CertifiedGenerationLoaderTests(unittest.TestCase):
+    """Loading a certified generation for rendering, and refusing the rest.
+
+    The renderer must reproduce the forecast that was certified, so the loader
+    is verified against a generation this pipeline actually produced rather
+    than against a hand-built fixture. Exactness is the load-bearing property:
+    the draws it returns have to be the certified draws, bit for bit, or the
+    rendered current point is a different forecast.
+    """
+
+    @classmethod
+    def _certify_one(cls, tmp: Path) -> tuple[Path, str, Any]:
+        """Certify one generation in a throwaway repo pair."""
+
+        source, site = ElectionAutomationTests._production_fixture(tmp)
+        production_result = ElectionAutomationTests._production_result(FORECAST_AS_OF)
+
+        def refresh(raw, processed, **kwargs):
+            raw.mkdir(parents=True, exist_ok=True)
+            ElectionAutomationTests._change_normalized_poll_support(
+                processed / "individual_polls.csv")
+            return {"messages": []}
+
+        def runner(**kwargs):
+            commit = subprocess.run(
+                ["git", "rev-parse", "HEAD"], cwd=source, check=True,
+                capture_output=True, text=True,
+            ).stdout.strip()
+            production_result.manifest["source_git_commit"] = commit
+            production_result.manifest["git_commit"] = commit
+            return production_result
+
+        with patch(
+            "scripts.publication_pipeline.pipeline.DEFAULT_PROCESSED_ROOT",
+            source / "data/processed",
+        ):
+            result = run_automation(
+                source,
+                site_repo=site,
+                schedule=INTRADAY_SCHEDULE_UTC,
+                now=_forecast_utc(8),
+                automation_enabled="true",
+                mode="publish",
+                commit=True,
+                refresh_fn=refresh,
+                simulation_runner=runner,
+                projection_runner=ElectionAutomationTests._projection_runner,
+                campaign_path_simulator=ElectionAutomationTests._campaign_path_simulator,
+                website_check_fn=lambda _root: {"status": "PASS"},
+                website_push_check_fn=lambda _root: {"status": "PASS"},
+                generated_at_utc=f"{FORECAST_AS_OF}T08:00:00+00:00",
+            )
+        assert result.status == "PUBLISHED", result.summary.render()
+        generation = json.loads(
+            (source / "files/election-simulator/current.json").read_text()
+        )["publication_generation"]
+        return source, generation, production_result
+
+    def test_it_returns_the_certified_draws_exactly(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            source, generation, produced = self._certify_one(Path(tmp))
+            loaded = load_certified_generation(source, generation=generation)
+
+            self.assertEqual(loaded.generation, generation)
+            # Bit-for-bit. Anything else is a different forecast.
+            np.testing.assert_array_equal(
+                loaded.vote_shares_matrix, produced.vote_shares_matrix)
+            np.testing.assert_array_equal(
+                loaded.seats_matrix, produced.seats_matrix)
+            # Percentage points, not fractions.
+            self.assertAlmostEqual(
+                float(loaded.vote_shares_matrix[0].sum()), 100.0, places=6)
+            # Provenance is the certified generation's own source revision,
+            # never the renderer's checkout.
+            self.assertEqual(
+                loaded.source_git_commit,
+                json.loads((source / "files/election-simulator/versions" / generation
+                            / "manifest.json").read_text())["source_git_commit"],
+            )
+            self.assertEqual(loaded.manifest["publication_generation"], generation)
+            self.assertEqual(loaded.manifest["rendered_from"], "archived_exact_draws")
+
+    def test_it_accepts_an_explicit_certification_commit(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            source, generation, _ = self._certify_one(Path(tmp))
+            certification = subprocess.run(
+                ["git", "log", "--format=%H", "--grep",
+                 "^chore: publish election forecast", "-1"],
+                cwd=source, check=True, capture_output=True, text=True,
+            ).stdout.strip()
+            loaded = load_certified_generation(
+                source, generation=generation, certification_commit=certification)
+            self.assertEqual(loaded.certification_commit, certification)
+
+    def test_it_refuses_a_commit_that_did_not_certify_the_generation(self) -> None:
+        """The commit is the caller's statement of which certification to render."""
+
+        with tempfile.TemporaryDirectory() as tmp:
+            source, generation, _ = self._certify_one(Path(tmp))
+            earlier = subprocess.run(
+                ["git", "rev-list", "--max-parents=0", "HEAD"],
+                cwd=source, check=True, capture_output=True, text=True,
+            ).stdout.split()[0]
+            with self.assertRaises(CertifiedGenerationError) as ctx:
+                load_certified_generation(
+                    source, generation=generation, certification_commit=earlier)
+            self.assertIn("does not contain", str(ctx.exception))
+
+    def test_it_refuses_a_generation_without_archived_draws(self) -> None:
+        """Pre-amendment-007 generations fail clearly instead of re-simulating."""
+
+        with tempfile.TemporaryDirectory() as tmp:
+            source, generation, _ = self._certify_one(Path(tmp))
+            archive = source / "data/processed/prospective_forecasts" / generation
+            (archive / SIDECAR_DRAWS_FILENAME).unlink()
+            with self.assertRaises(CertifiedGenerationError) as ctx:
+                load_certified_generation(source, generation=generation)
+            message = str(ctx.exception)
+            self.assertIn("no archived exact-draw sidecar", message)
+            self.assertIn("amendment 007", message)
+
+    def test_it_refuses_a_snapshot_that_disagrees_with_the_bundle(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            source, generation, _ = self._certify_one(Path(tmp))
+            snapshot_path = (source / "data/processed/prospective_forecasts"
+                             / generation / "snapshot.json")
+            snapshot = json.loads(snapshot_path.read_text())
+            snapshot["deterministic_payload_sha256"] = "0" * 64
+            snapshot_path.write_text(json.dumps(snapshot), encoding="utf-8")
+            with self.assertRaises(CertifiedGenerationError) as ctx:
+                load_certified_generation(source, generation=generation)
+            self.assertIn("disagree on deterministic_payload_sha256", str(ctx.exception))
+
+    def test_it_refuses_an_unknown_or_unsafe_generation_id(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            source, _generation, _ = self._certify_one(Path(tmp))
+            for bad in ("../escape", "not-a-generation"):
+                with self.subTest(generation=bad):
+                    with self.assertRaises(CertifiedGenerationError):
+                        load_certified_generation(source, generation=bad)
+
+    def test_the_loader_never_reaches_for_the_simulator(self) -> None:
+        """Structural: no replay or simulation fallback exists to be reached."""
+
+        source = Path(base.__file__).parent / "rendering/certified_generation.py"
+        text = source.read_text(encoding="utf-8")
+        for forbidden in ("simulate_election", "replay_certified_generation",
+                          "reproduce_missing_draws"):
+            self.assertNotIn(forbidden, text, forbidden)
 
 
 class HistoryInputRevisionReuseTests(unittest.TestCase):
