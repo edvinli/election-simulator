@@ -104,15 +104,105 @@ class TestLiveArchiveSurvivesAmendmentSix(unittest.TestCase):
                 self.assertEqual(row["previous_entry_sha256"], previous)
             previous = row["entry_sha256"]
 
-    def test_each_capture_keeps_the_amendments_in_force_when_it_was_taken(self) -> None:
-        # A capture records the amendments that existed at its own cutoff.
-        # Back-filling 006 into an earlier capture would be a rewrite of
-        # evidence, so no committed capture may reference it.
+    def _amendment_created_at(self) -> dict[int, str]:
+        """`created_at_utc` for every amendment the index references."""
+
+        created: dict[int, str] = {}
+        for ref in self.index["amendments"]:
+            body = json.loads((self.ARCHIVE / ref["path"]).read_text(encoding="utf-8"))
+            created[int(body["amendment_number"])] = body["created_at_utc"]
+        return created
+
+    def test_listed_amendments_do_not_postdate_capture(self) -> None:
+        """One direction only: nothing newer than the capture may appear in it.
+
+        This was `assertNotIn(6, numbers)`, which was true evidence while every
+        committed capture predated amendment 006 and became false the moment
+        one did not: 20260908T213000Z was retrieved 2026-09-08T21:30:07Z, well
+        after 006 was created at 2026-09-07T13:45:33Z, and lists it correctly.
+
+        The guarantee kept here is the one the original rationale names --
+        back-filling a later amendment into an earlier capture would rewrite
+        evidence -- so each listed amendment must not postdate the capture that
+        lists it. Compared against `retrieved_at_utc`, the moment the capture
+        actually happened, not `benchmark_cutoff`: an amendment rule keyed to
+        the cutoff would be a different claim and needs its own justification.
+
+        Deliberately NOT asserted: that a capture lists every amendment that
+        existed by the clock. 20260907T213000Z omits 006 even though 006 was
+        created earlier that day, because 006's commit is not an ancestor of
+        that run's parent -- it was on a line of history the run never saw, and
+        a merge on 2026-09-08 reconciled them. That explains the recorded
+        catalog; it is not by itself proof of completeness or policy
+        compliance, and it is documented here rather than repaired. Nothing
+        about the capture or its eligibility is changed by this test.
+        """
+
+        created = self._amendment_created_at()
+        checked = 0
         for row in self.index["captures"]:
+            manifest = json.loads(
+                (self.ARCHIVE / row["path"]).read_text(encoding="utf-8"))
+            retrieved = manifest["retrieved_at_utc"]
             numbers = [ref["amendment_number"] for ref in row["amendments"]]
             with self.subTest(slot=row["scheduled_date"]):
-                self.assertNotIn(6, numbers)
                 self.assertEqual(numbers, sorted(numbers))
+                for number in numbers:
+                    self.assertIn(number, created, f"amendment {number} is unindexed")
+                    self.assertLessEqual(
+                        created[number], retrieved,
+                        f"amendment {number} was created {created[number]}, after "
+                        f"this capture was retrieved at {retrieved}: a later "
+                        "amendment has been back-filled into an earlier capture",
+                    )
+                    checked += 1
+        self.assertGreater(checked, 0, "no amendment references were checked")
+
+    def test_the_listed_amendment_references_match_the_artifacts(self) -> None:
+        """Reference integrity, kept from the original assertion set.
+
+        A capture's amendment list is evidence only if each entry resolves to
+        the artifact it names and to that artifact's bytes.
+        """
+
+        for row in self.index["captures"]:
+            for ref in row["amendments"]:
+                with self.subTest(slot=row["scheduled_date"], amendment=ref["amendment_number"]):
+                    path = self.ARCHIVE / ref["path"]
+                    self.assertTrue(path.is_file(), ref["path"])
+                    self.assertEqual(
+                        hashlib.sha256(path.read_bytes()).hexdigest(), ref["sha256"])
+                    body = json.loads(path.read_text(encoding="utf-8"))
+                    self.assertEqual(body["amendment_number"], ref["amendment_number"])
+
+    def test_back_filling_a_later_amendment_is_rejected(self) -> None:
+        """The negative case: the guard must actually bite.
+
+        20260904T213000Z was retrieved 2026-09-04T23:13:12Z, three days before
+        amendment 006 existed. Adding 006 to its list is precisely the rewrite
+        the guard exists to refuse, so the check has to fail on it -- asserted
+        against a copy of the index, never the archive itself.
+        """
+
+        created = self._amendment_created_at()
+        row = next(r for r in self.index["captures"]
+                   if r["scheduled_date"] == "2026-09-04")
+        manifest = json.loads((self.ARCHIVE / row["path"]).read_text(encoding="utf-8"))
+        retrieved = manifest["retrieved_at_utc"]
+        self.assertNotIn(
+            6, [ref["amendment_number"] for ref in row["amendments"]],
+            "the September 4 capture already lists 006; this probe is void",
+        )
+        self.assertGreater(
+            created[6], retrieved,
+            "amendment 006 does not postdate the September 4 capture, so this "
+            "probe cannot demonstrate back-filling",
+        )
+        # The same comparison the guard makes, over the tampered copy.
+        tampered = [*row["amendments"], {"amendment_number": 6}]
+        with self.assertRaises(AssertionError):
+            for ref in tampered:
+                self.assertLessEqual(created[ref["amendment_number"]], retrieved)
 
     def test_no_committed_capture_directory_changed(self) -> None:
         root = Path(__file__).resolve().parents[1]

@@ -70,6 +70,16 @@ def _worker_crons() -> list[str]:
     return re.findall(r'"([^"]+)"', match.group(1))
 
 
+def _manifest_for(row: dict) -> dict:
+    """The capture manifest an index row points at.
+
+    Eligibility is a property of the capture, recorded in its own manifest;
+    the index row carries the pointer. Read it rather than trusting a copy.
+    """
+
+    return json.loads((ARCHIVE / row["path"]).read_text(encoding="utf-8"))
+
+
 def _baseline_ref() -> str | None:
     """`origin/main`, when this checkout actually has it.
 
@@ -307,15 +317,45 @@ class DuplicateTriggerStandsDownGreen(unittest.TestCase):
         self.assertFalse(self._stands_down(
             [{"scheduled_date": "2026-09-06", "timing_eligible": True}], SLOT))
 
-    def test_the_real_archive_does_not_stand_down_any_remaining_slot(self) -> None:
+    def test_the_real_archive_stands_down_exactly_the_slots_already_captured(self) -> None:
+        """Stand-down must track eligibility, not a moment in the campaign.
+
+        This asserted that no slot in 2026-09-07..12 stands down, which held
+        only while every capture in the archive was LATE_EXCLUDED. 2026-09-08
+        is the first on-time success, so it now stands down -- correctly, and
+        exactly as `test_a_slot_with_an_eligible_capture_stands_down` below
+        requires. The old form would have gone on failing for every slot the
+        campaign successfully captured.
+
+        The property that actually matters is the equivalence, in both
+        directions: a slot holding a timing-eligible capture stands down, and a
+        slot without one never does. That is what protects the remaining
+        schedule, and it does not depend on which day it is asserted.
+        """
+
         captures = json.loads((ARCHIVE / "index.json").read_text())["captures"]
-        for day in range(7, 13):
-            slot = f"2026-09-{day:02d}"
+        eligible_slots = {
+            row["scheduled_date"]
+            for row in captures
+            if _manifest_for(row).get("timing_eligible") is True
+        }
+        scheduled = json.loads((ARCHIVE / "protocol.json").read_text())["schedule"]
+        for slot in scheduled["scheduled_dates"]:
             with self.subTest(slot=slot):
-                self.assertFalse(
+                expected = slot in eligible_slots
+                self.assertEqual(
                     self._stands_down(captures, slot),
-                    f"{slot} would be skipped, but it holds no eligible capture",
+                    expected,
+                    f"{slot} stand-down disagrees with its eligibility: an "
+                    "eligible capture must suppress the slot and nothing else may",
                 )
+        # Not vacuous in either direction: the campaign has at least one
+        # captured slot and at least one still to run.
+        self.assertTrue(eligible_slots, "no eligible capture, so the True branch is untested")
+        self.assertTrue(
+            set(scheduled["scheduled_dates"]) - eligible_slots,
+            "every slot is captured, so the False branch is untested",
+        )
 
 
 class BothSchedulersMayDeliver(unittest.TestCase):
@@ -480,15 +520,145 @@ class FrozenProtocolIsUntouched(unittest.TestCase):
                 amendment = json.loads((ARCHIVE / ref["path"]).read_text())
                 self.assertEqual(amendment["original_protocol_sha256"], frozen)
 
-    def test_no_python_source_changed(self) -> None:
+    # The modules that implement the frozen rules the protocol hash pins.
+    # Narrower than "all Python" on purpose: see the test below.
+    #
+    # Each entry earns its place by implementing protocol language, not by
+    # being nearby. `time_rules` implements `timing_eligibility`; `scoring`
+    # and `results` implement `primary_scoring.fair_crps_formula` and the
+    # official-result handling; `report` implements
+    # `primary_scoring.winner` ("the system with the lower arithmetic mean
+    # fair CRPS"), its `tie_rule`, `campaign_scoring`'s "number of dates won
+    # by each system", and the `timing_eligible` filter that decides which
+    # captures are scored at all.
+    #
+    # `report` was missing, and its absence was not academic: reversing the
+    # comparison in `_winner` inverts every head-to-head outcome in the
+    # campaign report and passed this class untouched.
+    # `test_a_winner_rule_change_is_rejected` below is the negative case.
+    #
+    # Deliberately still excluded: `archive` and `__main__` persist and print
+    # decisions the modules above have already made, and `capture` /
+    # `botten_ada_capture` do retrieval. Pulling those in would drift back
+    # towards freezing the whole package, which is what this test stopped
+    # doing.
+    FROZEN_RULE_SOURCES = (
+        "scripts/prospective_benchmark_2026/time_rules.py",
+        "scripts/prospective_benchmark_2026/scoring.py",
+        "scripts/prospective_benchmark_2026/results.py",
+        "scripts/prospective_benchmark_2026/report.py",
+    )
+
+    @classmethod
+    def _changed_frozen_modules(cls, baseline: str, *, cwd: Path) -> list[str]:
+        """The frozen-rule modules that differ from the baseline."""
+
+        return subprocess.run(
+            ["git", "diff", "--name-only", baseline, "--", *cls.FROZEN_RULE_SOURCES],
+            cwd=cwd, capture_output=True, text=True, check=True,
+        ).stdout.split()
+
+    def test_the_frozen_rule_modules_are_unchanged(self) -> None:
+        """The frozen rules themselves, not every line of Python in the repo.
+
+        This began as "``scripts/`` is byte-identical to origin/main", which
+        was true and useful evidence *about amendment 006*: that amendment
+        changes delivery only. As a standing invariant it was the wrong shape.
+        It froze the entire Python surface of the repository against any
+        branch, so the first unrelated change to any module -- parallelising
+        the history backfill, say, after a publication was lost to a job
+        timeout -- failed a benchmark test for a reason with nothing to do
+        with the benchmark, and the honest fix would have looked like weakening
+        a frozen-protocol check.
+
+        What actually has to hold while the campaign is live is that the
+        modules implementing the pinned rules do not drift: the cutoff and slot
+        attribution in ``time_rules``, and the scoring in ``scoring``/
+        ``results``. Those are what ``protocol.sha256`` stands behind, and they
+        are what is asserted here. The rest of the amendment's "delivery only"
+        claim is carried by the sibling assertions in this class -- the
+        protocol hash, the cutoff and schedule fields, and the recorded timing
+        contract -- which check the artifacts rather than a diff.
+        """
+
         baseline = _baseline_ref()
         if baseline is None:
             self.skipTest("no origin/main baseline in this checkout")
-        changed = subprocess.run(
-            ["git", "diff", "--name-only", baseline, "--", "scripts/"],
-            cwd=ROOT, capture_output=True, text=True, check=True,
-        ).stdout.split()
-        self.assertEqual(changed, [], f"amendment 006 must change no Python source: {changed}")
+        changed = self._changed_frozen_modules(baseline, cwd=ROOT)
+        self.assertEqual(
+            changed, [],
+            f"a frozen benchmark rule module changed: {changed}. These implement "
+            "the rules protocol.sha256 pins; changing one during the campaign "
+            "needs an amendment, not a code review.",
+        )
+
+    def test_a_winner_rule_change_is_rejected(self) -> None:
+        """The negative case, without which the scope above is only a claim.
+
+        A freeze test that never sees a violation cannot distinguish "nothing
+        changed" from "the thing that changed was not being watched". That is
+        exactly the failure this list already had: `report.py` was absent, so
+        reversing the comparison in `_winner` -- the smallest edit that flips
+        every head-to-head outcome the campaign reports -- passed every
+        assertion in this class.
+
+        The probe runs in a throwaway worktree of HEAD, so the checkout under
+        test is never modified. `git worktree` shares refs, so the baseline
+        resolves there exactly as it does here.
+        """
+
+        baseline = _baseline_ref()
+        if baseline is None:
+            self.skipTest("no origin/main baseline in this checkout")
+
+        relative = "scripts/prospective_benchmark_2026/report.py"
+        needle = '    return "election_simulator" if first < second else "botten_ada"'
+        original = (ROOT / relative).read_text(encoding="utf-8")
+        # If the comparison is rewritten, this probe must be updated rather
+        # than silently stop probing anything.
+        self.assertIn(
+            needle, original,
+            f"the winner comparison in {relative} moved; update this probe",
+        )
+
+        with tempfile.TemporaryDirectory(prefix="frozen-rule-probe-") as tmp:
+            probe = Path(tmp) / "worktree"
+            subprocess.run(
+                ["git", "worktree", "add", "--detach", "-q", str(probe), "HEAD"],
+                cwd=ROOT, check=True, capture_output=True, text=True,
+            )
+            try:
+                target = probe / relative
+                # Reverse the comparison: a tie stays a tie, and every decided
+                # date changes hands.
+                target.write_text(
+                    original.replace(needle, needle.replace("<", ">")),
+                    encoding="utf-8",
+                )
+                changed = self._changed_frozen_modules(baseline, cwd=probe)
+                self.assertIn(
+                    relative, changed,
+                    "reversing the winner rule was not detected by the freeze; "
+                    "FROZEN_RULE_SOURCES does not cover winner selection",
+                )
+                # And the freeze fails on it, rather than merely noticing.
+                with self.assertRaises(AssertionError):
+                    self.assertEqual(changed, [])
+            finally:
+                subprocess.run(
+                    ["git", "worktree", "remove", "--force", str(probe)],
+                    cwd=ROOT, check=False, capture_output=True, text=True,
+                )
+
+        # The real checkout is untouched by the probe.
+        self.assertEqual((ROOT / relative).read_text(encoding="utf-8"), original)
+
+    def test_the_frozen_rule_modules_all_exist(self) -> None:
+        """A path typo would make the freeze above silently vacuous."""
+
+        for relative in self.FROZEN_RULE_SOURCES:
+            with self.subTest(module=relative):
+                self.assertTrue((ROOT / relative).is_file(), relative)
 
     def test_the_recorded_timing_contract_is_unchanged(self) -> None:
         # Pinned to explicit values rather than to another call of the same
