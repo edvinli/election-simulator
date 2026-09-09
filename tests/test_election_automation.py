@@ -22,6 +22,7 @@ from unittest.mock import Mock, call, patch
 
 import numpy as np
 
+from scripts import election_automation_base as base
 from scripts.election_automation import (
     DAILY_SCHEDULE_UTC,
     ELECTION_DAY,
@@ -673,8 +674,207 @@ class ElectionAutomationTests(unittest.TestCase):
             self.assertEqual(self._git_status(source), "")
             self.assertEqual(self._git_status(site), "")
 
-    def test_website_gate_failure_keeps_both_live_current_pointers_byte_identical(self) -> None:
-        """A late website failure cannot publish a partially staged forecast."""
+    def test_backfill_failure_after_certification_keeps_the_forecast_on_the_remote(self) -> None:
+        """The 2026-09-09 incident, as an acceptance test.
+
+        That run finished its 100_000-draw simulation at 16:36:33, exported the
+        snapshot, entered the history backfill, and was killed by the job
+        timeout at 18:20:02 having pushed nothing. The forecast was complete and
+        was thrown away.
+
+        Here the backfill is failed deliberately at its first call -- the
+        earliest point after certification -- and the surviving state is
+        asserted from FRESH CLONES of both remotes, which is the only tree
+        production ever gives a retry:
+
+          * the simulator's remote holds the certified generation;
+          * its certification commit excludes the history artifact;
+          * the website's remote is untouched;
+          * rendering republishes that same generation with no second
+            authoritative simulation.
+        """
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            checkouts = root / "checkouts"
+            checkouts.mkdir()
+            source, site = self._production_fixture(checkouts)
+            source_remote = root / "simulator.git"
+            site_remote = root / "website.git"
+            self._publish_to_bare_remote(source, source_remote, "main")
+            self._publish_to_bare_remote(site, site_remote, "master")
+            site_tree_before = subprocess.run(
+                ["git", "rev-parse", "master^{tree}"], cwd=site_remote, check=True,
+                capture_output=True, text=True,
+            ).stdout.strip()
+            site_subjects_before = self._remote_subjects(site_remote, "master")
+
+            simulations: list[int] = []
+            production_result = self._production_result(FORECAST_AS_OF)
+
+            def refresh(raw, processed, **kwargs):
+                raw.mkdir(parents=True, exist_ok=True)
+                self._change_normalized_poll_support(processed / "individual_polls.csv")
+                return {"messages": []}
+
+            def runner(**kwargs):
+                simulations.append(int(kwargs["samples"]))
+                commit = subprocess.run(
+                    ["git", "rev-parse", "HEAD"], cwd=source, check=True,
+                    capture_output=True, text=True,
+                ).stdout.strip()
+                production_result.manifest["source_git_commit"] = commit
+                production_result.manifest["git_commit"] = commit
+                return production_result
+
+            # What the incident actually was: the process was KILLED inside the
+            # backfill, so no in-process handler ran. A backfill exception is
+            # already tolerated here, which is why merely raising proves
+            # nothing. The property that makes a kill survivable is that the
+            # certified generation is on the remote BEFORE this point, so the
+            # probe records the remote's state at backfill entry.
+            remote_at_backfill: list[str | None] = []
+
+            def exploding_backfill(*args, **kwargs):
+                shown = subprocess.run(
+                    ["git", "show", "main:files/election-simulator/current.json"],
+                    cwd=source_remote, capture_output=True, text=True, check=False,
+                )
+                remote_at_backfill.append(
+                    json.loads(shown.stdout)["publication_generation"]
+                    if shown.returncode == 0 else None
+                )
+                raise AutomationError("history curve backfill exhausted its budget")
+
+            with patch(
+                "scripts.publication_pipeline.pipeline.DEFAULT_PROCESSED_ROOT",
+                source / "data/processed",
+            ), patch.object(base, "backfill_reconstructed_curve", exploding_backfill):
+                blocked = run_automation(
+                    source,
+                    site_repo=site,
+                    schedule=INTRADAY_SCHEDULE_UTC,
+                    now=_forecast_utc(8),
+                    automation_enabled="true",
+                    mode="publish",
+                    commit=True,
+                    push=True,
+                    refresh_fn=refresh,
+                    simulation_runner=runner,
+                    projection_runner=self._projection_runner,
+                    campaign_path_simulator=self._campaign_path_simulator,
+                    website_check_fn=lambda _root: {"status": "PASS"},
+                    website_push_check_fn=lambda _root: (_ for _ in ()).throw(
+                        AutomationError("website command failed: changes-baseline.smoke.mjs")),
+                    generated_at_utc=f"{FORECAST_AS_OF}T08:00:00+00:00",
+                )
+            self.assertNotEqual(blocked.status, "PUBLISHED")
+            self.assertEqual(simulations, [100_000], "one authoritative simulation")
+
+            # THE LOAD-BEARING ASSERTION. When the backfill began, the
+            # certified generation was already retrievable from the simulator's
+            # remote. Had the process been killed at that instant -- as it was
+            # on 2026-09-09 at 18:20:02 -- the forecast would still exist.
+            self.assertEqual(len(remote_at_backfill), 1, remote_at_backfill)
+            self.assertIsNotNone(
+                remote_at_backfill[0],
+                "no certified pointer on the remote when the backfill started: a "
+                "process kill here would discard the finished forecast again",
+            )
+
+            # Certified, and durable on the remote.
+            certified = self._remote_pointer(
+                source_remote, "main")["publication_generation"]
+            self.assertEqual(
+                remote_at_backfill[0], certified,
+                "the generation on the remote at backfill entry is the certified one",
+            )
+            subjects = self._remote_subjects(source_remote, "main")
+            self.assertTrue(
+                any(s.startswith("chore: publish election forecast") for s in subjects),
+                subjects,
+            )
+            # The CERTIFICATION commit specifically -- not HEAD, which by now
+            # is the separate render commit. That separation is the point: the
+            # certification commit carries the generation and never the
+            # history, so a rendering failure cannot have touched it.
+            certification_sha = subprocess.run(
+                ["git", "log", "--format=%H", "--grep",
+                 "^chore: publish election forecast", "main"],
+                cwd=source_remote, check=True, capture_output=True, text=True,
+            ).stdout.split()[0]
+            files = subprocess.run(
+                ["git", "show", "--name-only", "--format=", certification_sha],
+                cwd=source_remote, check=True, capture_output=True, text=True,
+            ).stdout.split()
+            self.assertTrue(
+                any(f.startswith(f"files/election-simulator/versions/{certified}/")
+                    for f in files), files)
+            self.assertNotIn(
+                "files/election-simulator/history/coalition-timeseries.json", files, files)
+
+            # The website remote is untouched.
+            self.assertEqual(self._remote_subjects(site_remote, "master"),
+                             site_subjects_before)
+            self.assertEqual(
+                subprocess.run(
+                    ["git", "rev-parse", "master^{tree}"], cwd=site_remote,
+                    check=True, capture_output=True, text=True,
+                ).stdout.strip(),
+                site_tree_before,
+            )
+
+            # Rendering retried from fresh clones publishes that generation,
+            # with a runner that raises if any simulation is attempted.
+            fresh_source = self._clone_from_remote(
+                source_remote, "main", root / "fresh-simulator")
+            fresh_site = self._clone_from_remote(
+                site_remote, "master", root / "fresh-website")
+
+            def must_not_simulate(**kwargs):
+                raise AssertionError("rendering must not run a simulation")
+
+            with patch(
+                "scripts.publication_pipeline.pipeline.DEFAULT_PROCESSED_ROOT",
+                fresh_source / "data/processed",
+            ):
+                rendered = run_automation(
+                    fresh_source,
+                    site_repo=fresh_site,
+                    schedule=INTRADAY_SCHEDULE_UTC,
+                    now=_forecast_utc(10),
+                    automation_enabled="true",
+                    mode="publish",
+                    commit=True,
+                    push=True,
+                    refresh_fn=lambda raw, processed, **kwargs: {"messages": []},
+                    simulation_runner=must_not_simulate,
+                    website_check_fn=lambda _root: {"status": "PASS"},
+                    website_push_check_fn=lambda _root: {"status": "PASS"},
+                    generated_at_utc=f"{FORECAST_AS_OF}T10:00:00+00:00",
+                )
+            self.assertNotEqual(rendered.status, "FAILED", rendered.summary.render())
+            self.assertEqual(
+                self._remote_pointer(site_remote, "master")["publication_generation"],
+                certified,
+            )
+
+    def test_website_gate_failure_certifies_the_forecast_and_leaves_the_site(self) -> None:
+        """The boundary, at the pointers.
+
+        This asserted that BOTH live pointers stayed byte-identical after a
+        late website failure, which was the right guarantee while certification
+        and rendering were one transaction: a half-published forecast was the
+        only other outcome.
+
+        Certification now pushes before any rendering runs, so the source
+        pointer *must* move -- that is the whole point, and on 2026-09-09 a
+        completed 100_000-draw simulation was discarded precisely because it
+        did not. The website pointer must still not move, and the guarantee
+        the original name protected -- that no partially staged forecast is
+        ever published -- is now stronger, not weaker: the forecast is fully
+        certified and the website is untouched.
+        """
 
         with tempfile.TemporaryDirectory() as tmp:
             source, site = self._production_fixture(Path(tmp))
@@ -732,8 +932,40 @@ class ElectionAutomationTests(unittest.TestCase):
             self.assertEqual(result.summary.simulation_samples, 100_000)
             self.assertIn("Simulation samples: 100000", result.summary.render())
             self.assertEqual(calls, [100_000])
-            self.assertEqual(source_current.read_bytes(), source_before)
+
+            # The forecast is certified: the source pointer advanced, and it
+            # names the generation the run produced.
+            self.assertNotEqual(source_current.read_bytes(), source_before)
+            certified = json.loads(source_current.read_text())["publication_generation"]
+            self.assertIn(
+                f"chore: publish election forecast",
+                self._git_subjects(source)[0],
+            )
+            self.assertTrue(
+                (source / "files/election-simulator/versions" / certified).is_dir(),
+                certified,
+            )
+
+            # The website is untouched, by pointer and by commit subject.
             self.assertEqual(site_current.read_bytes(), site_before)
+            self.assertFalse(
+                any(subject.startswith("chore: sync election forecast")
+                    for subject in self._git_subjects(site)),
+                self._git_subjects(site),
+            )
+
+            # And the history was NOT swept into the certification commit: it
+            # is a rendering output, and rendering is what failed.
+            certification_files = subprocess.run(
+                ["git", "show", "--name-only", "--format=", "HEAD"],
+                cwd=source, check=True, capture_output=True, text=True,
+            ).stdout.split()
+            self.assertNotIn(
+                "files/election-simulator/history/coalition-timeseries.json",
+                certification_files,
+                certification_files,
+            )
+
             self.assertEqual(self._git_status(source), "")
             self.assertEqual(self._git_status(site), "")
 
