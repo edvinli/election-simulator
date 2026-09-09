@@ -60,6 +60,10 @@ from scripts.site_publisher import GENERATION_FILES, publish_generation_to_site,
 from scripts.static_exporter import validate_published_directory
 from scripts.simulator.engine import SimulationResult, simulate_election
 from scripts.simulator.reproducibility import compute_file_sha256
+from scripts.rendering import (
+    CertifiedGenerationError,
+    load_certified_generation,
+)
 from scripts.simulator.exact_draw_sidecar import (
     SIDECAR_DRAWS_FILENAME,
     SIDECAR_METADATA_FILENAME,
@@ -2679,6 +2683,157 @@ time.sleep(60)
                 bad_manifest.write_bytes(original)
             self.assertEqual(pointer_path.read_bytes(), pointer_before)
 
+
+
+class CertifiedGenerationLoaderTests(unittest.TestCase):
+    """Loading a certified generation for rendering, and refusing the rest.
+
+    The renderer must reproduce the forecast that was certified, so the loader
+    is verified against a generation this pipeline actually produced rather
+    than against a hand-built fixture. Exactness is the load-bearing property:
+    the draws it returns have to be the certified draws, bit for bit, or the
+    rendered current point is a different forecast.
+    """
+
+    @classmethod
+    def _certify_one(cls, tmp: Path) -> tuple[Path, str, Any]:
+        """Certify one generation in a throwaway repo pair."""
+
+        source, site = ElectionAutomationTests._production_fixture(tmp)
+        production_result = ElectionAutomationTests._production_result(FORECAST_AS_OF)
+
+        def refresh(raw, processed, **kwargs):
+            raw.mkdir(parents=True, exist_ok=True)
+            ElectionAutomationTests._change_normalized_poll_support(
+                processed / "individual_polls.csv")
+            return {"messages": []}
+
+        def runner(**kwargs):
+            commit = subprocess.run(
+                ["git", "rev-parse", "HEAD"], cwd=source, check=True,
+                capture_output=True, text=True,
+            ).stdout.strip()
+            production_result.manifest["source_git_commit"] = commit
+            production_result.manifest["git_commit"] = commit
+            return production_result
+
+        with patch(
+            "scripts.publication_pipeline.pipeline.DEFAULT_PROCESSED_ROOT",
+            source / "data/processed",
+        ):
+            result = run_automation(
+                source,
+                site_repo=site,
+                schedule=INTRADAY_SCHEDULE_UTC,
+                now=_forecast_utc(8),
+                automation_enabled="true",
+                mode="publish",
+                commit=True,
+                refresh_fn=refresh,
+                simulation_runner=runner,
+                projection_runner=ElectionAutomationTests._projection_runner,
+                campaign_path_simulator=ElectionAutomationTests._campaign_path_simulator,
+                website_check_fn=lambda _root: {"status": "PASS"},
+                website_push_check_fn=lambda _root: {"status": "PASS"},
+                generated_at_utc=f"{FORECAST_AS_OF}T08:00:00+00:00",
+            )
+        assert result.status == "PUBLISHED", result.summary.render()
+        generation = json.loads(
+            (source / "files/election-simulator/current.json").read_text()
+        )["publication_generation"]
+        return source, generation, production_result
+
+    def test_it_returns_the_certified_draws_exactly(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            source, generation, produced = self._certify_one(Path(tmp))
+            loaded = load_certified_generation(source, generation=generation)
+
+            self.assertEqual(loaded.generation, generation)
+            # Bit-for-bit. Anything else is a different forecast.
+            np.testing.assert_array_equal(
+                loaded.vote_shares_matrix, produced.vote_shares_matrix)
+            np.testing.assert_array_equal(
+                loaded.seats_matrix, produced.seats_matrix)
+            # Percentage points, not fractions.
+            self.assertAlmostEqual(
+                float(loaded.vote_shares_matrix[0].sum()), 100.0, places=6)
+            # Provenance is the certified generation's own source revision,
+            # never the renderer's checkout.
+            self.assertEqual(
+                loaded.source_git_commit,
+                json.loads((source / "files/election-simulator/versions" / generation
+                            / "manifest.json").read_text())["source_git_commit"],
+            )
+            self.assertEqual(loaded.manifest["publication_generation"], generation)
+            self.assertEqual(loaded.manifest["rendered_from"], "archived_exact_draws")
+
+    def test_it_accepts_an_explicit_certification_commit(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            source, generation, _ = self._certify_one(Path(tmp))
+            certification = subprocess.run(
+                ["git", "log", "--format=%H", "--grep",
+                 "^chore: publish election forecast", "-1"],
+                cwd=source, check=True, capture_output=True, text=True,
+            ).stdout.strip()
+            loaded = load_certified_generation(
+                source, generation=generation, certification_commit=certification)
+            self.assertEqual(loaded.certification_commit, certification)
+
+    def test_it_refuses_a_commit_that_did_not_certify_the_generation(self) -> None:
+        """The commit is the caller's statement of which certification to render."""
+
+        with tempfile.TemporaryDirectory() as tmp:
+            source, generation, _ = self._certify_one(Path(tmp))
+            earlier = subprocess.run(
+                ["git", "rev-list", "--max-parents=0", "HEAD"],
+                cwd=source, check=True, capture_output=True, text=True,
+            ).stdout.split()[0]
+            with self.assertRaises(CertifiedGenerationError) as ctx:
+                load_certified_generation(
+                    source, generation=generation, certification_commit=earlier)
+            self.assertIn("does not contain", str(ctx.exception))
+
+    def test_it_refuses_a_generation_without_archived_draws(self) -> None:
+        """Pre-amendment-007 generations fail clearly instead of re-simulating."""
+
+        with tempfile.TemporaryDirectory() as tmp:
+            source, generation, _ = self._certify_one(Path(tmp))
+            archive = source / "data/processed/prospective_forecasts" / generation
+            (archive / SIDECAR_DRAWS_FILENAME).unlink()
+            with self.assertRaises(CertifiedGenerationError) as ctx:
+                load_certified_generation(source, generation=generation)
+            message = str(ctx.exception)
+            self.assertIn("no archived exact-draw sidecar", message)
+            self.assertIn("amendment 007", message)
+
+    def test_it_refuses_a_snapshot_that_disagrees_with_the_bundle(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            source, generation, _ = self._certify_one(Path(tmp))
+            snapshot_path = (source / "data/processed/prospective_forecasts"
+                             / generation / "snapshot.json")
+            snapshot = json.loads(snapshot_path.read_text())
+            snapshot["deterministic_payload_sha256"] = "0" * 64
+            snapshot_path.write_text(json.dumps(snapshot), encoding="utf-8")
+            with self.assertRaises(CertifiedGenerationError) as ctx:
+                load_certified_generation(source, generation=generation)
+            self.assertIn("disagree on deterministic_payload_sha256", str(ctx.exception))
+
+    def test_it_refuses_an_unknown_or_unsafe_generation_id(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            source, _generation, _ = self._certify_one(Path(tmp))
+            for bad in ("../escape", "not-a-generation"):
+                with self.subTest(generation=bad):
+                    with self.assertRaises(CertifiedGenerationError):
+                        load_certified_generation(source, generation=bad)
+
+    def test_the_loader_never_reaches_for_the_simulator(self) -> None:
+        """Structural: no replay or simulation fallback exists to be reached."""
+
+        source = Path(base.__file__).parent / "rendering/certified_generation.py"
+        text = source.read_text(encoding="utf-8")
+        for forbidden in ("simulate_election", "replay_certified_generation",
+                          "reproduce_missing_draws"):
+            self.assertNotIn(forbidden, text, forbidden)
 
 
 class HistoryInputRevisionReuseTests(unittest.TestCase):
