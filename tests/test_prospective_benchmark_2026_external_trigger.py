@@ -482,11 +482,41 @@ class FrozenProtocolIsUntouched(unittest.TestCase):
 
     # The modules that implement the frozen rules the protocol hash pins.
     # Narrower than "all Python" on purpose: see the test below.
+    #
+    # Each entry earns its place by implementing protocol language, not by
+    # being nearby. `time_rules` implements `timing_eligibility`; `scoring`
+    # and `results` implement `primary_scoring.fair_crps_formula` and the
+    # official-result handling; `report` implements
+    # `primary_scoring.winner` ("the system with the lower arithmetic mean
+    # fair CRPS"), its `tie_rule`, `campaign_scoring`'s "number of dates won
+    # by each system", and the `timing_eligible` filter that decides which
+    # captures are scored at all.
+    #
+    # `report` was missing, and its absence was not academic: reversing the
+    # comparison in `_winner` inverts every head-to-head outcome in the
+    # campaign report and passed this class untouched.
+    # `test_a_winner_rule_change_is_rejected` below is the negative case.
+    #
+    # Deliberately still excluded: `archive` and `__main__` persist and print
+    # decisions the modules above have already made, and `capture` /
+    # `botten_ada_capture` do retrieval. Pulling those in would drift back
+    # towards freezing the whole package, which is what this test stopped
+    # doing.
     FROZEN_RULE_SOURCES = (
         "scripts/prospective_benchmark_2026/time_rules.py",
         "scripts/prospective_benchmark_2026/scoring.py",
         "scripts/prospective_benchmark_2026/results.py",
+        "scripts/prospective_benchmark_2026/report.py",
     )
+
+    @classmethod
+    def _changed_frozen_modules(cls, baseline: str, *, cwd: Path) -> list[str]:
+        """The frozen-rule modules that differ from the baseline."""
+
+        return subprocess.run(
+            ["git", "diff", "--name-only", baseline, "--", *cls.FROZEN_RULE_SOURCES],
+            cwd=cwd, capture_output=True, text=True, check=True,
+        ).stdout.split()
 
     def test_the_frozen_rule_modules_are_unchanged(self) -> None:
         """The frozen rules themselves, not every line of Python in the repo.
@@ -514,16 +544,74 @@ class FrozenProtocolIsUntouched(unittest.TestCase):
         baseline = _baseline_ref()
         if baseline is None:
             self.skipTest("no origin/main baseline in this checkout")
-        changed = subprocess.run(
-            ["git", "diff", "--name-only", baseline, "--", *self.FROZEN_RULE_SOURCES],
-            cwd=ROOT, capture_output=True, text=True, check=True,
-        ).stdout.split()
+        changed = self._changed_frozen_modules(baseline, cwd=ROOT)
         self.assertEqual(
             changed, [],
             f"a frozen benchmark rule module changed: {changed}. These implement "
             "the rules protocol.sha256 pins; changing one during the campaign "
             "needs an amendment, not a code review.",
         )
+
+    def test_a_winner_rule_change_is_rejected(self) -> None:
+        """The negative case, without which the scope above is only a claim.
+
+        A freeze test that never sees a violation cannot distinguish "nothing
+        changed" from "the thing that changed was not being watched". That is
+        exactly the failure this list already had: `report.py` was absent, so
+        reversing the comparison in `_winner` -- the smallest edit that flips
+        every head-to-head outcome the campaign reports -- passed every
+        assertion in this class.
+
+        The probe runs in a throwaway worktree of HEAD, so the checkout under
+        test is never modified. `git worktree` shares refs, so the baseline
+        resolves there exactly as it does here.
+        """
+
+        baseline = _baseline_ref()
+        if baseline is None:
+            self.skipTest("no origin/main baseline in this checkout")
+
+        relative = "scripts/prospective_benchmark_2026/report.py"
+        needle = '    return "election_simulator" if first < second else "botten_ada"'
+        original = (ROOT / relative).read_text(encoding="utf-8")
+        # If the comparison is rewritten, this probe must be updated rather
+        # than silently stop probing anything.
+        self.assertIn(
+            needle, original,
+            f"the winner comparison in {relative} moved; update this probe",
+        )
+
+        with tempfile.TemporaryDirectory(prefix="frozen-rule-probe-") as tmp:
+            probe = Path(tmp) / "worktree"
+            subprocess.run(
+                ["git", "worktree", "add", "--detach", "-q", str(probe), "HEAD"],
+                cwd=ROOT, check=True, capture_output=True, text=True,
+            )
+            try:
+                target = probe / relative
+                # Reverse the comparison: a tie stays a tie, and every decided
+                # date changes hands.
+                target.write_text(
+                    original.replace(needle, needle.replace("<", ">")),
+                    encoding="utf-8",
+                )
+                changed = self._changed_frozen_modules(baseline, cwd=probe)
+                self.assertIn(
+                    relative, changed,
+                    "reversing the winner rule was not detected by the freeze; "
+                    "FROZEN_RULE_SOURCES does not cover winner selection",
+                )
+                # And the freeze fails on it, rather than merely noticing.
+                with self.assertRaises(AssertionError):
+                    self.assertEqual(changed, [])
+            finally:
+                subprocess.run(
+                    ["git", "worktree", "remove", "--force", str(probe)],
+                    cwd=ROOT, check=False, capture_output=True, text=True,
+                )
+
+        # The real checkout is untouched by the probe.
+        self.assertEqual((ROOT / relative).read_text(encoding="utf-8"), original)
 
     def test_the_frozen_rule_modules_all_exist(self) -> None:
         """A path typo would make the freeze above silently vacuous."""
