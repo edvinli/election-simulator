@@ -719,6 +719,38 @@ def _poll_identity(poll: Mapping[str, Any]) -> tuple[Any, ...]:
     )
 
 
+# Reconstruction backfill concurrency.
+#
+# One worker is the default for every in-process caller: the parallel path
+# forks processes, and a library must not do that behind a caller's back.
+# Production asks for more explicitly, through --history-workers.
+DEFAULT_HISTORY_WORKERS = 1
+# What the publication workflow requests. Bounded rather than "all cores": the
+# runner also has the publication's own work to do, and each worker re-imports
+# the model and holds its own draw matrices.
+PRODUCTION_HISTORY_WORKERS = 4
+
+
+def resolve_history_workers(requested: int | None) -> int:
+    """Bound a requested backfill worker count by what this machine has.
+
+    ``None`` means the serial default.  A request larger than ``os.cpu_count()``
+    is capped rather than refused, so the same invocation is valid on a
+    4-core runner and on a laptop, and asking for fewer than one is a caller
+    error rather than a silent promotion to serial.
+    """
+
+    if requested is None:
+        return DEFAULT_HISTORY_WORKERS
+    try:
+        wanted = int(requested)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"history workers must be an integer: {requested!r}") from exc
+    if wanted < 1:
+        raise ValueError(f"history workers must be at least 1: {wanted}")
+    return max(1, min(wanted, os.cpu_count() or 1))
+
+
 def first_changed_poll_date(
     previous_polls: Iterable[Mapping[str, Any]],
     current_polls: Iterable[Mapping[str, Any]],
@@ -803,8 +835,9 @@ def build_history(
     source_worktree_clean: bool | None = None,
     production_metadata: Mapping[str, Any] | None = None,
     model_data_dir: Path | str = DEFAULT_PROCESSED_ROOT,
-    workers: int = 1,
+    workers: int = DEFAULT_HISTORY_WORKERS,
     progress_callback: Callable[[int, int, str], None] | None = None,
+    workload_callback: Callable[[int, int], None] | None = None,
 ) -> dict[str, Any]:
     """Build and validate one schema 1.0 history artifact.
 
@@ -982,8 +1015,27 @@ def build_history(
         dates_to_simulate.append((point_date, requested_samples))
 
     computed_results: dict[date, tuple[np.ndarray, np.ndarray, Any]] = {}
-    workers_count = max(1, int(workers)) if isinstance(workers, int) else 1
-    if workers_count > 1 and simulation_runner is None and len(dates_to_simulate) > 1:
+    # Resolved here, at the one place the pool is actually sized, rather than
+    # in each caller. `resolve_history_workers` was already applied by the
+    # publication path, which left every other entry point -- the CLI with an
+    # explicit `--workers`, and any direct caller -- free to oversubscribe a
+    # smaller machine. Applying it at this boundary makes the cap a property of
+    # the execution rather than of one caller's diligence, and it is idempotent
+    # for anything the publication path has already resolved.
+    workers_count = resolve_history_workers(workers if workers is not None else None)
+    # An injected runner keeps every date on the serial seam: the parallel path
+    # sends work to a subprocess, which cannot see a caller's closure.
+    parallel = workers_count > 1 and simulation_runner is None and len(dates_to_simulate) > 1
+    if workload_callback is not None:
+        # Reported from here, not from the caller, because this is the first
+        # point at which the real workload is known. A caller counting holes
+        # sees only the gaps; fingerprint invalidation can add far more. On
+        # 2026-09-08 that was one hole and 119 invalidated points, and no log
+        # line said so -- the publication simply ran out of job time.
+        # The second argument is the *effective* worker count, so a request
+        # that fell back to serial is visible as such.
+        workload_callback(len(dates_to_simulate), workers_count if parallel else 1)
+    if parallel:
         import concurrent.futures
         tasks = [
             (point_date.isoformat(), election.isoformat(), req_samples, seed, str(model_data_dir))
@@ -1460,8 +1512,9 @@ def backfill_reconstructed_curve(
     production_latest_samples: int | None = None,
     simulation_runner: Callable[..., Any] | None = None,
     model_data_dir: Path | str = DEFAULT_PROCESSED_ROOT,
-    workers: int = 1,
+    workers: int = DEFAULT_HISTORY_WORKERS,
     progress_callback: Callable[[int, int, str], None] | None = None,
+    workload_callback: Callable[[int, int], None] | None = None,
 ) -> tuple[dict[str, Any], list[date]]:
     """Fill the holes the daily roll-in leaves in the reconstructed curve.
 
@@ -1502,6 +1555,7 @@ def backfill_reconstructed_curve(
         model_data_dir=model_data_dir,
         workers=workers,
         progress_callback=progress_callback,
+        workload_callback=workload_callback,
     )
     # `build_history` assembles a payload from its own inputs, so anything a
     # later stage attached -- the campaign-path region and the secondary
