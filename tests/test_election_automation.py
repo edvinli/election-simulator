@@ -771,6 +771,18 @@ class ElectionAutomationTests(unittest.TestCase):
             self.assertNotEqual(blocked.status, "PUBLISHED")
             self.assertEqual(simulations, [100_000], "one authoritative simulation")
 
+            # "Forecast certified; website update failed" has to be
+            # distinguishable from "forecast failed", and it has to survive the
+            # generic failure handler -- which is the only path a rendering
+            # exception takes.
+            self.assertEqual(blocked.summary.certification_status, "CERTIFIED_AND_PUSHED")
+            self.assertTrue(
+                blocked.summary.certification_remote_verified,
+                blocked.summary.render(),
+            )
+            self.assertNotEqual(blocked.summary.certification_commit, "NONE")
+            self.assertIn("Certification: CERTIFIED_AND_PUSHED", blocked.summary.render())
+
             # THE LOAD-BEARING ASSERTION. When the backfill began, the
             # certified generation was already retrievable from the simulator's
             # remote. Had the process been killed at that instant -- as it was

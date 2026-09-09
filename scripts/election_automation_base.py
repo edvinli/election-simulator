@@ -206,6 +206,12 @@ class AutomationSummary:
     website_commit: str = "NONE"
     deployment_status: str = "NOT_RUN"
     recovery_status: str = "NONE"
+    #: Set the instant certification completes, so a later rendering failure
+    #: still reports "forecast certified; website update failed" rather than a
+    #: bare FAILED that reads as "the forecast failed".
+    certification_status: str = "NOT_REACHED"
+    certification_commit: str = "NONE"
+    certification_remote_verified: bool = False
     daily_publication_status: str = "UNKNOWN"
     failure: str | None = None
 
@@ -225,6 +231,8 @@ class AutomationSummary:
             f"Website commit: {self.website_commit}",
             f"Deployment status: {self.deployment_status}",
             f"Recovery status: {self.recovery_status}",
+            f"Certification: {self.certification_status}"
+            + (" (remote verified)" if self.certification_remote_verified else ""),
             f"Daily publication: {self.daily_publication_status}",
         ]
         if self.failure:
@@ -1503,7 +1511,12 @@ def _website_needs_recovery(*, source_repo: Path, site_repo: Path) -> tuple[bool
     if not rendered:
         source["render_state"] = "CERTIFIED_NOT_RENDERED"
         source["source_history_generation"] = source_history_generation
-        # Not mirrorable: refuse rather than publish a mismatched history.
+        # Not mirrorable -- mirroring would deploy a history that predates the
+        # certified generation. It is emphatically NOT "nothing to do" either:
+        # the website is stale and the fix is to render, which needs the
+        # backfill and so a renderer entry point. Until that exists the state
+        # is surfaced rather than swallowed, because a silent
+        # NO_PUBLICATION_NEEDED here leaves a stale site with no signal.
         return False, source
     source["render_state"] = "RENDERED_NOT_DEPLOYED" if (
         site_history_generation != generation
@@ -1635,21 +1648,34 @@ def _assert_certification_on_remote(
 
     remote = _run_git(repo, ["ls-remote", "origin", f"refs/heads/{push_ref}"])
     head = remote.stdout.split()[0] if remote.stdout.split() else ""
-    if head != commit_hash:
+    if not head:
         raise AutomationError(
-            f"certification commit {commit_hash[:12]} is not the head of "
-            f"origin/{push_ref} (found {head[:12] or 'nothing'})"
+            f"origin/{push_ref} has no head, so certification "
+            f"{commit_hash[:12]} cannot be confirmed as remote"
         )
-    listed = _run_git(
-        repo,
-        ["cat-file", "-e",
-         f"{commit_hash}:files/election-simulator/versions/{generation}/manifest.json"],
-        check=False,
-    )
+    # Exact head equality would report failure after a legitimate concurrent
+    # push -- another workflow committing a polling snapshot a second later is
+    # normal. What has to hold is that the certification is *reachable* from
+    # the remote head and that the generation is intact there, which is what a
+    # retry from a fresh clone actually depends on.
+    if head != commit_hash:
+        _run_git(repo, ["fetch", "--quiet", "origin", push_ref])
+        descends = _run_git(
+            repo, ["merge-base", "--is-ancestor", commit_hash, head], check=False)
+        if descends.returncode != 0:
+            raise AutomationError(
+                f"certification commit {commit_hash[:12]} is not reachable from "
+                f"origin/{push_ref} (head {head[:12]}): the push did not survive"
+            )
+    # Intact at the remote head, not merely inside our own commit: a later push
+    # that reverted the generation would leave a reachable but useless
+    # certification.
+    manifest = f"files/election-simulator/versions/{generation}/manifest.json"
+    listed = _run_git(repo, ["cat-file", "-e", f"{head}:{manifest}"], check=False)
     if listed.returncode != 0:
         raise AutomationError(
-            f"certification commit {commit_hash[:12]} does not contain the "
-            f"generation {generation} it claims to certify"
+            f"generation {generation} is not present at origin/{push_ref} "
+            f"({head[:12]}), so the certification is not usable"
         )
 
 
@@ -1866,6 +1892,7 @@ def run_production_event(
     website_push_ref: str = "master",
     stage_callback: StageCallback | None = None,
     pipeline_observer: Callable[[PipelineRun], None] | None = None,
+    certification_observer: Callable[[Mapping[str, Any]], None] | None = None,
     history_workers: int = DEFAULT_HISTORY_WORKERS,
 ) -> tuple[PipelineRun, dict[str, Any], dict[str, Any] | None]:
     """Run exactly one production simulation and stage all consumers.
@@ -1981,6 +2008,11 @@ def run_production_event(
             source_push_ref=source_push_ref,
             stage_callback=stage_callback,
         )
+        # Reported before anything else can fail. Everything after this point
+        # is presentation, and a presentation failure must not erase the fact
+        # that the forecast exists.
+        if certification_observer is not None:
+            certification_observer(certification)
         # Close yesterday's hole before rolling today's point in.  The roll-in
         # relabels the previous official point `prospective_archived` and
         # cannot simulate a replacement, so without this the reconstructed
@@ -2239,6 +2271,18 @@ def run_automation(
         if run.simulation_validation is not None:
             summary.simulation_samples = int(run.simulation_validation.get("samples", 0))
 
+    def observe_certification(record: Mapping[str, Any]) -> None:
+        # Written onto the summary as soon as certification returns, so the
+        # generic failure handler below reports it too. Without this the
+        # distinction between "forecast failed" and "forecast certified,
+        # rendering failed" is absent exactly when it is needed.
+        summary.certification_status = str(record.get("status", "UNKNOWN"))
+        summary.certification_commit = str(record.get("commit") or "NONE")
+        summary.certification_remote_verified = bool(record.get("remote_verified"))
+        generation = record.get("generation")
+        if generation and summary.publication_generation in ("", "NONE"):
+            summary.publication_generation = str(generation)
+
     try:
         guard_election_date(today, election)
         resolved_mode = resolve_mode(
@@ -2368,6 +2412,7 @@ def run_automation(
             # short-circuiting on a stale website generation from an older
             # failed run.
             recovery: dict[str, Any] | None = None
+            source_is_certified = False
             if not publication_needed and root != site and resolved_mode in MUTATING_MODES:
                 # Only skip the recovery probe when there is no certified
                 # source pointer to compare.  Once a source generation is
@@ -2391,6 +2436,17 @@ def run_automation(
                         commit=effective_commit,
                         push=effective_push,
                     )
+            if recovery is None and source_is_certified:
+                # `_website_needs_recovery` declines to mirror when the
+                # simulator's history predates the certified generation. That
+                # is a real, actionable state -- certified but not rendered --
+                # and must not be reported as a healthy no-op.
+                probed, probe = _website_needs_recovery(
+                    source_repo=root, site_repo=site)
+                if not probed and probe.get("render_state") == "CERTIFIED_NOT_RENDERED":
+                    summary.recovery_status = "CERTIFIED_NOT_RENDERED"
+                    summary.deployment_status = "WEBSITE_STALE_PENDING_RENDER"
+                    summary.publication_generation = str(probe.get("generation", "NONE"))
             if recovery is not None:
                 summary.recovery_status = "WEBSITE_RECOVERED" if effective_commit else "WEBSITE_RECOVERY_STAGED"
                 summary.publication_generation = str(recovery.get("generation", "NONE"))
@@ -2441,6 +2497,7 @@ def run_automation(
                         allow_custom_processed_root=True,
                         stage_callback=stage_callback,
                         pipeline_observer=observe_pipeline,
+                        certification_observer=observe_certification,
                         history_workers=history_workers,
                     )
             else:
@@ -2464,6 +2521,7 @@ def run_automation(
                     allow_duplicate_payload=True,
                     stage_callback=stage_callback,
                     pipeline_observer=observe_pipeline,
+                    certification_observer=observe_certification,
                     history_workers=history_workers,
                 )
         summary.simulation_samples = int(run.simulation_validation["samples"]) if run.simulation_validation else 0
