@@ -70,6 +70,16 @@ def _worker_crons() -> list[str]:
     return re.findall(r'"([^"]+)"', match.group(1))
 
 
+def _manifest_for(row: dict) -> dict:
+    """The capture manifest an index row points at.
+
+    Eligibility is a property of the capture, recorded in its own manifest;
+    the index row carries the pointer. Read it rather than trusting a copy.
+    """
+
+    return json.loads((ARCHIVE / row["path"]).read_text(encoding="utf-8"))
+
+
 def _baseline_ref() -> str | None:
     """`origin/main`, when this checkout actually has it.
 
@@ -307,15 +317,45 @@ class DuplicateTriggerStandsDownGreen(unittest.TestCase):
         self.assertFalse(self._stands_down(
             [{"scheduled_date": "2026-09-06", "timing_eligible": True}], SLOT))
 
-    def test_the_real_archive_does_not_stand_down_any_remaining_slot(self) -> None:
+    def test_the_real_archive_stands_down_exactly_the_slots_already_captured(self) -> None:
+        """Stand-down must track eligibility, not a moment in the campaign.
+
+        This asserted that no slot in 2026-09-07..12 stands down, which held
+        only while every capture in the archive was LATE_EXCLUDED. 2026-09-08
+        is the first on-time success, so it now stands down -- correctly, and
+        exactly as `test_a_slot_with_an_eligible_capture_stands_down` below
+        requires. The old form would have gone on failing for every slot the
+        campaign successfully captured.
+
+        The property that actually matters is the equivalence, in both
+        directions: a slot holding a timing-eligible capture stands down, and a
+        slot without one never does. That is what protects the remaining
+        schedule, and it does not depend on which day it is asserted.
+        """
+
         captures = json.loads((ARCHIVE / "index.json").read_text())["captures"]
-        for day in range(7, 13):
-            slot = f"2026-09-{day:02d}"
+        eligible_slots = {
+            row["scheduled_date"]
+            for row in captures
+            if _manifest_for(row).get("timing_eligible") is True
+        }
+        scheduled = json.loads((ARCHIVE / "protocol.json").read_text())["schedule"]
+        for slot in scheduled["scheduled_dates"]:
             with self.subTest(slot=slot):
-                self.assertFalse(
+                expected = slot in eligible_slots
+                self.assertEqual(
                     self._stands_down(captures, slot),
-                    f"{slot} would be skipped, but it holds no eligible capture",
+                    expected,
+                    f"{slot} stand-down disagrees with its eligibility: an "
+                    "eligible capture must suppress the slot and nothing else may",
                 )
+        # Not vacuous in either direction: the campaign has at least one
+        # captured slot and at least one still to run.
+        self.assertTrue(eligible_slots, "no eligible capture, so the True branch is untested")
+        self.assertTrue(
+            set(scheduled["scheduled_dates"]) - eligible_slots,
+            "every slot is captured, so the False branch is untested",
+        )
 
 
 class BothSchedulersMayDeliver(unittest.TestCase):
