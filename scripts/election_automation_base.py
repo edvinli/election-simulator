@@ -1079,6 +1079,85 @@ WEBSITE_GATE_COMMANDS: tuple[tuple[str, ...], ...] = (
 )
 
 
+#: The remaining suites a forecast publication can affect, run as a gate on the
+#: *website push* rather than on certification.
+#:
+#: The split is deliberate and is about ordering, not importance. The commands
+#: above run before the simulator's own durable commit, so anything added there
+#: delays certification of the forecast itself. These run after the forecast is
+#: certified and before the website is pushed: a failure here leaves a
+#: correctly certified forecast and an unchanged live website, which is the
+#: conservative outcome.
+#:
+#: The membership of both tuples together is not a judgement call. It is the set
+#: the website's own selector reports for the paths a publication writes --
+#: ``node browser-tests/select-suites.mjs --changed files/election-simulator/...``
+#: -- minus nothing. ``test_website_push_gate`` asserts that equality against a
+#: real website checkout, so the website repository stays the single source of
+#: truth and any drift fails loudly instead of silently narrowing the gate.
+#: Per-suite ceiling for the push gate, deliberately tighter than the
+#: 15-minute ceiling the first tier uses.
+#:
+#: The benchmark protocol protects its capture slot by assuming the publish job
+#: can hold ``election-simulator-production`` for up to its 120-minute job
+#: timeout, and derives the protected interval (18:30Z-22:00Z) from exactly
+#: that number. This tier must therefore never be able to grow the publish
+#: job's worst case into that timeout: seven suites at five minutes is 35
+#: minutes of absolute worst case, against a real measured cost of 68 seconds
+#: for all seven. The slowest suite in the tier takes about 18 seconds, so five
+#: minutes is already a sixteen-fold margin -- large enough never to fire on a
+#: slow runner, small enough that a hung suite cannot consume the publication's
+#: budget or the benchmark's assumptions.
+WEBSITE_PUSH_GATE_TIMEOUT_SECONDS = 5 * 60
+
+WEBSITE_PUSH_GATE_COMMANDS: tuple[tuple[str, ...], ...] = (
+    ("node", "browser-tests/changes-baseline.smoke.mjs", "_site"),
+    ("node", "browser-tests/bloc-summary.smoke.mjs", "_site"),
+    ("node", "browser-tests/threshold-panel.smoke.mjs", "_site"),
+    ("node", "browser-tests/builder-blocks.smoke.mjs", "_site"),
+    ("node", "browser-tests/alternatives.smoke.mjs", "_site"),
+    ("node", "browser-tests/histogram-copy.smoke.mjs", "_site"),
+    ("node", "browser-tests/party-timeseries.contract.mjs", "_site"),
+)
+
+
+def run_website_push_checks(
+    site_root: Path,
+    *,
+    chrome_bin: str | None = None,
+    stage_callback: StageCallback | None = _log_stage,
+) -> dict[str, Any]:
+    """Run the push-gate suites against an already-built site tree.
+
+    Deliberately does not build. The caller has already run
+    :func:`run_website_checks` against this same tree, so ``_site`` is present
+    and current; rebuilding would add cost to every publication for nothing.
+    """
+
+    env = os.environ.copy()
+    if chrome_bin:
+        env["CHROME_BIN"] = chrome_bin
+    if not (site_root / "_site").is_dir():
+        raise AutomationError(
+            "website push gate requires an already-built _site tree; "
+            "run_website_checks must run against this tree first"
+        )
+    for command in WEBSITE_PUSH_GATE_COMMANDS:
+        test_name = command[1].rsplit("/", 1)[-1]
+        with _timed_stage(test_name, stage_callback):
+            _run_command(
+                list(command),
+                name=test_name,
+                timeout_seconds=WEBSITE_PUSH_GATE_TIMEOUT_SECONDS,
+                cwd=site_root,
+                env=env,
+            )
+    return {
+        "status": "PASS",
+        "suites": [command[1].rsplit("/", 1)[-1] for command in WEBSITE_PUSH_GATE_COMMANDS],
+    }
+
+
 def run_website_checks(
     site_root: Path,
     *,
@@ -1299,6 +1378,7 @@ def _recover_website_from_source(
     source_repo: Path,
     site_repo: Path,
     website_check_fn: Callable[[Path], dict[str, Any]],
+    website_push_check_fn: Callable[[Path], dict[str, Any]] = run_website_push_checks,
     commit: bool,
     push: bool,
     website_push_ref: str = "master",
@@ -1326,6 +1406,10 @@ def _recover_website_from_source(
             generation=generation,
             website_check_fn=website_check_fn,
         )
+        # Recovery mirrors an already-certified generation, so there is no
+        # certification left to delay: the full gate simply runs here, inside
+        # the staged tree, before anything is installed or pushed.
+        checks["push_gate"] = website_push_check_fn(staged_site)
     if not commit:
         checks.update(
             {
@@ -1465,6 +1549,7 @@ def run_production_event(
     campaign_path_simulator: Callable[..., Any] | None = None,
     history_updater: Callable[..., dict[str, Any]] | None = None,
     website_check_fn: Callable[[Path], dict[str, Any]] | None = None,
+    website_push_check_fn: Callable[[Path], dict[str, Any]] | None = None,
     commit: bool = False,
     push: bool = False,
     allow_duplicate_payload: bool = False,
@@ -1637,6 +1722,15 @@ def run_production_event(
                 raise AutomationError("History deterministic hash is not self-consistent")
 
         website_check = website_check_fn or run_website_checks
+        # A caller that substitutes the website gate substitutes *both* tiers.
+        # The injection seam is "the website checks", not "the first tier of
+        # them": a test supplying a stub for one and inheriting the real
+        # browser suites for the other would run Node against a fixture tree.
+        website_push_check = (
+            website_push_check_fn
+            or website_check_fn
+            or run_website_push_checks
+        )
         staged_site = temporary / "website"
         _copy_site_tree(site, staged_site)
         website = _stage_site(
@@ -1716,6 +1810,14 @@ def run_production_event(
             push=push,
             push_ref=source_push_ref,
         )
+        # The forecast is now durably certified, so the remaining website
+        # suites cost it nothing. They run before the website push and against
+        # the staged tree that `_verify_website_artifacts` just proved
+        # byte-identical to the installed one, reusing the `_site` build
+        # `_stage_site` already produced. A failure here raises, so the website
+        # commit below never happens: the live site keeps serving the previous
+        # generation while the new forecast stays certified and archived.
+        website["push_gate"] = website_push_check(staged_site)
         _git_commit_paths(
             site,
             ["files/election-simulator"],
@@ -1740,6 +1842,7 @@ def run_automation(
     commit: bool = False,
     push: bool = False,
     website_check_fn: Callable[[Path], dict[str, Any]] | None = None,
+    website_push_check_fn: Callable[[Path], dict[str, Any]] | None = None,
     refresh_fn: Callable[..., dict[str, Any]] = refresh_snapshot,
     simulation_runner: Callable[..., Any] | None = None,
     projection_runner: Callable[..., Any] | None = None,
@@ -1918,6 +2021,10 @@ def run_automation(
                         source_repo=root,
                         site_repo=site,
                         website_check_fn=website_check_fn or run_website_checks,
+                        website_push_check_fn=(
+                            website_push_check_fn
+                            or website_check_fn
+                            or run_website_push_checks),
                         commit=effective_commit,
                         push=effective_push,
                     )
@@ -1963,6 +2070,7 @@ def run_automation(
                         projection_runner=projection_runner,
                         campaign_path_simulator=campaign_path_simulator,
                         website_check_fn=website_check_fn,
+                        website_push_check_fn=website_push_check_fn,
                         commit=False,
                         push=False,
                         allow_duplicate_payload=True,
@@ -1984,6 +2092,7 @@ def run_automation(
                     projection_runner=projection_runner,
                     campaign_path_simulator=campaign_path_simulator,
                     website_check_fn=website_check_fn,
+                    website_push_check_fn=website_push_check_fn,
                     commit=effective_commit,
                     push=effective_push,
                     # A daily or manual publication is still a distinct
