@@ -1242,6 +1242,268 @@ time.sleep(60)
         self.assertNotEqual(DEFAULT_WEBSITE_REPO, Path.home() / "Documents" / "Git" / "edvinli.github.io")
         self.assertIn(ENV_OVERRIDE, (REPOSITORY_ROOT / "docs/election_simulator_automation.md").read_text())
 
+    def _git_subjects(self, root: Path) -> list[str]:
+        return subprocess.run(
+            ["git", "log", "--format=%s"], cwd=root, check=True,
+            capture_output=True, text=True,
+        ).stdout.split("\n")
+
+    def test_dry_run_fails_on_a_second_tier_failure_without_writing_anything(self) -> None:
+        """A dry run that cannot fail the way a publication would is a lie.
+
+        The committed path runs the second tier after certification, which a
+        dry run cannot imitate because there is nothing to certify. Running it
+        only there would leave `--mode dry_run` reporting success while the
+        real publication failed on one of those seven suites -- and a dry run
+        exists to be believed before a publication is attempted.
+        """
+
+        with tempfile.TemporaryDirectory() as tmp:
+            source, site = self._production_fixture(Path(tmp))
+            source_before = self._git_status(source)
+            site_before = self._git_status(site)
+            source_head = subprocess.run(
+                ["git", "rev-parse", "HEAD"], cwd=source, check=True,
+                capture_output=True, text=True,
+            ).stdout.strip()
+            site_head = subprocess.run(
+                ["git", "rev-parse", "HEAD"], cwd=site, check=True,
+                capture_output=True, text=True,
+            ).stdout.strip()
+            site_pointer_before = (
+                site / "files/election-simulator/current.json").read_bytes()
+            production_result = self._production_result(FORECAST_AS_OF)
+
+            def refresh(raw, processed, **kwargs):
+                raw.mkdir(parents=True, exist_ok=True)
+                path = processed / "individual_polls.csv"
+                self._change_normalized_poll_support(path)
+                return {"messages": []}
+
+            def runner(**kwargs):
+                commit = subprocess.run(
+                    ["git", "rev-parse", "HEAD"], cwd=source, check=True,
+                    capture_output=True, text=True,
+                ).stdout.strip()
+                production_result.manifest["source_git_commit"] = commit
+                production_result.manifest["git_commit"] = commit
+                return production_result
+
+            first_tier: list[Path] = []
+            second_tier: list[Path] = []
+
+            def passing_first_tier(site_root):
+                first_tier.append(Path(site_root))
+                return {"status": "PASS"}
+
+            def failing_second_tier(site_root):
+                second_tier.append(Path(site_root))
+                raise AutomationError(
+                    "website command failed: changes-baseline.smoke.mjs "
+                    "(exit code 1) after 13.000s"
+                )
+
+            with patch(
+                "scripts.publication_pipeline.pipeline.DEFAULT_PROCESSED_ROOT",
+                source / "data/processed",
+            ):
+                result = run_automation(
+                    source,
+                    site_repo=site,
+                    schedule=INTRADAY_SCHEDULE_UTC,
+                    now=_forecast_utc(8),
+                    automation_enabled="true",
+                    mode="dry_run",
+                    commit=False,
+                    refresh_fn=refresh,
+                    simulation_runner=runner,
+                    projection_runner=self._projection_runner,
+                    campaign_path_simulator=self._campaign_path_simulator,
+                    website_check_fn=passing_first_tier,
+                    website_push_check_fn=failing_second_tier,
+                    generated_at_utc=f"{FORECAST_AS_OF}T08:00:00+00:00",
+                )
+
+            # The dry run reached the second tier and failed on it, rather
+            # than reporting a success the publication would not reproduce.
+            self.assertEqual(len(second_tier), 1, second_tier)
+            self.assertNotEqual(result.status, "PUBLISHED")
+            self.assertNotIn(result.status, {"DRY_RUN", "STAGED", "OK"})
+
+            # Both tiers ran against the same disposable tree, never the live
+            # website checkout.
+            self.assertEqual(len(first_tier), 1, first_tier)
+            self.assertEqual(first_tier, second_tier)
+            self.assertNotEqual(second_tier[0], site)
+
+            # And a dry run writes nothing, in either repository.
+            self.assertEqual(self._git_status(source), source_before)
+            self.assertEqual(self._git_status(site), site_before)
+            for repository, head in ((source, source_head), (site, site_head)):
+                self.assertEqual(
+                    subprocess.run(
+                        ["git", "rev-parse", "HEAD"], cwd=repository, check=True,
+                        capture_output=True, text=True,
+                    ).stdout.strip(),
+                    head,
+                )
+            self.assertEqual(
+                (site / "files/election-simulator/current.json").read_bytes(),
+                site_pointer_before,
+            )
+
+    def test_website_push_gate_failure_certifies_the_forecast_but_never_pushes(self) -> None:
+        """The second tier's whole justification, asserted as behaviour.
+
+        Source order shows where the call sits; only a real publication shows
+        what a failure there costs. The claim is that the split is not merely
+        tidy but load-bearing: when the tier fails, the forecast is already
+        durable and the website is untouched, and the same generation can then
+        be published by recovery without simulating anything again.
+        """
+
+        with tempfile.TemporaryDirectory() as tmp:
+            source, site = self._production_fixture(Path(tmp))
+            simulations: list[int] = []
+            production_result = self._production_result(FORECAST_AS_OF)
+
+            def refresh(raw, processed, **kwargs):
+                raw.mkdir(parents=True, exist_ok=True)
+                path = processed / "individual_polls.csv"
+                self._change_normalized_poll_support(path)
+                return {"messages": []}
+
+            def runner(**kwargs):
+                simulations.append(int(kwargs["samples"]))
+                commit = subprocess.run(
+                    ["git", "rev-parse", "HEAD"], cwd=source, check=True,
+                    capture_output=True, text=True,
+                ).stdout.strip()
+                production_result.manifest["source_git_commit"] = commit
+                production_result.manifest["git_commit"] = commit
+                return production_result
+
+            gate_calls: list[Path] = []
+
+            def failing_push_gate(site_root):
+                gate_calls.append(Path(site_root))
+                raise AutomationError(
+                    "website command failed: changes-baseline.smoke.mjs "
+                    "(exit code 1) after 13.000s"
+                )
+
+            with patch(
+                "scripts.publication_pipeline.pipeline.DEFAULT_PROCESSED_ROOT",
+                source / "data/processed",
+            ):
+                blocked = run_automation(
+                    source,
+                    site_repo=site,
+                    schedule=INTRADAY_SCHEDULE_UTC,
+                    now=_forecast_utc(8),
+                    automation_enabled="true",
+                    commit=True,
+                    refresh_fn=refresh,
+                    simulation_runner=runner,
+                    projection_runner=self._projection_runner,
+                    campaign_path_simulator=self._campaign_path_simulator,
+                    website_check_fn=lambda _root: {"status": "PASS"},
+                    website_push_check_fn=failing_push_gate,
+                    generated_at_utc=f"{FORECAST_AS_OF}T08:00:00+00:00",
+                )
+
+            # The gate ran, and it ran against a staged tree rather than the
+            # live website checkout.
+            self.assertEqual(len(gate_calls), 1, gate_calls)
+            self.assertNotEqual(gate_calls[0], site)
+
+            self.assertNotEqual(blocked.status, "PUBLISHED")
+            self.assertEqual(simulations, [100_000])
+
+            # The forecast is durable: the simulator carries its own
+            # publication commit even though the website was never pushed.
+            source_subjects = self._git_subjects(source)
+            self.assertTrue(
+                any(subject.startswith("chore: publish election forecast")
+                    for subject in source_subjects),
+                source_subjects,
+            )
+            certified = json.loads(
+                (source / "files/election-simulator/current.json").read_text())
+            generation = certified["publication_generation"]
+
+            # And the website was not pushed, by any of the three names that
+            # would indicate it had been.
+            site_subjects = self._git_subjects(site)
+            for forbidden in ("chore: sync election forecast",
+                              "chore: recover election forecast"):
+                self.assertFalse(
+                    any(subject.startswith(forbidden) for subject in site_subjects),
+                    site_subjects,
+                )
+            # Nothing was committed, so nothing would be served.
+            committed_pointer = json.loads(subprocess.run(
+                ["git", "show", "HEAD:files/election-simulator/current.json"],
+                cwd=site, check=True, capture_output=True, text=True,
+            ).stdout)
+            self.assertNotEqual(
+                committed_pointer["publication_generation"], generation)
+            # And the live pointer *file* was put back too. Installation and
+            # the pointer write both precede this gate, so without the
+            # rollback the working tree would claim a generation that was
+            # never pushed -- which is the state the module's own recovery
+            # path refuses to leave behind, in the same words.
+            live_pointer = json.loads(
+                (site / "files/election-simulator/current.json").read_text())
+            self.assertEqual(
+                live_pointer["publication_generation"],
+                committed_pointer["publication_generation"],
+            )
+
+            # Recovery publishes that exact generation with no further
+            # simulation: the cost of a failed push gate is one website
+            # update, never a recomputed forecast.
+            #
+            # The installed version files are still on disk, left for
+            # diagnosis by design. Production never sees that tree again --
+            # every workflow run checks out fresh from the durable remote --
+            # so the fresh checkout is what recovery has to be exercised
+            # against, and `git checkout`/`clean` is how a temporary fixture
+            # spells it.
+            subprocess.run(["git", "checkout", "--", "."], cwd=site, check=True)
+            subprocess.run(["git", "clean", "-qfd"], cwd=site, check=True)
+            self.assertEqual(self._git_status(site), "")
+            simulations.clear()
+
+            def must_not_simulate(**kwargs):
+                raise AssertionError("recovery must not run a simulation")
+
+            with patch(
+                "scripts.publication_pipeline.pipeline.DEFAULT_PROCESSED_ROOT",
+                source / "data/processed",
+            ):
+                recovered = run_automation(
+                    source,
+                    site_repo=site,
+                    schedule=INTRADAY_SCHEDULE_UTC,
+                    now=_forecast_utc(10),
+                    automation_enabled="true",
+                    commit=True,
+                    refresh_fn=lambda raw, processed, **kwargs: {"messages": []},
+                    simulation_runner=must_not_simulate,
+                    website_check_fn=lambda _root: {"status": "PASS"},
+                    website_push_check_fn=lambda _root: {"status": "PASS"},
+                    generated_at_utc=f"{FORECAST_AS_OF}T10:00:00+00:00",
+                )
+
+            self.assertEqual(recovered.status, "WEBSITE_RECOVERED")
+            self.assertEqual(simulations, [])
+            recovered_live = json.loads(
+                (site / "files/election-simulator/current.json").read_text())
+            self.assertEqual(recovered_live["publication_generation"], generation)
+            self.assertEqual(self._git_status(source), "")
+            self.assertEqual(self._git_status(site), "")
+
     def test_committed_polling_without_publication_forces_next_unchanged_retry(self) -> None:
         """A durable polling commit is retried after the first publish fails."""
 

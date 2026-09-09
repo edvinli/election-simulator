@@ -201,10 +201,37 @@ class WebsitePushGateTests(unittest.TestCase):
     an update and costs the forecast nothing.
     """
 
-    def _built_site(self) -> Path:
+    @staticmethod
+    def _all_gated_suites() -> list[str]:
+        return [
+            command[1].rsplit("/", 1)[-1]
+            for command in ea.WEBSITE_GATE_COMMANDS + ea.WEBSITE_PUSH_GATE_COMMANDS
+        ]
+
+    def _built_site(self, selector: str | None = "agree") -> Path:
+        """A tree shaped like a built website checkout.
+
+        `selector` controls the stub `select-suites.mjs`: "agree" reports
+        exactly the gated set, `None` omits the selector entirely, and any
+        other string is written as the script body verbatim so a test can make
+        it misbehave.
+        """
+
         root = Path(tempfile.mkdtemp(prefix="push-gate-site-"))
         self.addCleanup(shutil.rmtree, root, ignore_errors=True)
         (root / "_site").mkdir()
+        if selector is not None:
+            (root / "browser-tests").mkdir()
+            if selector == "agree":
+                body = (
+                    "console.log(JSON.stringify({include: "
+                    + json.dumps([{"suite": name} for name in self._all_gated_suites()])
+                    + "}));"
+                )
+            else:
+                body = selector
+            (root / "browser-tests" / "select-suites.mjs").write_text(
+                body, encoding="utf-8")
         return root
 
     @patch("scripts.election_automation._run_command")
@@ -304,21 +331,31 @@ class WebsitePushGateTests(unittest.TestCase):
         second = {command[1] for command in ea.WEBSITE_PUSH_GATE_COMMANDS}
         self.assertEqual(first & second, set())
 
-    def test_the_push_gate_runs_after_certification_and_before_the_push(self) -> None:
-        """Ordering is the whole point of the split, so assert it structurally.
+    def test_the_push_gate_is_reached_in_both_publication_modes(self) -> None:
+        """Position, asserted as reachability rather than as source order.
 
-        Invoking a real publication here would need a full simulator; what has
-        to be guaranteed is position, and position is visible in the source:
-        the gate call must sit between the simulator's own commit and the
-        website's.
+        The behavioural proof that a failure stops the website push lives in
+        `SecondTierFailureIsBehaviourallyFatal` below, which runs a real
+        committed publication. What remains worth pinning cheaply here is that
+        neither mode can return without reaching the gate at all: the dry-run
+        branch returns before the certification point, so the committed path's
+        call site alone would leave `--mode dry_run` ungated.
         """
 
         source = Path(base.__file__).read_text(encoding="utf-8")
+        calls = source.count("website_push_check(staged_site)")
+        self.assertEqual(calls, 2, "one call per publication mode")
+        dry_run_return = source.index('website["deployment"] = "dry-run"')
         certify = source.index('f"chore: publish election forecast {as_of.isoformat()}"')
-        gate = source.index('website["push_gate"] = website_push_check(staged_site)')
         sync = source.index('f"chore: sync election forecast {generation}"')
-        self.assertLess(certify, gate, "the gate must not delay certification")
-        self.assertLess(gate, sync, "the gate must precede the website push")
+        first = source.index("website_push_check(staged_site)")
+        second = source.index("website_push_check(staged_site)", first + 1)
+        # The dry-run gate precedes that branch's return.
+        self.assertLess(first, dry_run_return)
+        # The committed gate sits between the two commits: after the forecast
+        # is durable, before the website is pushed.
+        self.assertLess(certify, second)
+        self.assertLess(second, sync)
 
     def test_recovery_push_gate_failure_prevents_the_website_commit(self) -> None:
         """The recovery path mirrors an already-certified generation.
@@ -354,14 +391,123 @@ class WebsitePushGateTests(unittest.TestCase):
         commits.assert_not_called()
 
 
-class WebsiteGateMatchesWebsiteSelectorTests(unittest.TestCase):
-    """The gate's membership is the website's decision, not ours.
+class SelectorParityIsEnforcedAtPublicationTime(unittest.TestCase):
+    """Parity is asked of the checkout being published, on every publication.
 
-    `browser-tests/select-suites.mjs` already answers "which suites can this
-    change affect", and the website repository owns that mapping. Restating it
-    here by hand would let the two drift, and a gate that silently narrows is
-    worse than no gate. So assert the equality directly against a real website
-    checkout, and skip -- rather than pass -- when none is opted in.
+    A unit test asserting the same equality is useful but cannot be relied on:
+    the publication workflow does not run this module and supplies no website
+    checkout, so that test skips in CI and a selector change could otherwise
+    leave the gate quietly incomplete. Enforcement therefore lives inside the
+    second tier, where it runs against the real checkout and after
+    certification, so it can stop a website push without delaying a forecast.
+
+    Every branch here fails closed. During a publication the website checkout
+    is present by construction, so "cannot ask the selector" means the checkout
+    is wrong, not that the gate is fine.
+    """
+
+    def _site(self, selector: str | None) -> Path:
+        root = Path(tempfile.mkdtemp(prefix="selector-parity-"))
+        self.addCleanup(shutil.rmtree, root, ignore_errors=True)
+        (root / "_site").mkdir()
+        if selector is not None:
+            (root / "browser-tests").mkdir()
+            (root / "browser-tests" / "select-suites.mjs").write_text(
+                selector, encoding="utf-8")
+        return root
+
+    @staticmethod
+    def _emitting(suites: list[str]) -> str:
+        return (
+            "console.log(JSON.stringify({include: "
+            + json.dumps([{"suite": name} for name in suites])
+            + "}));"
+        )
+
+    def _gated(self) -> list[str]:
+        return [
+            command[1].rsplit("/", 1)[-1]
+            for command in ea.WEBSITE_GATE_COMMANDS + ea.WEBSITE_PUSH_GATE_COMMANDS
+        ]
+
+    def test_agreement_is_the_only_silent_outcome(self) -> None:
+        site = self._site(self._emitting(self._gated()))
+        self.assertIsNone(ea.website_gate_selector_disagreement(site))
+
+    def test_a_newly_affected_suite_is_named(self) -> None:
+        """The case this exists for: the selector starts reporting one more."""
+
+        site = self._site(self._emitting(self._gated() + ["brand-new.smoke.mjs"]))
+        reason = ea.website_gate_selector_disagreement(site)
+        self.assertIsNotNone(reason)
+        self.assertIn("brand-new.smoke.mjs", reason)
+        self.assertIn("ungated but affected", reason)
+
+    def test_a_suite_no_longer_affected_is_also_named(self) -> None:
+        site = self._site(self._emitting(self._gated()[1:]))
+        reason = ea.website_gate_selector_disagreement(site)
+        self.assertIsNotNone(reason)
+        self.assertIn("gated but not affected", reason)
+
+    def test_a_missing_selector_is_disagreement_not_a_pass(self) -> None:
+        reason = ea.website_gate_selector_disagreement(self._site(None))
+        self.assertIsNotNone(reason)
+        self.assertIn("no suite selector", reason)
+
+    def test_a_failing_selector_is_disagreement(self) -> None:
+        site = self._site("process.stderr.write('boom'); process.exit(3);")
+        reason = ea.website_gate_selector_disagreement(site)
+        self.assertIsNotNone(reason)
+        self.assertIn("exited 3", reason)
+
+    def test_unreadable_selector_output_is_disagreement(self) -> None:
+        site = self._site("console.log('not json at all');")
+        reason = ea.website_gate_selector_disagreement(site)
+        self.assertIsNotNone(reason)
+        self.assertIn("unreadable output", reason)
+
+    def test_the_shape_is_checked_not_just_the_json(self) -> None:
+        site = self._site("console.log(JSON.stringify({suites: []}));")
+        reason = ea.website_gate_selector_disagreement(site)
+        self.assertIsNotNone(reason)
+        self.assertIn("unreadable output", reason)
+
+    @patch("scripts.election_automation._run_command")
+    def test_the_tier_refuses_to_run_a_suite_when_parity_fails(
+        self,
+        mock_run_cmd: MagicMock,
+    ) -> None:
+        """Parity is checked before any browser suite starts."""
+
+        site = self._site(self._emitting(self._gated() + ["brand-new.smoke.mjs"]))
+        with self.assertRaises(AutomationError) as ctx:
+            ea.run_website_push_checks(site)
+        self.assertIn("brand-new.smoke.mjs", str(ctx.exception))
+        mock_run_cmd.assert_not_called()
+
+    @patch("scripts.election_automation._run_command")
+    def test_a_passing_tier_records_that_parity_was_verified(
+        self,
+        mock_run_cmd: MagicMock,
+    ) -> None:
+        site = self._site(self._emitting(self._gated()))
+        result = ea.run_website_push_checks(site)
+        self.assertEqual(result["selector_parity"], "VERIFIED")
+        self.assertEqual(mock_run_cmd.call_count, len(ea.WEBSITE_PUSH_GATE_COMMANDS))
+
+
+class WebsiteGateMatchesWebsiteSelectorTests(unittest.TestCase):
+    """The same equality, against a real checkout, as a development signal.
+
+    This is deliberately *not* what enforces parity.
+    `SelectorParityIsEnforcedAtPublicationTime` covers that, inside the second
+    tier, because this test skips wherever no website checkout is opted in --
+    which includes the publication workflow and this repository's CI, where a
+    skip would look exactly like a pass.
+
+    Its value is speed and locality: someone editing the gate or the selector
+    with both checkouts to hand gets told immediately, rather than at the next
+    publication. Set ``ELECTION_SIMULATOR_WEBSITE_REPO`` to enable it.
     """
 
     #: Paths a forecast publication writes in the website repository.

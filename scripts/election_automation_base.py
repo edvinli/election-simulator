@@ -1090,24 +1090,37 @@ WEBSITE_GATE_COMMANDS: tuple[tuple[str, ...], ...] = (
 #: conservative outcome.
 #:
 #: The membership of both tuples together is not a judgement call. It is the set
-#: the website's own selector reports for the paths a publication writes --
-#: ``node browser-tests/select-suites.mjs --changed files/election-simulator/...``
-#: -- minus nothing. ``test_website_push_gate`` asserts that equality against a
-#: real website checkout, so the website repository stays the single source of
-#: truth and any drift fails loudly instead of silently narrowing the gate.
+#: the website's own selector reports for the paths a publication writes, and
+#: that equality is *enforced at publication time* by
+#: :func:`website_gate_selector_disagreement`, which asks the checkout being
+#: published rather than trusting this list. So the website repository stays the
+#: single source of truth, and a selector change that widens the affected set
+#: stops the website push instead of silently leaving the gate incomplete.
+#:
+#: Editing these tuples by hand without a matching selector change therefore
+#: fails the next publication, which is the intended direction of pressure.
 #: Per-suite ceiling for the push gate, deliberately tighter than the
 #: 15-minute ceiling the first tier uses.
 #:
-#: The benchmark protocol protects its capture slot by assuming the publish job
-#: can hold ``election-simulator-production`` for up to its 120-minute job
-#: timeout, and derives the protected interval (18:30Z-22:00Z) from exactly
-#: that number. This tier must therefore never be able to grow the publish
-#: job's worst case into that timeout: seven suites at five minutes is 35
-#: minutes of absolute worst case, against a real measured cost of 68 seconds
-#: for all seven. The slowest suite in the tier takes about 18 seconds, so five
-#: minutes is already a sixteen-fold margin -- large enough never to fire on a
-#: slow runner, small enough that a hung suite cannot consume the publication's
-#: budget or the benchmark's assumptions.
+#: What this does and does not establish, stated precisely because the
+#: surrounding numbers invite a stronger reading than they support:
+#:
+#: The benchmark's protected interval (18:30Z-22:00Z) is derived from the
+#: publish job's 120-minute ``timeout-minutes``. That interval is unaffected by
+#: this tier for one reason only -- the outer timeout is unchanged. GitHub
+#: still ends the job, and releases ``election-simulator-production``, at 120
+#: minutes regardless of what runs inside it.
+#:
+#: This ceiling is therefore not a proof that the whole job fits. Simulation,
+#: history reconstruction and the first tier all precede this one and are not
+#: bounded here, so nothing below shows a publication completes in time. What
+#: it does give is a bound on *this tier's* contribution: seven suites at five
+#: minutes is 35 minutes of absolute worst case against a measured 68 seconds
+#: for all seven, and the slowest suite in the tier takes about 18 seconds. So
+#: a hung suite here cannot quietly become the reason a publication is cut off,
+#: and adding suites to this tier later cannot grow its worst case unnoticed.
+#: Whether the job as a whole survives its timeout is a separate question, and
+#: not one this constant answers.
 WEBSITE_PUSH_GATE_TIMEOUT_SECONDS = 5 * 60
 
 WEBSITE_PUSH_GATE_COMMANDS: tuple[tuple[str, ...], ...] = (
@@ -1119,6 +1132,73 @@ WEBSITE_PUSH_GATE_COMMANDS: tuple[tuple[str, ...], ...] = (
     ("node", "browser-tests/histogram-copy.smoke.mjs", "_site"),
     ("node", "browser-tests/party-timeseries.contract.mjs", "_site"),
 )
+
+
+#: The paths a publication writes in the website repository. The website's own
+#: suite selector maps these to the suites a publication can affect.
+PUBLICATION_WEBSITE_PATHS: tuple[str, ...] = (
+    "files/election-simulator/current.json",
+    "files/election-simulator/history/coalition-timeseries.json",
+)
+
+#: Reading the selector is a metadata query against a checked-out file, not a
+#: browser run, so it gets a short ceiling of its own.
+WEBSITE_SELECTOR_TIMEOUT_SECONDS = 60
+
+
+def website_gate_selector_disagreement(site_root: Path) -> str | None:
+    """Why the gate and the website's selector disagree, or ``None``.
+
+    The gate's membership is the website's decision. ``select-suites.mjs``
+    already answers "which suites can this change affect" and the website
+    repository owns that mapping, so the authoritative check is to ask it
+    rather than to restate its answer here.
+
+    Fails closed in every direction. A missing selector, a non-zero exit, or
+    unreadable output all count as disagreement: during a publication the
+    website checkout is present by construction, so "cannot ask" means
+    something is wrong with the checkout, not that the gate is fine. A unit
+    test may skip this comparison; a publication may not.
+    """
+
+    selector = site_root / "browser-tests" / "select-suites.mjs"
+    if not selector.is_file():
+        return f"the website checkout has no suite selector at {selector}"
+    try:
+        completed = subprocess.run(
+            ["node", "browser-tests/select-suites.mjs", "--changed",
+             *PUBLICATION_WEBSITE_PATHS],
+            cwd=site_root,
+            capture_output=True,
+            text=True,
+            timeout=WEBSITE_SELECTOR_TIMEOUT_SECONDS,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError) as error:
+        return f"the website suite selector could not be run: {error}"
+    if completed.returncode != 0:
+        return (
+            "the website suite selector exited "
+            f"{completed.returncode}: {completed.stderr.strip()[:400]}"
+        )
+    try:
+        affected = {
+            entry["suite"] for entry in json.loads(completed.stdout)["include"]
+        }
+    except (ValueError, KeyError, TypeError) as error:
+        return f"the website suite selector returned unreadable output: {error}"
+    gated = {
+        command[1].rsplit("/", 1)[-1]
+        for command in WEBSITE_GATE_COMMANDS + WEBSITE_PUSH_GATE_COMMANDS
+    }
+    if gated == affected:
+        return None
+    return (
+        "the publication gate and the website's own suite selector disagree. "
+        f"ungated but affected: {sorted(affected - gated)}; "
+        f"gated but not affected: {sorted(gated - affected)}. "
+        "Update WEBSITE_PUSH_GATE_COMMANDS rather than narrowing the gate."
+    )
 
 
 def run_website_push_checks(
@@ -1142,6 +1222,13 @@ def run_website_push_checks(
             "website push gate requires an already-built _site tree; "
             "run_website_checks must run against this tree first"
         )
+    # Asked of the checkout being published, on every publication, before any
+    # suite runs. A selector change that widens the affected set stops the
+    # website push instead of silently leaving the gate incomplete.
+    with _timed_stage("website suite selector parity", stage_callback):
+        disagreement = website_gate_selector_disagreement(site_root)
+    if disagreement is not None:
+        raise AutomationError(disagreement)
     for command in WEBSITE_PUSH_GATE_COMMANDS:
         test_name = command[1].rsplit("/", 1)[-1]
         with _timed_stage(test_name, stage_callback):
@@ -1154,6 +1241,7 @@ def run_website_push_checks(
             )
     return {
         "status": "PASS",
+        "selector_parity": "VERIFIED",
         "suites": [command[1].rsplit("/", 1)[-1] for command in WEBSITE_PUSH_GATE_COMMANDS],
     }
 
@@ -1747,6 +1835,14 @@ def run_production_event(
             # production gates execute against disposable trees, while the
             # live simulator and website repositories remain byte-for-byte
             # untouched.  The GitHub workflow supplies --commit.
+            #
+            # "All production gates" has to mean all of them.  The committed
+            # path runs the second tier after certification, which is the one
+            # thing a dry run cannot imitate -- there is nothing to certify.
+            # So it runs here instead: a dry run that passed while a real
+            # publication would fail on one of these suites would be worse
+            # than no dry run, because its whole purpose is to be believed.
+            website["push_gate"] = website_push_check(staged_site)
             website["status"] = "STAGED_NOT_INSTALLED"
             website["deployment"] = "dry-run"
             return run, history, website
@@ -1817,7 +1913,32 @@ def run_production_event(
         # `_stage_site` already produced. A failure here raises, so the website
         # commit below never happens: the live site keeps serving the previous
         # generation while the new forecast stays certified and archived.
-        website["push_gate"] = website_push_check(staged_site)
+        #
+        # The dry-run branch above runs the same tier at its own only possible
+        # position. The two call sites are exclusive -- that branch returns --
+        # so this is one gate reached at the latest point each mode allows,
+        # not the same gate twice.
+        try:
+            website["push_gate"] = website_push_check(staged_site)
+        except Exception:
+            # The same invariant the recovery path states in the same words: a
+            # website gate failure must not leave a new live pointer behind.
+            # By this point the site tree has the generation installed and its
+            # pointer switched, so without this the working tree would claim a
+            # generation that was never pushed -- and `_assert_clean` would
+            # then refuse the recovery that is supposed to finish the job.
+            #
+            # The installed version files are left for diagnosis, exactly as
+            # the recovery path leaves them: the next workflow run checks out
+            # fresh from the durable remote, where the forecast is certified
+            # and the website is simply one generation behind.
+            try:
+                _restore_pointer(website_pointer, website_pointer_before)
+            except Exception as restore_error:
+                raise AutomationError(
+                    "failed to restore the website pointer after a push-gate failure"
+                ) from restore_error
+            raise
         _git_commit_paths(
             site,
             ["files/election-simulator"],
