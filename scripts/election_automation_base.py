@@ -99,7 +99,7 @@ BENCHMARK_SIDECAR_END = date(2026, 9, 12)
 # today's mandatory recalculation is missing.  It is a separate mode rather
 # than a flag on publish so the kill switch and the run-type label can treat
 # an automated trigger differently from an operator's explicit dispatch.
-VALID_MODES = ("probe", "dry_run", "publish", "publish_if_stale")
+VALID_MODES = ("probe", "dry_run", "publish", "publish_if_stale", "render")
 MUTATING_MODES = ("publish", "publish_if_stale")
 AUTOMATION_ENABLED_ENV = "ELECTION_AUTOMATION_ENABLED"
 SOURCE_PROVENANCE_DIRECT_LIVE = "DIRECT_LIVE_FETCH"
@@ -2867,11 +2867,69 @@ def build_parser() -> argparse.ArgumentParser:
             "certified forecast is a single simulation either way."
         ),
     )
+    parser.add_argument(
+        "--render-generation",
+        default=None,
+        help=(
+            "Render this already-certified generation instead of producing a "
+            "new forecast. The authoritative simulator is never invoked: the "
+            "certified point comes from that generation's archived joint "
+            "draws. Requires --mode render."
+        ),
+    )
+    parser.add_argument(
+        "--render-certification-commit",
+        default=None,
+        help=(
+            "The commit that certified --render-generation. When given, the "
+            "generation's manifest, snapshot and exact-draw sidecar must all "
+            "be present in it, so a retry cannot pick up another "
+            "generation's files after a concurrent push."
+        ),
+    )
     return parser
+
+
+def _render_from_cli(args: argparse.Namespace) -> int:
+    """`--mode render`: the second publication stage, on its own.
+
+    Deliberately separate from `run_automation`: rendering acquires no
+    polling, runs no authoritative simulation, and is not subject to the
+    election-day guard that governs creating a forecast.
+    """
+
+    if not args.render_generation:
+        raise AutomationError("--mode render requires --render-generation")
+    rendered = render_certified_generation(
+        root=args.repo_root,
+        site=args.site_repo,
+        generation=args.render_generation,
+        certification_commit=args.render_certification_commit,
+        election_date=args.election_date,
+        history_workers=args.history_workers,
+        commit=True,
+        push=True,
+        stage_callback=_log_stage,
+    )
+    print(json.dumps(rendered, ensure_ascii=False, allow_nan=False, default=str))
+    if args.summary_path:
+        args.summary_path.parent.mkdir(parents=True, exist_ok=True)
+        args.summary_path.write_text(
+            "Render status: {status}\nGeneration: {generation}\n"
+            "Deployment: {deployment}\n".format(
+                status=rendered.get("status"),
+                generation=rendered.get("generation"),
+                deployment=rendered.get("deployment", "NONE"),
+            ),
+            encoding="utf-8",
+        )
+    return 0 if rendered.get("status") == "RENDERED_AND_DEPLOYED" else 1
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if args.mode == "render":
+        return _render_from_cli(args)
     if args.mode in MUTATING_MODES:
         commit = True
         push = True
