@@ -1248,6 +1248,192 @@ time.sleep(60)
             capture_output=True, text=True,
         ).stdout.split("\n")
 
+    @staticmethod
+    def _publish_to_bare_remote(repo: Path, remote: Path, branch: str) -> None:
+        """Give a fixture checkout a real remote on the branch it pushes to."""
+
+        subprocess.run(["git", "init", "--bare", "-q", str(remote)], check=True)
+        subprocess.run(["git", "branch", "-M", branch], cwd=repo, check=True)
+        subprocess.run(["git", "remote", "add", "origin", str(remote)], cwd=repo, check=True)
+        subprocess.run(["git", "push", "-q", "origin", f"HEAD:{branch}"], cwd=repo, check=True)
+
+    @staticmethod
+    def _remote_subjects(remote: Path, branch: str) -> list[str]:
+        return subprocess.run(
+            ["git", "log", "--format=%s", branch], cwd=remote, check=True,
+            capture_output=True, text=True,
+        ).stdout.split("\n")
+
+    @staticmethod
+    def _remote_pointer(remote: Path, branch: str) -> dict:
+        return json.loads(subprocess.run(
+            ["git", "show", f"{branch}:files/election-simulator/current.json"],
+            cwd=remote, check=True, capture_output=True, text=True,
+        ).stdout)
+
+    @classmethod
+    def _clone_from_remote(cls, remote: Path, branch: str, destination: Path) -> Path:
+        subprocess.run(
+            ["git", "clone", "-q", "-b", branch, str(remote), str(destination)],
+            check=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.name", "Automation Test"], cwd=destination, check=True)
+        subprocess.run(
+            ["git", "config", "user.email", "automation@example.test"],
+            cwd=destination, check=True)
+        return destination
+
+    def test_gate_failure_leaves_the_forecast_on_the_remote_and_the_website_untouched(self) -> None:
+        """Remote durability, which `push=False` cannot show.
+
+        A local commit proves the run got that far; what the split actually
+        promises is that a failed website gate costs nothing already earned.
+        That is a claim about the remotes: the forecast has to be durable
+        somewhere the next fresh checkout will find it, and the website has to
+        be exactly where it was. So this pushes for real, to temporary bare
+        remotes, and then finishes the job from fresh clones -- which is how
+        production reaches recovery, every run starting from the remote.
+        """
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            checkouts = root / "checkouts"
+            checkouts.mkdir()
+            source, site = self._production_fixture(checkouts)
+            source_remote = root / "simulator.git"
+            site_remote = root / "website.git"
+            self._publish_to_bare_remote(source, source_remote, "main")
+            self._publish_to_bare_remote(site, site_remote, "master")
+
+            site_subjects_before = self._remote_subjects(site_remote, "master")
+            site_pointer_before = self._remote_pointer(site_remote, "master")
+            site_tree_before = subprocess.run(
+                ["git", "rev-parse", "master^{tree}"], cwd=site_remote, check=True,
+                capture_output=True, text=True,
+            ).stdout.strip()
+
+            simulations: list[int] = []
+            production_result = self._production_result(FORECAST_AS_OF)
+
+            def refresh(raw, processed, **kwargs):
+                raw.mkdir(parents=True, exist_ok=True)
+                self._change_normalized_poll_support(processed / "individual_polls.csv")
+                return {"messages": []}
+
+            def runner(**kwargs):
+                simulations.append(int(kwargs["samples"]))
+                commit = subprocess.run(
+                    ["git", "rev-parse", "HEAD"], cwd=source, check=True,
+                    capture_output=True, text=True,
+                ).stdout.strip()
+                production_result.manifest["source_git_commit"] = commit
+                production_result.manifest["git_commit"] = commit
+                return production_result
+
+            def failing_push_gate(site_root):
+                raise AutomationError(
+                    "website command failed: changes-baseline.smoke.mjs "
+                    "(exit code 1) after 13.000s"
+                )
+
+            with patch(
+                "scripts.publication_pipeline.pipeline.DEFAULT_PROCESSED_ROOT",
+                source / "data/processed",
+            ):
+                blocked = run_automation(
+                    source,
+                    site_repo=site,
+                    schedule=INTRADAY_SCHEDULE_UTC,
+                    now=_forecast_utc(8),
+                    automation_enabled="true",
+                    mode="publish",
+                    commit=True,
+                    push=True,
+                    refresh_fn=refresh,
+                    simulation_runner=runner,
+                    projection_runner=self._projection_runner,
+                    campaign_path_simulator=self._campaign_path_simulator,
+                    website_check_fn=lambda _root: {"status": "PASS"},
+                    website_push_check_fn=failing_push_gate,
+                    generated_at_utc=f"{FORECAST_AS_OF}T08:00:00+00:00",
+                )
+            self.assertNotEqual(blocked.status, "PUBLISHED")
+            self.assertEqual(simulations, [100_000])
+
+            # The forecast reached the simulator's remote: durable where the
+            # next fresh checkout will find it.
+            source_subjects = self._remote_subjects(source_remote, "main")
+            self.assertTrue(
+                any(subject.startswith("chore: publish election forecast")
+                    for subject in source_subjects),
+                source_subjects,
+            )
+            generation = self._remote_pointer(
+                source_remote, "main")["publication_generation"]
+
+            # The website's remote is byte-identical: same subjects, same
+            # pointer, same tree object.
+            self.assertEqual(self._remote_subjects(site_remote, "master"),
+                             site_subjects_before)
+            self.assertEqual(self._remote_pointer(site_remote, "master"),
+                             site_pointer_before)
+            self.assertEqual(
+                subprocess.run(
+                    ["git", "rev-parse", "master^{tree}"], cwd=site_remote,
+                    check=True, capture_output=True, text=True,
+                ).stdout.strip(),
+                site_tree_before,
+            )
+            self.assertNotEqual(
+                site_pointer_before["publication_generation"], generation)
+
+            # Recovery from fresh clones, which is the only tree production
+            # ever gives it. Nothing is carried over from the failed run.
+            fresh_source = self._clone_from_remote(
+                source_remote, "main", root / "fresh-simulator")
+            fresh_site = self._clone_from_remote(
+                site_remote, "master", root / "fresh-website")
+            self.assertEqual(self._git_status(fresh_source), "")
+            self.assertEqual(self._git_status(fresh_site), "")
+
+            def must_not_simulate(**kwargs):
+                raise AssertionError("recovery must not run a simulation")
+
+            with patch(
+                "scripts.publication_pipeline.pipeline.DEFAULT_PROCESSED_ROOT",
+                fresh_source / "data/processed",
+            ):
+                recovered = run_automation(
+                    fresh_source,
+                    site_repo=fresh_site,
+                    schedule=INTRADAY_SCHEDULE_UTC,
+                    now=_forecast_utc(10),
+                    automation_enabled="true",
+                    mode="publish",
+                    commit=True,
+                    push=True,
+                    refresh_fn=lambda raw, processed, **kwargs: {"messages": []},
+                    simulation_runner=must_not_simulate,
+                    website_check_fn=lambda _root: {"status": "PASS"},
+                    website_push_check_fn=lambda _root: {"status": "PASS"},
+                    generated_at_utc=f"{FORECAST_AS_OF}T10:00:00+00:00",
+                )
+
+            self.assertEqual(recovered.status, "WEBSITE_RECOVERED")
+            # That same generation, published to the website's remote, with no
+            # forecast recomputed anywhere.
+            self.assertEqual(
+                self._remote_pointer(site_remote, "master")["publication_generation"],
+                generation,
+            )
+            self.assertEqual(
+                self._remote_pointer(source_remote, "main")["publication_generation"],
+                generation,
+            )
+            self.assertEqual(self._git_status(fresh_source), "")
+            self.assertEqual(self._git_status(fresh_site), "")
+
     def test_dry_run_fails_on_a_second_tier_failure_without_writing_anything(self) -> None:
         """A dry run that cannot fail the way a publication would is a lie.
 
@@ -1360,6 +1546,11 @@ time.sleep(60)
         tidy but load-bearing: when the tier fails, the forecast is already
         durable and the website is untouched, and the same generation can then
         be published by recovery without simulating anything again.
+
+        Scoped to one repository pair with ``push=False``, so "durable" here
+        means committed, and recovery is shown from a reset checkout. The
+        remote half of the claim, with real clones from bare remotes, belongs
+        to the sibling test below.
         """
 
         with tempfile.TemporaryDirectory() as tmp:
@@ -1448,11 +1639,15 @@ time.sleep(60)
             ).stdout)
             self.assertNotEqual(
                 committed_pointer["publication_generation"], generation)
-            # And the live pointer *file* was put back too. Installation and
-            # the pointer write both precede this gate, so without the
-            # rollback the working tree would claim a generation that was
-            # never pushed -- which is the state the module's own recovery
-            # path refuses to leave behind, in the same words.
+            # And the live pointer *file* was put back. Installation and the
+            # pointer write both precede this gate, so without the rollback
+            # the working tree would claim a generation that was never
+            # pushed -- the state the module's own recovery path refuses to
+            # leave behind, in the same words.
+            #
+            # Only the pointer. The checkout is deliberately still dirty with
+            # the installed version files, which is why the recovery phase
+            # below has to reset it rather than simply proceeding.
             live_pointer = json.loads(
                 (site / "files/election-simulator/current.json").read_text())
             self.assertEqual(
@@ -1464,12 +1659,14 @@ time.sleep(60)
             # simulation: the cost of a failed push gate is one website
             # update, never a recomputed forecast.
             #
-            # The installed version files are still on disk, left for
-            # diagnosis by design. Production never sees that tree again --
-            # every workflow run checks out fresh from the durable remote --
-            # so the fresh checkout is what recovery has to be exercised
-            # against, and `git checkout`/`clean` is how a temporary fixture
-            # spells it.
+            # Recovery is demonstrated from a *reset* checkout, not from the
+            # tree the failed run left behind: restoring the pointer does not
+            # clean that tree, and `_assert_clean` would refuse it. That is
+            # not a gap being papered over -- production never sees the tree
+            # again, since every workflow run starts from a fresh checkout of
+            # the durable remote. `git checkout`/`clean` is how a local
+            # fixture spells "fresh checkout"; the sibling remote-durability
+            # test does it properly, with real clones from bare remotes.
             subprocess.run(["git", "checkout", "--", "."], cwd=site, check=True)
             subprocess.run(["git", "clean", "-qfd"], cwd=site, check=True)
             self.assertEqual(self._git_status(site), "")

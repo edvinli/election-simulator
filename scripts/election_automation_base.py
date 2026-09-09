@@ -1925,13 +1925,16 @@ def run_production_event(
             # website gate failure must not leave a new live pointer behind.
             # By this point the site tree has the generation installed and its
             # pointer switched, so without this the working tree would claim a
-            # generation that was never pushed -- and `_assert_clean` would
-            # then refuse the recovery that is supposed to finish the job.
+            # generation that was never pushed.
             #
-            # The installed version files are left for diagnosis, exactly as
-            # the recovery path leaves them: the next workflow run checks out
-            # fresh from the durable remote, where the forecast is certified
-            # and the website is simply one generation behind.
+            # This restores the pointer and nothing else. The checkout is NOT
+            # left clean: the installed version files and the updated history
+            # remain, for diagnosis, exactly as the recovery path leaves them.
+            # So recovery is not available in this tree -- `_assert_clean`
+            # refuses a dirty one -- and it does not need to be. Every
+            # workflow run starts from a fresh checkout of the durable remote,
+            # where the forecast is certified and the website is simply one
+            # generation behind, which is the state recovery is written for.
             try:
                 _restore_pointer(website_pointer, website_pointer_before)
             except Exception as restore_error:
