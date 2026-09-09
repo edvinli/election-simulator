@@ -86,6 +86,9 @@ ELECTION_DAY = date.fromisoformat(DEFAULT_ELECTION_DATE)
 DAILY_SCHEDULE_UTC = "0 4 * * *"
 INTRADAY_SCHEDULE_UTC = "0 6,8,10,12,14,16,18,20 * * *"
 PRODUCTION_SAMPLES = 100_000
+#: Amendment 004's bounded retention window, kept as the historical record.
+#: Amendment 007 extended retention to every newly certified generation, so
+#: these no longer gate whether a sidecar is written.
 BENCHMARK_SIDECAR_START = date(2026, 9, 4)
 BENCHMARK_SIDECAR_END = date(2026, 9, 12)
 # publish_if_stale is the fallback boundary: it may publish, but only when
@@ -1974,7 +1977,27 @@ def run_production_event(
             )
         generation = str(run.snapshot["generation_id"])
         result = run.simulation_result
-        retain_exact_draws = BENCHMARK_SIDECAR_START <= as_of <= BENCHMARK_SIDECAR_END
+        # Retained for EVERY newly certified generation, not only inside the
+        # benchmark window, under amendment 007.
+        #
+        # Rendering an already-certified generation without rerunning the
+        # authoritative forecast needs that generation's joint draw matrices: a
+        # history point's coalition intervals come from joint draws and cannot
+        # be recovered from published marginal quantiles. Amendment 004
+        # permitted per-generation sidecars only for 2026-09-04..2026-09-12,
+        # after which amendment 003's prohibition would return -- so the
+        # renderer would have lost its input on 2026-09-13.
+        #
+        # Prospective only, and operational only. No sidecar is written for a
+        # generation that did not export one from its own SimulationResult;
+        # retroactive backfill stays prohibited; and the archive's sidecar
+        # requirement applies to the generation being certified, so archived
+        # generations without one remain valid. Benchmark scoring, selection,
+        # eligibility, weighting and dates are unchanged.
+        #
+        # `BENCHMARK_SIDECAR_START`/`_END` are kept as the record of amendment
+        # 004's window; they no longer gate retention.
+        retain_exact_draws = True
         if retain_exact_draws:
             write_exact_draw_sidecar(
                 result,

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 import csv
+import hashlib
 from datetime import date, datetime, timedelta, timezone
 import contextlib
 import io
@@ -60,8 +61,11 @@ from scripts.static_exporter import validate_published_directory
 from scripts.simulator.engine import SimulationResult, simulate_election
 from scripts.simulator.reproducibility import compute_file_sha256
 from scripts.simulator.exact_draw_sidecar import (
+    SIDECAR_DRAWS_FILENAME,
+    SIDECAR_METADATA_FILENAME,
     collect_latest_certified_generation,
     load_verified_draw_sidecar,
+    validate_exact_draw_sidecar,
 )
 from scripts.simulator.summary import compute_simulation_summary
 from tests.history_fixtures import (
@@ -673,6 +677,98 @@ class ElectionAutomationTests(unittest.TestCase):
             )
             self.assertEqual(self._git_status(source), "")
             self.assertEqual(self._git_status(site), "")
+
+    def test_a_generation_certified_after_the_benchmark_window_retains_its_draws(self) -> None:
+        """Amendment 007, at the date that motivated it.
+
+        Amendment 004 permitted per-generation exact-draw sidecars only through
+        2026-09-12, after which amendment 003's prohibition would return. A
+        renderer needs those joint draws -- coalition intervals are computed
+        from them and cannot be recovered from published marginal quantiles --
+        so on 2026-09-13, election day, rendering an already-certified
+        generation would have had no valid input.
+
+        Certified here on 2026-09-13 -- election day, and the day after the
+        benchmark's final scheduled date of 2026-09-12 -- asserting the sidecar
+        is exported and hash-linked from the archive entry rather than merely
+        present. The history contract permits a publication on election day
+        itself and refuses one after it, so 2026-09-13 is both the last date a
+        forecast can be certified and the first date amendment 004's window
+        would have denied it a sidecar.
+        """
+
+        for as_of in ("2026-09-13",):
+            with self.subTest(as_of=as_of):
+                with tempfile.TemporaryDirectory() as tmp:
+                    source, site = self._production_fixture(Path(tmp))
+                    production_result = self._production_result(as_of)
+
+                    def refresh(raw, processed, **kwargs):
+                        raw.mkdir(parents=True, exist_ok=True)
+                        self._change_normalized_poll_support(
+                            processed / "individual_polls.csv")
+                        return {"messages": []}
+
+                    def runner(**kwargs):
+                        commit = subprocess.run(
+                            ["git", "rev-parse", "HEAD"], cwd=source, check=True,
+                            capture_output=True, text=True,
+                        ).stdout.strip()
+                        production_result.manifest["source_git_commit"] = commit
+                        production_result.manifest["git_commit"] = commit
+                        return production_result
+
+                    with patch(
+                        "scripts.publication_pipeline.pipeline.DEFAULT_PROCESSED_ROOT",
+                        source / "data/processed",
+                    ):
+                        result = run_automation(
+                            source,
+                            site_repo=site,
+                            schedule=INTRADAY_SCHEDULE_UTC,
+                            now=datetime.fromisoformat(f"{as_of}T08:00:00+00:00"),
+                            automation_enabled="true",
+                            mode="publish",
+                            commit=True,
+                            refresh_fn=refresh,
+                            simulation_runner=runner,
+                            projection_runner=self._projection_runner,
+                            campaign_path_simulator=self._campaign_path_simulator,
+                            website_check_fn=lambda _root: {"status": "PASS"},
+                            website_push_check_fn=lambda _root: {"status": "PASS"},
+                            generated_at_utc=f"{as_of}T08:00:00+00:00",
+                        )
+                    self.assertEqual(result.status, "PUBLISHED", result.summary.render())
+
+                    generation = json.loads(
+                        (source / "files/election-simulator/current.json").read_text()
+                    )["publication_generation"]
+                    archive = source / "data/processed/prospective_forecasts" / generation
+                    draws = archive / SIDECAR_DRAWS_FILENAME
+                    meta = archive / SIDECAR_METADATA_FILENAME
+                    self.assertTrue(draws.is_file(), f"no exact draws for {generation}")
+                    self.assertTrue(meta.is_file(), f"no sidecar metadata for {generation}")
+
+                    # VERIFIED, not merely present: the archive's own
+                    # validator ties the sidecar to the certified snapshot, so
+                    # this runs that check rather than re-deriving a hash.
+                    snapshot = json.loads((archive / "snapshot.json").read_text())
+                    validate_exact_draw_sidecar(
+                        draws, meta, certified_snapshot=snapshot)
+                    index = json.loads(
+                        (source / "data/processed/prospective_forecasts/index.json").read_text())
+                    entry = next(e for e in index["snapshots"]
+                                 if e.get("generation_id") == generation)
+                    self.assertEqual(entry["path"], f"{generation}/snapshot.json", entry)
+
+                    # And the snapshot it belongs to is in the same commit.
+                    files = subprocess.run(
+                        ["git", "show", "--name-only", "--format=", "HEAD~1"],
+                        cwd=source, check=True, capture_output=True, text=True,
+                    ).stdout.split()
+                    relative = f"data/processed/prospective_forecasts/{generation}"
+                    self.assertIn(f"{relative}/snapshot.json", files, files)
+                    self.assertIn(f"{relative}/{SIDECAR_DRAWS_FILENAME}", files, files)
 
     def test_backfill_failure_after_certification_keeps_the_forecast_on_the_remote(self) -> None:
         """The 2026-09-09 incident, as an acceptance test.
