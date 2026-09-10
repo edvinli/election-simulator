@@ -59,6 +59,11 @@ ALWAYS_RUN = (
     # silently dead workflow_run trigger is exactly the failure it exists to
     # catch.
     "test_render_workflow",
+    # Drives the reconstruction canary's verdict function directly. It imports
+    # from tests/support rather than scripts/, so no scripts change selects
+    # it -- and it is the only thing standing between a wrong comparison in
+    # that acceptance script and a runner result nobody can trust.
+    "test_reconstruction_canary",
 )
 
 # Modules that the nightly schedule re-runs in a heavier configuration than the

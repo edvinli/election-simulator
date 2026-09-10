@@ -472,33 +472,28 @@ class ReconstructionCanaryWorkflowTests(unittest.TestCase):
                 self.assertRegex(
                     block[:block.index("type:")], r"required: true", required)
 
-    def test_the_script_asserts_what_the_run_is_for(self) -> None:
-        """The script is the test; the workflow only supplies a runner.
+    def test_the_verdict_is_tested_behaviourally_elsewhere(self) -> None:
+        """This file asserts the workflow; the verdict needs more than text.
 
-        Both of this canary's failure modes present as success -- a fixture
-        the history contract rejects, and a renderer whose expected non-zero
-        exit truncates the assertions -- so the assertions have to be in the
-        script rather than in a reader's attention.
+        There used to be a test here listing the script's assertion messages
+        and checking they appeared in its source. That style cannot catch a
+        wrong comparison, and it missed three: protected-path baselines that
+        collided between the two repositories, safety checks skipped when the
+        renderer's output could not be parsed, and a "both views rebuilt"
+        verdict that never looked at the views.
+
+        The verdict is a pure function now, driven by crafted state in
+        tests/test_reconstruction_canary.py. This only pins that the seam
+        exists, so the behavioural tests cannot be quietly bypassed.
         """
 
-        for claim in (
-            # the gap is verified before rendering, not assumed
-            "this canary needs a known-good starting point",
-            "the fixture must leave exactly one gap on",
-            # the requested date came back and nothing is left short
-            "was not reconstructed",
-            "curve dates still missing",
-            # both repositories are checked against their post-fixture state
-            "HEAD moved",
-            "working tree changed",
-            "the website pointer changed",
-            "protected path changed",
-            # an expected parity omission is not an unrelated failure
-            "the primary view was omitted for an unexpected reason",
-            "with nothing reported short",
-        ):
-            with self.subTest(claim=claim):
-                self.assertIn(claim, self.script)
+        self.assertIn("def evaluate(", self.script)
+        self.assertIn("FULL_ACCEPTANCE", self.script)
+        self.assertIn("RECONSTRUCTION_ONLY", self.script)
+        behavioural = REPOSITORY_ROOT / "tests/test_reconstruction_canary.py"
+        self.assertTrue(behavioural.is_file(), behavioural)
+        self.assertIn("from tests.support.reconstruction_canary import",
+                      behavioural.read_text(encoding="utf-8"))
 
     def test_the_script_never_pushes(self) -> None:
         """Keyed on argv tokens, not on prose.
