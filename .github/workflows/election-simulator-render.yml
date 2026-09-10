@@ -163,9 +163,17 @@ jobs:
           RENDER_COMMIT: ${{ steps.target.outputs.commit }}
         run: |
           set -euo pipefail
+          # --history-workers is not optional here. Its default is 1, and the
+          # reconstruction backfill is the whole reason this workflow exists:
+          # the 2026-09-10 render resolved 123 dates in 58m54s on four
+          # workers, which does not fit in this job's 90 minutes serially.
+          # resolve_history_workers() caps the request by os.cpu_count(), so
+          # the same value is valid on any runner. Keep it equal to what the
+          # publication workflow requests -- the two run the same pipeline.
           args=(--site-repo "$GITHUB_WORKSPACE/website"
                 --mode render
                 --render-generation "$RENDER_GENERATION"
+                --history-workers 4
                 --summary-path "$GITHUB_WORKSPACE/render-summary.txt")
           if [[ -n "${RENDER_COMMIT:-}" ]]; then
             args+=(--render-certification-commit "$RENDER_COMMIT")

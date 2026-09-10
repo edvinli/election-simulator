@@ -18,6 +18,11 @@ from pathlib import Path
 import re
 import unittest
 
+from scripts.forecast_history.generate import (
+    PRODUCTION_HISTORY_WORKERS,
+    resolve_history_workers,
+)
+
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS = REPOSITORY_ROOT / ".github/workflows"
 RENDER = WORKFLOWS / "election-simulator-render.yml"
@@ -115,6 +120,53 @@ class RenderWorkflowTriggerTests(unittest.TestCase):
 
         self.assertIn("already serves", self.render)
         self.assertIn("needed=false", self.render)
+
+
+class RenderWorkflowRuntimeTests(unittest.TestCase):
+    """What the render job actually invokes, not what it could invoke.
+
+    The 2026-09-10 render run passed while exercising none of this, because it
+    skipped rendering -- the website already served the generation.
+    """
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.render = RENDER.read_text(encoding="utf-8")
+        cls.publication = PUBLICATION.read_text(encoding="utf-8")
+
+    def test_the_render_invocation_requests_the_production_worker_count(self) -> None:
+        """`--history-workers` defaults to 1, and the backfill is why this job exists.
+
+        The 2026-09-10 backfill resolved 123 dates in 58m54s on four workers.
+        Serial, that does not fit in this job's 90-minute timeout -- so a
+        workflow that omits the flag discards the parallelism the run depended
+        on and reintroduces the timeout the split was created to fix.
+
+        Asserted on the argument array the step builds, not merely on the
+        string appearing somewhere in the file: a comment mentioning the flag
+        must not satisfy this.
+        """
+
+        args = self.render[self.render.index('args=(--site-repo'):]
+        args = args[:args.index(')')]
+        self.assertIn(f"--history-workers {PRODUCTION_HISTORY_WORKERS}", args)
+        self.assertIn("--mode render", args)
+
+    def test_rendering_and_publication_request_the_same_worker_count(self) -> None:
+        """One pipeline, one worker budget.
+
+        `render_history_for_generation` is shared, so a rendering retry that
+        ran it with different concurrency than publication would have a
+        different runtime profile for identical work.
+        """
+
+        expected = f"--history-workers {PRODUCTION_HISTORY_WORKERS}"
+        self.assertIn(expected, self.render)
+        self.assertIn(expected, self.publication)
+        self.assertLessEqual(
+            resolve_history_workers(PRODUCTION_HISTORY_WORKERS), 8,
+            "bounded, not all cores: the runner also has the render to do",
+        )
 
 
 if __name__ == "__main__":
