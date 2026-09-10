@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 from copy import deepcopy
 import csv
 import hashlib
@@ -3716,6 +3717,222 @@ class DegradedRenderRepairTests(unittest.TestCase):
                 forced = base.render_certified_generation(**common, repair=True)
             self.assertEqual(forced["status"], "RENDERED_AND_DEPLOYED", forced)
             self.assertEqual(forced["curve"]["status"], "COMPLETE")
+
+
+class RenderDryRunTests(unittest.TestCase):
+    """Staging a render on a runner without touching production.
+
+    The rendering path is hard to exercise safely. It only does real work when
+    a publication certified and then failed, and forcing it with `--repair`
+    against a healthy deployment can only leave the site unchanged or strip a
+    view it could not rebuild. So the canary that proves the path works on a
+    real runner has to be able to stop before installing anything.
+
+    A dry run still runs everything that is expensive and environment-specific
+    -- pinned model inputs, the reconstruction, both future views, the Jekyll
+    build and both website gate tiers, all against a disposable copy of the
+    site -- and returns before the history commit, the pointer flip and the
+    website push.
+    """
+
+    @staticmethod
+    def _cli(*extra: str) -> argparse.Namespace:
+        return base.build_parser().parse_args(
+            ["--site-repo", "/tmp/site", "--mode", "render",
+             "--render-generation", "20260910T110717Z-5054d5b3", *extra])
+
+    def test_the_flag_defaults_off_and_inverts_commit_and_push(self) -> None:
+        """Production must not become a dry run by omission."""
+
+        captured: dict[str, object] = {}
+
+        def fake_render(**kwargs):
+            captured.update(kwargs)
+            return {"status": "RENDERED_AND_DEPLOYED", "generation": "g",
+                    "curve": {"status": "COMPLETE", "missing": [],
+                              "views": {"status": "COMPLETE"}}}
+
+        for extra, expect_commit in (((), True), (("--render-dry-run",), False)):
+            with self.subTest(flag=extra or "(default)"):
+                captured.clear()
+                with patch.object(base, "render_certified_generation", fake_render), \
+                        contextlib.redirect_stdout(io.StringIO()):
+                    base._render_from_cli(self._cli(*extra))
+                self.assertIs(captured["commit"], expect_commit)
+                self.assertIs(captured["push"], expect_commit)
+
+    def test_a_staged_dry_run_is_a_success_only_when_nothing_is_short(self) -> None:
+        """Held to the same bar as a real render, for the same reason.
+
+        A dry run that reaches the end having produced a short curve or a
+        missing required view has found exactly what the canary is for, and a
+        zero exit would hide it.
+        """
+
+        cases = [
+            ("COMPLETE", "COMPLETE", 0),
+            ("INCOMPLETE", "COMPLETE", 1),
+            ("COMPLETE", "INCOMPLETE", 1),
+        ]
+        for curve_status, views_status, expected in cases:
+            with self.subTest(curve=curve_status, views=views_status):
+                rendered = {
+                    "status": "RENDER_STAGED_NOT_INSTALLED",
+                    "generation": "20260910T110717Z-5054d5b3",
+                    "deployment": "dry-run",
+                    "curve": {
+                        "status": curve_status,
+                        "missing": [] if curve_status == "COMPLETE" else ["2026-09-09"],
+                        "reconstructed": [],
+                        "error": None,
+                        "views": {
+                            "status": views_status,
+                            "primary_campaign_paths": (
+                                "REBUILT" if views_status == "COMPLETE" else "OMITTED"),
+                            "missing": ([] if views_status == "COMPLETE"
+                                        else ["future_campaign_paths"]),
+                            "error": None,
+                        },
+                    },
+                }
+                with patch.object(
+                    base, "render_certified_generation", lambda **_: rendered
+                ), contextlib.redirect_stdout(io.StringIO()):
+                    self.assertEqual(
+                        base._render_from_cli(self._cli("--render-dry-run")), expected)
+
+    def test_render_only_flags_are_refused_outside_render_mode(self) -> None:
+        """An ignored dry-run request is a deployment nobody asked for.
+
+        All four render-only flags said "Requires --mode render" in their help
+        and none of it was enforced: `--mode publish --render-dry-run` ran a
+        real publication with commit and push enabled while silently
+        discarding the request. An ignored `--render-generation` is a
+        confusing no-op; an ignored `--render-dry-run` or `--repair` is an
+        operator asking for no writes and getting a deployment.
+
+        Asserted by forbidding *both* entry points, so the test proves the
+        combination never reaches automation rather than merely that it exits
+        non-zero.
+        """
+
+        def forbidden(*args, **kwargs):
+            raise AssertionError(
+                "a refused flag combination must not reach automation")
+
+        flags = [
+            ["--render-dry-run"],
+            ["--repair"],
+            ["--render-generation", "20260910T110717Z-5054d5b3"],
+            ["--render-certification-commit", "6c71d9c"],
+        ]
+        # `None` is the "no --mode given" case: rendering is never inferred,
+        # so a render-only flag without an explicit mode is discarded too.
+        for mode in ("publish", "probe", "dry_run", "publish_if_stale", None):
+            for flag in flags:
+                with self.subTest(mode=mode, flag=flag[0]):
+                    argv = ["--site-repo", "/tmp/site"]
+                    if mode is not None:
+                        argv += ["--mode", mode]
+                    argv += flag
+                    with patch.object(base, "run_automation", forbidden), \
+                            patch.object(base, "render_certified_generation", forbidden), \
+                            patch.object(base, "_render_from_cli", forbidden), \
+                            contextlib.redirect_stderr(io.StringIO()) as stderr:
+                        with self.assertRaises(SystemExit) as raised:
+                            base.main(argv)
+                    # argparse's own exit code for a misused command line.
+                    self.assertEqual(raised.exception.code, 2)
+                    self.assertIn(flag[0], stderr.getvalue())
+                    self.assertIn("require --mode render", stderr.getvalue())
+
+    def test_render_mode_still_accepts_every_render_only_flag(self) -> None:
+        """The refusal must not have narrowed the render path itself."""
+
+        captured: dict[str, object] = {}
+
+        def fake_render(**kwargs):
+            captured.update(kwargs)
+            return {"status": "RENDER_STAGED_NOT_INSTALLED", "generation": "g",
+                    "deployment": "dry-run",
+                    "curve": {"status": "COMPLETE", "missing": [],
+                              "views": {"status": "COMPLETE"}}}
+
+        with patch.object(base, "render_certified_generation", fake_render), \
+                contextlib.redirect_stdout(io.StringIO()):
+            code = base.main([
+                "--site-repo", "/tmp/site", "--mode", "render",
+                "--render-generation", "20260910T110717Z-5054d5b3",
+                "--render-certification-commit", "6c71d9c",
+                "--render-dry-run", "--repair",
+            ])
+        self.assertEqual(code, 0)
+        self.assertEqual(captured["generation"], "20260910T110717Z-5054d5b3")
+        self.assertEqual(captured["certification_commit"], "6c71d9c")
+        self.assertIs(captured["repair"], True)
+        self.assertIs(captured["commit"], False)
+        self.assertIs(captured["push"], False)
+
+    def test_a_publication_without_render_flags_is_untouched(self) -> None:
+        """The guard is about combinations, not about publishing."""
+
+        captured: dict[str, object] = {}
+
+        def fake_run_automation(*args, **kwargs):
+            captured.update(kwargs)
+            return SimpleNamespace(
+                summary=SimpleNamespace(render=lambda: ""),
+                to_dict=lambda: {}, status="SOURCE_CHECKED",
+            )
+
+        with patch.object(base, "run_automation", fake_run_automation), \
+                contextlib.redirect_stdout(io.StringIO()):
+            base.main(["--site-repo", "/tmp/site", "--mode", "publish"])
+        self.assertIs(captured["commit"], True)
+        self.assertIs(captured["push"], True)
+
+    def test_the_declared_list_matches_the_flags_that_claim_it(self) -> None:
+        """Every flag whose help says "Requires --mode render" is on the list.
+
+        The defect was a help string and an enforcement that disagreed, so the
+        two are tied together here rather than left to drift again.
+        """
+
+        import argparse as _argparse
+
+        parser = base.build_parser()
+        claiming = set()
+        for action in parser._actions:  # noqa: SLF001 - the only way to read help
+            if isinstance(action, _argparse._HelpAction):  # noqa: SLF001
+                continue
+            if action.help and "Requires --mode render" in action.help:
+                claiming.add(action.dest)
+        declared = {attribute for attribute, _ in base.RENDER_ONLY_ARGUMENTS}
+        self.assertEqual(
+            claiming, declared,
+            "a flag documents --mode render but is not enforced, or vice versa",
+        )
+
+
+    def test_a_dry_run_reaches_both_website_gate_tiers_before_returning(self) -> None:
+        """Structural: the gates are the point, so they must precede the return.
+
+        A dry run that returned before `_stage_site` would prove nothing about
+        Jekyll, Chromium or the browser suites -- which are exactly the
+        environment-specific parts a runner canary exists to check.
+        """
+
+        source = Path(base.__file__).read_text(encoding="utf-8")
+        renderer = source[source.index("def render_certified_generation("):]
+        renderer = renderer[:renderer.index("\ndef ")]
+        staged = renderer.index("website = _stage_site(")
+        push_gate = renderer.index('website["push_gate"] = website_push_check(')
+        dry_return = renderer.index('result["deployment"] = "dry-run"')
+        self.assertLess(staged, dry_return, "the Jekyll/browser tier must run first")
+        self.assertLess(push_gate, dry_return, "the push gate must run first")
+        # And it returns before anything is installed.
+        install = renderer.index("_copy_file_atomic(staged_history, history_destination)")
+        self.assertLess(dry_return, install)
 
 
 class PinnedModelInputsTests(unittest.TestCase):

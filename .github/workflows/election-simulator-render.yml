@@ -34,6 +34,11 @@ on:
         description: "Commit that certified it; verified to contain its snapshot, bundle and draws"
         required: false
         type: string
+      dry_run:
+        description: "Stage and gate the render without committing or pushing anything"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -156,6 +161,12 @@ jobs:
           # be rendered. Honour it even against a complete deployment; the
           # automatic follow-on trigger forces nothing.
           RENDER_REPAIR: ${{ github.event_name == 'workflow_dispatch' }}
+          # Dispatch-only, and false unless asked for. Exercises the whole
+          # rendering path on a real runner -- the local composite action, the
+          # website's Jekyll plugin set, Chromium, the pinned retrospective
+          # trees, the certified-generation loader, the reconstruction and both
+          # website gate tiers -- and stops before installing anything.
+          RENDER_DRY_RUN: ${{ github.event.inputs.dry_run == 'true' }}
         run: |
           set -euo pipefail
           # --history-workers is not optional here. Its default is 1, and the
@@ -175,6 +186,9 @@ jobs:
           fi
           if [[ "${RENDER_REPAIR:-false}" == "true" ]]; then
             args+=(--repair)
+          fi
+          if [[ "${RENDER_DRY_RUN:-false}" == "true" ]]; then
+            args+=(--render-dry-run)
           fi
           uv run python -m scripts.election_automation "${args[@]}"
 
