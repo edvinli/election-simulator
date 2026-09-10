@@ -43,6 +43,21 @@ REQUIRED_GEMS = (
 )
 
 
+def _without_comments(workflow: str) -> str:
+    """The YAML with whole-line comments removed.
+
+    This suite deliberately asserts against workflow text, and the render
+    workflow now *explains* the conclusion filter it does not have -- so a
+    naive substring search finds the explanation. Assertions about what the
+    YAML does are made against this; assertions about what it documents are
+    made against the raw text.
+    """
+
+    return "\n".join(
+        line for line in workflow.splitlines() if not line.lstrip().startswith("#")
+    )
+
+
 def _gem_install_blocks(workflow: str) -> list[str]:
     """Every `gem install` invocation in a workflow, backslash joins included."""
 
@@ -142,10 +157,60 @@ class RenderWorkflowTriggerTests(unittest.TestCase):
         self.assertIn("repository: edvinli/edvinli.github.io", self.render)
         self.assertIn("secrets.WEBSITE_REPO_TOKEN", self.render)
 
-    def test_it_declines_a_failed_certification_but_not_a_dispatch(self) -> None:
-        self.assertIn("github.event_name == 'workflow_dispatch'", self.render)
+    def test_it_follows_every_completed_publication_whatever_its_conclusion(self) -> None:
+        """The recovery case is a publication that certified and then failed.
+
+        Certification pushes the immutable generation before any history,
+        projection or browser work, so `certify, push, fail in rendering` is
+        the shape this workflow exists to recover -- and a job gated on
+        `conclusion == 'success'` skips precisely that run. The condition and
+        the comment above it used to contradict each other: the comment said a
+        failed publication may still have certified, and the condition then
+        declined to look.
+
+        Nothing is inferred from the run's outcome. The target comes from the
+        durable certified pointer and `deployed_render_state` decides whether
+        it still needs rendering, so following a genuinely empty failure costs
+        one cheap RENDER_NOT_NEEDED.
+        """
+
+        # No job-level conclusion filter of any kind, checked against the
+        # YAML rather than the prose that explains its absence.
+        yaml = _without_comments(self.render)
+        self.assertNotIn("workflow_run.conclusion", yaml)
+        self.assertNotRegex(
+            yaml, r"(?m)^    if:",
+            "the render job must not gate on the publication run's outcome",
+        )
+        # And the trigger still fires on completion rather than on success,
+        # which is what makes every conclusion reach the job at all.
+        self.assertIn("types: [completed]", yaml)
+        # The reasoning is recorded where the condition used to be, so the
+        # next reader does not restore it.
+        self.assertIn("may already have certified", self.render)
+
+    def test_every_conclusion_and_a_dispatch_reach_the_render_job(self) -> None:
+        """Enumerated, because "no filter" is easy to regress into "one filter".
+
+        There is no expression to evaluate once the job carries no `if:`, so
+        this asserts the property that makes that true: the workflow names no
+        conclusion anywhere, for any of the values a completed run can carry.
+        """
+
+        yaml = _without_comments(self.render)
+        for conclusion in ("success", "failure", "cancelled", "timed_out",
+                           "skipped", "action_required", "neutral", "stale"):
+            with self.subTest(conclusion=conclusion):
+                self.assertNotIn(
+                    f"conclusion == '{conclusion}'", yaml,
+                    f"a {conclusion} publication must still reach the render job",
+                )
+        # workflow_dispatch reaches it too, and remains the forcing path.
+        self.assertRegex(yaml, r"(?m)^  workflow_dispatch:$")
         self.assertIn(
-            "github.event.workflow_run.conclusion == 'success'", self.render)
+            "RENDER_REPAIR: ${{ github.event_name == 'workflow_dispatch' }}",
+            yaml,
+        )
 
     def test_the_workflow_does_not_decide_whether_rendering_is_needed(self) -> None:
         """That decision moved into `deployed_render_state`, and had to.

@@ -94,6 +94,8 @@ from tests.site_publication_fixture import (
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 COMMIT = "a" * 40
+#: Sentinel for "the key is absent", distinct from a null value.
+_MISSING = object()
 
 # The publication fixture is frozen (see tests/history_fixtures.py): the
 # history it rolls a certified point into, and the polling inputs that history
@@ -3492,6 +3494,65 @@ class DegradedRenderRepairTests(unittest.TestCase):
                 sum(s.startswith("chore: publish election forecast") for s in subjects), 1,
                 subjects,
             )
+
+    def test_unprovable_generation_metadata_is_not_complete(self) -> None:
+        """This gate must prove ownership, not merely fail to disprove it.
+
+        `deployed_render_state` is what production consults to decide it may
+        stop rendering, so a history whose certified point carries no
+        generation id -- or a non-string one -- has to read as incomplete.
+        Accepting it because there was "nothing to compare" would let a
+        pointer/history disagreement, or corrupt metadata, present as a
+        finished deployment.
+        """
+
+        with tempfile.TemporaryDirectory() as tmp:
+            source, site, generation, _ = self._publish_with_a_failing_backfill(
+                Path(tmp))
+            site_history = site / "files/election-simulator/history/coalition-timeseries.json"
+            original = json.loads(site_history.read_text())
+
+            def with_generation(value: object) -> dict:
+                payload = deepcopy(original)
+                point = [
+                    p for p in payload["series"]
+                    if p["provenance"] == "current_production"
+                ][0]
+                if value is _MISSING:
+                    point.pop("publication_generation", None)
+                else:
+                    point["publication_generation"] = value
+                return payload
+
+            for label, value in (
+                ("absent", _MISSING),
+                ("null", None),
+                ("integer", 123),
+                ("another generation", "20260101T000000Z-deadbeef"),
+            ):
+                with self.subTest(publication_generation=label):
+                    site_history.write_text(
+                        json.dumps(with_generation(value)), encoding="utf-8")
+                    state = base.deployed_render_state(
+                        site_repo=site, generation=generation,
+                        election_date=FROZEN_ELECTION_DATE,
+                    )
+                    self.assertTrue(state["serves_generation"])
+                    self.assertFalse(
+                        state["complete"],
+                        f"a history whose generation is {label} was reported complete",
+                    )
+                    self.assertIn("but its history names", state["reason"])
+
+            # The unmodified artifact is still judged on its real gaps rather
+            # than rejected outright, so the assertions above are about the
+            # metadata and nothing else.
+            site_history.write_text(json.dumps(original), encoding="utf-8")
+            restored = base.deployed_render_state(
+                site_repo=site, generation=generation,
+                election_date=FROZEN_ELECTION_DATE,
+            )
+            self.assertNotIn("but its history names", restored["reason"])
 
     def test_an_omitted_view_is_repaired_for_the_same_generation(self) -> None:
         """The other half of "degraded, therefore retryable".

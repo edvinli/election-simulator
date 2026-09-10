@@ -1941,14 +1941,22 @@ def deployed_render_state(
     # The pointer and the history are separate files, written by separate
     # steps. A history left behind by an older generation passes every check
     # below on its own terms while contradicting the pointer beside it.
+    #
+    # Absent or non-string metadata is not "nothing to compare" here: this
+    # gate decides whether production may stop rendering, so it has to be
+    # able to *prove* the deployed history belongs to this generation, not
+    # merely fail to disprove it. Every history the current pipeline writes
+    # carries the id on its certified point, so the only artifacts this
+    # rejects are pre-automation ones -- for which rendering once, which
+    # writes the id, is the correct outcome rather than a loop.
     history_generation = certified.get("publication_generation")
-    if isinstance(history_generation, str) and history_generation != generation:
+    if not isinstance(history_generation, str) or history_generation != generation:
         return outcome(
             deployed=deployed,
             serves_generation=True,
             reason=(
                 f"the website's pointer names {generation} but its history "
-                f"names {history_generation}"
+                f"names {history_generation!r}"
             ),
         )
 

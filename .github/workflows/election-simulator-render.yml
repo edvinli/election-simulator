@@ -49,13 +49,20 @@ concurrency:
 
 jobs:
   render:
-    # For a workflow_run trigger, only follow a successful certification. A
-    # failed publication may still have certified -- that is the point of the
-    # split -- so the generation is resolved from the simulator's certified
-    # pointer rather than assumed from the run's outcome.
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      github.event.workflow_run.conclusion == 'success'
+    # Deliberately unconditional on the publication run's conclusion.
+    #
+    # A failed publication may already have certified -- that is the entire
+    # point of the split, and it is the case this workflow exists to recover.
+    # Certification pushes the immutable generation before any history,
+    # projection or browser work, so the shape we care about is: certify, push,
+    # then fail in rendering. Gating on `conclusion == 'success'` skips exactly
+    # that run, which defeats the recovery architecture when it is needed.
+    #
+    # Nothing is inferred from the run's outcome. The target is read from the
+    # simulator's durable certified pointer and `deployed_render_state` decides
+    # whether it still needs rendering, so a publication that failed before
+    # certifying anything new resolves the generation already deployed and
+    # returns RENDER_NOT_NEEDED without pinning an input.
     runs-on: ${{ vars.ELECTION_SIMULATOR_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 90
     permissions:
