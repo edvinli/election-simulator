@@ -18,10 +18,62 @@ from pathlib import Path
 import re
 import unittest
 
+from scripts.forecast_history.generate import (
+    PRODUCTION_HISTORY_WORKERS,
+    resolve_history_workers,
+)
+
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS = REPOSITORY_ROOT / ".github/workflows"
 RENDER = WORKFLOWS / "election-simulator-render.yml"
 PUBLICATION = WORKFLOWS / "election-simulator-publication.yml"
+JEKYLL_ACTION = (
+    REPOSITORY_ROOT / ".github/actions/setup-jekyll-and-chromium/action.yml"
+)
+# The website's _config.yml `plugins:` list, plus jekyll itself. `gem install
+# jekyll` alone provisions a runner that fails at `jekyll build` on the first
+# unresolved plugin.
+REQUIRED_GEMS = (
+    "jekyll",
+    "jekyll-paginate",
+    "jekyll-sitemap",
+    "jekyll-gist",
+    "jekyll-feed",
+    "jekyll-redirect-from",
+)
+
+
+def _without_comments(workflow: str) -> str:
+    """The YAML with whole-line comments removed.
+
+    This suite deliberately asserts against workflow text, and the render
+    workflow now *explains* the conclusion filter it does not have -- so a
+    naive substring search finds the explanation. Assertions about what the
+    YAML does are made against this; assertions about what it documents are
+    made against the raw text.
+    """
+
+    return "\n".join(
+        line for line in workflow.splitlines() if not line.lstrip().startswith("#")
+    )
+
+
+def _gem_install_blocks(workflow: str) -> list[str]:
+    """Every `gem install` invocation in a workflow, backslash joins included."""
+
+    blocks = []
+    lines = workflow.splitlines()
+    for index, line in enumerate(lines):
+        # The invocation, not a comment that mentions it.
+        if not re.match(r"\s*gem install\b", line):
+            continue
+        block = [line]
+        cursor = index
+        while block[-1].rstrip().endswith("\\") and cursor + 1 < len(lines):
+            cursor += 1
+            block.append(lines[cursor])
+        blocks.append("\n".join(block))
+    return blocks
 
 
 class RenderWorkflowTriggerTests(unittest.TestCase):
@@ -105,16 +157,196 @@ class RenderWorkflowTriggerTests(unittest.TestCase):
         self.assertIn("repository: edvinli/edvinli.github.io", self.render)
         self.assertIn("secrets.WEBSITE_REPO_TOKEN", self.render)
 
-    def test_it_declines_a_failed_certification_but_not_a_dispatch(self) -> None:
-        self.assertIn("github.event_name == 'workflow_dispatch'", self.render)
+    def test_it_follows_every_completed_publication_whatever_its_conclusion(self) -> None:
+        """The recovery case is a publication that certified and then failed.
+
+        Certification pushes the immutable generation before any history,
+        projection or browser work, so `certify, push, fail in rendering` is
+        the shape this workflow exists to recover -- and a job gated on
+        `conclusion == 'success'` skips precisely that run. The condition and
+        the comment above it used to contradict each other: the comment said a
+        failed publication may still have certified, and the condition then
+        declined to look.
+
+        Nothing is inferred from the run's outcome. The target comes from the
+        durable certified pointer and `deployed_render_state` decides whether
+        it still needs rendering, so following a genuinely empty failure costs
+        one cheap RENDER_NOT_NEEDED.
+        """
+
+        # No job-level conclusion filter of any kind, checked against the
+        # YAML rather than the prose that explains its absence.
+        yaml = _without_comments(self.render)
+        self.assertNotIn("workflow_run.conclusion", yaml)
+        self.assertNotRegex(
+            yaml, r"(?m)^    if:",
+            "the render job must not gate on the publication run's outcome",
+        )
+        # And the trigger still fires on completion rather than on success,
+        # which is what makes every conclusion reach the job at all.
+        self.assertIn("types: [completed]", yaml)
+        # The reasoning is recorded where the condition used to be, so the
+        # next reader does not restore it.
+        self.assertIn("may already have certified", self.render)
+
+    def test_every_conclusion_and_a_dispatch_reach_the_render_job(self) -> None:
+        """Enumerated, because "no filter" is easy to regress into "one filter".
+
+        There is no expression to evaluate once the job carries no `if:`, so
+        this asserts the property that makes that true: the workflow names no
+        conclusion anywhere, for any of the values a completed run can carry.
+        """
+
+        yaml = _without_comments(self.render)
+        for conclusion in ("success", "failure", "cancelled", "timed_out",
+                           "skipped", "action_required", "neutral", "stale"):
+            with self.subTest(conclusion=conclusion):
+                self.assertNotIn(
+                    f"conclusion == '{conclusion}'", yaml,
+                    f"a {conclusion} publication must still reach the render job",
+                )
+        # workflow_dispatch reaches it too, and remains the forcing path.
+        self.assertRegex(yaml, r"(?m)^  workflow_dispatch:$")
         self.assertIn(
-            "github.event.workflow_run.conclusion == 'success'", self.render)
+            "RENDER_REPAIR: ${{ github.event_name == 'workflow_dispatch' }}",
+            yaml,
+        )
 
-    def test_it_skips_when_the_website_already_serves_the_generation(self) -> None:
-        """Cheap guard before the expensive one in `_reject_stale_render`."""
+    def test_the_workflow_does_not_decide_whether_rendering_is_needed(self) -> None:
+        """That decision moved into `deployed_render_state`, and had to.
 
-        self.assertIn("already serves", self.render)
-        self.assertIn("needed=false", self.render)
+        The step here compared current.json to the target generation and
+        skipped on equality. The curve backfill is never allowed to block a
+        certified forecast, so a render whose reconstruction failed installs
+        the publication and flips the pointer anyway -- and a skip keyed on
+        the pointer then declines to ever repair the hole, including when an
+        operator dispatches the workflow explicitly for that generation.
+
+        Keyed on the step output the old gate wrote, so restoring the gate
+        fails this rather than merely reading differently.
+        """
+
+        self.assertNotIn("needed=false", self.render)
+        self.assertNotIn("needed=true", self.render)
+        self.assertNotRegex(
+            self.render, r"(?m)^\s+if: steps\.needed\.outputs\.needed",
+            "the render step must run and let the renderer decide",
+        )
+
+    def test_an_explicit_dispatch_forces_the_render_and_the_follow_on_does_not(self) -> None:
+        """Repair is what a dispatch is for; the automatic trigger forces nothing.
+
+        Without this the retry story is incomplete: an operator who knows the
+        curve is short has no way to ask for it to be redone, because the only
+        generation they would name is the one already in the pointer.
+        """
+
+        self.assertIn(
+            "RENDER_REPAIR: ${{ github.event_name == 'workflow_dispatch' }}",
+            self.render,
+        )
+        self.assertIn("args+=(--repair)", self.render)
+        # Not passed unconditionally: a workflow_run follow-on that forced the
+        # work would re-render every publication the publish job already
+        # rendered, which is the cost the split exists to avoid paying twice.
+        self.assertNotRegex(self.render, r"(?m)^\s+--repair$")
+
+
+class RenderWorkflowRuntimeTests(unittest.TestCase):
+    """What the render job actually invokes, not what it could invoke.
+
+    Both failures pinned here are the same shape: a step that looks correct
+    and is only wrong at the moment it does real work. The 2026-09-10 render
+    run passed while exercising neither, because it skipped rendering -- the
+    website already served the generation.
+    """
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.render = RENDER.read_text(encoding="utf-8")
+        cls.publication = PUBLICATION.read_text(encoding="utf-8")
+        cls.action = JEKYLL_ACTION.read_text(encoding="utf-8")
+
+    def test_the_render_invocation_requests_the_production_worker_count(self) -> None:
+        """`--history-workers` defaults to 1, and the backfill is why this job exists.
+
+        The 2026-09-10 backfill resolved 123 dates in 58m54s on four workers.
+        Serial, that does not fit in this job's 90-minute timeout -- so a
+        workflow that omits the flag discards the parallelism the run depended
+        on and reintroduces the timeout the split was created to fix.
+
+        Asserted on the argument array the step builds, not merely on the
+        string appearing somewhere in the file: a comment mentioning the flag
+        must not satisfy this.
+        """
+
+        args = self.render[self.render.index('args=(--site-repo'):]
+        args = args[:args.index(')')]
+        self.assertIn(f"--history-workers {PRODUCTION_HISTORY_WORKERS}", args)
+        self.assertIn("--mode render", args)
+
+    def test_rendering_and_publication_request_the_same_worker_count(self) -> None:
+        """One pipeline, one worker budget.
+
+        `render_history_for_generation` is shared, so a rendering retry that
+        ran it with different concurrency than publication would have a
+        different runtime profile for identical work.
+        """
+
+        expected = f"--history-workers {PRODUCTION_HISTORY_WORKERS}"
+        self.assertIn(expected, self.render)
+        self.assertIn(expected, self.publication)
+        self.assertLessEqual(
+            resolve_history_workers(PRODUCTION_HISTORY_WORKERS), 8,
+            "bounded, not all cores: the runner also has the render to do",
+        )
+
+    def test_rendering_installs_every_gem_the_website_build_needs(self) -> None:
+        """`gem install jekyll` alone is a runner that fails at `jekyll build`.
+
+        This workflow shipped exactly that. Nothing caught it because its only
+        run skipped rendering, so no Jekyll build ever ran on it.
+        """
+
+        self.assertIn(
+            "uses: ./simulator/.github/actions/setup-jekyll-and-chromium",
+            self.render,
+            "rendering must use the shared dependency setup",
+        )
+        # The path is relative to $GITHUB_WORKSPACE, and the simulator is
+        # checked out to `simulator/`, so the action has to be reachable there.
+        self.assertIn("path: simulator", self.render)
+        self.assertTrue(JEKYLL_ACTION.is_file(), JEKYLL_ACTION)
+        for gem in REQUIRED_GEMS:
+            with self.subTest(gem=gem):
+                self.assertRegex(self.action, rf"(?m)^\s+{re.escape(gem)} \\$")
+
+    def test_the_shared_action_still_provides_a_browser(self) -> None:
+        """The browser suites resolve Chromium through CHROME_BIN."""
+
+        self.assertIn('echo "CHROME_BIN=$CHROME_BIN_PATH" >> "$GITHUB_ENV"', self.action)
+        self.assertIn("using: composite", self.action)
+        self.assertIn("ruby/setup-ruby@v1", self.action)
+
+    def test_no_jekyll_install_anywhere_is_missing_a_plugin(self) -> None:
+        """One job cannot use the shared action, so pin its copy to it.
+
+        `browser_diagnostic` checks out only the website, so
+        ./simulator/.github/actions is not on disk in that job and its install
+        stays inline. Every `gem install` in either workflow is therefore
+        checked directly, which also catches a new one added by hand.
+        """
+
+        blocks = (
+            _gem_install_blocks(self.render)
+            + _gem_install_blocks(self.publication)
+            + _gem_install_blocks(self.action)
+        )
+        self.assertTrue(blocks, "no gem install found; the assertion has gone blind")
+        for block in blocks:
+            for gem in REQUIRED_GEMS:
+                with self.subTest(gem=gem, block=block[:60]):
+                    self.assertRegex(block, rf"(?m)^\s*{re.escape(gem)}\s*\\?$")
 
 
 if __name__ == "__main__":

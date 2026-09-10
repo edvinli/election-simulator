@@ -1,0 +1,55 @@
+# The website's build dependencies, in one place.
+#
+# The website's _config.yml declares five Jekyll plugins, so `gem install
+# jekyll` alone produces a runner that looks provisioned and fails at
+# `jekyll build` with an unresolved plugin. The rendering workflow shipped
+# exactly that for as long as it never reached a real render: its one
+# successful run skipped rendering because the website already served the
+# generation, so the gap was never exercised.
+#
+# Kept as a composite action rather than copied a fourth time because the list
+# is a contract with another repository: when the website adds a plugin, there
+# should be one place here that has to learn about it.
+name: Set up Jekyll and Chromium
+description: Ruby, the website's full Jekyll plugin set, and a Chromium the browser suites can find.
+
+inputs:
+  ruby-version:
+    description: Ruby version to install.
+    required: false
+    default: "3.3"
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: ${{ inputs.ruby-version }}
+
+    - name: Install Jekyll and Chromium when needed
+      shell: bash
+      run: |
+        set -euo pipefail
+        # Mirrors the `plugins:` list in the website's _config.yml. A missing
+        # entry here is a build failure there, not a slower build.
+        gem install \
+          jekyll \
+          jekyll-paginate \
+          jekyll-sitemap \
+          jekyll-gist \
+          jekyll-feed \
+          jekyll-redirect-from \
+          --no-document
+        if command -v chromium >/dev/null 2>&1; then
+          CHROME_BIN_PATH="$(command -v chromium)"
+        elif command -v chromium-browser >/dev/null 2>&1; then
+          CHROME_BIN_PATH="$(command -v chromium-browser)"
+        elif command -v google-chrome >/dev/null 2>&1; then
+          CHROME_BIN_PATH="$(command -v google-chrome)"
+        else
+          sudo apt-get update
+          sudo apt-get install -y chromium
+          CHROME_BIN_PATH="$(command -v chromium)"
+        fi
+        echo "CHROME_BIN=$CHROME_BIN_PATH" >> "$GITHUB_ENV"

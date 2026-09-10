@@ -166,34 +166,8 @@ jobs:
             tests.test_polling_acquisition \
             tests.test_election_automation
 
-      - name: Set up Node and Jekyll
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.3"
-
-      - name: Install Jekyll and Chromium when needed
-        shell: bash
-        run: |
-          gem install \
-            jekyll \
-            jekyll-paginate \
-            jekyll-sitemap \
-            jekyll-gist \
-            jekyll-feed \
-            jekyll-redirect-from \
-            --no-document
-          if command -v chromium >/dev/null 2>&1; then
-            CHROME_BIN_PATH="$(command -v chromium)"
-          elif command -v chromium-browser >/dev/null 2>&1; then
-            CHROME_BIN_PATH="$(command -v chromium-browser)"
-          elif command -v google-chrome >/dev/null 2>&1; then
-            CHROME_BIN_PATH="$(command -v google-chrome)"
-          else
-            sudo apt-get update
-            sudo apt-get install -y chromium
-            CHROME_BIN_PATH="$(command -v chromium)"
-          fi
-          echo "CHROME_BIN=$CHROME_BIN_PATH" >> "$GITHUB_ENV"
+      - name: Set up Jekyll and Chromium
+        uses: ./simulator/.github/actions/setup-jekyll-and-chromium
 
       - name: Run full dry-run without commits or pushes
         working-directory: simulator
@@ -243,6 +217,9 @@ jobs:
         with:
           ruby-version: "3.3"
 
+      # Inline, not the shared composite action: this job checks out only the
+      # website, so ./simulator/.github/actions is not on disk here. The gem
+      # list is pinned equal to the action's by test_render_workflow.
       - name: Install Jekyll and Chromium when needed
         shell: bash
         run: |
@@ -596,36 +573,9 @@ jobs:
             tests.test_polling_acquisition \
             tests.test_election_automation
 
-      - name: Set up Node and Jekyll
+      - name: Set up Jekyll and Chromium
         if: steps.automation_gate.outputs.disabled != 'true'
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.3"
-
-      - name: Install Jekyll and Chromium when needed
-        if: steps.automation_gate.outputs.disabled != 'true'
-        shell: bash
-        run: |
-          gem install \
-            jekyll \
-            jekyll-paginate \
-            jekyll-sitemap \
-            jekyll-gist \
-            jekyll-feed \
-            jekyll-redirect-from \
-            --no-document
-          if command -v chromium >/dev/null 2>&1; then
-            CHROME_BIN_PATH="$(command -v chromium)"
-          elif command -v chromium-browser >/dev/null 2>&1; then
-            CHROME_BIN_PATH="$(command -v chromium-browser)"
-          elif command -v google-chrome >/dev/null 2>&1; then
-            CHROME_BIN_PATH="$(command -v google-chrome)"
-          else
-            sudo apt-get update
-            sudo apt-get install -y chromium
-            CHROME_BIN_PATH="$(command -v chromium)"
-          fi
-          echo "CHROME_BIN=$CHROME_BIN_PATH" >> "$GITHUB_ENV"
+        uses: ./simulator/.github/actions/setup-jekyll-and-chromium
 
       - name: Acquire, validate, publish, test, and sync
         if: steps.automation_gate.outputs.disabled != 'true'

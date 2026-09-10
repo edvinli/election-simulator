@@ -247,6 +247,34 @@ MODEL_INPUT_PATHS = (
     "data/processed/pollofpolls/individual_polls.csv",
 )
 
+# The retrospective tables the model reads off whatever processed root it is
+# handed. The production engine resolves its election, mandate and geography
+# paths under that root (scripts/simulator/engine.py), and
+# `forecast_history.effective_inputs` reads the election targets there to
+# compute the reuse fingerprints.
+#
+# Named indirectly on purpose: a structural test forbids this module from
+# mentioning the engine entry point, because rendering must never reach for it.
+#
+# Pinning only the polling files produced a processed root that looked complete
+# and was not. The curve backfill raised "Missing canonical election results
+# file" on its first date, and the guard that stops the curve from ever
+# blocking a certified forecast swallowed it -- so a render reconstructed
+# nothing, every time, silently. No run had shown this, because the rendering
+# workflow's only run skipped rendering.
+#
+# Whole directories rather than the individual files the engine names: the
+# geography loader reads a sibling the engine's own signature does not
+# mention, and discovering that one missing file at a time is how this defect
+# stayed hidden. They are small (~170K together) and pinned at the certified
+# revision like everything else here, so a table corrected later cannot
+# retroactively change an older forecast's curve.
+MODEL_INPUT_TREES = (
+    "data/processed/elections",
+    "data/processed/mandates",
+    "data/processed/geography",
+)
+
 
 def materialize_pinned_model_inputs(
     repo_root: Path | str, *, source_git_commit: str, destination: Path | str
@@ -294,6 +322,38 @@ def materialize_pinned_model_inputs(
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(shown.stdout)
         written += 1
+    for prefix in MODEL_INPUT_TREES:
+        listed = subprocess.run(
+            ["git", "ls-tree", "-r", "--name-only", source_git_commit, "--", prefix],
+            cwd=repo, capture_output=True, text=True, check=False,
+        )
+        names = (
+            [name for name in listed.stdout.splitlines() if name.strip()]
+            if listed.returncode == 0
+            else []
+        )
+        # `-r` lists a directory's files; a single entry equal to the prefix is
+        # a symlink committed in its place, whose target is outside the
+        # revision and so is not pinnable.
+        if not names or names == [prefix]:
+            raise CertifiedGenerationError(
+                f"model input tree {prefix} is not a directory of files at "
+                f"certified revision {source_git_commit[:12]}"
+            )
+        for name in names:
+            shown = subprocess.run(
+                ["git", "show", f"{source_git_commit}:{name}"],
+                cwd=repo, capture_output=True, check=False,
+            )
+            if shown.returncode != 0:
+                raise CertifiedGenerationError(
+                    f"model input {name} is absent at certified revision "
+                    f"{source_git_commit[:12]}"
+                )
+            target = processed / Path(name).relative_to("data/processed")
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(shown.stdout)
+            written += 1
     if written == 0:
         raise CertifiedGenerationError(
             f"no model inputs could be pinned at {source_git_commit[:12]}")

@@ -49,13 +49,20 @@ concurrency:
 
 jobs:
   render:
-    # For a workflow_run trigger, only follow a successful certification. A
-    # failed publication may still have certified -- that is the point of the
-    # split -- so the generation is resolved from the simulator's certified
-    # pointer rather than assumed from the run's outcome.
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      github.event.workflow_run.conclusion == 'success'
+    # Deliberately unconditional on the publication run's conclusion.
+    #
+    # A failed publication may already have certified -- that is the entire
+    # point of the split, and it is the case this workflow exists to recover.
+    # Certification pushes the immutable generation before any history,
+    # projection or browser work, so the shape we care about is: certify, push,
+    # then fail in rendering. Gating on `conclusion == 'success'` skips exactly
+    # that run, which defeats the recovery architecture when it is needed.
+    #
+    # Nothing is inferred from the run's outcome. The target is read from the
+    # simulator's durable certified pointer and `deployed_render_state` decides
+    # whether it still needs rendering, so a publication that failed before
+    # certifying anything new resolves the generation already deployed and
+    # returns RENDER_NOT_NEEDED without pinning an input.
     runs-on: ${{ vars.ELECTION_SIMULATOR_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 90
     permissions:
@@ -100,23 +107,11 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Set up Ruby and Jekyll
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.3"
-
-      - name: Install Jekyll and a browser
-        run: |
-          set -euo pipefail
-          gem install --no-document jekyll
-          sudo apt-get update
-          sudo apt-get install -y chromium-browser || sudo apt-get install -y chromium
-          for candidate in chromium chromium-browser google-chrome; do
-            if command -v "$candidate" >/dev/null; then
-              echo "CHROME_BIN=$(command -v "$candidate")" >> "$GITHUB_ENV"
-              break
-            fi
-          done
+      # The website needs five Jekyll plugins beyond `jekyll` itself. This
+      # workflow installed only `jekyll` and never noticed, because its one
+      # successful run skipped rendering.
+      - name: Set up Jekyll and Chromium
+        uses: ./simulator/.github/actions/setup-jekyll-and-chromium
 
       - name: Install simulator dependencies
         working-directory: simulator
@@ -143,32 +138,43 @@ jobs:
           echo "commit=$commit" >> "$GITHUB_OUTPUT"
           echo "rendering $generation (certified by ${commit:-unknown})"
 
-      - name: Skip when the website already serves this generation
-        id: needed
-        run: |
-          set -euo pipefail
-          deployed="$(python -c 'import json; print(json.load(open("website/files/election-simulator/current.json"))["publication_generation"])' || echo "")"
-          if [[ "$deployed" == "${{ steps.target.outputs.generation }}" ]]; then
-            echo "needed=false" >> "$GITHUB_OUTPUT"
-            echo "website already serves $deployed; nothing to render"
-          else
-            echo "needed=true" >> "$GITHUB_OUTPUT"
-          fi
-
+      # Whether this generation still needs rendering is decided by
+      # `deployed_render_state`, not here. This step used to compare
+      # current.json to the target and skip on equality, which is wrong in the
+      # one case that matters: the curve backfill is never allowed to block a
+      # certified forecast, so a render whose reconstruction failed installs
+      # the publication and flips the pointer anyway -- and a skip keyed on
+      # the pointer then refuses to ever repair the hole, including on an
+      # explicit dispatch. The renderer returns RENDER_NOT_NEEDED cheaply,
+      # before pinning any model input, when the deployed artifact is whole.
       - name: Render and deploy
-        if: steps.needed.outputs.needed == 'true'
         working-directory: simulator
         env:
           RENDER_GENERATION: ${{ steps.target.outputs.generation }}
           RENDER_COMMIT: ${{ steps.target.outputs.commit }}
+          # An explicit dispatch is an operator asking for this generation to
+          # be rendered. Honour it even against a complete deployment; the
+          # automatic follow-on trigger forces nothing.
+          RENDER_REPAIR: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
           set -euo pipefail
+          # --history-workers is not optional here. Its default is 1, and the
+          # reconstruction backfill is the whole reason this workflow exists:
+          # the 2026-09-10 render resolved 123 dates in 58m54s on four
+          # workers, which does not fit in this job's 90 minutes serially.
+          # resolve_history_workers() caps the request by os.cpu_count(), so
+          # the same value is valid on any runner. Keep it equal to what the
+          # publication workflow requests -- the two run the same pipeline.
           args=(--site-repo "$GITHUB_WORKSPACE/website"
                 --mode render
                 --render-generation "$RENDER_GENERATION"
+                --history-workers 4
                 --summary-path "$GITHUB_WORKSPACE/render-summary.txt")
           if [[ -n "${RENDER_COMMIT:-}" ]]; then
             args+=(--render-certification-commit "$RENDER_COMMIT")
+          fi
+          if [[ "${RENDER_REPAIR:-false}" == "true" ]]; then
+            args+=(--repair)
           fi
           uv run python -m scripts.election_automation "${args[@]}"
 
