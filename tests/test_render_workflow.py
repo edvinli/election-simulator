@@ -147,11 +147,44 @@ class RenderWorkflowTriggerTests(unittest.TestCase):
         self.assertIn(
             "github.event.workflow_run.conclusion == 'success'", self.render)
 
-    def test_it_skips_when_the_website_already_serves_the_generation(self) -> None:
-        """Cheap guard before the expensive one in `_reject_stale_render`."""
+    def test_the_workflow_does_not_decide_whether_rendering_is_needed(self) -> None:
+        """That decision moved into `deployed_render_state`, and had to.
 
-        self.assertIn("already serves", self.render)
-        self.assertIn("needed=false", self.render)
+        The step here compared current.json to the target generation and
+        skipped on equality. The curve backfill is never allowed to block a
+        certified forecast, so a render whose reconstruction failed installs
+        the publication and flips the pointer anyway -- and a skip keyed on
+        the pointer then declines to ever repair the hole, including when an
+        operator dispatches the workflow explicitly for that generation.
+
+        Keyed on the step output the old gate wrote, so restoring the gate
+        fails this rather than merely reading differently.
+        """
+
+        self.assertNotIn("needed=false", self.render)
+        self.assertNotIn("needed=true", self.render)
+        self.assertNotRegex(
+            self.render, r"(?m)^\s+if: steps\.needed\.outputs\.needed",
+            "the render step must run and let the renderer decide",
+        )
+
+    def test_an_explicit_dispatch_forces_the_render_and_the_follow_on_does_not(self) -> None:
+        """Repair is what a dispatch is for; the automatic trigger forces nothing.
+
+        Without this the retry story is incomplete: an operator who knows the
+        curve is short has no way to ask for it to be redone, because the only
+        generation they would name is the one already in the pointer.
+        """
+
+        self.assertIn(
+            "RENDER_REPAIR: ${{ github.event_name == 'workflow_dispatch' }}",
+            self.render,
+        )
+        self.assertIn("args+=(--repair)", self.render)
+        # Not passed unconditionally: a workflow_run follow-on that forced the
+        # work would re-render every publication the publish job already
+        # rendered, which is the cost the split exists to avoid paying twice.
+        self.assertNotRegex(self.render, r"(?m)^\s+--repair$")
 
 
 class RenderWorkflowRuntimeTests(unittest.TestCase):

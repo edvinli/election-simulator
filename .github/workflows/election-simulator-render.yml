@@ -131,24 +131,24 @@ jobs:
           echo "commit=$commit" >> "$GITHUB_OUTPUT"
           echo "rendering $generation (certified by ${commit:-unknown})"
 
-      - name: Skip when the website already serves this generation
-        id: needed
-        run: |
-          set -euo pipefail
-          deployed="$(python -c 'import json; print(json.load(open("website/files/election-simulator/current.json"))["publication_generation"])' || echo "")"
-          if [[ "$deployed" == "${{ steps.target.outputs.generation }}" ]]; then
-            echo "needed=false" >> "$GITHUB_OUTPUT"
-            echo "website already serves $deployed; nothing to render"
-          else
-            echo "needed=true" >> "$GITHUB_OUTPUT"
-          fi
-
+      # Whether this generation still needs rendering is decided by
+      # `deployed_render_state`, not here. This step used to compare
+      # current.json to the target and skip on equality, which is wrong in the
+      # one case that matters: the curve backfill is never allowed to block a
+      # certified forecast, so a render whose reconstruction failed installs
+      # the publication and flips the pointer anyway -- and a skip keyed on
+      # the pointer then refuses to ever repair the hole, including on an
+      # explicit dispatch. The renderer returns RENDER_NOT_NEEDED cheaply,
+      # before pinning any model input, when the deployed artifact is whole.
       - name: Render and deploy
-        if: steps.needed.outputs.needed == 'true'
         working-directory: simulator
         env:
           RENDER_GENERATION: ${{ steps.target.outputs.generation }}
           RENDER_COMMIT: ${{ steps.target.outputs.commit }}
+          # An explicit dispatch is an operator asking for this generation to
+          # be rendered. Honour it even against a complete deployment; the
+          # automatic follow-on trigger forces nothing.
+          RENDER_REPAIR: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
           set -euo pipefail
           # --history-workers is not optional here. Its default is 1, and the
@@ -165,6 +165,9 @@ jobs:
                 --summary-path "$GITHUB_WORKSPACE/render-summary.txt")
           if [[ -n "${RENDER_COMMIT:-}" ]]; then
             args+=(--render-certification-commit "$RENDER_COMMIT")
+          fi
+          if [[ "${RENDER_REPAIR:-false}" == "true" ]]; then
+            args+=(--repair)
           fi
           uv run python -m scripts.election_automation "${args[@]}"
 

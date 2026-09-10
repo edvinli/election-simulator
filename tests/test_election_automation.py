@@ -47,7 +47,12 @@ from scripts.election_automation import (
     should_publish,
 )
 from scripts.forecast_history.campaign_paths import CampaignPathSimulation
-from scripts.forecast_history.contract import DEFAULT_COALITIONS, build_groups_from_matrices, validate_history_contract
+from scripts.forecast_history.contract import (
+    DEFAULT_COALITIONS,
+    build_groups_from_matrices,
+    deterministic_history_sha256,
+    validate_history_contract,
+)
 from scripts.forecast_history.effective_inputs import EffectiveInputs, previous_fingerprints
 from scripts.forecast_history.generate import (
     DEFAULT_SIMULATION_SEED,
@@ -3003,10 +3008,18 @@ class PublicationCurveContinuityTests(unittest.TestCase):
         freeze_archive_inputs(processed / "prospective_forecasts")
         return processed
 
-    def _publish(self, history: dict, processed: Path, day: str) -> tuple[dict, list]:
+    def _publish(
+        self,
+        history: dict,
+        processed: Path,
+        day: str,
+        *,
+        allow_degraded_views: bool = False,
+    ) -> tuple[dict, dict]:
         return base.render_history_for_generation(
             history,
             ElectionAutomationTests._result(day),
+            allow_degraded_views=allow_degraded_views,
             poll_file=processed / "pollofpolls" / "swedishpolls_individual_polls.csv",
             timeseries_file=processed / "pollofpolls" / "pollofpolls_timeseries.csv",
             archive_dir=processed / "prospective_forecasts",
@@ -3037,10 +3050,10 @@ class PublicationCurveContinuityTests(unittest.TestCase):
                         previous = (
                             FROZEN_AS_OF if index == 0 else days[index - 1]
                         )
-                        history, backfilled = self._publish(history, processed, day)
+                        history, curve = self._publish(history, processed, day)
                         # The hole this publication's own roll-in created.
                         self.assertIn(
-                            date.fromisoformat(previous), backfilled,
+                            previous, curve["reconstructed"],
                             f"the date {previous} archived by this roll-in was not "
                             "reconstructed; the backfill ran before the roll-in",
                         )
@@ -3048,6 +3061,10 @@ class PublicationCurveContinuityTests(unittest.TestCase):
                             missing_curve_dates(history), [],
                             "the published curve has a hole in it",
                         )
+                        # The report agrees with the artifact it describes.
+                        self.assertEqual(curve["status"], "COMPLETE")
+                        self.assertEqual(curve["missing"], [])
+                        self.assertIsNone(curve["error"])
                         # The archived point and the curve point coexist on that
                         # date: the publication is still recorded, and the line
                         # the chart draws is continuous through it.
@@ -3092,8 +3109,9 @@ class PublicationCurveContinuityTests(unittest.TestCase):
                         if point["provenance"] == "current_production"
                     ][0]
                 )
-                second, backfilled = self._publish(first, processed, "2026-09-07")
-            self.assertTrue(backfilled, "this publication had a hole to close")
+                second, curve = self._publish(first, processed, "2026-09-07")
+            self.assertTrue(
+                curve["reconstructed"], "this publication had a hole to close")
             # The previous certified point is now archived, and the roll-in
             # relabelled it rather than re-deriving it.
             archived = [
@@ -3109,6 +3127,132 @@ class PublicationCurveContinuityTests(unittest.TestCase):
                 certified["publication_generation"],
             )
 
+    def test_an_unverifiable_primary_view_is_omitted_and_reported(self) -> None:
+        """The primary view's guarantee is not negotiable, so absence is the fallback.
+
+        `future_campaign_paths` claims its election-day endpoint is bitwise
+        identical to the certified draws, and the builder fails closed when it
+        cannot establish that. A render then has three options and only one is
+        honest: publish a view whose guarantee is false, keep whatever the
+        previous generation left behind, or publish none and say so.
+
+        Observed for real: the 2026-09-10 fresh-clone rehearsal could not
+        rebuild this view for 20260909T221847Z-6017c0aa, and every website
+        gate passed without it -- so omission degrades the chart's forward
+        region rather than the page.
+        """
+
+        with tempfile.TemporaryDirectory() as tmp:
+            processed = self._inputs(Path(tmp))
+            with patch(
+                "scripts.forecast_history.generate.simulate_election",
+                ElectionAutomationTests._projection_runner,
+            ), patch(
+                "scripts.forecast_history.campaign_paths_contract.build_future_campaign_paths",
+                side_effect=ValueError("endpoint parity could not be established"),
+            ):
+                history, curve = self._publish(
+                    make_history_fixture(), processed, "2026-09-06",
+                    allow_degraded_views=True,
+                )
+
+            views = curve["views"]
+            self.assertEqual(views["primary_campaign_paths"], "OMITTED")
+            self.assertEqual(views["status"], "INCOMPLETE")
+            self.assertEqual(views["missing"], ["future_campaign_paths"])
+            self.assertEqual(views["secondary_projection"], "REBUILT")
+            self.assertIn("endpoint parity could not be established", views["error"])
+            self.assertNotIn("future_campaign_paths", history)
+            # The secondary fan is required and still present, anchored here.
+            self.assertIn("future_projection", history)
+            self.assertEqual(history["future_projection"]["origin_date"], "2026-09-06")
+            # And the artifact is fully valid and self-consistent without it.
+            validate_history_contract(history)
+            self.assertEqual(
+                history["deterministic_content_sha256"],
+                deterministic_history_sha256(history),
+            )
+            # The curve is unaffected: a view failure is not a curve failure.
+            self.assertEqual(curve["status"], "COMPLETE")
+            self.assertEqual(missing_curve_dates(history), [])
+
+    def test_a_previous_generations_views_are_never_inherited(self) -> None:
+        """The defect fix 2 exists to remove, asserted at its hardest point.
+
+        The backfill carries unknown top-level keys across a rebuild, so the
+        previous generation's view sections survive into the payload unless
+        something removes them. Rendering used to call the plain updater and
+        leave them there, publishing a forward region belonging to a forecast
+        that was no longer on the page.
+
+        An origin date is not proof of ownership -- two intraday publications
+        share one -- so a section is rebuilt or dropped, never adopted.
+        """
+
+        with tempfile.TemporaryDirectory() as tmp:
+            processed = self._inputs(Path(tmp))
+            with patch(
+                "scripts.forecast_history.generate.simulate_election",
+                ElectionAutomationTests._projection_runner,
+            ):
+                first, first_curve = self._publish(
+                    make_history_fixture(), processed, "2026-09-06")
+            # A real, valid section belonging to the 2026-09-06 generation.
+            self.assertEqual(first_curve["views"]["primary_campaign_paths"], "REBUILT")
+            self.assertEqual(first["future_campaign_paths"]["origin_date"], "2026-09-06")
+            inherited = deepcopy(first["future_campaign_paths"])
+
+            with patch(
+                "scripts.forecast_history.generate.simulate_election",
+                ElectionAutomationTests._projection_runner,
+            ), patch(
+                "scripts.forecast_history.campaign_paths_contract.build_future_campaign_paths",
+                side_effect=ValueError("endpoint parity could not be established"),
+            ):
+                second, curve = self._publish(
+                    first, processed, "2026-09-07", allow_degraded_views=True)
+
+            self.assertEqual(curve["views"]["primary_campaign_paths"], "OMITTED")
+            self.assertNotIn(
+                "future_campaign_paths", second,
+                "the previous generation's forward region was inherited",
+            )
+            self.assertNotEqual(second.get("future_campaign_paths"), inherited)
+            # The secondary fan was rebuilt onto the new point, not inherited.
+            self.assertEqual(second["future_projection"]["origin_date"], "2026-09-07")
+            validate_history_contract(second)
+
+    def test_a_primary_view_failure_is_strict_by_default(self) -> None:
+        """Publication must not inherit recovery rendering's tolerance.
+
+        This stage is shared, so the degraded fallback added for explicit
+        recovery rendering would otherwise have relaxed the path that
+        *creates* forecasts -- which has a working reference in hand and no
+        reason to publish without the view. The default is therefore strict
+        and `run_production_event` never passes the flag.
+        """
+
+        with tempfile.TemporaryDirectory() as tmp:
+            processed = self._inputs(Path(tmp))
+            with patch(
+                "scripts.forecast_history.generate.simulate_election",
+                ElectionAutomationTests._projection_runner,
+            ), patch(
+                "scripts.forecast_history.campaign_paths_contract.build_future_campaign_paths",
+                side_effect=ValueError("endpoint parity could not be established"),
+            ), self.assertRaisesRegex(
+                ValueError, "endpoint parity could not be established"
+            ):
+                self._publish(make_history_fixture(), processed, "2026-09-06")
+
+        source = Path(base.__file__).read_text(encoding="utf-8")
+        self.assertIn("    allow_degraded_views: bool = False,\n", source)
+        # Exactly one caller enables it, and it is the recovery renderer.
+        self.assertEqual(source.count("allow_degraded_views=True"), 1)
+        renderer = source[source.index("def render_certified_generation("):]
+        renderer = renderer[:renderer.index("\ndef ")]
+        self.assertIn("allow_degraded_views=True", renderer)
+
     def test_a_publication_refreshes_both_future_views_onto_its_own_point(self) -> None:
         """Projections belong to the generation that published them.
 
@@ -3123,7 +3267,9 @@ class PublicationCurveContinuityTests(unittest.TestCase):
                 "scripts.forecast_history.generate.simulate_election",
                 ElectionAutomationTests._projection_runner,
             ):
-                history, _ = self._publish(make_history_fixture(), processed, "2026-09-06")
+                history, curve = self._publish(
+                    make_history_fixture(), processed, "2026-09-06")
+            self.assertEqual(curve["status"], "COMPLETE")
             current = [
                 point
                 for point in history["series"]
@@ -3147,9 +3293,14 @@ class PublicationCurveContinuityTests(unittest.TestCase):
                 base, "backfill_reconstructed_curve",
                 side_effect=RuntimeError("reconstruction exploded"),
             ):
-                history, backfilled = self._publish(
+                history, curve = self._publish(
                     make_history_fixture(), processed, "2026-09-06")
-            self.assertEqual(backfilled, [])
+            # Reported, not swallowed: the whole point of the report is that a
+            # failure here leaves a hole nothing else would mention.
+            self.assertEqual(curve["reconstructed"], [])
+            self.assertEqual(curve["status"], "INCOMPLETE")
+            self.assertEqual(curve["missing"], [FROZEN_AS_OF])
+            self.assertIn("reconstruction exploded", curve["error"])
             # Published, with the hole the failed backfill could not close.
             self.assertEqual(
                 [
@@ -3164,6 +3315,346 @@ class PublicationCurveContinuityTests(unittest.TestCase):
                 [FROZEN_AS_OF],
             )
             validate_history_contract(history)
+
+
+class DegradedRenderRepairTests(unittest.TestCase):
+    """A publication whose curve failed must be visible, and repairable.
+
+    The reconstruction is never allowed to block a certified forecast, so an
+    exception in it is swallowed and the publication deploys an exact forecast
+    whose chart has a hole. That much is deliberate. What was not survivable is
+    what came next: the rendering workflow skipped the generation because its
+    pointer was already live, so the one job that could have repaired the curve
+    declined to -- including when an operator dispatched it explicitly for that
+    generation. The failure was swallowed by design and nothing reported it,
+    which left no path back to a whole curve short of waiting for the next
+    publication to move the pointer.
+
+    The whole arc is asserted here, in order: deploy degraded, say so, repair
+    the same generation without re-certifying, then decline the work once the
+    deployment is whole unless it is explicitly demanded.
+
+    Published on 2026-09-06 rather than the frozen date, because a same-day
+    replacement leaves no hole for a failing backfill to fail to close: the
+    date keeps a certified point either way. One day later is the production
+    shape -- the roll-in archives 2026-09-05 and owes the curve a replacement.
+    """
+
+    PUBLISH_DAY = "2026-09-06"
+    ARCHIVED_DAY = FROZEN_AS_OF
+
+    def _publish_with_a_failing_backfill(self, tmp: Path) -> tuple[Path, Path, str, Any]:
+        source, site = ElectionAutomationTests._production_fixture(tmp)
+        # The archive cannot run ahead of the generation being published, and
+        # the committed one does run ahead of the frozen date. Committed after
+        # the fixture's own init, because a publication refuses a dirty
+        # simulator worktree.
+        freeze_archive_inputs(source / "data/processed/prospective_forecasts")
+        subprocess.run(
+            ["git", "add", "-A", "data/processed/prospective_forecasts"],
+            cwd=source, check=True,
+        )
+        subprocess.run(
+            ["git", "commit", "-qm", "fixture: archive stops at the frozen date"],
+            cwd=source, check=True,
+        )
+        produced = ElectionAutomationTests._production_result(self.PUBLISH_DAY)
+
+        def refresh(raw, processed, **kwargs):
+            raw.mkdir(parents=True, exist_ok=True)
+            ElectionAutomationTests._change_normalized_poll_support(
+                processed / "individual_polls.csv")
+            return {"messages": []}
+
+        def runner(**kwargs):
+            commit = subprocess.run(
+                ["git", "rev-parse", "HEAD"], cwd=source, check=True,
+                capture_output=True, text=True,
+            ).stdout.strip()
+            produced.manifest["source_git_commit"] = commit
+            produced.manifest["git_commit"] = commit
+            return produced
+
+        published = datetime(2026, 9, 6, 8, 0, tzinfo=timezone.utc)
+        with patch(
+            "scripts.publication_pipeline.pipeline.DEFAULT_PROCESSED_ROOT",
+            source / "data/processed",
+        ), patch.object(
+            base, "backfill_reconstructed_curve",
+            side_effect=RuntimeError("reconstruction exploded"),
+        ):
+            result = run_automation(
+                source,
+                site_repo=site,
+                schedule=INTRADAY_SCHEDULE_UTC,
+                now=published,
+                automation_enabled="true",
+                mode="publish",
+                commit=True,
+                refresh_fn=refresh,
+                simulation_runner=runner,
+                projection_runner=ElectionAutomationTests._projection_runner,
+                campaign_path_simulator=ElectionAutomationTests._campaign_path_simulator,
+                website_check_fn=lambda _root: {"status": "PASS"},
+                website_push_check_fn=lambda _root: {"status": "PASS"},
+                generated_at_utc=f"{self.PUBLISH_DAY}T08:00:00+00:00",
+            )
+        # The forecast published. That is the guarantee the swallow exists for
+        # and it must survive everything below.
+        self.assertEqual(result.status, "PUBLISHED", result.summary.render())
+        generation = json.loads(
+            (source / "files/election-simulator/current.json").read_text()
+        )["publication_generation"]
+        return source, site, generation, result
+
+    def test_a_degraded_publication_reports_the_gap_it_deployed(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            source, site, generation, result = self._publish_with_a_failing_backfill(
+                Path(tmp))
+
+            rendered = result.summary.render()
+            self.assertIn("Reconstructed curve: INCOMPLETE", rendered)
+            self.assertIn(f"Curve missing dates: {self.ARCHIVED_DAY}", rendered)
+            self.assertIn("reconstruction exploded", rendered)
+            # And the forecast itself is still reported as published.
+            self.assertIn("Deployment status: ", rendered)
+            self.assertEqual(result.summary.curve_status, "INCOMPLETE")
+            self.assertEqual(result.summary.curve_missing_dates, self.ARCHIVED_DAY)
+
+            # The deployment really did go out with the hole in it.
+            deployed = base.deployed_render_state(site_repo=site, generation=generation)
+            self.assertTrue(deployed["serves_generation"])
+            self.assertFalse(deployed["complete"])
+            self.assertEqual(deployed["missing"], [self.ARCHIVED_DAY])
+            self.assertIn("missing curve date", deployed["reason"])
+
+    def test_the_same_generation_is_repaired_without_recertifying(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            source, site, generation, _ = self._publish_with_a_failing_backfill(
+                Path(tmp))
+            site_history = site / "files/election-simulator/history/coalition-timeseries.json"
+            certified_before = deepcopy(
+                base._current_production_point(json.loads(site_history.read_text())))
+            pointer_before = (site / "files/election-simulator/current.json").read_bytes()
+
+            def must_not_simulate(**kwargs):
+                raise AssertionError(
+                    "a curve repair must not run the authoritative simulator")
+
+            # No `repair=True`: an incomplete deployment is reason enough on
+            # its own, which is the property the pointer-equality skip lacked.
+            with patch(
+                "scripts.publication_pipeline.pipeline.DEFAULT_PROCESSED_ROOT",
+                source / "data/processed",
+            ), patch("scripts.simulator.engine.simulate_election", must_not_simulate), \
+                    patch(
+                        "scripts.forecast_history.generate.simulate_election",
+                        ElectionAutomationTests._projection_runner,
+                    ):
+                repaired = base.render_certified_generation(
+                    root=source,
+                    site=site,
+                    generation=generation,
+                    election_date=FROZEN_ELECTION_DATE,
+                    commit=True,
+                    push=False,
+                    projection_runner=ElectionAutomationTests._projection_runner,
+                    campaign_path_simulator=ElectionAutomationTests._campaign_path_simulator,
+                    website_check_fn=lambda _root: {"status": "PASS"},
+                    website_push_check_fn=lambda _root: {"status": "PASS"},
+                )
+
+            self.assertEqual(repaired["status"], "RENDERED_AND_DEPLOYED", repaired)
+            self.assertEqual(repaired["curve"]["status"], "COMPLETE")
+            self.assertIn(self.ARCHIVED_DAY, repaired["curve"]["reconstructed"])
+            self.assertEqual(repaired["curve"]["missing"], [])
+
+            history = json.loads(site_history.read_text())
+            validate_history_contract(history)
+            self.assertEqual([d.isoformat() for d in missing_curve_dates(history)], [])
+            # Same generation, same forecast. A repair that moved the certified
+            # point would be a new forecast wearing an old generation's id.
+            self.assertEqual(
+                base._current_production_point(history), certified_before)
+            self.assertEqual(
+                json.loads((site / "files/election-simulator/current.json").read_text()
+                           )["publication_generation"],
+                generation,
+            )
+            self.assertEqual(
+                json.loads(pointer_before)["publication_generation"], generation)
+            # No second certification commit.
+            subjects = subprocess.run(
+                ["git", "log", "--format=%s"], cwd=source, check=True,
+                capture_output=True, text=True,
+            ).stdout.splitlines()
+            self.assertEqual(
+                sum(s.startswith("chore: publish election forecast") for s in subjects), 1,
+                subjects,
+            )
+
+    def test_an_omitted_view_is_repaired_for_the_same_generation(self) -> None:
+        """The other half of "degraded, therefore retryable".
+
+        A render that omits the primary campaign-path view deploys an exact
+        forecast and a whole curve, and used to report success -- so the
+        automatic follow-on trigger, keyed on completeness, would decline to
+        ever rebuild the view. Curve completeness is not render completeness.
+
+        The arc: deploy with the view omitted, report it as its own outcome,
+        have the deployed-state probe refuse to call that complete, then
+        rebuild the view for the same generation with no re-certification and
+        no movement of the certified point.
+        """
+
+        with tempfile.TemporaryDirectory() as tmp:
+            source, site, generation, _ = self._publish_with_a_failing_backfill(
+                Path(tmp))
+            site_history = site / "files/election-simulator/history/coalition-timeseries.json"
+            common = dict(
+                root=source,
+                site=site,
+                generation=generation,
+                election_date=FROZEN_ELECTION_DATE,
+                commit=True,
+                push=False,
+                projection_runner=ElectionAutomationTests._projection_runner,
+                campaign_path_simulator=ElectionAutomationTests._campaign_path_simulator,
+                website_check_fn=lambda _root: {"status": "PASS"},
+                website_push_check_fn=lambda _root: {"status": "PASS"},
+            )
+
+            # 1. A render that repairs the curve but cannot build the view.
+            with patch(
+                "scripts.publication_pipeline.pipeline.DEFAULT_PROCESSED_ROOT",
+                source / "data/processed",
+            ), patch(
+                "scripts.forecast_history.generate.simulate_election",
+                ElectionAutomationTests._projection_runner,
+            ), patch(
+                "scripts.forecast_history.campaign_paths_contract.build_future_campaign_paths",
+                side_effect=ValueError("endpoint parity could not be established"),
+            ):
+                degraded = base.render_certified_generation(**common)
+
+            self.assertEqual(degraded["status"], "RENDERED_VIEWS_INCOMPLETE", degraded)
+            self.assertEqual(degraded["curve"]["status"], "COMPLETE")
+            self.assertEqual(
+                degraded["curve"]["views"]["missing"], ["future_campaign_paths"])
+            history = json.loads(site_history.read_text())
+            validate_history_contract(history)
+            self.assertNotIn("future_campaign_paths", history)
+            certified_before = deepcopy(base._current_production_point(history))
+
+            # 2. Which the probe must not call complete, or nothing retries.
+            state = base.deployed_render_state(
+                site_repo=site, generation=generation,
+                election_date=FROZEN_ELECTION_DATE,
+            )
+            self.assertTrue(state["serves_generation"])
+            self.assertFalse(
+                state["complete"],
+                "a deployment missing its primary view was reported complete",
+            )
+            self.assertEqual(state["missing"], [], "the curve itself is whole")
+            self.assertEqual(state["missing_views"], ["future_campaign_paths"])
+            self.assertIn("missing view", state["reason"])
+
+            # 3. So a plain re-run -- no --repair -- rebuilds it.
+            def must_not_simulate(**kwargs):
+                raise AssertionError(
+                    "a view repair must not run the authoritative simulator")
+
+            with patch(
+                "scripts.publication_pipeline.pipeline.DEFAULT_PROCESSED_ROOT",
+                source / "data/processed",
+            ), patch("scripts.simulator.engine.simulate_election", must_not_simulate), \
+                    patch(
+                        "scripts.forecast_history.generate.simulate_election",
+                        ElectionAutomationTests._projection_runner,
+                    ):
+                repaired = base.render_certified_generation(**common)
+
+            self.assertEqual(repaired["status"], "RENDERED_AND_DEPLOYED", repaired)
+            self.assertEqual(repaired["curve"]["views"]["status"], "COMPLETE")
+            self.assertEqual(
+                repaired["curve"]["views"]["primary_campaign_paths"], "REBUILT")
+
+            history = json.loads(site_history.read_text())
+            validate_history_contract(history)
+            self.assertIn("future_campaign_paths", history)
+            self.assertEqual(
+                history["future_campaign_paths"]["origin_date"],
+                certified_before["date"],
+            )
+            # Same forecast, same generation, no second certification.
+            self.assertEqual(
+                base._current_production_point(history), certified_before)
+            subjects = subprocess.run(
+                ["git", "log", "--format=%s"], cwd=source, check=True,
+                capture_output=True, text=True,
+            ).stdout.splitlines()
+            self.assertEqual(
+                sum(s.startswith("chore: publish election forecast") for s in subjects), 1,
+                subjects,
+            )
+            # And now it is complete, so the follow-on trigger stands down.
+            self.assertTrue(
+                base.deployed_render_state(
+                    site_repo=site, generation=generation,
+                    election_date=FROZEN_ELECTION_DATE,
+                )["complete"]
+            )
+
+    def test_a_whole_deployment_is_left_alone_unless_repair_is_demanded(self) -> None:
+        """The cheap half of the decision, and the operator's override.
+
+        Skipping is still right in the common case -- the publication workflow
+        renders as part of publishing, and the follow-on trigger should not pay
+        for that twice. It just must not be keyed on the pointer alone.
+        """
+
+        with tempfile.TemporaryDirectory() as tmp:
+            source, site, generation, _ = self._publish_with_a_failing_backfill(
+                Path(tmp))
+            common = dict(
+                root=source,
+                site=site,
+                generation=generation,
+                election_date=FROZEN_ELECTION_DATE,
+                commit=True,
+                push=False,
+                projection_runner=ElectionAutomationTests._projection_runner,
+                campaign_path_simulator=ElectionAutomationTests._campaign_path_simulator,
+                website_check_fn=lambda _root: {"status": "PASS"},
+                website_push_check_fn=lambda _root: {"status": "PASS"},
+            )
+            with patch(
+                "scripts.publication_pipeline.pipeline.DEFAULT_PROCESSED_ROOT",
+                source / "data/processed",
+            ), patch(
+                "scripts.forecast_history.generate.simulate_election",
+                ElectionAutomationTests._projection_runner,
+            ):
+                self.assertEqual(
+                    base.render_certified_generation(**common)["status"],
+                    "RENDERED_AND_DEPLOYED",
+                )
+                # Now whole: declined, and cheaply -- before any model input is
+                # pinned, which is asserted by forbidding the loader.
+                with patch.object(
+                    base, "load_certified_generation",
+                    side_effect=AssertionError(
+                        "a declined render must not load the generation"),
+                ):
+                    skipped = base.render_certified_generation(**common)
+                self.assertEqual(skipped["status"], "RENDER_NOT_NEEDED", skipped)
+                self.assertEqual(skipped["deployment"], "already-serving")
+                self.assertIn("complete curve", skipped["reason"])
+
+                forced = base.render_certified_generation(**common, repair=True)
+            self.assertEqual(forced["status"], "RENDERED_AND_DEPLOYED", forced)
+            self.assertEqual(forced["curve"]["status"], "COMPLETE")
 
 
 class PinnedModelInputsTests(unittest.TestCase):
@@ -3232,6 +3723,39 @@ class PinnedModelInputsTests(unittest.TestCase):
                 seed=DEFAULT_SIMULATION_SEED,
             )
             self.assertTrue(inputs.training, "no historical elections were loaded")
+
+    def test_the_real_engine_runs_against_a_pinned_root(self) -> None:
+        """The defect's own shape, guarded with the real model.
+
+        The two assertions above are a file list and one loader. Neither would
+        have caught the sibling the geography loader reads, because nobody
+        thought to list it -- that one was found by a backfill failing on its
+        second date. So this runs the canonical engine against a pinned root
+        and nothing else: no fixture inputs, no substituted simulator. Any
+        table the model reads and the pinning omits fails here, whether or not
+        anyone remembered it.
+
+        Deliberately tiny. It is a completeness check on the pinned tree, not
+        a check on the forecast, which the simulator suites cover.
+        """
+
+        with tempfile.TemporaryDirectory() as tmp:
+            processed = self._pin(Path(tmp))
+            result = simulate_election(
+                as_of=FROZEN_AS_OF,
+                election_date=FROZEN_ELECTION_DATE,
+                samples=16,
+                seed=DEFAULT_SIMULATION_SEED,
+                data_dir=processed,
+            )
+            self.assertEqual(result.vote_shares_matrix.shape[0], 16)
+            self.assertEqual(
+                result.seats_matrix.shape[0], result.vote_shares_matrix.shape[0])
+            # Percentage points summing to a full electorate: the engine really
+            # read its tables rather than falling through to a default.
+            self.assertAlmostEqual(
+                float(result.vote_shares_matrix[0].sum()), 100.0, places=6)
+            self.assertEqual(int(result.seats_matrix[0].sum()), 349)
 
     def test_a_symlinked_tree_is_refused_rather_than_pinned_as_a_link(self) -> None:
         """A committed symlink is not a pinnable tree.

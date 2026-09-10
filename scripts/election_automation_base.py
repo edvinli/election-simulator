@@ -43,13 +43,16 @@ from scripts.forecast_history.generate import (
     DEFAULT_HISTORY_WORKERS,
     PRODUCTION_HISTORY_WORKERS,
     backfill_reconstructed_curve,
+    missing_curve_dates,
     resolve_history_workers,
 )
 # The projection-aware pipeline, imported here rather than patched in by the
 # `scripts.election_automation` facade: publication and explicit rendering must
 # not be able to drift into two different history pipelines again.
 from scripts.forecast_history.future_projection import (
-    attach_future_views,
+    attach_primary_campaign_paths,
+    attach_secondary_projection,
+    finalize_future_views,
     roll_in_certified_point,
 )
 from scripts.pollofpolls.__main__ import (
@@ -227,6 +230,20 @@ class AutomationSummary:
     certification_commit: str = "NONE"
     certification_remote_verified: bool = False
     daily_publication_status: str = "UNKNOWN"
+    #: The reconstructed curve of the artifact that was actually published.
+    #: The backfill is never allowed to block a certified forecast, so its
+    #: failures are swallowed -- and a swallowed failure nobody reports is a
+    #: chart with a hole and no signal. These three say so.
+    curve_status: str = "NOT_REACHED"
+    curve_missing_dates: str = "NONE"
+    curve_failure: str | None = None
+    #: The primary campaign-path region is bitwise tied to the certified
+    #: draws and is omitted rather than published unverified. Absence is legal
+    #: -- election day has no campaign left -- so it has to be reported, or a
+    #: forecast silently loses its headline forward view.
+    future_views_status: str = "NOT_REACHED"
+    future_views_missing: str = "NONE"
+    future_views_failure: str | None = None
     failure: str | None = None
 
     def render(self) -> str:
@@ -248,7 +265,17 @@ class AutomationSummary:
             f"Certification: {self.certification_status}"
             + (" (remote verified)" if self.certification_remote_verified else ""),
             f"Daily publication: {self.daily_publication_status}",
+            f"Reconstructed curve: {self.curve_status}",
+            f"Primary campaign-path view: {self.future_views_status}",
         ]
+        if self.curve_missing_dates != "NONE":
+            lines.append(f"Curve missing dates: {self.curve_missing_dates}")
+        if self.curve_failure:
+            lines.append(f"Curve failure: {self.curve_failure}")
+        if self.future_views_missing != "NONE":
+            lines.append(f"Missing future views: {self.future_views_missing}")
+        if self.future_views_failure:
+            lines.append(f"Primary campaign-path failure: {self.future_views_failure}")
         if self.failure:
             lines.append(f"Failure: {self.failure}")
         return "\n".join(lines) + "\n"
@@ -1318,7 +1345,20 @@ def _stage_site(
     website_check_fn: Callable[[Path], dict[str, Any]],
     stage_callback: StageCallback | None = None,
 ) -> dict[str, Any]:
-    """Mirror publication/history into a disposable website tree and test it."""
+    """Mirror publication/history into a disposable website tree and test it.
+
+    ``allow_existing`` matches what `_install_site_outputs` already passes for
+    the live tree. The staged tree is a copy of the live site, so a render that
+    repairs a generation the website already serves finds that generation
+    present here -- and refusing it made a same-generation repair impossible,
+    which is the other half of why a degraded render could not be retried.
+
+    It does not weaken immutability. `publish_generation_to_site` still
+    validates the existing version and refuses it unless the manifest digest
+    and every generation file are byte-identical: a repair rewrites the history
+    curve, which lives outside the versioned directory, and must leave the
+    certified publication exactly as certification wrote it.
+    """
 
     with _timed_stage("website sync/validation", stage_callback):
         publish_generation_to_site(
@@ -1326,6 +1366,7 @@ def _stage_site(
             source_publication_dir=staged_publication,
             generation=generation,
             update_pointer=True,
+            allow_existing=True,
         )
         sync_history_to_site(site_repo=site_root, source_history_path=staged_history)
         validate_published_directory(site_root / SITE_PUBLICATION_RELATIVE)
@@ -1565,6 +1606,63 @@ def _reject_stale_render(
         )
 
 
+#: The reconstructed curve either covers every scheduled date in the published
+#: artifact or it does not. `INCOMPLETE` is not a failure of the forecast --
+#: the certified point is exact either way -- but it is a render that has more
+#: to do, and it must survive as a fact rather than as a swallowed exception.
+CURVE_COMPLETE = "COMPLETE"
+CURVE_INCOMPLETE = "INCOMPLETE"
+
+#: Views a published history must carry, and when.
+#:
+#: `future_projection` is unconditional. `future_campaign_paths` is required
+#: only while a campaign remains: on election day there is nothing left to
+#: simulate and the builder legitimately drops it, so its absence there is
+#: correct rather than degraded. Everywhere else its absence means the chart
+#: has lost its headline forward region, which is a render that still has work
+#: to do -- not a success.
+VIEW_REBUILT = "REBUILT"
+VIEW_OMITTED = "OMITTED"
+VIEW_NOT_REQUIRED = "NOT_REQUIRED_ON_ELECTION_DAY"
+
+
+def _future_views_report(
+    history: Mapping[str, Any],
+    *,
+    election_date: date,
+    error: str | None,
+) -> dict[str, Any]:
+    """What the future-view stage produced, and whether that is complete."""
+
+    certified = _current_production_point(history)
+    origin = str(certified.get("date") or "")
+    campaign_required = origin < election_date.isoformat()
+    present = isinstance(history.get("future_campaign_paths"), Mapping)
+    if present:
+        primary = VIEW_REBUILT
+    elif campaign_required:
+        primary = VIEW_OMITTED
+    else:
+        primary = VIEW_NOT_REQUIRED
+    missing = [] if primary != VIEW_OMITTED else ["future_campaign_paths"]
+    return {
+        "status": CURVE_INCOMPLETE if missing else CURVE_COMPLETE,
+        "secondary_projection": VIEW_REBUILT,
+        "primary_campaign_paths": primary,
+        "missing": missing,
+        "error": error,
+    }
+
+
+def required_history_views(*, origin_date: str, election_date: str) -> tuple[str, ...]:
+    """The view sections a history for ``origin_date`` must carry."""
+
+    if origin_date < election_date:
+        return ("future_projection", "future_campaign_paths")
+    return ("future_projection",)
+
+
+
 def _current_production_point(history: Mapping[str, Any]) -> Mapping[str, Any]:
     """The single certified point in a history, or a refusal."""
 
@@ -1595,10 +1693,11 @@ def render_history_for_generation(
     generated_at_utc: str,
     model_commit: str,
     history_workers: int | None = None,
+    allow_degraded_views: bool = False,
     projection_runner: Callable[..., Any] | None = None,
     campaign_path_simulator: Callable[..., Any] | None = None,
     stage_callback: StageCallback | None = None,
-) -> tuple[dict[str, Any], list[date]]:
+) -> tuple[dict[str, Any], dict[str, Any]]:
     """The one history pipeline publication and explicit rendering share.
 
     Three stages, and their order is the substance of this function:
@@ -1622,6 +1721,22 @@ def render_history_for_generation(
 
     The certified forecast itself is never re-simulated here: it is carried
     through the backfill byte for byte, which is asserted rather than assumed.
+
+    Returns the history and a report of what the curve and the future views
+    achieved. The reconstruction is not allowed to block a certified forecast,
+    so a failure there is swallowed -- and a swallowed failure that nobody
+    reports is a forecast deployed with a hole in it and no signal anywhere.
+    The report is how the caller says so, and how it decides whether the
+    render still needs to be retried.
+
+    ``allow_degraded_views`` is off by default, which keeps this strict: a
+    primary campaign-path view that cannot be built raises, exactly as it did
+    before this stage was shared. Publication relies on that and must keep
+    relying on it -- it is the path that *creates* forecasts, and it has a
+    working reference in hand. Only explicit recovery rendering turns it on,
+    where the alternative is refusing to repair a curve because a separate
+    view cannot be verified, and only until the parity divergence is
+    understood.
     """
 
     with _timed_stage("history update", stage_callback):
@@ -1652,6 +1767,7 @@ def render_history_for_generation(
     def _log_backfill_plan(dates: int, workers: int) -> None:
         _log_stage("history curve backfill", f"START dates={dates} workers={workers}")
 
+    curve_error: str | None = None
     with _timed_stage("history curve backfill", stage_callback):
         try:
             history, backfilled = backfill_reconstructed_curve(
@@ -1667,6 +1783,7 @@ def render_history_for_generation(
         except Exception as error:  # noqa: BLE001 - the curve never blocks a certified forecast
             history = dict(rolled)
             backfilled = []
+            curve_error = f"{type(error).__name__}: {error}"
             _log_stage("history curve backfill", f"SKIPPED {error}")
         if backfilled:
             _log_stage(
@@ -1682,24 +1799,196 @@ def render_history_for_generation(
         raise AutomationError(
             "History backfill altered the certified current_production point")
 
+    # Whatever the previous generation left in the artifact is not this
+    # generation's view. The backfill carries unknown top-level keys across, so
+    # both sections are dropped here and only rebuilt below: publishing a
+    # stale one is the defect this stage exists to remove, and an origin date
+    # that happens to match does not prove a section belongs to *this*
+    # generation -- two intraday publications share a date.
+    history.pop("future_projection", None)
+    history.pop("future_campaign_paths", None)
+
+    views_error: str | None = None
     with _timed_stage("history projections", stage_callback):
         # `model_data_dir` is the processed root the pinned inputs live under,
-        # which is what both the curve and the projections must simulate from:
-        # a projection drawn from newer polling than the forecast saw is not
-        # that forecast's projection.
-        history = attach_future_views(
+        # which is what both views must simulate from: a projection drawn from
+        # newer polling than the forecast saw is not that forecast's
+        # projection.
+        #
+        # The secondary fan is required -- a history without it is not
+        # publishable -- so its failure propagates.
+        history = attach_secondary_projection(
             history,
             production_result,
             projection_data_dir=model_data_dir,
             projection_runner=projection_runner,
-            campaign_path_simulator=campaign_path_simulator,
         )
+        try:
+            history = attach_primary_campaign_paths(
+                history,
+                production_result,
+                projection_data_dir=model_data_dir,
+                campaign_path_simulator=campaign_path_simulator,
+            )
+        except Exception as error:  # noqa: BLE001 - reported, never guessed at
+            # The primary view's entire claim is that its election-day
+            # endpoint is bitwise identical to the certified draws. If that
+            # cannot be established, there are three options and only one is
+            # honest: publish a view whose guarantee is false, keep another
+            # generation's view, or publish none and say so.
+            #
+            # Only a caller that asked for degraded rendering gets the third.
+            # For everyone else -- publication above all -- this still fails.
+            if not allow_degraded_views:
+                raise
+            views_error = f"{type(error).__name__}: {error}"
+            history.pop("future_campaign_paths", None)
+            _log_stage("history projections", f"PRIMARY VIEW OMITTED {views_error}")
+        history = finalize_future_views(history)
     # Checked at the one place both publication and rendering pass through, so
     # a future writer cannot mutate the payload between construction and
     # staging.
     if history["deterministic_content_sha256"] != deterministic_history_sha256(history):
         raise AutomationError("History deterministic hash is not self-consistent")
-    return history, backfilled
+
+    # Measured on the payload that is about to be published, not inferred from
+    # whether the backfill raised: a reconstruction can also come back having
+    # resolved fewer dates than the curve needed, and the artifact is the only
+    # honest witness to what the reader will see.
+    remaining = [point_date.isoformat() for point_date in missing_curve_dates(history)]
+    curve = {
+        "status": CURVE_INCOMPLETE if remaining else CURVE_COMPLETE,
+        "reconstructed": [point_date.isoformat() for point_date in backfilled],
+        "missing": remaining,
+        "error": curve_error,
+        "views": _future_views_report(
+            history, election_date=election_date, error=views_error),
+    }
+    if remaining:
+        _log_stage(
+            "history curve backfill",
+            f"INCOMPLETE missing={','.join(remaining)}"
+            + (f" error={curve_error}" if curve_error else ""),
+        )
+    return history, curve
+
+
+def deployed_render_state(
+    *,
+    site_repo: Path,
+    generation: str,
+    election_date: date | str = ELECTION_DAY,
+) -> dict[str, Any]:
+    """Whether the website already serves this generation, and completely.
+
+    Pointer equality is not enough to decide a render can be skipped. Neither
+    is a whole curve. Two things a render installs can be short while the
+    pointer says the generation is live:
+
+    * the curve, because the backfill is not allowed to block a certified
+      forecast and its failure is swallowed by design;
+    * the primary campaign-path view, because it is only published when its
+      bitwise guarantee against the certified draws can be established.
+
+    Either one leaves a deployment that a skip keyed on the pointer -- or on
+    the curve alone -- would decline to ever repair. So completeness here
+    means: this generation's own history, a curve with no scheduled gaps, and
+    every view the origin date requires, each anchored to the certified point.
+
+    Read off the *deployed* artifact rather than remembered from the run that
+    produced it: that is what the reader sees, and it stays true across a
+    retry in another job on another runner.
+    """
+
+    site = Path(site_repo)
+    election = (
+        election_date.isoformat() if isinstance(election_date, date)
+        else str(election_date)
+    )
+
+    def outcome(**fields: Any) -> dict[str, Any]:
+        base = {
+            "deployed": None,
+            "serves_generation": False,
+            "complete": False,
+            "missing": [],
+            "missing_views": [],
+        }
+        base.update(fields)
+        return base
+
+    try:
+        deployed = str(
+            _certified_current_generation(site / SITE_PUBLICATION_RELATIVE)["generation"])
+    except (AutomationError, OSError, ValueError) as error:
+        return outcome(reason=f"the website serves no readable generation ({error})")
+    if deployed != generation:
+        return outcome(
+            deployed=deployed,
+            reason=f"the website serves {deployed}, not {generation}",
+        )
+    try:
+        history = _load_json_object(site / SITE_HISTORY_RELATIVE)
+        certified = _current_production_point(history)
+        missing = [d.isoformat() for d in missing_curve_dates(history)]
+    except (AutomationError, OSError, ValueError) as error:
+        return outcome(
+            deployed=deployed,
+            serves_generation=True,
+            reason=f"the deployed history is unreadable ({error})",
+        )
+
+    # The pointer and the history are separate files, written by separate
+    # steps. A history left behind by an older generation passes every check
+    # below on its own terms while contradicting the pointer beside it.
+    history_generation = certified.get("publication_generation")
+    if isinstance(history_generation, str) and history_generation != generation:
+        return outcome(
+            deployed=deployed,
+            serves_generation=True,
+            reason=(
+                f"the website's pointer names {generation} but its history "
+                f"names {history_generation}"
+            ),
+        )
+
+    origin = str(certified.get("date") or "")
+    missing_views = [
+        name for name in required_history_views(origin_date=origin, election_date=election)
+        if not isinstance(history.get(name), Mapping)
+    ]
+    # An anchor that does not sit on the certified point is a view describing a
+    # different forecast, which is worse than a missing one.
+    misanchored = [
+        name for name in required_history_views(origin_date=origin, election_date=election)
+        if isinstance(history.get(name), Mapping)
+        and str(history[name].get("origin_date")) != origin
+    ]
+
+    if missing or missing_views or misanchored:
+        reasons = []
+        if missing:
+            reasons.append(f"{len(missing)} missing curve date(s): {', '.join(missing)}")
+        if missing_views:
+            reasons.append(f"missing view(s): {', '.join(missing_views)}")
+        if misanchored:
+            reasons.append(f"view(s) not anchored to {origin}: {', '.join(misanchored)}")
+        return outcome(
+            deployed=deployed,
+            serves_generation=True,
+            missing=missing,
+            missing_views=missing_views + misanchored,
+            reason=f"the website serves {generation} with " + "; ".join(reasons),
+        )
+    return outcome(
+        deployed=deployed,
+        serves_generation=True,
+        complete=True,
+        reason=(
+            f"the website already serves {generation} with a complete curve "
+            "and every required view"
+        ),
+    )
 
 
 def render_certified_generation(
@@ -1710,6 +1999,7 @@ def render_certified_generation(
     certification_commit: str | None = None,
     election_date: date | str = ELECTION_DAY,
     history_workers: int | None = None,
+    repair: bool = False,
     projection_runner: Callable[..., Any] | None = None,
     campaign_path_simulator: Callable[..., Any] | None = None,
     website_check_fn: Callable[[Path], dict[str, Any]] | None = None,
@@ -1732,12 +2022,37 @@ def render_certified_generation(
     Date restrictions on *creating* a forecast do not apply here. Rendering a
     generation certified on election day must remain possible after it, which
     is why nothing in this path calls `guard_election_date`.
+
+    A generation the website already serves *completely* is not re-rendered:
+    that is the common case on the automatic follow-on trigger, where the
+    publication workflow has already done the work. One it serves with an
+    incomplete curve is rendered again, because that is the repair. ``repair``
+    forces the work regardless, for an operator who has an explicit reason.
     """
 
+    _reject_stale_render(site_repo=site, generation=generation)
+    # Decided before the certified generation is loaded and before any model
+    # input is pinned: this is the cheap check that makes the automatic
+    # follow-on trigger free when publication already rendered.
+    deployed = deployed_render_state(
+        site_repo=site, generation=generation, election_date=election_date)
+    if deployed["complete"] and not repair:
+        return {
+            "generation": generation,
+            "certification_commit": certification_commit,
+            "status": "RENDER_NOT_NEEDED",
+            "deployment": "already-serving",
+            "curve": {
+                "status": CURVE_COMPLETE,
+                "reconstructed": [],
+                "missing": [],
+                "error": None,
+            },
+            "reason": deployed["reason"],
+        }
     certified = load_certified_generation(
         root, generation=generation, certification_commit=certification_commit)
     election = election_date if isinstance(election_date, date) else date.fromisoformat(str(election_date))
-    _reject_stale_render(site_repo=site, generation=generation)
 
     publication_destination = root / "files" / "election-simulator"
     history_destination = publication_destination / "history" / "coalition-timeseries.json"
@@ -1770,7 +2085,7 @@ def render_certified_generation(
         # The same pipeline publication runs, in the same order, with both
         # future views: a recovery render has to reproduce a publication, not
         # a reduced version of one.
-        history, backfilled = render_history_for_generation(
+        history, curve = render_history_for_generation(
             existing_history,
             certified,
             poll_file=poll_file,
@@ -1785,11 +2100,17 @@ def render_certified_generation(
                 certified.publication_manifest.get("generated_at_utc") or ""),
             model_commit=certified.source_git_commit,
             history_workers=history_workers,
+            # Explicitly, and only here. Refusing to repair a curve because a
+            # separate view cannot be verified would leave the published
+            # chart short in two ways instead of one; publication stays
+            # strict. Revisit once the parity divergence is understood.
+            allow_degraded_views=True,
             projection_runner=projection_runner,
             campaign_path_simulator=campaign_path_simulator,
             stage_callback=stage_callback,
         )
-        result["backfilled"] = [d.isoformat() for d in backfilled]
+        result["curve"] = curve
+        result["backfilled"] = list(curve["reconstructed"])
         staged_history = temporary / "coalition-timeseries.json"
         write_history_json(staged_history, history)
         validate_history_contract(_load_json_object(staged_history))
@@ -1860,7 +2181,18 @@ def render_certified_generation(
             push=push,
             push_ref=website_push_ref,
         )
-        result["status"] = "RENDERED_AND_DEPLOYED"
+        # Deployed either way -- the forecast is what matters and it is exact
+        # -- but anything the render did not finish gets its own outcome, so
+        # the job is never green over a gap and a retry can find it. The two
+        # gaps are reported separately because they are repaired by different
+        # work: one re-simulates curve dates, the other needs a view whose
+        # bitwise guarantee can be established.
+        if curve["status"] != CURVE_COMPLETE:
+            result["status"] = "RENDERED_CURVE_INCOMPLETE"
+        elif curve["views"]["status"] != CURVE_COMPLETE:
+            result["status"] = "RENDERED_VIEWS_INCOMPLETE"
+        else:
+            result["status"] = "RENDERED_AND_DEPLOYED"
         result["deployment"] = "PUSHED" if push else "COMMITTED_NOT_PUSHED"
         return result
 
@@ -2375,7 +2707,7 @@ def run_production_event(
         # publication would.
         # The reconstructed dates are logged by the stage itself; publication
         # reports the certified generation, not the curve repair behind it.
-        history, _backfilled = render_history_for_generation(
+        history, curve = render_history_for_generation(
             existing_history,
             result,
             poll_file=processed_root / "pollofpolls" / "swedishpolls_individual_polls.csv",
@@ -2414,6 +2746,11 @@ def run_production_event(
             website_check_fn=website_check,
             stage_callback=stage_callback,
         )
+        # Carried out of the presentation half so the run summary can say the
+        # curve is short and by how much. A publication whose reconstruction
+        # failed publishes an exact forecast with a gap in its chart, and that
+        # has to be legible from the run rather than from the artifact.
+        website["curve"] = curve
 
         if not commit:
             # A local invocation without --commit is a genuine dry-run: all
@@ -2889,6 +3226,16 @@ def run_automation(
         summary.history_current_point = (
             f"{current['date']} ({current['provenance']})" if current else "NONE"
         )
+        curve = (website or {}).get("curve") or {}
+        summary.curve_status = str(curve.get("status") or "NOT_REACHED")
+        missing = curve.get("missing") or []
+        summary.curve_missing_dates = ", ".join(missing) if missing else "NONE"
+        summary.curve_failure = curve.get("error")
+        views = curve.get("views") or {}
+        summary.future_views_status = str(
+            views.get("primary_campaign_paths") or "NOT_REACHED")
+        summary.future_views_missing = ", ".join(views.get("missing") or []) or "NONE"
+        summary.future_views_failure = views.get("error")
         summary.simulator_commit = str(run.simulation_result.manifest.get("source_git_commit")) if run.simulation_result else "UNAVAILABLE"
         summary.website_commit = get_git_commit_hash(site) if effective_commit else "NOT_COMMITTED"
         summary.deployment_status = (
@@ -2967,6 +3314,16 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--repair",
+        action="store_true",
+        help=(
+            "Render --render-generation even if the website already serves it "
+            "completely. Rendering is skipped when the deployed artifact is "
+            "already whole, and repeated when its curve is short; this forces "
+            "the work regardless. Requires --mode render."
+        ),
+    )
+    parser.add_argument(
         "--render-certification-commit",
         default=None,
         help=(
@@ -2996,23 +3353,52 @@ def _render_from_cli(args: argparse.Namespace) -> int:
         certification_commit=args.render_certification_commit,
         election_date=args.election_date,
         history_workers=args.history_workers,
+        repair=args.repair,
         commit=True,
         push=True,
         stage_callback=_log_stage,
     )
     print(json.dumps(rendered, ensure_ascii=False, allow_nan=False, default=str))
+    curve = rendered.get("curve") or {}
+    missing = curve.get("missing") or []
     if args.summary_path:
         args.summary_path.parent.mkdir(parents=True, exist_ok=True)
-        args.summary_path.write_text(
-            "Render status: {status}\nGeneration: {generation}\n"
-            "Deployment: {deployment}\n".format(
-                status=rendered.get("status"),
-                generation=rendered.get("generation"),
-                deployment=rendered.get("deployment", "NONE"),
-            ),
-            encoding="utf-8",
-        )
-    return 0 if rendered.get("status") == "RENDERED_AND_DEPLOYED" else 1
+        lines = [
+            f"Render status: {rendered.get('status')}",
+            f"Generation: {rendered.get('generation')}",
+            f"Deployment: {rendered.get('deployment', 'NONE')}",
+            f"Reconstructed curve: {curve.get('status') or 'NOT_REACHED'}",
+            f"Future views: {(curve.get('views') or {}).get('status') or 'NOT_REACHED'}",
+        ]
+        if rendered.get("reason"):
+            lines.append(f"Reason: {rendered['reason']}")
+        if missing:
+            # Named, not counted: the retry is per generation and an operator
+            # reading this needs to know which dates are still short.
+            lines.append(f"Curve missing dates: {', '.join(missing)}")
+        if curve.get("error"):
+            lines.append(f"Curve failure: {curve['error']}")
+        views = curve.get("views") or {}
+        lines.append(
+            f"Primary campaign-path view: {views.get('primary_campaign_paths') or 'NOT_REACHED'}")
+        if views.get("error"):
+            lines.append(f"Primary campaign-path failure: {views['error']}")
+        if missing or (views.get("missing") or []):
+            lines.append(
+                "The forecast is deployed and exact. Re-run this workflow for "
+                f"generation {rendered.get('generation')} to repair what is "
+                "short; it will not re-certify and will not move the "
+                "certified point."
+            )
+        args.summary_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    # RENDER_NOT_NEEDED is a success: the website already serves this
+    # generation whole. An incomplete curve is not -- the deployment stands,
+    # but the render has more to do and a green job would hide it.
+    return 0 if rendered.get("status") in {
+        "RENDERED_AND_DEPLOYED", "RENDER_NOT_NEEDED"} else 1
+    # RENDERED_CURVE_INCOMPLETE and RENDERED_VIEWS_INCOMPLETE both exit 1: the
+    # deployment stands and is recorded, but the render has work left and a
+    # green job would hide it.
 
 
 def main(argv: Sequence[str] | None = None) -> int:

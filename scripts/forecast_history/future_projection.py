@@ -573,41 +573,42 @@ def roll_in_certified_point(
     return history
 
 
-def attach_future_views(
+def _certified_seed(production_result: Any) -> int:
+    """The base seed the certified run used, or the frozen default."""
+
+    manifest = getattr(production_result, "manifest", None)
+    manifest_map = manifest if isinstance(manifest, Mapping) else {}
+    seed = manifest_map.get("base_seed", DEFAULT_SIMULATION_SEED)
+    if not isinstance(seed, int) or isinstance(seed, bool):
+        return DEFAULT_SIMULATION_SEED
+    return seed
+
+
+def attach_secondary_projection(
     history: dict[str, Any],
     production_result: Any,
     *,
     projection_samples: int = DEFAULT_PROJECTION_SAMPLES,
     projection_data_dir: Path | str | None = None,
     projection_runner: Callable[..., Any] | None = None,
-    campaign_path_samples: int | None = None,
-    campaign_path_simulator: Callable[..., Any] | None = None,
 ) -> dict[str, Any]:
-    """Attach the primary paths and the secondary fan to a rolled-in history.
+    """Attach the secondary "if opinion stays unchanged" fan.
 
-    ``future_campaign_paths`` is the headline future view: coherent simulated
-    opinion trajectories from the certified origin through election day, whose
-    election-day endpoint is bitwise identical to the certified production
-    draws.  ``future_projection`` is retained and explicitly demoted to the
-    secondary "remaining uncertainty if opinion stays unchanged" view.
+    Separated from the primary view because the two fail for different reasons
+    and must not share an outcome. This one simulates forward from the
+    certified anchor and has no bitwise obligation to the certified draws, so
+    a history without it is not publishable at all -- whereas the primary view
+    is legitimately absent on election day, and so may be legitimately absent
+    when it cannot be rebuilt.
     """
 
-    # Imported lazily: the campaign-path contract reuses this module's date and
-    # label helpers, so a module-level import would be circular.
     from .campaign_paths_contract import (
-        build_future_campaign_paths,
         mark_secondary_projection,
-        validate_future_campaign_paths_contract,
         validate_secondary_projection_role,
     )
 
     current = _certified_current_point(history)
-    manifest = getattr(production_result, "manifest", None)
-    manifest_map = manifest if isinstance(manifest, Mapping) else {}
-    seed = manifest_map.get("base_seed", DEFAULT_SIMULATION_SEED)
-    if not isinstance(seed, int) or isinstance(seed, bool):
-        seed = DEFAULT_SIMULATION_SEED
-
+    seed = _certified_seed(production_result)
     history["future_projection"] = mark_secondary_projection(
         build_future_projection(
             origin_date=current["date"],
@@ -622,7 +623,33 @@ def attach_future_views(
     )
     validate_future_projection_contract(history)
     validate_secondary_projection_role(history["future_projection"])
+    return history
 
+
+def attach_primary_campaign_paths(
+    history: dict[str, Any],
+    production_result: Any,
+    *,
+    projection_data_dir: Path | str | None = None,
+    campaign_path_samples: int | None = None,
+    campaign_path_simulator: Callable[..., Any] | None = None,
+) -> dict[str, Any]:
+    """Attach the headline coherent campaign-path region.
+
+    Coherent simulated opinion trajectories from the certified origin through
+    election day, whose election-day endpoint is *bitwise identical* to the
+    certified production draws -- the builder fails closed otherwise. That
+    guarantee is the view's whole claim, so this must never be made to pass by
+    relaxing it: a caller that cannot satisfy it publishes no primary view.
+    """
+
+    from .campaign_paths_contract import (
+        build_future_campaign_paths,
+        validate_future_campaign_paths_contract,
+    )
+
+    current = _certified_current_point(history)
+    seed = _certified_seed(production_result)
     origin = _coerce_date(current["date"], name="current production date")
     election = _coerce_date(history["election_date"], name="history.election_date")
     if origin < election:
@@ -646,6 +673,22 @@ def attach_future_views(
         # On election day there is no remaining campaign to simulate.  Drop the
         # key rather than publishing an empty primary view.
         history.pop("future_campaign_paths", None)
+    return history
+
+
+def finalize_future_views(history: dict[str, Any]) -> dict[str, Any]:
+    """Re-digest and revalidate a history whose views are in place.
+
+    Separate from the two attach steps so a caller that omitted the primary
+    view still produces a fully valid, self-consistent artifact. A missing
+    ``future_campaign_paths`` is a legal state -- election day produces one --
+    so the digest and the contract are the same either way.
+    """
+
+    from .campaign_paths_contract import (
+        validate_future_campaign_paths_contract,
+        validate_secondary_projection_role,
+    )
 
     history["deterministic_content_sha256"] = deterministic_history_sha256(history)
     validate_history_contract(history)
@@ -654,6 +697,39 @@ def attach_future_views(
     if "future_campaign_paths" in history:
         validate_future_campaign_paths_contract(history)
     return history
+
+
+def attach_future_views(
+    history: dict[str, Any],
+    production_result: Any,
+    *,
+    projection_samples: int = DEFAULT_PROJECTION_SAMPLES,
+    projection_data_dir: Path | str | None = None,
+    projection_runner: Callable[..., Any] | None = None,
+    campaign_path_samples: int | None = None,
+    campaign_path_simulator: Callable[..., Any] | None = None,
+) -> dict[str, Any]:
+    """Both future views, strictly: either both are built or this raises.
+
+    The composition every caller wants unless it has a reason to survive a
+    primary-view failure, in which case it calls the three steps itself.
+    """
+
+    history = attach_secondary_projection(
+        history,
+        production_result,
+        projection_samples=projection_samples,
+        projection_data_dir=projection_data_dir,
+        projection_runner=projection_runner,
+    )
+    history = attach_primary_campaign_paths(
+        history,
+        production_result,
+        projection_data_dir=projection_data_dir,
+        campaign_path_samples=campaign_path_samples,
+        campaign_path_simulator=campaign_path_simulator,
+    )
+    return finalize_future_views(history)
 
 
 def update_history_with_production_result(
@@ -692,7 +768,10 @@ __all__ = [
     "PROJECTION_ASSUMPTION",
     "PROJECTION_LEGEND_SV",
     "attach_future_views",
+    "attach_primary_campaign_paths",
+    "attach_secondary_projection",
     "build_future_projection",
+    "finalize_future_views",
     "election_day_label_sv",
     "projection_tooltip_sv",
     "roll_in_certified_point",
