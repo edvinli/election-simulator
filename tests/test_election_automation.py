@@ -64,6 +64,7 @@ from scripts.rendering import (
     CertifiedGenerationError,
     load_certified_generation,
 )
+from scripts.rendering.certified_generation import materialize_pinned_model_inputs
 from scripts.simulator.exact_draw_sidecar import (
     SIDECAR_DRAWS_FILENAME,
     SIDECAR_METADATA_FILENAME,
@@ -361,10 +362,14 @@ class ElectionAutomationTests(unittest.TestCase):
 
         processed = source / "data/processed"
         processed.mkdir(parents=True)
+        # Copied, not symlinked: rendering pins its model inputs out of the
+        # certified *commit*, and a committed symlink to an absolute path
+        # outside the repository is not a file `git show` can produce. These
+        # three are small (~170K together); the rest stay symlinks.
+        for directory in ("elections", "mandates", "geography"):
+            shutil.copytree(
+                REPOSITORY_ROOT / "data/processed" / directory, processed / directory)
         for directory in (
-            "elections",
-            "mandates",
-            "geography",
             "seat_hindcasts",
             "vote_share_calibration",
             "pop_baseline_benchmark",
@@ -2849,6 +2854,110 @@ class KilledBackfillRecoveryTests(unittest.TestCase):
             # simply refusing everything.
             base._reject_stale_render(site_repo=fresh_site, generation=generation)
             self.assertTrue((fresh_source).is_dir())
+
+
+class PinnedModelInputsTests(unittest.TestCase):
+    """A pinned processed root the reconstruction can actually run on.
+
+    Rendering pins its model inputs at the certified revision, and pinned only
+    the three polling files. The model reads more than that off whatever
+    processed root it is handed, so the root was incomplete: the curve backfill
+    raised "Missing canonical election results file" on its first date and the
+    never-block guard around it turned that into a silent skip. Every render
+    therefore reconstructed nothing, and no run had shown it -- the rendering
+    workflow's only run skipped rendering because the website already served
+    the generation.
+
+    Two assertions, because the file list alone is what went wrong: the first
+    names the tables and where each is read, the second runs a real loader
+    against the pinned root so a table nobody thought to list still fails here
+    rather than in production.
+    """
+
+    @staticmethod
+    def _pin(destination: Path) -> Path:
+        head = subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=REPOSITORY_ROOT,
+            check=True, capture_output=True, text=True,
+        ).stdout.strip()
+        return materialize_pinned_model_inputs(
+            REPOSITORY_ROOT, source_git_commit=head, destination=destination)
+
+    def test_the_pinned_root_carries_every_table_the_model_reads(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            processed = self._pin(Path(tmp))
+            for relative in (
+                # scripts/simulator/engine.py resolves these under the
+                # processed root it is handed.
+                "elections/riksdag_election_results.csv",
+                "mandates/historical_certified_mandates.csv",
+                "geography/constituency_party_votes_2014_2022.csv",
+                # The geography loader reads this sibling, which the engine's
+                # own signature does not name -- found only after the three
+                # above were pinned and the backfill failed on the next file.
+                "geography/constituency_electorates_2014_2026.csv",
+                # The polling snapshot, which is why pinning exists at all.
+                "pollofpolls/swedishpolls_individual_polls.csv",
+                "pollofpolls/pollofpolls_timeseries.csv",
+                "pollofpolls/individual_polls.csv",
+            ):
+                with self.subTest(relative=relative):
+                    self.assertTrue(
+                        (processed / relative).is_file(), processed / relative)
+
+    def test_the_reuse_fingerprints_can_be_computed_from_a_pinned_root(self) -> None:
+        """`build_history` fingerprints before it simulates.
+
+        The reuse cache reads the pinned root to decide which existing points
+        survive, so a missing table there does not cost one date -- it costs
+        the whole reconstruction, which is exactly how a 123-date backfill can
+        run and still leave the curve short.
+        """
+
+        with tempfile.TemporaryDirectory() as tmp:
+            processed = self._pin(Path(tmp))
+            inputs = EffectiveInputs(
+                processed,
+                election_date=date.fromisoformat(FROZEN_ELECTION_DATE),
+                seed=DEFAULT_SIMULATION_SEED,
+            )
+            self.assertTrue(inputs.training, "no historical elections were loaded")
+
+    def test_a_symlinked_tree_is_refused_rather_than_pinned_as_a_link(self) -> None:
+        """A committed symlink is not a pinnable tree.
+
+        `git ls-tree -r` reports one entry for a symlink standing in for a
+        directory, and `git show` on it yields the link *target text*. Writing
+        that as the table would produce a processed root whose files exist and
+        contain a path, which is worse than one whose files are missing.
+        """
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "repo"
+            polling = root / "data/processed/pollofpolls"
+            polling.mkdir(parents=True)
+            for name in (
+                "swedishpolls_individual_polls.csv",
+                "pollofpolls_timeseries.csv",
+                "individual_polls.csv",
+            ):
+                (polling / name).write_text("header\nvalue\n", encoding="utf-8")
+            (root / "data/processed/elections").mkdir(parents=True)
+            (root / "data/processed/elections/riksdag_election_results.csv").write_text(
+                "year\n2022\n", encoding="utf-8")
+            # Committed in place of the directory, as tests/_production_fixture
+            # once did for every retrospective tree.
+            (root / "data/processed/mandates").symlink_to("/etc", target_is_directory=True)
+            ElectionAutomationTests._init_git(root)
+            head = subprocess.run(
+                ["git", "rev-parse", "HEAD"], cwd=root,
+                check=True, capture_output=True, text=True,
+            ).stdout.strip()
+            with self.assertRaisesRegex(
+                CertifiedGenerationError, "not a directory of files"
+            ):
+                materialize_pinned_model_inputs(
+                    root, source_git_commit=head, destination=Path(tmp) / "pinned")
 
 
 class CertifiedGenerationLoaderTests(unittest.TestCase):
