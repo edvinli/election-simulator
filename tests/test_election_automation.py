@@ -3801,6 +3801,119 @@ class RenderDryRunTests(unittest.TestCase):
                     self.assertEqual(
                         base._render_from_cli(self._cli("--render-dry-run")), expected)
 
+    def test_render_only_flags_are_refused_outside_render_mode(self) -> None:
+        """An ignored dry-run request is a deployment nobody asked for.
+
+        All four render-only flags said "Requires --mode render" in their help
+        and none of it was enforced: `--mode publish --render-dry-run` ran a
+        real publication with commit and push enabled while silently
+        discarding the request. An ignored `--render-generation` is a
+        confusing no-op; an ignored `--render-dry-run` or `--repair` is an
+        operator asking for no writes and getting a deployment.
+
+        Asserted by forbidding *both* entry points, so the test proves the
+        combination never reaches automation rather than merely that it exits
+        non-zero.
+        """
+
+        def forbidden(*args, **kwargs):
+            raise AssertionError(
+                "a refused flag combination must not reach automation")
+
+        flags = [
+            ["--render-dry-run"],
+            ["--repair"],
+            ["--render-generation", "20260910T110717Z-5054d5b3"],
+            ["--render-certification-commit", "6c71d9c"],
+        ]
+        # `None` is the "no --mode given" case: rendering is never inferred,
+        # so a render-only flag without an explicit mode is discarded too.
+        for mode in ("publish", "probe", "dry_run", "publish_if_stale", None):
+            for flag in flags:
+                with self.subTest(mode=mode, flag=flag[0]):
+                    argv = ["--site-repo", "/tmp/site"]
+                    if mode is not None:
+                        argv += ["--mode", mode]
+                    argv += flag
+                    with patch.object(base, "run_automation", forbidden), \
+                            patch.object(base, "render_certified_generation", forbidden), \
+                            patch.object(base, "_render_from_cli", forbidden), \
+                            contextlib.redirect_stderr(io.StringIO()) as stderr:
+                        with self.assertRaises(SystemExit) as raised:
+                            base.main(argv)
+                    # argparse's own exit code for a misused command line.
+                    self.assertEqual(raised.exception.code, 2)
+                    self.assertIn(flag[0], stderr.getvalue())
+                    self.assertIn("require --mode render", stderr.getvalue())
+
+    def test_render_mode_still_accepts_every_render_only_flag(self) -> None:
+        """The refusal must not have narrowed the render path itself."""
+
+        captured: dict[str, object] = {}
+
+        def fake_render(**kwargs):
+            captured.update(kwargs)
+            return {"status": "RENDER_STAGED_NOT_INSTALLED", "generation": "g",
+                    "deployment": "dry-run",
+                    "curve": {"status": "COMPLETE", "missing": [],
+                              "views": {"status": "COMPLETE"}}}
+
+        with patch.object(base, "render_certified_generation", fake_render), \
+                contextlib.redirect_stdout(io.StringIO()):
+            code = base.main([
+                "--site-repo", "/tmp/site", "--mode", "render",
+                "--render-generation", "20260910T110717Z-5054d5b3",
+                "--render-certification-commit", "6c71d9c",
+                "--render-dry-run", "--repair",
+            ])
+        self.assertEqual(code, 0)
+        self.assertEqual(captured["generation"], "20260910T110717Z-5054d5b3")
+        self.assertEqual(captured["certification_commit"], "6c71d9c")
+        self.assertIs(captured["repair"], True)
+        self.assertIs(captured["commit"], False)
+        self.assertIs(captured["push"], False)
+
+    def test_a_publication_without_render_flags_is_untouched(self) -> None:
+        """The guard is about combinations, not about publishing."""
+
+        captured: dict[str, object] = {}
+
+        def fake_run_automation(*args, **kwargs):
+            captured.update(kwargs)
+            return SimpleNamespace(
+                summary=SimpleNamespace(render=lambda: ""),
+                to_dict=lambda: {}, status="SOURCE_CHECKED",
+            )
+
+        with patch.object(base, "run_automation", fake_run_automation), \
+                contextlib.redirect_stdout(io.StringIO()):
+            base.main(["--site-repo", "/tmp/site", "--mode", "publish"])
+        self.assertIs(captured["commit"], True)
+        self.assertIs(captured["push"], True)
+
+    def test_the_declared_list_matches_the_flags_that_claim_it(self) -> None:
+        """Every flag whose help says "Requires --mode render" is on the list.
+
+        The defect was a help string and an enforcement that disagreed, so the
+        two are tied together here rather than left to drift again.
+        """
+
+        import argparse as _argparse
+
+        parser = base.build_parser()
+        claiming = set()
+        for action in parser._actions:  # noqa: SLF001 - the only way to read help
+            if isinstance(action, _argparse._HelpAction):  # noqa: SLF001
+                continue
+            if action.help and "Requires --mode render" in action.help:
+                claiming.add(action.dest)
+        declared = {attribute for attribute, _ in base.RENDER_ONLY_ARGUMENTS}
+        self.assertEqual(
+            claiming, declared,
+            "a flag documents --mode render but is not enforced, or vice versa",
+        )
+
+
     def test_a_dry_run_reaches_both_website_gate_tiers_before_returning(self) -> None:
         """Structural: the gates are the point, so they must precede the return.
 

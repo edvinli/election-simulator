@@ -3349,7 +3349,8 @@ def build_parser() -> argparse.ArgumentParser:
             "The commit that certified --render-generation. When given, the "
             "generation's manifest, snapshot and exact-draw sidecar must all "
             "be present in it, so a retry cannot pick up another "
-            "generation's files after a concurrent push."
+            "generation's files after a concurrent push. Requires --mode "
+            "render."
         ),
     )
     return parser
@@ -3430,8 +3431,52 @@ def _render_from_cli(args: argparse.Namespace) -> int:
     return 0 if reached_a_good_end and nothing_short else 1
 
 
+#: Flags that mean something only to ``--mode render``.
+#:
+#: Every one of them already said "Requires --mode render" in its help, and
+#: nothing enforced it: ``--mode publish --render-dry-run`` ran a real
+#: publication with commit and push enabled while silently discarding the
+#: request. An ignored ``--render-generation`` is a confusing no-op; an
+#: ignored dry-run or repair request is an operator asking for no writes and
+#: getting a deployment, which is the one direction this must never fail in.
+RENDER_ONLY_ARGUMENTS: tuple[tuple[str, str], ...] = (
+    ("render_generation", "--render-generation"),
+    ("render_certification_commit", "--render-certification-commit"),
+    ("render_dry_run", "--render-dry-run"),
+    ("repair", "--repair"),
+)
+
+
+def render_only_arguments_misused(args: argparse.Namespace) -> list[str]:
+    """Render-only flags supplied to something that is not a render.
+
+    Returns the offending flag names, in declaration order, or an empty list.
+    A mode of ``None`` counts as misuse too: rendering is never inferred, it
+    is always an explicit ``--mode render``, so a render-only flag without one
+    would be discarded just the same.
+    """
+
+    if getattr(args, "mode", None) == "render":
+        return []
+    return [
+        flag for attribute, flag in RENDER_ONLY_ARGUMENTS
+        if getattr(args, attribute, None)
+    ]
+
+
 def main(argv: Sequence[str] | None = None) -> int:
-    args = build_parser().parse_args(argv)
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    misused = render_only_arguments_misused(args)
+    if misused:
+        # `parser.error` exits 2, as argparse already does for an unknown
+        # flag. Refusing beats honouring a partial reading of the request.
+        parser.error(
+            f"{', '.join(misused)} require --mode render, but --mode "
+            f"{args.mode or 'was not given'}; refusing rather than ignoring "
+            "them, because a discarded --render-dry-run or --repair would "
+            "commit and push"
+        )
     if args.mode == "render":
         return _render_from_cli(args)
     if args.mode in MUTATING_MODES:
