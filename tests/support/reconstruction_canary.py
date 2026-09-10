@@ -32,7 +32,9 @@ import subprocess
 import sys
 import tempfile
 import time
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any, Mapping
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 SOURCE_HISTORY = Path("files/election-simulator/history/coalition-timeseries.json")
@@ -124,11 +126,141 @@ def punch_gap(source: Path, target_date: str) -> None:
         raise CanaryError(f"the fixture touched more than the history: {touched}")
 
 
-def _baseline(repository: Path) -> dict[str, str]:
-    return {
-        "head": _run(["git", "rev-parse", "HEAD"], cwd=repository),
-        "status": _run(["git", "status", "--porcelain"], cwd=repository),
-    }
+#: What a run established. A recognised parity omission is a real result --
+#: reconstruction ran and the curve closed -- but it is not the full runner
+#: acceptance, which requires both future views rebuilt. Keeping them distinct
+#: stops a known limitation from being read as a clean pass.
+FULL_ACCEPTANCE = "FULL_ACCEPTANCE"
+RECONSTRUCTION_ONLY = "RECONSTRUCTION_ONLY"
+FAILED = "FAILED"
+
+#: Exit codes. 2 is deliberately not 0: reconstruction-only is not acceptance.
+EXIT_CODES = {FULL_ACCEPTANCE: 0, FAILED: 1, RECONSTRUCTION_ONLY: 2}
+
+
+@dataclass(frozen=True)
+class RepositoryState:
+    """One repository's observable state, as the canary compares it.
+
+    ``protected`` is keyed by path *within this repository*. It used to be a
+    single dict keyed by path across both, so the website's entries silently
+    overwrote the simulator's and both were then compared against the
+    website's tree hashes -- which differ by construction, so the check would
+    have reported a change that had not happened.
+    """
+
+    head: str
+    status: str
+    protected: dict[str, str]
+
+
+def _baseline(repository: Path, protected: tuple[str, ...]) -> RepositoryState:
+    return RepositoryState(
+        head=_run(["git", "rev-parse", "HEAD"], cwd=repository),
+        status=_run(["git", "status", "--porcelain"], cwd=repository),
+        protected={
+            name: _run(["git", "rev-parse", f"HEAD:{name}"], cwd=repository)
+            for name in protected
+            if (repository / name).exists()
+        },
+    )
+
+
+def evaluate(
+    *,
+    target_date: str,
+    expected_generation: str,
+    rendered: Mapping[str, Any] | None,
+    parse_error: str | None,
+    exit_code: int,
+    before: Mapping[str, RepositoryState],
+    after: Mapping[str, RepositoryState],
+    pointer_before: bytes,
+    pointer_after: bytes,
+) -> tuple[list[str], str]:
+    """Decide what a run established, from state alone.
+
+    Pure so it can be tested without a render. The safety checks run first and
+    unconditionally: an unreadable renderer result is a failure *of the render*
+    and must not stop the canary from reporting whether production state was
+    disturbed, which is the more important question and used to be skipped
+    entirely when result parsing raised.
+    """
+
+    failures: list[str] = []
+
+    # --- safety, always, whatever the renderer said -----------------------
+    for label in sorted(set(before) | set(after)):
+        base, now = before.get(label), after.get(label)
+        if base is None or now is None:
+            failures.append(f"{label} state was not captured on both sides")
+            continue
+        if now.head != base.head:
+            failures.append(f"{label} HEAD moved: {base.head} -> {now.head}")
+        if now.status != base.status:
+            failures.append(f"{label} working tree changed: {now.status!r}")
+        for name, tree in base.protected.items():
+            if now.protected.get(name) != tree:
+                failures.append(
+                    f"{label} protected path changed: {name} "
+                    f"({tree} -> {now.protected.get(name)})")
+        for name in set(now.protected) - set(base.protected):
+            failures.append(f"{label} protected path appeared: {name}")
+    if pointer_after != pointer_before:
+        failures.append("the website pointer changed")
+
+    # --- what the render itself reported ----------------------------------
+    if parse_error is not None or not isinstance(rendered, Mapping):
+        failures.append(parse_error or "the renderer produced no usable result")
+        return failures, FAILED
+
+    curve = rendered.get("curve") or {}
+    views = curve.get("views") or {}
+
+    if rendered.get("generation") != expected_generation:
+        failures.append(
+            f"the render reports generation {rendered.get('generation')!r}, "
+            f"expected {expected_generation!r}")
+    if rendered.get("status") != "RENDER_STAGED_NOT_INSTALLED":
+        failures.append(
+            f"expected a staged dry run, got status {rendered.get('status')!r}")
+    if target_date not in (curve.get("reconstructed") or []):
+        failures.append(
+            f"{target_date} was not reconstructed "
+            f"(reconstructed={curve.get('reconstructed')})")
+    if curve.get("missing"):
+        failures.append(f"curve dates still missing: {curve['missing']}")
+    if curve.get("status") != "COMPLETE":
+        failures.append(f"curve status is {curve.get('status')!r}")
+
+    primary = views.get("primary_campaign_paths")
+    parity_omission = (
+        primary == "OMITTED"
+        and "bitwise identical" in str(views.get("error") or ""))
+    if primary == "OMITTED" and not parity_omission:
+        failures.append(
+            f"the primary view was omitted for an unexpected reason: "
+            f"{views.get('error')!r}")
+    elif primary not in {"REBUILT", "OMITTED", "NOT_REQUIRED_ON_ELECTION_DAY"}:
+        failures.append(f"unrecognised primary view state {primary!r}")
+
+    both_views_rebuilt = (
+        primary == "REBUILT"
+        and views.get("secondary_projection") == "REBUILT"
+        and views.get("status") == "COMPLETE"
+        and not (views.get("missing") or []))
+
+    # A non-zero renderer exit is expected only for the recognised omission.
+    if exit_code != 0 and not parity_omission:
+        failures.append(
+            f"the renderer exited {exit_code} with nothing recognised as short")
+    if exit_code == 0 and not both_views_rebuilt:
+        failures.append(
+            f"the renderer exited 0 without both views rebuilt (views={views})")
+
+    if failures:
+        return failures, FAILED
+    return failures, FULL_ACCEPTANCE if both_views_rebuilt else RECONSTRUCTION_ONLY
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -155,15 +287,14 @@ def main(argv: list[str] | None = None) -> int:
         print(f"fixture   one gap on {args.target_date}", flush=True)
 
         # Taken *after* the fixture: the fixture commit is expected, anything
-        # the renderer adds on top of it is not.
-        base_source, base_site = _baseline(source), _baseline(site)
-        pointer_before = (site / SITE_POINTER).read_bytes()
-        protected_before = {
-            name: _run(["git", "rev-parse", f"HEAD:{name}"], cwd=repository)
-            for repository, names in ((source, PROTECTED), (site, PROTECTED[:2]))
-            for name in names
-            if (repository / name).exists()
+        # the renderer adds on top of it is not. Keyed per repository, because
+        # the same path has different content in each.
+        repositories = {"simulator": (source, PROTECTED), "website": (site, PROTECTED[:2])}
+        before = {
+            label: _baseline(repository, protected)
+            for label, (repository, protected) in repositories.items()
         }
+        pointer_before = (site / SITE_POINTER).read_bytes()
 
         command = [
             sys.executable, "-m", "scripts.election_automation",
@@ -177,87 +308,70 @@ def main(argv: list[str] | None = None) -> int:
             command += ["--render-certification-commit", args.certification_commit]
 
         started = time.monotonic()
-        # The exit code is captured, never allowed to short-circuit the
-        # assertions below: a non-zero exit is an *expected* outcome when a
-        # required view cannot be verified, and the assertions are the point.
+        # The exit code is captured, never allowed to short-circuit what
+        # follows: a non-zero exit is an expected outcome when a required view
+        # cannot be verified, and the assertions are the point.
         completed = subprocess.run(
             command, cwd=source, capture_output=True, text=True, check=False)
         elapsed = time.monotonic() - started
         sys.stderr.write(completed.stderr)
         print(f"renderer  exit {completed.returncode} in {elapsed:.1f}s", flush=True)
 
-        rendered = None
+        # Parsing failure is recorded, not raised. The safety checks matter
+        # more than the render's own report and must still run.
+        rendered, parse_error = None, None
         for line in reversed(completed.stdout.splitlines()):
             if line.startswith("{") and '"generation"' in line:
-                rendered = json.loads(line)
+                try:
+                    rendered = json.loads(line)
+                except json.JSONDecodeError as error:
+                    parse_error = f"the renderer result is not valid JSON: {error}"
                 break
-        if rendered is None:
-            raise CanaryError(
-                f"the renderer produced no result JSON:\n{completed.stdout[-4000:]}")
+        if rendered is None and parse_error is None:
+            parse_error = (
+                "the renderer produced no result JSON; last output:\n"
+                + completed.stdout[-4000:])
 
-        curve = rendered.get("curve") or {}
-        views = curve.get("views") or {}
-        failures: list[str] = []
+        after = {
+            label: _baseline(repository, protected)
+            for label, (repository, protected) in repositories.items()
+        }
+        failures, outcome = evaluate(
+            target_date=args.target_date,
+            expected_generation=args.generation,
+            rendered=rendered,
+            parse_error=parse_error,
+            exit_code=completed.returncode,
+            before=before,
+            after=after,
+            pointer_before=pointer_before,
+            pointer_after=(site / SITE_POINTER).read_bytes(),
+        )
 
-        # 1. The requested date was reconstructed, and nothing is left short.
-        if args.target_date not in (curve.get("reconstructed") or []):
-            failures.append(
-                f"{args.target_date} was not reconstructed "
-                f"(reconstructed={curve.get('reconstructed')})")
-        if curve.get("missing"):
-            failures.append(f"curve dates still missing: {curve['missing']}")
-        if curve.get("status") != "COMPLETE":
-            failures.append(f"curve status is {curve.get('status')}")
-
-        # 2. Nothing was installed, in either repository, beyond the fixture.
-        for label, repository, base in (("simulator", source, base_source),
-                                        ("website", site, base_site)):
-            now = _baseline(repository)
-            if now["head"] != base["head"]:
-                failures.append(f"{label} HEAD moved: {base['head']} -> {now['head']}")
-            if now["status"] != base["status"]:
-                failures.append(f"{label} working tree changed:\n{now['status']}")
-        if (site / SITE_POINTER).read_bytes() != pointer_before:
-            failures.append("the website pointer changed")
-        for name, tree in protected_before.items():
-            for repository in (source, site):
-                if (repository / name).exists():
-                    if _run(["git", "rev-parse", f"HEAD:{name}"], cwd=repository) != tree:
-                        failures.append(f"protected path changed: {name}")
-
-        # 3. An expected parity omission is not an unrelated failure.
-        omitted_view = views.get("primary_campaign_paths") == "OMITTED"
-        parity = "bitwise identical" in str(views.get("error") or "")
-        if omitted_view and not parity:
-            failures.append(
-                f"the primary view was omitted for an unexpected reason: "
-                f"{views.get('error')}")
-        if completed.returncode != 0 and not (omitted_view and parity) and not failures:
-            failures.append(
-                f"the renderer exited {completed.returncode} with nothing reported short")
-
+        curve = (rendered or {}).get("curve") or {}
         print(json.dumps({
-            "generation": rendered.get("generation"),
-            "certification_commit": rendered.get("certification_commit"),
-            "status": rendered.get("status"),
+            "outcome": outcome,
+            "generation": (rendered or {}).get("generation"),
+            "certification_commit": (rendered or {}).get("certification_commit"),
+            "status": (rendered or {}).get("status"),
+            "renderer_exit_code": completed.returncode,
             "elapsed_seconds": round(elapsed, 1),
             "reconstructed": curve.get("reconstructed"),
             "curve_status": curve.get("status"),
-            "views": views,
-            "expected_parity_omission": bool(omitted_view and parity),
+            "views": curve.get("views"),
+            "failures": failures,
         }, indent=2), flush=True)
 
-        if failures:
-            for failure in failures:
-                print(f"FAIL  {failure}", flush=True)
-            return 1
-        if omitted_view:
-            print("PASS  reconstruction verified; primary view omitted on the known "
-                  "campaign-path parity limitation, production untouched", flush=True)
-        else:
-            print("PASS  reconstruction verified and both views rebuilt, "
-                  "production untouched", flush=True)
-        return 0
+        for failure in failures:
+            print(f"FAIL  {failure}", flush=True)
+        if outcome == FULL_ACCEPTANCE:
+            print("PASS  reconstruction verified, both views rebuilt, "
+                  "every gate passed, production untouched", flush=True)
+        elif outcome == RECONSTRUCTION_ONLY:
+            print("PARTIAL  reconstruction verified and production untouched, but "
+                  "the primary campaign-path view was omitted on the known parity "
+                  "limitation -- not a full runner acceptance", flush=True)
+        return EXIT_CODES[outcome]
     finally:
         os.chdir(REPOSITORY_ROOT)
         shutil.rmtree(workspace, ignore_errors=True)
