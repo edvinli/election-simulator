@@ -301,6 +301,27 @@ class RenderWorkflowRuntimeTests(unittest.TestCase):
             "bounded, not all cores: the runner also has the render to do",
         )
 
+    def test_a_dispatch_can_stage_a_render_without_installing_it(self) -> None:
+        """The safe way to exercise this path on a real runner.
+
+        Forcing a render against a healthy deployment can only leave it
+        unchanged or strip a view that could not be rebuilt, so the canary
+        needs a mode that runs the whole expensive, environment-specific path
+        and stops before installing. Dispatch-only, and off unless asked for.
+        """
+
+        yaml = _without_comments(self.render)
+        dispatch = yaml[yaml.index("workflow_dispatch:"):]
+        dispatch = dispatch[:dispatch.index("\npermissions:")]
+        self.assertIn("dry_run:", dispatch)
+        self.assertIn("default: false", dispatch)
+        self.assertIn("type: boolean", dispatch)
+        self.assertIn(
+            "RENDER_DRY_RUN: ${{ github.event.inputs.dry_run == 'true' }}", yaml)
+        self.assertIn("args+=(--render-dry-run)", yaml)
+        # Never unconditional: a scheduled follow-on must still really render.
+        self.assertNotRegex(yaml, r"(?m)^\s+--render-dry-run$")
+
     def test_rendering_installs_every_gem_the_website_build_needs(self) -> None:
         """`gem install jekyll` alone is a runner that fails at `jekyll build`.
 

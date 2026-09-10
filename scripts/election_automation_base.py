@@ -3322,6 +3322,17 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--render-dry-run",
+        action="store_true",
+        help=(
+            "Stage and gate a render without installing it: pins the model "
+            "inputs, reconstructs the curve, rebuilds the future views, "
+            "builds the site and runs both website gate tiers, then stops "
+            "before any commit or push. For exercising the rendering path on "
+            "a runner without touching production. Requires --mode render."
+        ),
+    )
+    parser.add_argument(
         "--repair",
         action="store_true",
         help=(
@@ -3362,8 +3373,12 @@ def _render_from_cli(args: argparse.Namespace) -> int:
         election_date=args.election_date,
         history_workers=args.history_workers,
         repair=args.repair,
-        commit=True,
-        push=True,
+        # A dry run does everything up to and including both website gate
+        # tiers -- `_stage_site` and the push gate run against a disposable
+        # copy of the site -- and returns before the history commit, the
+        # pointer flip and the website push.
+        commit=not args.render_dry_run,
+        push=not args.render_dry_run,
         stage_callback=_log_stage,
     )
     print(json.dumps(rendered, ensure_ascii=False, allow_nan=False, default=str))
@@ -3399,14 +3414,20 @@ def _render_from_cli(args: argparse.Namespace) -> int:
                 "certified point."
             )
         args.summary_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    # RENDER_NOT_NEEDED is a success: the website already serves this
-    # generation whole. An incomplete curve is not -- the deployment stands,
-    # but the render has more to do and a green job would hide it.
-    return 0 if rendered.get("status") in {
-        "RENDERED_AND_DEPLOYED", "RENDER_NOT_NEEDED"} else 1
-    # RENDERED_CURVE_INCOMPLETE and RENDERED_VIEWS_INCOMPLETE both exit 1: the
-    # deployment stands and is recorded, but the render has work left and a
-    # green job would hide it.
+    # Three terminal states are successes: the generation was rendered and
+    # deployed, the website already served it whole, or a dry run staged it
+    # and passed both gate tiers. Each is only a success if nothing came out
+    # short -- RENDERED_CURVE_INCOMPLETE and RENDERED_VIEWS_INCOMPLETE exit
+    # non-zero because the deployment stands but the render has work left, and
+    # a green job would hide that. A dry run is held to the same bar, so it
+    # reports a gap it would have deployed rather than merely reaching the end.
+    reached_a_good_end = rendered.get("status") in {
+        "RENDERED_AND_DEPLOYED", "RENDER_NOT_NEEDED", "RENDER_STAGED_NOT_INSTALLED"}
+    nothing_short = (
+        (curve.get("status") or CURVE_COMPLETE) == CURVE_COMPLETE
+        and ((curve.get("views") or {}).get("status") or CURVE_COMPLETE) == CURVE_COMPLETE
+    )
+    return 0 if reached_a_good_end and nothing_short else 1
 
 
 def main(argv: Sequence[str] | None = None) -> int:
