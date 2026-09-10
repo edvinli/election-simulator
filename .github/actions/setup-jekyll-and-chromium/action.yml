@@ -42,14 +42,34 @@ runs:
           jekyll-redirect-from \
           --no-document
         if command -v chromium >/dev/null 2>&1; then
-          CHROME_BIN_PATH="$(command -v chromium)"
+          CHROME_BIN_PATH="$(command -v chromium)"; CHROME_SOURCE="preinstalled chromium"
         elif command -v chromium-browser >/dev/null 2>&1; then
-          CHROME_BIN_PATH="$(command -v chromium-browser)"
+          CHROME_BIN_PATH="$(command -v chromium-browser)"; CHROME_SOURCE="preinstalled chromium-browser"
         elif command -v google-chrome >/dev/null 2>&1; then
-          CHROME_BIN_PATH="$(command -v google-chrome)"
+          CHROME_BIN_PATH="$(command -v google-chrome)"; CHROME_SOURCE="preinstalled google-chrome"
         else
           sudo apt-get update
           sudo apt-get install -y chromium
-          CHROME_BIN_PATH="$(command -v chromium)"
+          CHROME_BIN_PATH="$(command -v chromium)"; CHROME_SOURCE="apt-installed chromium"
         fi
+        # Say which browser was chosen, and which build of it.
+        #
+        # This is a consequential choice made from whatever the runner image
+        # happens to carry, and it was previously silent: when a render failed
+        # with "Chrome did not expose CDP", the run gave no way to tell which
+        # binary had been launched. The browser harness reports the same facts
+        # from its own side; both are wanted, because a disagreement between
+        # them means CHROME_BIN did not survive into the job.
+        if [ -z "$CHROME_BIN_PATH" ]; then
+          echo "::error::no usable browser was found or installed"
+          exit 1
+        fi
+        echo "browser: $CHROME_BIN_PATH ($CHROME_SOURCE)"
+        echo "version: $("$CHROME_BIN_PATH" --version 2>&1 | head -1 || echo unavailable)"
         echo "CHROME_BIN=$CHROME_BIN_PATH" >> "$GITHUB_ENV"
+        # The browser harness bounds this at 60s and defaults to 30s. A
+        # passing publication was observed launching in 23.7s and a rendering
+        # job lost that race at 30.2s, so CI asks for the bound. It is not a
+        # fix for a browser that cannot start: the harness fails such a launch
+        # immediately regardless of the deadline.
+        echo "CDP_READY_TIMEOUT_MS=60000" >> "$GITHUB_ENV"

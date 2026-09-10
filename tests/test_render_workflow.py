@@ -349,6 +349,46 @@ class RenderWorkflowRuntimeTests(unittest.TestCase):
         self.assertIn("using: composite", self.action)
         self.assertIn("ruby/setup-ruby@v1", self.action)
 
+    def test_the_action_says_which_browser_it_chose(self) -> None:
+        """A silent choice is an undiagnosable failure.
+
+        The browser is picked from whatever the runner image carries, and the
+        selection was previously invisible: a render that failed with "Chrome
+        did not expose CDP" gave no way to tell which binary had been
+        launched, so the first diagnosis had to be inferred from a *passing*
+        publication's timing instead.
+        """
+
+        self.assertIn('echo "browser: $CHROME_BIN_PATH ($CHROME_SOURCE)"', self.action)
+        self.assertIn('--version', self.action)
+        # Each branch of the selection labels itself, or the log names a path
+        # without saying how it was found.
+        self.assertEqual(self.action.count("CHROME_SOURCE="), 4)
+
+    def test_the_action_fails_closed_when_no_browser_is_found(self) -> None:
+        """Exporting an empty CHROME_BIN defers the failure to a suite.
+
+        The harness would then launch its own default and fail somewhere less
+        obvious, which is how an infrastructure problem gets reported as a
+        browser-test failure.
+        """
+
+        self.assertIn('if [ -z "$CHROME_BIN_PATH" ]; then', self.action)
+        self.assertIn("::error::no usable browser was found or installed", self.action)
+
+    def test_ci_asks_the_harness_for_its_bounded_launch_deadline(self) -> None:
+        """Configurable in the website repo, requested here.
+
+        The harness defaults to 30s and bounds the setting at 60s. A passing
+        publication launched in 23.7s -- a 6.3s margin -- and a rendering job,
+        which drives the browser after reconstruction and projection work in
+        the same job, lost that race at 30.2s. Asking for the bound is not a
+        fix for a browser that cannot start; the harness fails that case
+        immediately whatever the deadline says.
+        """
+
+        self.assertIn('echo "CDP_READY_TIMEOUT_MS=60000" >> "$GITHUB_ENV"', self.action)
+
     def test_no_jekyll_install_anywhere_is_missing_a_plugin(self) -> None:
         """One job cannot use the shared action, so pin its copy to it.
 
