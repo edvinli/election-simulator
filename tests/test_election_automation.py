@@ -76,6 +76,7 @@ from scripts.simulator.summary import compute_simulation_summary
 from tests.history_fixtures import (
     FROZEN_AS_OF,
     FROZEN_ELECTION_DATE,
+    freeze_archive_inputs,
     freeze_poll_inputs,
     make_history_fixture,
 )
@@ -140,6 +141,39 @@ def _forecast_utc(hour: int, minute: int = 0) -> datetime:
 
 
 class ElectionAutomationTests(unittest.TestCase):
+    def setUp(self) -> None:
+        """Route the curve reconstruction through the cheap simulator seam.
+
+        These are orchestration tests. They stage the frozen synthetic history
+        from tests/history_fixtures.py, whose effective-input fingerprints
+        match no real input file, so the resume cache can reuse nothing and
+        any reconstruction here is a full ~105-point rebuild rather than the
+        one day production sees.
+
+        That became reachable when the backfill moved after the roll-in: a
+        publication dated later than the frozen date now has a genuine gap to
+        close, and at 10,000 draws a point that is tens of minutes inside a
+        test which asserts wiring. The suite is also a publication gate, run
+        inside the publish job's 120-minute budget.
+
+        The reconstruction's mathematics is covered against the canonical
+        engine in tests/test_forecast_history.py. What is under test here is
+        the pipeline, so this simulator is replaced exactly as the production
+        and projection simulators already are.
+
+        Patched on ``forecast_history.generate``, which bound the name at
+        import, rather than on ``simulator.engine``: the tests asserting that
+        the *authoritative* simulator is never reached patch the engine
+        binding, and replacing this one must not disturb that.
+        """
+
+        reconstruction = patch(
+            "scripts.forecast_history.generate.simulate_election",
+            self._projection_runner,
+        )
+        reconstruction.start()
+        self.addCleanup(reconstruction.stop)
+
     @staticmethod
     def _workflow_job(workflow: str, name: str) -> str:
         """Return one top-level workflow job without requiring a YAML package."""
@@ -2782,16 +2816,28 @@ class KilledBackfillRecoveryTests(unittest.TestCase):
         def must_not_simulate(**kwargs):
             raise AssertionError("rendering must not run the authoritative simulator")
 
+        # The certified forecast's simulator must not run; the curve's may, and
+        # after the stage reorder it has the whole gap between the fixture's
+        # last curve point and the certified date to close. Reconstruction is
+        # routed through the cheap seam for the same reason the publication
+        # tests route it there -- this fixture stages placeholder model inputs,
+        # and what is under test is the rendering pipeline, not the model.
         with patch(
             "scripts.publication_pipeline.pipeline.DEFAULT_PROCESSED_ROOT",
             fresh_source / "data/processed",
-        ), patch("scripts.simulator.engine.simulate_election", must_not_simulate):
+        ), patch("scripts.simulator.engine.simulate_election", must_not_simulate), \
+                patch(
+                    "scripts.forecast_history.generate.simulate_election",
+                    ElectionAutomationTests._projection_runner,
+                ):
             rendered = base.render_certified_generation(
                 root=fresh_source,
                 site=fresh_site,
                 generation=generation,
                 commit=True,
                 push=True,
+                projection_runner=ElectionAutomationTests._projection_runner,
+                campaign_path_simulator=ElectionAutomationTests._campaign_path_simulator,
                 website_check_fn=lambda _root: {"status": "PASS"},
                 website_push_check_fn=lambda _root: {"status": "PASS"},
             )
@@ -2802,12 +2848,61 @@ class KilledBackfillRecoveryTests(unittest.TestCase):
             generation,
         )
         # And the rendered history names the generation it belongs to.
-        self.assertEqual(
-            base._history_generation(
-                fresh_source / "files/election-simulator/history/coalition-timeseries.json"),
+        rendered_history_path = (
+            fresh_source / "files/election-simulator/history/coalition-timeseries.json")
+        self.assertEqual(base._history_generation(rendered_history_path), generation)
+        self._assert_rendered_history_is_publication_grade(
+            rendered_history_path, generation)
+        # The website was handed the same history, not a reduced one.
+        self._assert_rendered_history_is_publication_grade(
+            fresh_site / "files/election-simulator/history/coalition-timeseries.json",
             generation,
         )
         return fresh_site
+
+    def _assert_rendered_history_is_publication_grade(
+        self, history_path: Path, generation: str
+    ) -> None:
+        """A recovery render must produce what a publication would.
+
+        Two ways it did not, before the pipeline was shared:
+
+        * rendering called the plain history updater, so it attached neither
+          future view and a recovered site carried forward whatever projection
+          sections the previous generation had left in the artifact;
+        * the backfill ran before the roll-in, so the render published a curve
+          with a hole on the date its own roll-in had just archived.
+        """
+
+        history = json.loads(history_path.read_text(encoding="utf-8"))
+        validate_history_contract(history)
+        certified = [
+            point for point in history["series"]
+            if point["provenance"] == "current_production"
+        ]
+        self.assertEqual(len(certified), 1, certified)
+        self.assertEqual(certified[0]["publication_generation"], generation)
+
+        self.assertEqual(
+            [day.isoformat() for day in missing_curve_dates(history)], [],
+            "the rendered curve has a hole in it",
+        )
+        # Both future views, anchored to the point this render certified --
+        # not to the generation that happened to be in the artifact before.
+        self.assertIn("future_projection", history)
+        self.assertEqual(
+            history["future_projection"]["origin_date"], certified[0]["date"])
+        certified_day = date.fromisoformat(certified[0]["date"])
+        if certified_day < date.fromisoformat(history["election_date"]):
+            self.assertIn("future_campaign_paths", history)
+            self.assertEqual(
+                history["future_campaign_paths"]["origin_date"], certified[0]["date"])
+        else:
+            # Certified on election day: there is no remaining campaign to
+            # simulate, and the primary view is dropped rather than published
+            # empty. Asserted so the branch cannot silently become the one a
+            # mid-campaign render takes.
+            self.assertNotIn("future_campaign_paths", history)
 
     def test_a_kill_at_backfill_leaves_a_certified_renderable_generation(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -2854,6 +2949,221 @@ class KilledBackfillRecoveryTests(unittest.TestCase):
             # simply refusing everything.
             base._reject_stale_render(site_repo=fresh_site, generation=generation)
             self.assertTrue((fresh_source).is_dir())
+
+
+class PublicationCurveContinuityTests(unittest.TestCase):
+    """No publication may leave a hole in the curve it just published.
+
+    The reconstruction backfill used to run *before* the roll-in, so it closed
+    yesterday's hole and left the one the roll-in was about to make. Every
+    publication therefore shipped a curve exactly one day short of its own
+    forecast, and repairing it harder did not help: the 2026-09-10 render
+    reconstructed 123 dates in 58m54s and still published a history whose
+    `missing_curve_dates()` returned 2026-09-09 -- present only as
+    `prospective_archived`, immediately before the new certified point.
+
+    Asserted across two consecutive publications, because one is not enough to
+    tell the two orderings apart: with the backfill first, publication N
+    closes the hole publication N-1 left, so any single publication looks like
+    it repaired something.
+
+    The reconstruction simulator is replaced with the cheap seam the other
+    orchestration tests use. What is under test is the *order* of the stages,
+    not the mathematics of a reconstructed point, which
+    tests/test_forecast_history.py covers against the canonical engine.
+    """
+
+    ELECTION = date.fromisoformat(FROZEN_ELECTION_DATE)
+
+    def _inputs(self, parent: Path) -> Path:
+        """A processed root whose polling and archive agree with the fixture."""
+
+        processed = parent / "processed"
+        processed.mkdir()
+        # Symlinked, as _production_fixture does: the retrospective tables are
+        # large, read-only, and the reconstruction loads them before it reaches
+        # the simulator seam.
+        for directory in (
+            "elections",
+            "mandates",
+            "geography",
+            "seat_hindcasts",
+            "vote_share_calibration",
+            "pop_baseline_benchmark",
+        ):
+            (processed / directory).symlink_to(
+                REPOSITORY_ROOT / "data/processed" / directory, target_is_directory=True)
+        shutil.copytree(
+            REPOSITORY_ROOT / "data/processed/pollofpolls", processed / "pollofpolls")
+        shutil.copytree(
+            REPOSITORY_ROOT / "data/processed/prospective_forecasts",
+            processed / "prospective_forecasts",
+        )
+        freeze_poll_inputs(processed / "pollofpolls")
+        freeze_archive_inputs(processed / "prospective_forecasts")
+        return processed
+
+    def _publish(self, history: dict, processed: Path, day: str) -> tuple[dict, list]:
+        return base.render_history_for_generation(
+            history,
+            ElectionAutomationTests._result(day),
+            poll_file=processed / "pollofpolls" / "swedishpolls_individual_polls.csv",
+            timeseries_file=processed / "pollofpolls" / "pollofpolls_timeseries.csv",
+            archive_dir=processed / "prospective_forecasts",
+            model_data_dir=processed,
+            election_date=self.ELECTION,
+            publication_generation=f"{day.replace('-', '')}T210000Z-0000abcd",
+            deterministic_payload_sha256="a" * 64,
+            generated_at_utc=f"{day}T21:00:00+00:00",
+            model_commit=COMMIT,
+            projection_runner=ElectionAutomationTests._projection_runner,
+            campaign_path_simulator=ElectionAutomationTests._campaign_path_simulator,
+        )
+
+    def test_consecutive_publications_leave_no_missing_curve_dates(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            processed = self._inputs(Path(tmp))
+            history = make_history_fixture()
+            self.assertEqual(missing_curve_dates(history), [],
+                             "the fixture must start continuous")
+
+            days = ["2026-09-06", "2026-09-07"]
+            with patch(
+                "scripts.forecast_history.generate.simulate_election",
+                ElectionAutomationTests._projection_runner,
+            ):
+                for index, day in enumerate(days):
+                    with self.subTest(publication=day):
+                        previous = (
+                            FROZEN_AS_OF if index == 0 else days[index - 1]
+                        )
+                        history, backfilled = self._publish(history, processed, day)
+                        # The hole this publication's own roll-in created.
+                        self.assertIn(
+                            date.fromisoformat(previous), backfilled,
+                            f"the date {previous} archived by this roll-in was not "
+                            "reconstructed; the backfill ran before the roll-in",
+                        )
+                        self.assertEqual(
+                            missing_curve_dates(history), [],
+                            "the published curve has a hole in it",
+                        )
+                        # The archived point and the curve point coexist on that
+                        # date: the publication is still recorded, and the line
+                        # the chart draws is continuous through it.
+                        provenances = {
+                            point["provenance"]
+                            for point in history["series"]
+                            if point["date"] == previous
+                        }
+                        self.assertEqual(
+                            provenances,
+                            {"prospective_archived", "reconstructed_current_model"},
+                        )
+                        self.assertEqual(
+                            [
+                                point["date"]
+                                for point in history["series"]
+                                if point["provenance"] == "current_production"
+                            ],
+                            [day],
+                        )
+
+    def test_the_certified_point_survives_the_backfill_byte_for_byte(self) -> None:
+        """The backfill reconstructs the curve, never the forecast.
+
+        `build_history` rebuilds the payload from its own inputs, and the one
+        point it must not rebuild is the certified one: an approximation of a
+        100,000-draw joint artifact published under that generation's id would
+        be a different forecast that nothing downstream would flag.
+        """
+
+        with tempfile.TemporaryDirectory() as tmp:
+            processed = self._inputs(Path(tmp))
+            with patch(
+                "scripts.forecast_history.generate.simulate_election",
+                ElectionAutomationTests._projection_runner,
+            ):
+                first, _ = self._publish(make_history_fixture(), processed, "2026-09-06")
+                certified = deepcopy(
+                    [
+                        point
+                        for point in first["series"]
+                        if point["provenance"] == "current_production"
+                    ][0]
+                )
+                second, backfilled = self._publish(first, processed, "2026-09-07")
+            self.assertTrue(backfilled, "this publication had a hole to close")
+            # The previous certified point is now archived, and the roll-in
+            # relabelled it rather than re-deriving it.
+            archived = [
+                point
+                for point in second["series"]
+                if point["provenance"] == "prospective_archived"
+                and point["date"] == "2026-09-06"
+            ]
+            self.assertEqual(len(archived), 1, archived)
+            self.assertEqual(archived[0]["groups"], certified["groups"])
+            self.assertEqual(
+                archived[0]["publication_generation"],
+                certified["publication_generation"],
+            )
+
+    def test_a_publication_refreshes_both_future_views_onto_its_own_point(self) -> None:
+        """Projections belong to the generation that published them.
+
+        They are anchored to the certified point, so a history whose curve was
+        repaired after the projections were built would publish views drawn
+        from a different arrangement than the one on the page.
+        """
+
+        with tempfile.TemporaryDirectory() as tmp:
+            processed = self._inputs(Path(tmp))
+            with patch(
+                "scripts.forecast_history.generate.simulate_election",
+                ElectionAutomationTests._projection_runner,
+            ):
+                history, _ = self._publish(make_history_fixture(), processed, "2026-09-06")
+            current = [
+                point
+                for point in history["series"]
+                if point["provenance"] == "current_production"
+            ][0]
+            self.assertEqual(current["date"], "2026-09-06")
+            self.assertEqual(history["future_projection"]["origin_date"], current["date"])
+            self.assertEqual(
+                history["future_campaign_paths"]["origin_date"], current["date"])
+
+    def test_the_backfill_failing_still_publishes_the_forecast(self) -> None:
+        """The curve is presentation; the certified forecast is not.
+
+        Moving the backfill after the roll-in must not have made it able to
+        block a publication.
+        """
+
+        with tempfile.TemporaryDirectory() as tmp:
+            processed = self._inputs(Path(tmp))
+            with patch.object(
+                base, "backfill_reconstructed_curve",
+                side_effect=RuntimeError("reconstruction exploded"),
+            ):
+                history, backfilled = self._publish(
+                    make_history_fixture(), processed, "2026-09-06")
+            self.assertEqual(backfilled, [])
+            # Published, with the hole the failed backfill could not close.
+            self.assertEqual(
+                [
+                    point["date"]
+                    for point in history["series"]
+                    if point["provenance"] == "current_production"
+                ],
+                ["2026-09-06"],
+            )
+            self.assertEqual(
+                [day.isoformat() for day in missing_curve_dates(history)],
+                [FROZEN_AS_OF],
+            )
+            validate_history_contract(history)
 
 
 class PinnedModelInputsTests(unittest.TestCase):
@@ -3305,15 +3615,24 @@ class HistoryWorkersPlumbingTests(unittest.TestCase):
             (generate.build_history, "workers"),
             (generate.backfill_reconstructed_curve, "workers"),
             (base.run_automation, "history_workers"),
+            # Reachable directly now: the `scripts.election_automation` facade
+            # no longer wraps run_production_event to inject a projection-aware
+            # history updater, because the pipeline both entry points share
+            # lives in election_automation_base itself.
+            (base.run_production_event, "history_workers"),
         ):
             with self.subTest(function=function.__name__):
                 parameter = inspect.signature(function).parameters[name]
                 self.assertEqual(parameter.default, 1)
-        # run_production_event is reached through the facade's projection
-        # wrapper, which forwards **kwargs and so reports no signature of its
-        # own. Its default is asserted at the definition instead.
+        # render_certified_generation takes None rather than 1: it is a
+        # different seam -- an explicit "the caller said nothing", which
+        # resolve_history_workers turns into the serial default.
+        self.assertIsNone(
+            inspect.signature(base.render_certified_generation)
+            .parameters["history_workers"].default
+        )
+        self.assertEqual(base.resolve_history_workers(None), 1)
         source = Path(base.__file__).read_text(encoding="utf-8")
-        self.assertIn("    history_workers: int = DEFAULT_HISTORY_WORKERS,\n", source)
         self.assertIn("history_workers=history_workers,", source)
         self.assertIn("workers=resolve_history_workers(history_workers),", source)
 

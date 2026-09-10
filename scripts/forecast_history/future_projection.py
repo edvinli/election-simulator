@@ -519,8 +519,62 @@ def _discard_persisted_projection_rows(
     return sanitized_payload
 
 
-def update_history_with_production_result(
+def _certified_current_point(history: Mapping[str, Any]) -> Mapping[str, Any]:
+    """The single certified anchor both future views are built from."""
+
+    current_points = [
+        point
+        for point in history["series"]
+        if point.get("provenance") == "current_production"
+    ]
+    if len(current_points) != 1:
+        raise ValueError("history must contain exactly one current_production anchor")
+    return current_points[0]
+
+
+def roll_in_certified_point(
     existing_payload: Mapping[str, Any],
+    production_result: Any,
+    **history_kwargs: Any,
+) -> dict[str, Any]:
+    """Roll the certified point in and stop, attaching no future views.
+
+    The first half of the history stage, separated from the second so the
+    reconstructed curve can be repaired in between.  This roll-in is what
+    *creates* the hole the backfill exists to close: it relabels the previous
+    official point ``prospective_archived`` and cannot simulate a replacement.
+    A backfill running before it therefore sees a continuous curve and leaves
+    the new hole for tomorrow, which is how the curve came to be one day short
+    of every publication.  See `missing_curve_dates`.
+
+    Both future views anchor to the certified point, which neither the roll-in
+    nor the backfill moves, so attaching them after the curve is whole costs
+    nothing and keeps them consistent with what was actually published.
+    """
+
+    historical_payload = _discard_persisted_projection_rows(existing_payload)
+    # Chronology is checked here, against the payload the base updater will
+    # actually ingest: before it, leaked projection rows would inflate the
+    # latest published date and refuse an ordered publication; after it, the
+    # projection overlap invariant reports the problem as corruption instead.
+    certified_as_of = getattr(getattr(production_result, "summary", None), "as_of", None)
+    if certified_as_of is not None:
+        validate_publication_chronology(historical_payload, certified_as_of)
+
+    history = _update_history_with_production_result(
+        historical_payload,
+        production_result,
+        **history_kwargs,
+    )
+    # Re-checked on the rolled-in payload: this is the guarantee the projection
+    # builder relies on, independent of how the base updater treated the
+    # incoming series.
+    validate_publication_chronology(history, _certified_current_point(history)["date"])
+    return history
+
+
+def attach_future_views(
+    history: dict[str, Any],
     production_result: Any,
     *,
     projection_samples: int = DEFAULT_PROJECTION_SAMPLES,
@@ -528,9 +582,8 @@ def update_history_with_production_result(
     projection_runner: Callable[..., Any] | None = None,
     campaign_path_samples: int | None = None,
     campaign_path_simulator: Callable[..., Any] | None = None,
-    **history_kwargs: Any,
 ) -> dict[str, Any]:
-    """Roll in the certified point, the primary paths and the secondary fan.
+    """Attach the primary paths and the secondary fan to a rolled-in history.
 
     ``future_campaign_paths`` is the headline future view: coherent simulated
     opinion trajectories from the certified origin through election day, whose
@@ -548,32 +601,7 @@ def update_history_with_production_result(
         validate_secondary_projection_role,
     )
 
-    historical_payload = _discard_persisted_projection_rows(existing_payload)
-    # Chronology is checked here, against the payload the base updater will
-    # actually ingest: before it, leaked projection rows would inflate the
-    # latest published date and refuse an ordered publication; after it, the
-    # projection overlap invariant reports the problem as corruption instead.
-    certified_as_of = getattr(getattr(production_result, "summary", None), "as_of", None)
-    if certified_as_of is not None:
-        validate_publication_chronology(historical_payload, certified_as_of)
-
-    history = _update_history_with_production_result(
-        historical_payload,
-        production_result,
-        **history_kwargs,
-    )
-    current_points = [
-        point
-        for point in history["series"]
-        if point.get("provenance") == "current_production"
-    ]
-    if len(current_points) != 1:
-        raise ValueError("history must contain exactly one current_production anchor")
-    current = current_points[0]
-    # Re-checked on the rolled-in payload: this is the guarantee the projection
-    # builder relies on, independent of how the base updater treated the
-    # incoming series.
-    validate_publication_chronology(history, current["date"])
+    current = _certified_current_point(history)
     manifest = getattr(production_result, "manifest", None)
     manifest_map = manifest if isinstance(manifest, Mapping) else {}
     seed = manifest_map.get("base_seed", DEFAULT_SIMULATION_SEED)
@@ -628,15 +656,46 @@ def update_history_with_production_result(
     return history
 
 
+def update_history_with_production_result(
+    existing_payload: Mapping[str, Any],
+    production_result: Any,
+    *,
+    projection_samples: int = DEFAULT_PROJECTION_SAMPLES,
+    projection_data_dir: Path | str | None = None,
+    projection_runner: Callable[..., Any] | None = None,
+    campaign_path_samples: int | None = None,
+    campaign_path_simulator: Callable[..., Any] | None = None,
+    **history_kwargs: Any,
+) -> dict[str, Any]:
+    """Roll in the certified point, the primary paths and the secondary fan.
+
+    The two halves back to back, for every caller that has no curve repair to
+    interleave.  A publication does have one, and calls them separately via
+    `scripts.election_automation_base.render_history_for_generation`.
+    """
+
+    return attach_future_views(
+        roll_in_certified_point(existing_payload, production_result, **history_kwargs),
+        production_result,
+        projection_samples=projection_samples,
+        projection_data_dir=projection_data_dir,
+        projection_runner=projection_runner,
+        campaign_path_samples=campaign_path_samples,
+        campaign_path_simulator=campaign_path_simulator,
+    )
+
+
 __all__ = [
     "DEFAULT_PROJECTION_SAMPLES",
     "ELECTION_NOISE_RNG_POLICY",
     "LATEST_FORECAST_LABEL_SV",
     "PROJECTION_ASSUMPTION",
     "PROJECTION_LEGEND_SV",
+    "attach_future_views",
     "build_future_projection",
     "election_day_label_sv",
     "projection_tooltip_sv",
+    "roll_in_certified_point",
     "update_history_with_production_result",
     "validate_future_projection_contract",
 ]

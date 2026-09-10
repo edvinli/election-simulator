@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import csv
 from datetime import date, timedelta
+import json
 from pathlib import Path
 from typing import Any
 
@@ -178,6 +179,43 @@ def freeze_poll_inputs(pollofpolls_dir: Path, *, as_of: str = FROZEN_AS_OF) -> N
     _truncate(pollofpolls_dir / "swedishpolls_individual_polls.csv", "publication_date", as_of)
     _truncate(pollofpolls_dir / "individual_polls.csv", "publication_date", as_of)
     _truncate(pollofpolls_dir / "pollofpolls_timeseries.csv", "date", as_of)
+
+
+def freeze_archive_inputs(archive_dir: Path, *, as_of: str = FROZEN_AS_OF) -> None:
+    """Drop archived generations published after ``as_of`` from a fixture copy.
+
+    An archive cannot run ahead of the forecast being published: the newest
+    snapshot in it *is* the generation under publication. The committed
+    archive does run ahead of the frozen date, though, and ``build_history``
+    derives "which date is the official one" from the newest date it can see
+    anywhere -- the requested dates, the existing points and the archive. A
+    fixture that publishes at the frozen date against the live archive
+    therefore hands the reconstruction a later official date than the
+    certified point, and the result carries two ``current_production`` points.
+
+    Only ``index.json`` is pruned, because that is the only thing
+    ``_load_archive_records`` reads; the generation directories are left alone
+    so tests that address one by id still find it.
+    """
+
+    index_path = Path(archive_dir) / "index.json"
+    if not index_path.is_file():
+        return
+    with index_path.open(encoding="utf-8") as handle:
+        index = json.load(handle)
+    snapshots = index.get("snapshots")
+    if not isinstance(snapshots, list):
+        return
+    index["snapshots"] = [
+        entry
+        for entry in snapshots
+        if not (
+            isinstance(entry, dict)
+            and str(entry.get("as_of") or entry.get("snapshot_date") or "") > as_of
+        )
+    ]
+    with index_path.open("w", encoding="utf-8") as handle:
+        json.dump(index, handle, ensure_ascii=False, indent=2)
 
 
 def _truncate(path: Path, column: str, as_of: str) -> None:

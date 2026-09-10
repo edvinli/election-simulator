@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import csv
 from contextlib import contextmanager, nullcontext
+import copy
 from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
 import hashlib
@@ -43,7 +44,13 @@ from scripts.forecast_history.generate import (
     PRODUCTION_HISTORY_WORKERS,
     backfill_reconstructed_curve,
     resolve_history_workers,
-    update_history_with_production_result,
+)
+# The projection-aware pipeline, imported here rather than patched in by the
+# `scripts.election_automation` facade: publication and explicit rendering must
+# not be able to drift into two different history pipelines again.
+from scripts.forecast_history.future_projection import (
+    attach_future_views,
+    roll_in_certified_point,
 )
 from scripts.pollofpolls.__main__ import (
     PollingValidationError,
@@ -1558,6 +1565,143 @@ def _reject_stale_render(
         )
 
 
+def _current_production_point(history: Mapping[str, Any]) -> Mapping[str, Any]:
+    """The single certified point in a history, or a refusal."""
+
+    points = [
+        point
+        for point in history.get("series") or []
+        if point.get("provenance") == "current_production"
+    ]
+    if len(points) != 1:
+        raise AutomationError(
+            "History must carry exactly one current_production point, "
+            f"found {len(points)}"
+        )
+    return points[0]
+
+
+def render_history_for_generation(
+    existing_history: Mapping[str, Any],
+    production_result: Any,
+    *,
+    poll_file: Path,
+    timeseries_file: Path,
+    archive_dir: Path,
+    model_data_dir: Path,
+    election_date: date,
+    publication_generation: str,
+    deterministic_payload_sha256: str,
+    generated_at_utc: str,
+    model_commit: str,
+    history_workers: int | None = None,
+    projection_runner: Callable[..., Any] | None = None,
+    campaign_path_simulator: Callable[..., Any] | None = None,
+    stage_callback: StageCallback | None = None,
+) -> tuple[dict[str, Any], list[date]]:
+    """The one history pipeline publication and explicit rendering share.
+
+    Three stages, and their order is the substance of this function:
+
+    1. Roll the certified point in.  This is the operation that *creates* the
+       newest hole in the reconstructed curve: it relabels the previous
+       official point ``prospective_archived`` and cannot simulate a
+       replacement.
+    2. Reconstruct every scheduled date the resulting arrangement is missing.
+       Running this before the roll-in instead -- as publication did until
+       now -- repairs yesterday's hole and leaves today's, so the published
+       curve stays exactly one day short of the forecast however often it is
+       repaired.  On 2026-09-10 a 123-date backfill still shipped a history
+       whose `missing_curve_dates()` returned 2026-09-09.
+    3. Attach both future views, anchored to the certified point that neither
+       of the first two stages moves.
+
+    Rendering used to run stage 1 alone, through the plain updater, so a
+    recovery render carried forward the previous generation's projection
+    sections.  Both entry points now get all three.
+
+    The certified forecast itself is never re-simulated here: it is carried
+    through the backfill byte for byte, which is asserted rather than assumed.
+    """
+
+    with _timed_stage("history update", stage_callback):
+        # `production_result` duck-types the certified SimulationResult, so the
+        # current point is built from that generation's joint draws and is exact.
+        rolled = roll_in_certified_point(
+            existing_history,
+            production_result,
+            poll_file=poll_file,
+            timeseries_file=timeseries_file,
+            archive_dir=archive_dir,
+            election_date=election_date,
+            publication_generation=publication_generation,
+            deterministic_payload_sha256=deterministic_payload_sha256,
+            generated_at_utc=generated_at_utc,
+            model_commit=model_commit,
+            source_worktree_clean=True,
+        )
+    # An independent snapshot, not a reference into `rolled`: the comparison
+    # below has to be able to fail.
+    certified_point = copy.deepcopy(_current_production_point(rolled))
+
+    # Announced before the work starts and carrying the count the
+    # reconstruction actually resolved, so an over-long backfill is
+    # diagnosable from the first log lines rather than from a job that died at
+    # its timeout with nothing to show. See the 2026-09-08 incident: one hole,
+    # 119 fingerprint-invalidated points, no signal.
+    def _log_backfill_plan(dates: int, workers: int) -> None:
+        _log_stage("history curve backfill", f"START dates={dates} workers={workers}")
+
+    with _timed_stage("history curve backfill", stage_callback):
+        try:
+            history, backfilled = backfill_reconstructed_curve(
+                rolled,
+                model_data_dir=model_data_dir,
+                poll_file=poll_file,
+                timeseries_file=timeseries_file,
+                archive_dir=archive_dir,
+                election_date=election_date,
+                workers=resolve_history_workers(history_workers),
+                workload_callback=_log_backfill_plan,
+            )
+        except Exception as error:  # noqa: BLE001 - the curve never blocks a certified forecast
+            history = dict(rolled)
+            backfilled = []
+            _log_stage("history curve backfill", f"SKIPPED {error}")
+        if backfilled:
+            _log_stage(
+                "history curve backfill",
+                "RECONSTRUCTED "
+                + ",".join(point_date.isoformat() for point_date in backfilled),
+            )
+    # The backfill rebuilds the payload from its own inputs and is written to
+    # reuse the official point byte for byte. Assert it: a re-simulated
+    # "certified" point would be a different forecast published under a
+    # certified generation id, which no downstream check would notice.
+    if _current_production_point(history) != certified_point:
+        raise AutomationError(
+            "History backfill altered the certified current_production point")
+
+    with _timed_stage("history projections", stage_callback):
+        # `model_data_dir` is the processed root the pinned inputs live under,
+        # which is what both the curve and the projections must simulate from:
+        # a projection drawn from newer polling than the forecast saw is not
+        # that forecast's projection.
+        history = attach_future_views(
+            history,
+            production_result,
+            projection_data_dir=model_data_dir,
+            projection_runner=projection_runner,
+            campaign_path_simulator=campaign_path_simulator,
+        )
+    # Checked at the one place both publication and rendering pass through, so
+    # a future writer cannot mutate the payload between construction and
+    # staging.
+    if history["deterministic_content_sha256"] != deterministic_history_sha256(history):
+        raise AutomationError("History deterministic hash is not self-consistent")
+    return history, backfilled
+
+
 def render_certified_generation(
     *,
     root: Path,
@@ -1566,6 +1710,8 @@ def render_certified_generation(
     certification_commit: str | None = None,
     election_date: date | str = ELECTION_DAY,
     history_workers: int | None = None,
+    projection_runner: Callable[..., Any] | None = None,
+    campaign_path_simulator: Callable[..., Any] | None = None,
     website_check_fn: Callable[[Path], dict[str, Any]] | None = None,
     website_push_check_fn: Callable[[Path], dict[str, Any]] | None = None,
     commit: bool = False,
@@ -1621,45 +1767,29 @@ def render_certified_generation(
         poll_file = processed_root / "pollofpolls" / "swedishpolls_individual_polls.csv"
         timeseries_file = processed_root / "pollofpolls" / "pollofpolls_timeseries.csv"
 
-        def _log_backfill_plan(dates: int, workers: int) -> None:
-            _log_stage("history curve backfill", f"START dates={dates} workers={workers}")
-
-        with _timed_stage("history curve backfill", stage_callback):
-            try:
-                history_for_update, backfilled = backfill_reconstructed_curve(
-                    existing_history,
-                    model_data_dir=processed_root,
-                    poll_file=poll_file,
-                    timeseries_file=timeseries_file,
-                    archive_dir=archive_destination,
-                    election_date=election,
-                    workers=resolve_history_workers(history_workers),
-                    workload_callback=_log_backfill_plan,
-                )
-            except Exception as error:  # noqa: BLE001 - the curve never blocks
-                history_for_update = existing_history
-                backfilled = []
-                _log_stage("history curve backfill", f"SKIPPED {error}")
+        # The same pipeline publication runs, in the same order, with both
+        # future views: a recovery render has to reproduce a publication, not
+        # a reduced version of one.
+        history, backfilled = render_history_for_generation(
+            existing_history,
+            certified,
+            poll_file=poll_file,
+            timeseries_file=timeseries_file,
+            archive_dir=archive_destination,
+            model_data_dir=processed_root,
+            election_date=election,
+            publication_generation=generation,
+            deterministic_payload_sha256=certified.manifest[
+                "deterministic_payload_sha256"],
+            generated_at_utc=str(
+                certified.publication_manifest.get("generated_at_utc") or ""),
+            model_commit=certified.source_git_commit,
+            history_workers=history_workers,
+            projection_runner=projection_runner,
+            campaign_path_simulator=campaign_path_simulator,
+            stage_callback=stage_callback,
+        )
         result["backfilled"] = [d.isoformat() for d in backfilled]
-
-        with _timed_stage("history update", stage_callback):
-            # `certified` duck-types the certified SimulationResult, so the
-            # current point is built from the archived joint draws and is exact.
-            history = update_history_with_production_result(
-                history_for_update,
-                certified,
-                poll_file=poll_file,
-                timeseries_file=timeseries_file,
-                archive_dir=archive_destination,
-                election_date=election,
-                publication_generation=generation,
-                deterministic_payload_sha256=certified.manifest[
-                    "deterministic_payload_sha256"],
-                generated_at_utc=str(
-                    certified.publication_manifest.get("generated_at_utc") or ""),
-                model_commit=certified.source_git_commit,
-                source_worktree_clean=True,
-            )
         staged_history = temporary / "coalition-timeseries.json"
         write_history_json(staged_history, history)
         validate_history_contract(_load_json_object(staged_history))
@@ -2087,7 +2217,6 @@ def run_production_event(
     simulation_runner: Callable[..., Any] | None = None,
     projection_runner: Callable[..., Any] | None = None,
     campaign_path_simulator: Callable[..., Any] | None = None,
-    history_updater: Callable[..., dict[str, Any]] | None = None,
     website_check_fn: Callable[[Path], dict[str, Any]] | None = None,
     website_push_check_fn: Callable[[Path], dict[str, Any]] | None = None,
     commit: bool = False,
@@ -2240,71 +2369,31 @@ def run_production_event(
         # that the forecast exists.
         if certification_observer is not None:
             certification_observer(certification)
-        # Close yesterday's hole before rolling today's point in.  The roll-in
-        # relabels the previous official point `prospective_archived` and
-        # cannot simulate a replacement, so without this the reconstructed
-        # curve loses one day per publication and the chart's last segment
-        # spans a widening gap.  Reconstruction is skipped entirely when the
-        # curve is already continuous, and a failure here must never block a
-        # certified forecast: the curve is a presentation of history, not the
-        # forecast itself.
-        # Announced before the work starts and carrying the count the
-        # reconstruction actually resolved, so an over-long backfill is
-        # diagnosable from the first log lines rather than from a job that
-        # died at its timeout with nothing to show. See the 2026-09-08
-        # incident: one hole, 119 fingerprint-invalidated points, no signal.
-        def _log_backfill_plan(dates: int, workers: int) -> None:
-            _log_stage(
-                "history curve backfill", f"START dates={dates} workers={workers}"
-            )
-
-        with _timed_stage("history curve backfill", stage_callback):
-            try:
-                history_for_update, backfilled = backfill_reconstructed_curve(
-                    existing_history,
-                    model_data_dir=processed_root,
-                    poll_file=processed_root / "pollofpolls" / "swedishpolls_individual_polls.csv",
-                    timeseries_file=processed_root / "pollofpolls" / "pollofpolls_timeseries.csv",
-                    archive_dir=staged_archive,
-                    election_date=election,
-                    workers=resolve_history_workers(history_workers),
-                    workload_callback=_log_backfill_plan,
-                )
-            except Exception as error:  # noqa: BLE001 - never block publication
-                history_for_update = existing_history
-                backfilled = []
-                _log_stage("history curve backfill", f"SKIPPED {error}")
-            if backfilled:
-                _log_stage(
-                    "history curve backfill",
-                    "RECONSTRUCTED "
-                    + ",".join(point_date.isoformat() for point_date in backfilled),
-                )
-        with _timed_stage("history update", stage_callback):
-            selected_history_updater = history_updater or update_history_with_production_result
-            history_kwargs = {
-                "poll_file": processed_root / "pollofpolls" / "swedishpolls_individual_polls.csv",
-                "timeseries_file": processed_root / "pollofpolls" / "pollofpolls_timeseries.csv",
-                "archive_dir": staged_archive,
-                "election_date": election,
-                "publication_generation": generation,
-                "deterministic_payload_sha256": payload_hash,
-                "generated_at_utc": generated,
-                "model_commit": source_commit,
-                "source_worktree_clean": True,
-            }
-            if history_updater is not None:
-                history_kwargs["projection_runner"] = projection_runner
-                history_kwargs["campaign_path_simulator"] = campaign_path_simulator
-            history = selected_history_updater(history_for_update, result, **history_kwargs)
-            write_history_json(staged_history, history)
-            validate_history_contract(_load_json_object(staged_history))
-            # The self-hash in the history payload is checked once more at the
-            # production boundary so a future writer cannot accidentally mutate it
-            # between construction and staging.
-            if history["deterministic_content_sha256"] != deterministic_history_sha256(history):
-                raise AutomationError("History deterministic hash is not self-consistent")
-
+        # The certified point, the curve and both future views, in the order
+        # that leaves no hole behind. Shared with `render_certified_generation`
+        # so a recovery render cannot publish a different history than a
+        # publication would.
+        # The reconstructed dates are logged by the stage itself; publication
+        # reports the certified generation, not the curve repair behind it.
+        history, _backfilled = render_history_for_generation(
+            existing_history,
+            result,
+            poll_file=processed_root / "pollofpolls" / "swedishpolls_individual_polls.csv",
+            timeseries_file=processed_root / "pollofpolls" / "pollofpolls_timeseries.csv",
+            archive_dir=staged_archive,
+            model_data_dir=processed_root,
+            election_date=election,
+            publication_generation=generation,
+            deterministic_payload_sha256=payload_hash,
+            generated_at_utc=generated,
+            model_commit=source_commit,
+            history_workers=history_workers,
+            projection_runner=projection_runner,
+            campaign_path_simulator=campaign_path_simulator,
+            stage_callback=stage_callback,
+        )
+        write_history_json(staged_history, history)
+        validate_history_contract(_load_json_object(staged_history))
         website_check = website_check_fn or run_website_checks
         # A caller that substitutes the website gate substitutes *both* tiers.
         # The injection seam is "the website checks", not "the first tier of
