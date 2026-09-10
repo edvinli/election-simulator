@@ -27,6 +27,7 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS = REPOSITORY_ROOT / ".github/workflows"
 RENDER = WORKFLOWS / "election-simulator-render.yml"
 PUBLICATION = WORKFLOWS / "election-simulator-publication.yml"
+RECONSTRUCTION_CANARY = WORKFLOWS / "election-simulator-reconstruction-canary.yml"
 JEKYLL_ACTION = (
     REPOSITORY_ROOT / ".github/actions/setup-jekyll-and-chromium/action.yml"
 )
@@ -408,6 +409,108 @@ class RenderWorkflowRuntimeTests(unittest.TestCase):
             for gem in REQUIRED_GEMS:
                 with self.subTest(gem=gem, block=block[:60]):
                     self.assertRegex(block, rf"(?m)^\s*{re.escape(gem)}\s*\\?$")
+
+
+class ReconstructionCanaryWorkflowTests(unittest.TestCase):
+    """The one criterion the ordinary dry-run canary cannot reach.
+
+    Against a healthy deployment there is nothing to reconstruct, and the
+    rendering path only does real work when a publication certified and then
+    failed. So this workflow manufactures the gap. Everything asserted here is
+    about it being unable to reach production while doing so.
+    """
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.canary = RECONSTRUCTION_CANARY.read_text(encoding="utf-8")
+        cls.yaml = _without_comments(cls.canary)
+        cls.script = (
+            REPOSITORY_ROOT / "tests/support/reconstruction_canary.py"
+        ).read_text(encoding="utf-8")
+
+    def test_it_is_manual_only(self) -> None:
+        """A canary that manufactures a gap must never fire on its own."""
+
+        self.assertRegex(self.yaml, r"(?m)^  workflow_dispatch:$")
+        for trigger in ("schedule:", "workflow_run:", "push:"):
+            with self.subTest(trigger=trigger):
+                self.assertNotIn(trigger, self.yaml)
+
+    def test_it_cannot_write_to_either_repository(self) -> None:
+        """The strongest available guarantee, and it is available.
+
+        Both repositories are public, so the script clones them over HTTPS
+        with no credential at all. The job therefore needs no write scope, and
+        is granted none -- which makes "installs nothing" a property of the
+        token rather than only of the code path.
+        """
+
+        self.assertIn("contents: read", self.yaml)
+        self.assertNotIn("contents: write", self.yaml)
+        self.assertNotIn("WEBSITE_REPO_TOKEN", self.yaml)
+        self.assertNotIn("secrets.", self.yaml)
+
+    def test_it_renders_dry_and_holds_its_own_lock(self) -> None:
+        # The renderer must install nothing even though the token could not
+        # let it: two independent reasons, not one.
+        self.assertIn("--render-dry-run", self.script)
+        self.assertRegex(
+            self.yaml, r"(?m)^  group: election-simulator-reconstruction-canary$")
+        # Never the production lock the benchmark capture serializes against,
+        # and not the render lock either: this conflicts with nothing.
+        self.assertNotIn("election-simulator-production", self.yaml)
+        self.assertNotIn("group: election-simulator-render", self.yaml)
+
+    def test_it_requires_the_generation_and_the_target_date(self) -> None:
+        """Never "whatever is latest", and never a guessed gap."""
+
+        dispatch = self.yaml[self.yaml.index("workflow_dispatch:"):]
+        dispatch = dispatch[:dispatch.index("\npermissions:")]
+        for required in ("generation:", "target_date:"):
+            with self.subTest(input=required):
+                block = dispatch[dispatch.index(required):]
+                self.assertRegex(
+                    block[:block.index("type:")], r"required: true", required)
+
+    def test_the_verdict_is_tested_behaviourally_elsewhere(self) -> None:
+        """This file asserts the workflow; the verdict needs more than text.
+
+        There used to be a test here listing the script's assertion messages
+        and checking they appeared in its source. That style cannot catch a
+        wrong comparison, and it missed three: protected-path baselines that
+        collided between the two repositories, safety checks skipped when the
+        renderer's output could not be parsed, and a "both views rebuilt"
+        verdict that never looked at the views.
+
+        The verdict is a pure function now, driven by crafted state in
+        tests/test_reconstruction_canary.py. This only pins that the seam
+        exists, so the behavioural tests cannot be quietly bypassed.
+        """
+
+        self.assertIn("def evaluate(", self.script)
+        self.assertIn("FULL_ACCEPTANCE", self.script)
+        self.assertIn("RECONSTRUCTION_ONLY", self.script)
+        behavioural = REPOSITORY_ROOT / "tests/test_reconstruction_canary.py"
+        self.assertTrue(behavioural.is_file(), behavioural)
+        self.assertIn("from tests.support.reconstruction_canary import",
+                      behavioural.read_text(encoding="utf-8"))
+
+    def test_the_script_never_pushes(self) -> None:
+        """Keyed on argv tokens, not on prose.
+
+        Every git invocation in the script is a list of quoted arguments, so
+        `"push"` as a literal is the thing to forbid. An earlier version of
+        this test searched for the bare word and matched the docstring
+        explaining that nothing is pushed.
+        """
+
+        self.assertNotIn('"push"', self.script)
+        self.assertNotIn("'push'", self.script)
+        self.assertNotIn("git push", self.script)
+        # And the remote it clones from is never written to: no credential is
+        # embedded in a URL, which is the only way a public clone could be.
+        self.assertNotIn("@github.com", self.script)
+        self.assertNotIn("x-access-token", self.script)
 
 
 if __name__ == "__main__":

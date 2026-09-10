@@ -1,0 +1,99 @@
+# Prove on a real runner that a render reconstructs a missing curve date.
+#
+# Manual only. This exists because the one acceptance criterion the ordinary
+# dry-run canary cannot reach is "the historical reconstruction actually runs
+# here": against a healthy deployment there is nothing to reconstruct, and the
+# rendering path only does real work when a publication certified and then
+# failed. So the gap is manufactured, deliberately, in a throwaway clone.
+#
+# Nothing here can reach production. The job holds `contents: read`, both
+# repositories are cloned fresh by the script into a temporary workspace it
+# removes on the way out, the renderer runs with --render-dry-run so it
+# installs nothing, and the script asserts afterwards that neither clone moved
+# past its own fixture commit. Both repositories are public, so no token is
+# needed and none is granted.
+name: Election Simulator reconstruction canary
+
+on:
+  workflow_dispatch:
+    inputs:
+      generation:
+        description: "Certified generation id to render (required)"
+        required: true
+        type: string
+      certification_commit:
+        description: "Commit that certified it; verified to contain its snapshot, bundle and draws"
+        required: false
+        type: string
+      target_date:
+        description: "Reconstructed curve date to remove and expect back, e.g. 2026-09-07"
+        required: true
+        type: string
+      history_workers:
+        description: "Reconstruction workers, as production requests"
+        required: false
+        default: "4"
+        type: string
+
+permissions:
+  contents: read
+
+# Its own lock. Never the production lock -- the benchmark capture serializes
+# against that one -- and not the render lock either, because this installs
+# nothing and so cannot conflict with a real render.
+concurrency:
+  group: election-simulator-reconstruction-canary
+  cancel-in-progress: false
+
+jobs:
+  canary:
+    runs-on: ${{ vars.ELECTION_SIMULATOR_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 60
+    steps:
+      # Only to run the script from. The repositories under test are cloned by
+      # the script itself, so this checkout is never the thing being modified.
+      - name: Check out simulator
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: simulator
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Set up Jekyll and Chromium
+        uses: ./simulator/.github/actions/setup-jekyll-and-chromium
+
+      - name: Install simulator dependencies
+        working-directory: simulator
+        run: uv sync --frozen
+
+      - name: Reconstruct a deliberate gap, install nothing
+        working-directory: simulator
+        env:
+          CANARY_GENERATION: ${{ github.event.inputs.generation }}
+          CANARY_COMMIT: ${{ github.event.inputs.certification_commit }}
+          CANARY_TARGET_DATE: ${{ github.event.inputs.target_date }}
+          CANARY_WORKERS: ${{ github.event.inputs.history_workers }}
+        run: |
+          set -euo pipefail
+          args=(--simulator-remote https://github.com/edvinli/election-simulator.git
+                --website-remote https://github.com/edvinli/edvinli.github.io.git
+                --generation "$CANARY_GENERATION"
+                --target-date "$CANARY_TARGET_DATE"
+                --history-workers "$CANARY_WORKERS")
+          if [[ -n "${CANARY_COMMIT:-}" ]]; then
+            args+=(--certification-commit "$CANARY_COMMIT")
+          fi
+          uv run python -m tests.support.reconstruction_canary "${args[@]}"
