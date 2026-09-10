@@ -100,23 +100,11 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Set up Ruby and Jekyll
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.3"
-
-      - name: Install Jekyll and a browser
-        run: |
-          set -euo pipefail
-          gem install --no-document jekyll
-          sudo apt-get update
-          sudo apt-get install -y chromium-browser || sudo apt-get install -y chromium
-          for candidate in chromium chromium-browser google-chrome; do
-            if command -v "$candidate" >/dev/null; then
-              echo "CHROME_BIN=$(command -v "$candidate")" >> "$GITHUB_ENV"
-              break
-            fi
-          done
+      # The website needs five Jekyll plugins beyond `jekyll` itself. This
+      # workflow installed only `jekyll` and never noticed, because its one
+      # successful run skipped rendering.
+      - name: Set up Jekyll and Chromium
+        uses: ./simulator/.github/actions/setup-jekyll-and-chromium
 
       - name: Install simulator dependencies
         working-directory: simulator

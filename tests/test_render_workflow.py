@@ -27,6 +27,38 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS = REPOSITORY_ROOT / ".github/workflows"
 RENDER = WORKFLOWS / "election-simulator-render.yml"
 PUBLICATION = WORKFLOWS / "election-simulator-publication.yml"
+JEKYLL_ACTION = (
+    REPOSITORY_ROOT / ".github/actions/setup-jekyll-and-chromium/action.yml"
+)
+# The website's _config.yml `plugins:` list, plus jekyll itself. `gem install
+# jekyll` alone provisions a runner that fails at `jekyll build` on the first
+# unresolved plugin.
+REQUIRED_GEMS = (
+    "jekyll",
+    "jekyll-paginate",
+    "jekyll-sitemap",
+    "jekyll-gist",
+    "jekyll-feed",
+    "jekyll-redirect-from",
+)
+
+
+def _gem_install_blocks(workflow: str) -> list[str]:
+    """Every `gem install` invocation in a workflow, backslash joins included."""
+
+    blocks = []
+    lines = workflow.splitlines()
+    for index, line in enumerate(lines):
+        # The invocation, not a comment that mentions it.
+        if not re.match(r"\s*gem install\b", line):
+            continue
+        block = [line]
+        cursor = index
+        while block[-1].rstrip().endswith("\\") and cursor + 1 < len(lines):
+            cursor += 1
+            block.append(lines[cursor])
+        blocks.append("\n".join(block))
+    return blocks
 
 
 class RenderWorkflowTriggerTests(unittest.TestCase):
@@ -125,14 +157,17 @@ class RenderWorkflowTriggerTests(unittest.TestCase):
 class RenderWorkflowRuntimeTests(unittest.TestCase):
     """What the render job actually invokes, not what it could invoke.
 
-    The 2026-09-10 render run passed while exercising none of this, because it
-    skipped rendering -- the website already served the generation.
+    Both failures pinned here are the same shape: a step that looks correct
+    and is only wrong at the moment it does real work. The 2026-09-10 render
+    run passed while exercising neither, because it skipped rendering -- the
+    website already served the generation.
     """
 
     @classmethod
     def setUpClass(cls) -> None:
         cls.render = RENDER.read_text(encoding="utf-8")
         cls.publication = PUBLICATION.read_text(encoding="utf-8")
+        cls.action = JEKYLL_ACTION.read_text(encoding="utf-8")
 
     def test_the_render_invocation_requests_the_production_worker_count(self) -> None:
         """`--history-workers` defaults to 1, and the backfill is why this job exists.
@@ -167,6 +202,53 @@ class RenderWorkflowRuntimeTests(unittest.TestCase):
             resolve_history_workers(PRODUCTION_HISTORY_WORKERS), 8,
             "bounded, not all cores: the runner also has the render to do",
         )
+
+    def test_rendering_installs_every_gem_the_website_build_needs(self) -> None:
+        """`gem install jekyll` alone is a runner that fails at `jekyll build`.
+
+        This workflow shipped exactly that. Nothing caught it because its only
+        run skipped rendering, so no Jekyll build ever ran on it.
+        """
+
+        self.assertIn(
+            "uses: ./simulator/.github/actions/setup-jekyll-and-chromium",
+            self.render,
+            "rendering must use the shared dependency setup",
+        )
+        # The path is relative to $GITHUB_WORKSPACE, and the simulator is
+        # checked out to `simulator/`, so the action has to be reachable there.
+        self.assertIn("path: simulator", self.render)
+        self.assertTrue(JEKYLL_ACTION.is_file(), JEKYLL_ACTION)
+        for gem in REQUIRED_GEMS:
+            with self.subTest(gem=gem):
+                self.assertRegex(self.action, rf"(?m)^\s+{re.escape(gem)} \\$")
+
+    def test_the_shared_action_still_provides_a_browser(self) -> None:
+        """The browser suites resolve Chromium through CHROME_BIN."""
+
+        self.assertIn('echo "CHROME_BIN=$CHROME_BIN_PATH" >> "$GITHUB_ENV"', self.action)
+        self.assertIn("using: composite", self.action)
+        self.assertIn("ruby/setup-ruby@v1", self.action)
+
+    def test_no_jekyll_install_anywhere_is_missing_a_plugin(self) -> None:
+        """One job cannot use the shared action, so pin its copy to it.
+
+        `browser_diagnostic` checks out only the website, so
+        ./simulator/.github/actions is not on disk in that job and its install
+        stays inline. Every `gem install` in either workflow is therefore
+        checked directly, which also catches a new one added by hand.
+        """
+
+        blocks = (
+            _gem_install_blocks(self.render)
+            + _gem_install_blocks(self.publication)
+            + _gem_install_blocks(self.action)
+        )
+        self.assertTrue(blocks, "no gem install found; the assertion has gone blind")
+        for block in blocks:
+            for gem in REQUIRED_GEMS:
+                with self.subTest(gem=gem, block=block[:60]):
+                    self.assertRegex(block, rf"(?m)^\s*{re.escape(gem)}\s*\\?$")
 
 
 if __name__ == "__main__":
