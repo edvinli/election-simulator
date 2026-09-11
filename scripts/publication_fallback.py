@@ -49,6 +49,7 @@ from __future__ import annotations
 
 from datetime import date, datetime, timedelta
 
+from scripts.simulator.config import DEFAULT_ELECTION_DATE
 from scripts.prospective_benchmark_2026.time_rules import (
     FINAL_CAPTURE_DATE,
     FIRST_CAPTURE_DATE,
@@ -59,13 +60,49 @@ from scripts.prospective_benchmark_2026.time_rules import (
 
 __all__ = [
     "CAPTURE_COMPLETION_GRACE",
+    "ELECTION_DAY",
+    "ELECTION_DAY_SCHEDULE_UTC",
     "FALLBACK_RUN_TYPE",
     "PUBLICATION_MAX_RUNTIME",
     "benchmark_protected_interval",
     "benchmark_window_conflict",
     "daily_publication_satisfied",
+    "election_day_only_tick_stands_down",
     "stockholm_date_of",
 ]
+
+ELECTION_DAY = date.fromisoformat(DEFAULT_ELECTION_DATE)
+
+# 19:00Z is 21:00 Stockholm/Oslo -- one offset, UTC+2 -- and it is the one
+# intraday hour that exists for
+# election day alone: through 2026-09-12 the checks run hourly 08:00-20:00
+# local and then skip to the long-standing 22:00 one, so 21:00 is deliberately
+# absent. Election day runs hourly 08:00-22:00 local, which needs it.
+#
+# Cron has day-of-month and month fields, so "19:00Z on 13 September" is
+# expressible; what it lacks is a year, so that expression would also fire in
+# 2027 and every year after. The tick is therefore scheduled daily and stood
+# down here against the election date itself.
+#
+# Keyed on the cron expression rather than the wall clock: ticks have been
+# delivered 1h43m-2h42m late, and a late 18:00Z tick must not be mistaken for
+# the 19:00Z one and discarded.
+ELECTION_DAY_SCHEDULE_UTC = "0 19 * * *"
+
+
+def election_day_only_tick_stands_down(schedule: str | None, now: datetime) -> bool:
+    """Whether this tick is the election-day-only one, fired off election day.
+
+    Answered before the production lock is requested, so a stood-down tick
+    never queues ahead of anything.
+    """
+
+    if str(schedule or "").strip() != ELECTION_DAY_SCHEDULE_UTC:
+        return False
+    if now.tzinfo is None:
+        raise ValueError("now must include a timezone")
+    return stockholm_date_of(now) != ELECTION_DAY
+
 
 # The publication workflow's own ``timeout-minutes``.  A publication that
 # started this long before the benchmark's pre-warm could still be holding the
