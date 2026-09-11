@@ -16,6 +16,7 @@ from scripts.pollofpolls.acquire import (
     sha256_bytes,
 )
 from scripts.pollofpolls.config import Source
+from tests.support.git_fixtures import disable_background_maintenance
 
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -317,6 +318,7 @@ class SemanticAcquisitionTests(unittest.TestCase):
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text("header\nverified\n", encoding="utf-8")
             subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+            disable_background_maintenance(root)
             subprocess.run(
                 ["git", "config", "user.name", "Acquisition Test"], cwd=root, check=True
             )

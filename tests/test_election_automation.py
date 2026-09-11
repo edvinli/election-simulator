@@ -91,6 +91,7 @@ from tests.site_publication_fixture import (
     frozen_site_generation,
     install_frozen_site_publication,
 )
+from tests.support.git_fixtures import disable_background_maintenance
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
@@ -300,6 +301,9 @@ class ElectionAutomationTests(unittest.TestCase):
     @staticmethod
     def _init_git(root: Path) -> None:
         subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+        # Before the first commit: a commit is what triggers the first
+        # background maintenance run, and that run outlives the fixture.
+        disable_background_maintenance(root)
         subprocess.run(["git", "config", "user.name", "Automation Test"], cwd=root, check=True)
         subprocess.run(["git", "config", "user.email", "automation@example.test"], cwd=root, check=True)
         subprocess.run(["git", "add", "-A"], cwd=root, check=True)
@@ -1644,6 +1648,7 @@ time.sleep(60)
         """Give a fixture checkout a real remote on the branch it pushes to."""
 
         subprocess.run(["git", "init", "--bare", "-q", str(remote)], check=True)
+        disable_background_maintenance(remote)
         subprocess.run(["git", "branch", "-M", branch], cwd=repo, check=True)
         subprocess.run(["git", "remote", "add", "origin", str(remote)], cwd=repo, check=True)
         subprocess.run(["git", "push", "-q", "origin", f"HEAD:{branch}"], cwd=repo, check=True)

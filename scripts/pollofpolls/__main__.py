@@ -280,8 +280,12 @@ raw snapshot.
 - `pollofpolls_timeseries.csv`: `date`, M, L, C, KD, S, V, MP, SD, FI,
   `other`, `source_extra_json`, `source_url`, and `retrieved_at`.
 - `pollofpolls_party_chart_timeseries.csv`: `date`, M, L, C, KD, S, V, MP, SD, FI
-  extracted from first-party party chart CSVs (2009+), verified to match the canonical
-  2014+ timeseries exactly.
+  extracted from first-party party chart CSVs (2009+). Wherever it overlaps the
+  canonical 2014+ timeseries the canonical value is the one written, so the party
+  charts contribute only the years canonical does not cover; the provider revises
+  the two feeds independently, and each disagreement is reported rather than
+  silently taken. Disagreement that looks structural rather than like a revision
+  -- too large, or too widespread -- still fails the refresh.
 - `individual_polls.csv`: deterministic `poll_id`, normalized and original pollster,
   separate interview/publication dates, party, normalized `support`, exact numeric
   `source_value`, reporting status, sample/method, source URL, `retrieved_at`, and
@@ -429,10 +433,32 @@ def refresh_snapshot(
         if not report["valid"]:
             raise PollingValidationError(report)
         summary = _summary(timeseries, individual, swedishpolls, crosswalk, manifest)
-        party_chart_timeseries = extract_party_chart_pop_timeseries(
-            raw_dir,
-            canonical_timeseries=timeseries,
-        )
+        # The provider revises the party charts and the canonical series
+        # independently, so the overlap is reconciled -- canonical wins -- and
+        # every disagreement is reported rather than aborting the refresh on
+        # the first one. Only a breach of the operational limits still fails.
+        #
+        # The ``finally`` is the point: a rejection is exactly when the
+        # inventory is wanted, so the messages are emitted whether the
+        # extraction returned or raised. The exception carries the same
+        # inventory for callers that never see this return value.
+        party_chart_disagreements: list[dict[str, Any]] = []
+        try:
+            party_chart_timeseries = extract_party_chart_pop_timeseries(
+                raw_dir,
+                canonical_timeseries=timeseries,
+                disagreements=party_chart_disagreements,
+            )
+        finally:
+            for disagreement in party_chart_disagreements:
+                messages.append(
+                    "party chart pofp differs from canonical on "
+                    f"{disagreement['date']} for party {disagreement['party']}: "
+                    f"party chart={disagreement['party_chart_pofp']} vs "
+                    f"canonical={disagreement['canonical']} "
+                    f"(diff={disagreement['difference_pp']:.4f} pp); "
+                    "canonical value used"
+                )
 
         _write_csv(processed_dir / "pollofpolls_timeseries.csv", TIMESERIES_FIELDS, timeseries)
         _write_csv(
@@ -477,6 +503,7 @@ def refresh_snapshot(
         "swedishpolls": swedishpolls,
         "crosswalk": crosswalk,
         "party_chart_timeseries": party_chart_timeseries,
+        "party_chart_disagreements": party_chart_disagreements,
         "validation_report": report,
         "summary": summary,
         "metadata": metadata,
