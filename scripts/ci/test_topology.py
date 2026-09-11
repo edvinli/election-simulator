@@ -64,6 +64,12 @@ ALWAYS_RUN = (
     # it -- and it is the only thing standing between a wrong comparison in
     # that acceptance script and a runner result nobody can trust.
     "test_reconstruction_canary",
+    # Asserts that temporary Git fixtures are built with background
+    # maintenance off. It exercises tests/support and the fixture helper
+    # rather than scripts/, so no scripts change selects it -- and what it
+    # guards is a teardown race that fails the suite with nothing wrong in
+    # the test, which is how a publication was lost on 2026-09-11.
+    "test_git_fixtures",
 )
 
 # Modules that the nightly schedule re-runs in a heavier configuration than the

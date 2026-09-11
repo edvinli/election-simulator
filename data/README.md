@@ -92,8 +92,12 @@ raw snapshot.
 - `pollofpolls_timeseries.csv`: `date`, M, L, C, KD, S, V, MP, SD, FI,
   `other`, `source_extra_json`, `source_url`, and `retrieved_at`.
 - `pollofpolls_party_chart_timeseries.csv`: `date`, M, L, C, KD, S, V, MP, SD, FI
-  extracted from first-party party chart CSVs (2009+), verified to match the canonical
-  2014+ timeseries exactly.
+  extracted from first-party party chart CSVs (2009+). Wherever it overlaps the
+  canonical 2014+ timeseries the canonical value is the one written, so the party
+  charts contribute only the years canonical does not cover; the provider revises
+  the two feeds independently, and each disagreement is reported rather than
+  silently taken. Disagreement that looks structural rather than like a revision
+  -- too large, or too widespread -- still fails the refresh.
 - `individual_polls.csv`: deterministic `poll_id`, normalized and original pollster,
   separate interview/publication dates, party, normalized `support`, exact numeric
   `source_value`, reporting status, sample/method, source URL, `retrieved_at`, and

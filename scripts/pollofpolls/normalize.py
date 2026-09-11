@@ -279,17 +279,113 @@ def parse_party_chart_pop_series(payload: bytes, party: str) -> dict[date, float
     return parsed
 
 
+# Both feeds are Poll of Polls estimates of the same quantity, published to one
+# decimal, and the provider revises them independently: a poll added late, or a
+# rounding change, moves one feed and not the other. Disagreements of a few
+# tenths are therefore expected, and the overlap is reconciled rather than
+# asserted equal.
+#
+# The two bounds below are OPERATIONAL LIMITS, not evidence of anything. They
+# say "this is more than we are willing to absorb without a human looking",
+# which is all the code is in a position to know -- it cannot distinguish a
+# mis-mapped column from a provider who changed their mind. Neither bound
+# should be relaxed to make a particular day's feed pass; a breach is a
+# question to answer, and the answer may well be to accept the data and move
+# the bound deliberately, with the inventory in hand.
+
+#: Per-value limit. A revision moves tenths; a mis-mapped party column would
+#: move points. Chosen an order of magnitude above the revisions seen so far
+#: and well below any column confusion -- a judgement, not a measurement.
+STRUCTURAL_DISAGREEMENT_PP = 1.0
+#: Prevalence limit, the other half. A revision touches a handful of dates; a
+#: feed that changed shape disagrees in bulk. This is the only place feed
+#: corruption is detectable at all: before 2014 there is no canonical series to
+#: compare against, so a party feed that changed character silently takes the
+#: years we cannot check with the years we can.
+MAX_DISAGREEMENT_RATE = 0.01
+#: A rate needs a denominator worth dividing by. The real overlap is eight
+#: parties across a decade of days -- tens of thousands of values -- but a
+#: caller comparing against a handful of dates would otherwise trip the
+#: prevalence limit on a single revision, so prevalence is only judged once the
+#: allowed rate corresponds to more than a couple of values. Below that the
+#: per-value limit, which applies to every value individually, is the whole
+#: check.
+MIN_COMPARED_FOR_RATE = 1000
+#: Below this the two feeds are reporting the same number; anything at or above
+#: it is recorded so a revision is never invisible.
+_AGREEMENT_EPSILON_PP = 1e-4
+
+
+class PartyChartDisagreement(ValueError):
+    """The overlap disagreed by more than the operational limits allow.
+
+    Carries the whole inventory, not just the value that tripped the limit: a
+    rejection is the moment the inventory is most needed, and a probe that
+    rejects the feed while reporting one example is not a diagnostic. Stays a
+    ``ValueError`` so existing acquisition error handling is unchanged.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        disagreements: list[dict[str, Any]],
+        compared: int,
+    ) -> None:
+        super().__init__(message)
+        self.disagreements = list(disagreements)
+        self.compared = compared
+
+
+def summarize_party_chart_disagreements(
+    disagreements: list[dict[str, Any]],
+    compared: int,
+) -> str:
+    """One line naming the count, the worst value, and what it touched.
+
+    Bounded on purpose: an inventory of thousands must not become the failure
+    message. The full list travels on the exception and in the report.
+    """
+
+    if not disagreements:
+        return f"no disagreement across {compared} compared values"
+    worst = max(disagreements, key=lambda d: d["difference_pp"])
+    dates = sorted({d["date"] for d in disagreements})
+    parties = sorted({d["party"] for d in disagreements})
+    shown = ", ".join(dates[:5]) + (f", +{len(dates) - 5} more" if len(dates) > 5 else "")
+    return (
+        f"{len(disagreements)} of {compared} compared values differ; "
+        f"max {worst['difference_pp']:.4f} pp on {worst['date']} for party "
+        f"{worst['party']} (party chart pofp={worst['party_chart_pofp']} vs "
+        f"canonical={worst['canonical']}); "
+        f"parties {', '.join(parties)}; dates {shown}"
+    )
+
+
 def extract_party_chart_pop_timeseries(
     raw_dir: Path,
     *,
     canonical_timeseries: list[dict[str, Any]] | None = None,
-    discrepancy_tolerance: float = 1e-4,
+    structural_disagreement_pp: float = STRUCTURAL_DISAGREEMENT_PP,
+    max_disagreement_rate: float = MAX_DISAGREEMENT_RATE,
+    min_compared_for_rate: int = MIN_COMPARED_FOR_RATE,
+    disagreements: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     """Extract daily 2009+ Poll of Polls estimates across parties from raw party charts.
 
-    Validates that for all overlapping observation dates with the canonical 2014+
-    Poll of Polls series, differences remain within discrepancy_tolerance.
+    The party charts exist to reach *back* past the canonical 2014+ series. So
+    where the two overlap the canonical series is authoritative and its values
+    are the ones returned: the model's 2014+ inputs stay exactly what they have
+    always been, and the party charts only ever contribute the years canonical
+    does not cover.
+
+    Disagreements on the overlap are collected -- every one of them, not just
+    the first -- into ``disagreements`` when a list is passed. They fail the
+    extraction only if they look structural rather than like a provider
+    revision: too large (``structural_disagreement_pp``) or too widespread
+    (``max_disagreement_rate``).
     """
+
     party_series: dict[str, dict[date, float]] = {}
     for source in PARTY_SOURCES:
         if source.party is None:
@@ -317,24 +413,71 @@ def extract_party_chart_pop_timeseries(
             row["FI"] = None
         rows.append(row)
 
-    if canonical_timeseries is not None:
-        canonical_by_date = {
-            parse_date(r["date"]): r
-            for r in canonical_timeseries
-            if "date" in r
-        }
-        for row in rows:
-            d = parse_date(row["date"])
-            if d in canonical_by_date:
-                canon = canonical_by_date[d]
-                for p in parliamentary_parties:
-                    if canon.get(p) is not None:
-                        diff = abs(float(row[p]) - float(canon[p]))
-                        if diff > discrepancy_tolerance:
-                            raise ValueError(
-                                f"Discrepancy on {d} for party {p}: party chart pofp={row[p]} vs "
-                                f"canonical={canon[p]} (diff={diff:.6f} > tolerance={discrepancy_tolerance})"
-                            )
+    if canonical_timeseries is None:
+        return rows
+
+    canonical_by_date = {
+        parse_date(r["date"]): r
+        for r in canonical_timeseries
+        if "date" in r
+    }
+
+    found: list[dict[str, Any]] = []
+    compared = 0
+    for row in rows:
+        d = parse_date(row["date"])
+        canon = canonical_by_date.get(d)
+        if canon is None:
+            continue
+        for p in parliamentary_parties:
+            canonical_value = canon.get(p)
+            # An absent or blank canonical cell is not a disagreement and not
+            # an override: the party chart is the only feed that knows.
+            if canonical_value in (None, ""):
+                continue
+            compared += 1
+            party_value = float(row[p])
+            canonical_value = float(canonical_value)
+            difference = abs(party_value - canonical_value)
+            if difference >= _AGREEMENT_EPSILON_PP:
+                found.append(
+                    {
+                        "date": row["date"],
+                        "party": p,
+                        "party_chart_pofp": party_value,
+                        "canonical": canonical_value,
+                        "difference_pp": round(difference, 6),
+                    }
+                )
+            # Canonical wins whether or not it disagreed, so the overlap is
+            # byte-identical to the series the model already consumes.
+            row[p] = canonical_value
+
+    if disagreements is not None:
+        disagreements.extend(found)
+
+    inventory = summarize_party_chart_disagreements(found, compared)
+
+    oversized = [f for f in found if f["difference_pp"] >= structural_disagreement_pp]
+    if oversized:
+        raise PartyChartDisagreement(
+            f"Party chart and canonical feeds differ by more than the "
+            f"{structural_disagreement_pp} pp per-value limit on "
+            f"{len(oversized)} value(s); the cause is not established here and "
+            f"needs review before the data is used. Inventory: {inventory}",
+            disagreements=found,
+            compared=compared,
+        )
+    if compared >= min_compared_for_rate and len(found) / compared > max_disagreement_rate:
+        raise PartyChartDisagreement(
+            f"Party chart and canonical feeds disagree on "
+            f"{len(found) / compared:.4%} of compared values, above the "
+            f"{max_disagreement_rate:.4%} prevalence limit; whether these are "
+            f"provider revisions or a changed feed is not established here and "
+            f"needs review. Inventory: {inventory}",
+            disagreements=found,
+            compared=compared,
+        )
     return rows
 
 
