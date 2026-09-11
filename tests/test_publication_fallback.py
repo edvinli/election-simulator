@@ -34,6 +34,8 @@ from unittest.mock import patch
 
 from scripts.election_automation import (
     DAILY_SCHEDULE_UTC,
+    ELECTION_DAY,
+    ELECTION_DAY_SCHEDULE_UTC,
     INTRADAY_SCHEDULE_UTC,
     AutomationError,
     PollingRefresh,
@@ -50,6 +52,7 @@ from scripts.publication_fallback import (
     benchmark_protected_interval,
     benchmark_window_conflict,
     daily_publication_satisfied,
+    election_day_only_tick_stands_down,
     stockholm_date_of,
 )
 from scripts.prospective_benchmark_2026.time_rules import (
@@ -1237,6 +1240,135 @@ class FallbackTickFilterTests(unittest.TestCase):
         ):
             with self.subTest(policy=policy):
                 self.assertNotIn(policy, body)
+
+
+class IntradayScheduleShapeTests(unittest.TestCase):
+    """The exact hours the intraday checks may run, per calendar date.
+
+    Stated as the local clock the schedule was requested in, and derived from
+    the constants the workflow uses, so a cron edit that changes coverage
+    cannot pass silently.
+    """
+
+    #: Europe/Oslo is UTC+2 on both remaining campaign dates.
+    OSLO_OFFSET = 2
+
+    def _local_hours(self, schedules) -> set[int]:
+        hours: set[int] = set()
+        for expression in schedules:
+            hours |= {h + self.OSLO_OFFSET for h in _cron_utc_hours(expression)}
+        return hours
+
+    def _hours_on(self, day: date) -> set[int]:
+        """Local hours that actually reach the production lock on ``day``."""
+
+        schedules = [INTRADAY_SCHEDULE_UTC]
+        tick = datetime(day.year, day.month, day.day, 19, tzinfo=timezone.utc)
+        if not election_day_only_tick_stands_down(ELECTION_DAY_SCHEDULE_UTC, tick):
+            schedules.append(ELECTION_DAY_SCHEDULE_UTC)
+        return self._local_hours(schedules)
+
+    def test_through_september_12_is_hourly_08_to_20_plus_22(self) -> None:
+        expected = set(range(8, 21)) | {22}
+        for day in (date(2026, 9, 11), date(2026, 9, 12)):
+            with self.subTest(day=day):
+                self.assertEqual(self._hours_on(day), expected)
+
+    def test_no_21_oclock_check_before_election_day(self) -> None:
+        """Explicit, because it is the one hour the request excluded."""
+
+        for day in (date(2026, 9, 11), date(2026, 9, 12)):
+            with self.subTest(day=day):
+                self.assertNotIn(21, self._hours_on(day))
+
+    def test_election_day_is_hourly_08_to_22(self) -> None:
+        self.assertEqual(self._hours_on(ELECTION_DAY), set(range(8, 23)))
+
+    def test_the_22_oclock_check_is_retained_throughout(self) -> None:
+        for day in (date(2026, 9, 11), date(2026, 9, 12), ELECTION_DAY):
+            with self.subTest(day=day):
+                self.assertIn(22, self._hours_on(day))
+
+    def test_the_daily_publication_is_untouched(self) -> None:
+        self.assertEqual(_cron_utc_hours(DAILY_SCHEDULE_UTC), [4])
+        self.assertEqual(
+            [h + self.OSLO_OFFSET for h in _cron_utc_hours(DAILY_SCHEDULE_UTC)], [6])
+
+    def test_the_election_day_tick_stands_down_on_every_other_date(self) -> None:
+        """The cron has no date field, so the cutoff is enforced here."""
+
+        for day in (
+            ELECTION_DAY - timedelta(days=2),
+            ELECTION_DAY - timedelta(days=1),
+            ELECTION_DAY + timedelta(days=1),
+        ):
+            tick = datetime(day.year, day.month, day.day, 19, tzinfo=timezone.utc)
+            with self.subTest(day=day):
+                self.assertTrue(
+                    election_day_only_tick_stands_down(ELECTION_DAY_SCHEDULE_UTC, tick))
+        on_the_day = datetime(
+            ELECTION_DAY.year, ELECTION_DAY.month, ELECTION_DAY.day, 19,
+            tzinfo=timezone.utc)
+        self.assertFalse(
+            election_day_only_tick_stands_down(ELECTION_DAY_SCHEDULE_UTC, on_the_day))
+
+    def test_only_the_election_day_cron_is_ever_stood_down(self) -> None:
+        """A late ordinary tick must not be mistaken for the 19:00Z one.
+
+        Ticks have been delivered 1h43m-2h42m late, so an 18:00Z tick can
+        arrive at 19:00Z or later. Keying on the cron expression rather than
+        the wall clock is what keeps it.
+        """
+
+        late = datetime(2026, 9, 12, 20, 42, tzinfo=timezone.utc)
+        for expression in (INTRADAY_SCHEDULE_UTC, DAILY_SCHEDULE_UTC):
+            with self.subTest(expression=expression):
+                self.assertFalse(election_day_only_tick_stands_down(expression, late))
+        # A dispatch carries no schedule at all.
+        for empty in (None, "", "   "):
+            with self.subTest(schedule=empty):
+                self.assertFalse(election_day_only_tick_stands_down(empty, late))
+
+    def test_a_naive_instant_is_refused(self) -> None:
+        with self.assertRaises(ValueError):
+            election_day_only_tick_stands_down(
+                ELECTION_DAY_SCHEDULE_UTC, datetime(2026, 9, 13, 19))
+
+    def test_every_scheduled_cron_classifies(self) -> None:
+        """Only the 04:00Z tick is DAILY; both intraday crons are POLL_CHANGE."""
+
+        self.assertEqual(classify_run_type(schedule=DAILY_SCHEDULE_UTC), "DAILY")
+        for expression in (INTRADAY_SCHEDULE_UTC, ELECTION_DAY_SCHEDULE_UTC):
+            with self.subTest(expression=expression):
+                self.assertEqual(classify_run_type(schedule=expression), "POLL_CHANGE")
+
+    def test_the_workflow_schedules_exactly_these_crons(self) -> None:
+        """The constants are the schedule, not a description of one."""
+
+        workflow = (Path(__file__).resolve().parents[1]
+             / ".github/workflows/election-simulator-publication.yml").read_text()
+        scheduled = re.findall(r'- cron: "([^"]+)"', workflow)
+        self.assertEqual(
+            scheduled,
+            [DAILY_SCHEDULE_UTC, INTRADAY_SCHEDULE_UTC, ELECTION_DAY_SCHEDULE_UTC],
+        )
+
+    def test_the_stand_down_happens_outside_the_production_lock(self) -> None:
+        """A stood-down tick must never queue ahead of a capture.
+
+        fallback_preflight has no concurrency group of the production kind, so
+        deciding there is what keeps the tick out of the queue entirely.
+        """
+
+        workflow = (Path(__file__).resolve().parents[1]
+             / ".github/workflows/election-simulator-publication.yml").read_text()
+        preflight = workflow[workflow.index("  fallback_preflight:"):workflow.index("  publish:")]
+        self.assertIn("election_day_only_tick_stands_down", preflight)
+        self.assertIn("SKIPPED_ELECTION_DAY_ONLY_TICK", preflight)
+        # The group, not the word: the job's comments name the production lock
+        # precisely because they explain staying out of it.
+        self.assertIn("group: election-simulator-fallback-preflight", preflight)
+        self.assertNotIn("group: election-simulator-production", preflight)
 
 
 if __name__ == "__main__":

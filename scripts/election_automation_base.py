@@ -89,6 +89,8 @@ from scripts.simulator.exact_draw_sidecar import (
 )
 from scripts.simulator.reproducibility import compute_file_sha256, get_git_commit_hash
 from scripts.publication_fallback import (
+    ELECTION_DAY,
+    ELECTION_DAY_SCHEDULE_UTC,
     FALLBACK_RUN_TYPE,
     benchmark_window_conflict,
     daily_publication_satisfied,
@@ -96,9 +98,11 @@ from scripts.publication_fallback import (
 
 
 STOCKHOLM = ZoneInfo("Europe/Stockholm")
-ELECTION_DAY = date.fromisoformat(DEFAULT_ELECTION_DATE)
 DAILY_SCHEDULE_UTC = "0 4 * * *"
-INTRADAY_SCHEDULE_UTC = "0 6,8,10,12,14,16,18,20 * * *"
+# Hourly 08:00-20:00 Stockholm/Oslo (one offset, UTC+2), then the
+# long-standing 22:00 check. 21:00 local (19:00Z) is deliberately absent
+# here and scheduled separately, because it runs on election day alone.
+INTRADAY_SCHEDULE_UTC = "0 6,7,8,9,10,11,12,13,14,15,16,17,18,20 * * *"
 PRODUCTION_SAMPLES = 100_000
 #: Amendment 004's bounded retention window, kept as the historical record.
 #: Amendment 007 extended retention to every newly certified generation, so
@@ -3526,6 +3530,7 @@ __all__ = [
     "AutomationSummary",
     "DAILY_SCHEDULE_UTC",
     "ELECTION_DAY",
+    "ELECTION_DAY_SCHEDULE_UTC",
     "INTRADAY_SCHEDULE_UTC",
     "MODEL_RELEVANT_INPUTS",
     "PollingRefresh",
