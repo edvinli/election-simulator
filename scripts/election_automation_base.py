@@ -100,8 +100,8 @@ from scripts.publication_fallback import (
 STOCKHOLM = ZoneInfo("Europe/Stockholm")
 DAILY_SCHEDULE_UTC = "0 4 * * *"
 # Hourly 08:00-20:00 Stockholm/Oslo (one offset, UTC+2), then the
-# long-standing 22:00 check. 21:00 local (19:00Z) is deliberately absent
-# here and scheduled separately, because it runs on election day alone.
+# long-standing 22:00 check. 21:00 local (19:00Z) is deliberately absent here
+# and scheduled separately, because it runs on election day alone.
 INTRADAY_SCHEDULE_UTC = "0 6,7,8,9,10,11,12,13,14,15,16,17,18,20 * * *"
 PRODUCTION_SAMPLES = 100_000
 #: Amendment 004's bounded retention window, kept as the historical record.

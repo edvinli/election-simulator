@@ -1243,11 +1243,17 @@ class FallbackTickFilterTests(unittest.TestCase):
 
 
 class IntradayScheduleShapeTests(unittest.TestCase):
-    """The exact hours the intraday checks may run, per calendar date.
+    """The exact hours an intraday check is scheduled for, per calendar date.
 
     Stated as the local clock the schedule was requested in, and derived from
     the constants the workflow uses, so a cron edit that changes coverage
     cannot pass silently.
+
+    Scheduled is not the same as published, and these tests claim only the
+    former. A scheduled tick still passes through fallback_preflight, which
+    may stand it down inside the benchmark's protected window -- the 22:00
+    check most of all, since 20:00Z is already inside it. Those deferrals are
+    covered by ScheduledPublicationDeferralTests, not here.
     """
 
     #: Europe/Oslo is UTC+2 on both remaining campaign dates.
@@ -1260,7 +1266,11 @@ class IntradayScheduleShapeTests(unittest.TestCase):
         return hours
 
     def _hours_on(self, day: date) -> set[int]:
-        """Local hours that actually reach the production lock on ``day``."""
+        """Local hours a check is scheduled for on ``day``.
+
+        After the election-day stand-down, which is the only one this helper
+        applies. A tick counted here may still defer for the benchmark.
+        """
 
         schedules = [INTRADAY_SCHEDULE_UTC]
         tick = datetime(day.year, day.month, day.day, 19, tzinfo=timezone.utc)
@@ -1284,7 +1294,9 @@ class IntradayScheduleShapeTests(unittest.TestCase):
     def test_election_day_is_hourly_08_to_22(self) -> None:
         self.assertEqual(self._hours_on(ELECTION_DAY), set(range(8, 23)))
 
-    def test_the_22_oclock_check_is_retained_throughout(self) -> None:
+    def test_the_22_oclock_check_is_retained_on_the_schedule_throughout(self) -> None:
+        """Retained as a cron. Whether it publishes is the preflight's call."""
+
         for day in (date(2026, 9, 11), date(2026, 9, 12), ELECTION_DAY):
             with self.subTest(day=day):
                 self.assertIn(22, self._hours_on(day))

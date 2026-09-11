@@ -9,8 +9,9 @@ on:
     - cron: "0 4 * * *" # 06:00 local: always publish
     # Hourly 08:00–20:00 local, then the long-standing 22:00 check.
     - cron: "0 6,7,8,9,10,11,12,13,14,15,16,17,18,20 * * *" # poll-change checks
-    # 21:00 local. GitHub cron has no date field, so this is scheduled daily
-    # and stood down in fallback_preflight on every date but election day,
+    # 21:00 local. Cron can express a day and month but not a year, so a
+    # dated expression would fire again in 2027; this is scheduled daily and
+    # stood down in fallback_preflight against the election date itself,
     # before the production lock is requested.
     - cron: "0 19 * * *" # election day only: completes hourly 08:00–22:00
   workflow_dispatch:
@@ -422,8 +423,8 @@ jobs:
             stand_down "DEFERRED_BENCHMARK_WINDOW"
           fi
 
-          # The 21:00 local tick exists for election day alone. Cron
-          # cannot say that, so it is said here -- and here specifically,
+          # The 21:00 local tick exists for election day alone. Cron has no
+          # year field, so it cannot say that -- and this is where it is said,
           # because this job is outside election-simulator-production: a tick
           # that stands down never queues ahead of a capture or a publication.
           if ! uv run python -c 'import sys, os; from datetime import datetime, timezone; from scripts.publication_fallback import election_day_only_tick_stands_down; sys.exit(1 if election_day_only_tick_stands_down(os.environ.get("EVENT_SCHEDULE"), datetime.now(timezone.utc)) else 0)'; then

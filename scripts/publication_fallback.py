@@ -79,10 +79,14 @@ ELECTION_DAY = date.fromisoformat(DEFAULT_ELECTION_DATE)
 # local and then skip to the long-standing 22:00 one, so 21:00 is deliberately
 # absent. Election day runs hourly 08:00-22:00 local, which needs it.
 #
-# GitHub cron has no year or date field, so the tick is scheduled every day and
-# stood down here on every date but election day. Keyed on the cron expression
-# rather than the wall clock: ticks have been delivered 1h43m-2h42m late, and a
-# late 18:00Z tick must not be mistaken for the 19:00Z one and discarded.
+# Cron has day-of-month and month fields, so "19:00Z on 13 September" is
+# expressible; what it lacks is a year, so that expression would also fire in
+# 2027 and every year after. The tick is therefore scheduled daily and stood
+# down here against the election date itself.
+#
+# Keyed on the cron expression rather than the wall clock: ticks have been
+# delivered 1h43m-2h42m late, and a late 18:00Z tick must not be mistaken for
+# the 19:00Z one and discarded.
 ELECTION_DAY_SCHEDULE_UTC = "0 19 * * *"
 
 
