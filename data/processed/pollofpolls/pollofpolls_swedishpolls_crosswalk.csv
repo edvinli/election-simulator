@@ -71,7 +71,6 @@ pop-0c6afcc3d42a629e452b,,Demoskop,2017-11-18,2017-12-05,no_match,0,,{},False
 pop-0c7c4c4856ebf5edfe30,swp-6cf00a5318b30325867c,YouGov,2018-07-13,2018-07-15,exact_span_match,1,0.0,{},True
 pop-0c8d14ffefbce3ee3ae5,swp-a73a6f870327ee327245,Demoskop,2012-09-25,2012-10-03,exact_span_match,1,0.0,{},True
 pop-0cd6510681e765913864,swp-e3a4289fef1eefc3b85f,Novus,2013-02-25,2013-03-24,exact_span_match,1,0.0,{},True
-pop-0cf299603e793f9999c0,swp-890ec61b403d5d0d9325,Novus,2026-08-03,2026-08-16,exact_span_match,1,0.0,{},True
 pop-0d0c6515ebf858bcf53b,swp-d61d5b2d8a4ea908ee58,Skop,2009-06-11,2009-07-07,exact_span_match,1,0.0,{},True
 pop-0d36a55f620f32ce4069,swp-b2d316ce4046da347969,Sifo,2019-05-06,2019-05-16,exact_span_match,1,0.0,{},True
 pop-0d3a3d096e0017ce0419,swp-91a6178cb10574ebc1a2,Skop,2011-02-10,2011-03-09,exact_span_match,1,0.0,{},True
@@ -547,6 +546,7 @@ pop-5f24fbf010918b61c043,swp-df2752375ec0f0770524,Novus,2016-02-22,2016-03-20,ex
 pop-5f35c434a130882ee199,swp-7632effaf980f64a6f68,Sentio,2010-06-01,2010-06-30,exact_span_match_approximate_supplementary_period,1,0.0,{},True
 pop-5f707756c4d6a7868f21,,Demoskop,2021-05-25,2021-06-02,no_match,0,,{},False
 pop-5f778059fe80d2bcb0d1,swp-4d1998bfd1c178075abb,Demoskop,2015-03-31,2015-04-08,exact_span_match,1,0.0,{},True
+pop-5fa50dc62deb26d8f095,swp-f732d4f42b29ccca4489,Indikator,2026-09-02,2026-09-10,exact_span_match,1,0.0,{},True
 pop-5fb4144eda1619699554,swp-6e818db884ff2a351658,Novus,2026-09-01,2026-09-05,exact_span_match,1,0.0,{},True
 pop-5fcb93605b6eb51660f0,swp-c82eece148dc0a9b9892,Skop,2010-03-18,2010-04-10,exact_span_match,1,0.0,{},True
 pop-5fdf3367a9725284b9a6,swp-0c32aa43dbb77954c129,Novus,2014-04-28,2014-05-25,exact_span_match,1,0.0,{},True
@@ -620,6 +620,7 @@ pop-69c02bcb45a61546ba10,swp-a72771f806c0463ab4b1,Sifo,2010-08-23,2010-08-26,exa
 pop-69f567222b963a566084,,Novus,2014-02-28,2014-03-23,no_match,0,,{},False
 pop-6a5eb0f7e022d3a0496c,,Novus,2022-08-30,2022-08-30,no_match,0,,{},False
 pop-6a6793c9a6e9913ea5c5,swp-9bb530703efd89543bef,YouGov,2014-12-04,2014-12-05,exact_span_match,1,0.0,{},True
+pop-6a6a643d328cbdafff67,swp-890ec61b403d5d0d9325,Novus,2026-08-03,2026-08-16,exact_span_match,1,0.0,{},True
 pop-6a9925ab6ef7ab040ff7,swp-e525897b60ed362092e7,Sifo,2021-08-09,2021-08-19,exact_span_match,1,0.0,{},True
 pop-6ab9a9cf9f880a0bda4c,,SCB,2022-08-24,2022-09-10,no_match,0,,{},False
 pop-6ae96620cf3f576f8d8d,swp-81ddd739106f37e8a2dc,Demoskop,2013-01-02,2013-01-10,exact_span_match,1,0.0,{},True
