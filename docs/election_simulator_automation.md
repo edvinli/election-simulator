@@ -26,7 +26,11 @@ cron schedules.
 `runs-on` reads the repository variable `ELECTION_SIMULATOR_RUNNER` and falls
 back to `ubuntu-latest`, so a self-hosted runner can be selected if
 `pollofpolls.se` blocks GitHub-hosted traffic. The explicit Stockholm date
-guard stops all work after 2026-09-13.
+guard stops all work after the target election (`DEFAULT_ELECTION_DATE`,
+currently 2030-09-08; it stopped the 2026 cycle after 2026-09-13). A new
+cycle does not certify until a Poll of Polls estimate after the previous
+election exists (`AWAITING_POST_ELECTION_POLLS`, a successful no-op); see
+[`election_cycle_2030.md`](election_cycle_2030.md).
 
 The selected runner must provide outbound HTTPS access to the polling sources,
 enough memory/time for the existing 100,000-draw production simulation, and a

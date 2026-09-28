@@ -15,15 +15,14 @@ from scripts.geography.config import (
 )
 from scripts.geography.integerization import biproportional_controlled_rounding
 from scripts.geography.projection import _get_cached_geography_structures
-from scripts.mandates.config import FIXED_SEATS_2018, FIXED_SEATS_2022, FIXED_SEATS_2026
 from scripts.vote_share_calibration.election_noise_b import (
     MODEL_ID as ADOPTED_NOISE_MODEL,
 )
 from scripts.vote_share_calibration.national_engine import generate_national_vote_shares
 
+from .election_cycles import fixed_seats_for, geography_baseline_year_for
 from .config import (
     DEFAULT_ELECTION_DATE,
-    DEFAULT_GEOGRAPHY_BASELINE_YEAR,
     DEFAULT_MAJORITY_THRESHOLD,
     DEFAULT_SIMULATION_SAMPLES,
     DEFAULT_SIMULATION_SEED,
@@ -106,7 +105,7 @@ def simulate_election(
     election_date: str | date = DEFAULT_ELECTION_DATE,
     samples: int = DEFAULT_SIMULATION_SAMPLES,
     seed: int = DEFAULT_SIMULATION_SEED,
-    baseline_year: int = DEFAULT_GEOGRAPHY_BASELINE_YEAR,
+    baseline_year: int | None = None,
     processed_geo_dir: Path | str | None = None,
     data_dir: Path | str | None = None,
     repo_dir: Path | str | None = None,
@@ -123,7 +122,7 @@ def simulate_election(
         -> ElectionNoise (default: the adopted pp_lw_gaussian; pp_centered_noise
            remains selectable for archived-forecast reproduction)
         -> National vote compositions (N, 9)
-        -> GeographicProjection v1 (2022 baseline -> 2026 constituencies via IPF)
+        -> GeographicProjection v1 (previous-election baseline -> target constituencies via IPF)
         -> Exact-Margin Controlled Rounding (Bipartite flow preserving R_c and C_p)
         -> MandateAllocator v1 (Vectorized Sainte-Laguë with legal fallback)
         -> Summary statistics & probabilities
@@ -155,6 +154,14 @@ def simulate_election(
 
     # 2. Load Precomputed Geographic Baseline Matrix B and Target Row Vector R
     target_year = elec_date.year
+    # The baseline is the previous ordinary election unless a caller names
+    # one. Outside oracle mode it must precede the target: a baseline equal to
+    # the target would hand the forecast its own election's result.
+    if baseline_year is None:
+        baseline_year = geography_baseline_year_for(target_year)
+    if geography_mode != "oracle" and baseline_year >= target_year:
+        raise ValueError(
+            f"Geography baseline {baseline_year} does not precede the {target_year} election")
     B_cached, R_cached = _get_cached_geography_structures(
         baseline_year=baseline_year,
         target_year=target_year,
@@ -168,13 +175,8 @@ def simulate_election(
     R_int = _apportion_constituency_units_of_25(R_base, total_national_votes)
     R_col_vec = R_int[:, np.newaxis].astype(np.float64)
 
-    # Resolve official fixed seats for target election
-    if target_year == 2018:
-        fixed_seats_dict = FIXED_SEATS_2018
-    elif target_year == 2022:
-        fixed_seats_dict = FIXED_SEATS_2022
-    else:
-        fixed_seats_dict = FIXED_SEATS_2026
+    # Resolve official fixed seats for target election (2030: declared stand-in)
+    fixed_seats_dict = fixed_seats_for(target_year)
     fixed_seats_arr = np.array([fixed_seats_dict[c] for c in OFFICIAL_CONSTITUENCY_CODES], dtype=np.int64)
 
     # 3. Batch Geographic Projection + Integerization + Mandate Allocation

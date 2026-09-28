@@ -180,7 +180,8 @@ class ForecastHistoryTests(unittest.TestCase):
                 )
 
     def test_history_schedule_marks_cap_boundary(self) -> None:
-        dates = build_history_dates(latest_date="2026-05-26")
+        # The 2026 election's schedule, pinned: the default target has moved on.
+        dates = build_history_dates(latest_date="2026-05-26", election_date="2026-09-13")
         self.assertIn(date(2026, 5, 23), dates)
         self.assertIn(date(2026, 5, 24), dates)
         self.assertIn(date(2026, 5, 25), dates)
@@ -273,6 +274,7 @@ class ForecastHistoryTests(unittest.TestCase):
             path = Path(temporary) / "polls.csv"
             self._poll_csv(path)
             kwargs = {
+                "election_date": "2026-09-13",
                 "dates": ["2026-05-23", "2026-05-24"],
                 "samples": 4,
                 "seed": 7,

@@ -40,7 +40,12 @@ AUTOMATION_CHANGED = {
     "scripts/simulator/engine.py",
     "tests/test_prospective_archive.py",
 }
-KNOWN_POST_FREEZE_CHANGES = PARTY_CHART_MERGE_CHANGED | AUTOMATION_CHANGED
+# The 2030 cycle switch moves the default target election and its baseline
+# label in config.py; the model itself is unchanged (docs/election_cycle_2030.md).
+CYCLE_2030_CHANGED = {
+    "scripts/simulator/config.py",
+}
+KNOWN_POST_FREEZE_CHANGES = PARTY_CHART_MERGE_CHANGED | AUTOMATION_CHANGED | CYCLE_2030_CHANGED
 
 def _commit_available(sha: str) -> bool:
     """True when the object exists locally.

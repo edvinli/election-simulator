@@ -109,6 +109,45 @@ campaign paths are built and required only from the election's dynamics cap
 about 17 GB of path arrays per publication, to describe movement the model
 caps at 112 days. The website already works without them.
 
+## The switch
+
+`DEFAULT_ELECTION_DATE` is `2030-09-08`, and the baseline label
+`DEFAULT_GEOGRAPHY_BASELINE_YEAR` is 2026. The engine now:
+
+- resolves its own default baseline from the target;
+- refuses a baseline that does not precede the target outside oracle mode;
+- takes fixed seats from the cycle rules.
+
+`config.py` is recorded as intentional drift in the publication freeze
+(`CYCLE_2030_CHANGED`). `engine.py` was already known drift in every
+freeze.
+
+Tests that exercise the 2026 campaign on 2026 fixtures pin that election
+explicitly rather than relying on the default. That covers the automation,
+fallback and backfill-kill scenarios. The live-artifact reuse lane is
+skipped while the committed history belongs to a decided election, since no
+publication resumes it. It runs again once the first 2030 history is
+committed.
+
+### Merging it safely
+
+Merging arms the hourly publication cron: the date guard now passes, and
+`ELECTION_AUTOMATION_ENABLED` is `true`. The render workflow has no kill
+switch and fires after every publication run. The sequence is:
+
+1. Set the repository variable `ELECTION_AUTOMATION_ENABLED=false`.
+2. Merge.
+3. Dispatch a manual `dry_run`, then a manual `publish`. Manual dispatch
+   bypasses the kill switch by design.
+4. Check the website:
+   - the 2026 archive and the new 2030 history are joined on one chart;
+   - `results/2026.json` is still served;
+   - the pointer names the 2030 generation.
+5. Re-enable the variable.
+
+Until a post-election Poll of Polls estimate exists, every run reports
+`AWAITING_POST_ELECTION_POLLS` and changes nothing.
+
 ## Stand-ins to replace
 
 | Input | Stand-in | Replace when |

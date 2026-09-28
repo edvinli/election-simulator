@@ -42,7 +42,7 @@ from scripts.election_automation import (
     automation_enabled_for_event,
     classify_run_type,
     resolve_mode,
-    run_automation,
+    run_automation as _run_automation,
     should_publish,
 )
 from scripts.publication_fallback import (
@@ -60,6 +60,18 @@ from scripts.prospective_benchmark_2026.time_rules import (
     FIRST_CAPTURE_DATE,
     scheduled_cutoff,
 )
+
+
+# The run_automation scenarios below are the 2026 campaign's, on 2026 dates.
+# The production target has moved to the next election, so the election they
+# model is pinned; the election-day tick tests keep using the configured
+# ELECTION_DAY, which is what the function under test reads.
+CAMPAIGN_ELECTION_DAY = date(2026, 9, 13)
+
+
+def run_automation(*args, **kwargs):
+    kwargs.setdefault("election_date", CAMPAIGN_ELECTION_DAY)
+    return _run_automation(*args, **kwargs)
 
 
 TODAY = date(2026, 9, 7)
