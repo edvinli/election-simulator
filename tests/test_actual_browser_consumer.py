@@ -134,10 +134,20 @@ class ActualBrowserConsumerTests(unittest.TestCase):
         self.assertEqual(verdict["seat_nodes"], 349)
         self.assertIn("representative joint simulation draw", verdict["parliament_aria_label"])
 
+    #: Lookup files outside the frozen publication bundle. The page requests
+    #: the certified election result independently of the publication, and
+    #: renders it only once the publication postdates it.
+    LOOKUP_PATHS = ("results/2026.json",)
+
+    def _publication_requests(self, verdict: dict) -> list[str]:
+        return [path for path in verdict["requested_paths"] if path not in self.LOOKUP_PATHS]
+
     def test_production_consumer_requests_the_canonical_paths(self) -> None:
         verdict = run_actual_consumer(self.publication)
+        for lookup in self.LOOKUP_PATHS:
+            self.assertEqual(verdict["requested_paths"].count(lookup), 1, verdict["requested_paths"])
         self.assertEqual(
-            verdict["requested_paths"],
+            self._publication_requests(verdict),
             ["current.json"]
             + [
                 f"versions/{self.generation}/{name}"
@@ -427,7 +437,7 @@ class ActualBrowserConsumerTests(unittest.TestCase):
         self.assertFalse(verdict["certified"])
         self.assertIn("legacy normalized marginal medians", verdict["parliament_aria_label"])
         self.assertEqual(verdict["seat_nodes"], 349)
-        self.assertEqual(verdict["requested_paths"][0], "current.json")
+        self.assertEqual(self._publication_requests(verdict)[0], "current.json")
 
 
 if __name__ == "__main__":
