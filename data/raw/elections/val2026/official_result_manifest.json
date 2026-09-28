@@ -1,0 +1,63 @@
+{
+  "schema_version": "1.0",
+  "authority": "Valmyndigheten",
+  "certification_status": "FINAL_CERTIFIED",
+  "election_date": "2026-09-13",
+  "official_source_url": "https://resultat.val.se/data/resultat/val2026/RD_S.json",
+  "retrieved_at_utc": "2026-09-19T17:32:49Z",
+  "raw_path": "resultat_val_se_val2026_RD_S.json",
+  "raw_sha256": "1998afdc723a83b325c729faf68063c8731e33496fc274bf9fbb80499e0afb08",
+  "valid_national_votes": 6767429,
+  "parties": {
+    "M": {
+      "votes": 1343448,
+      "vote_share_percentage_points": 19.851674838406137,
+      "seats": 70
+    },
+    "L": {
+      "votes": 361187,
+      "vote_share_percentage_points": 5.337137633804507,
+      "seats": 19
+    },
+    "C": {
+      "votes": 475780,
+      "vote_share_percentage_points": 7.030439477089453,
+      "seats": 25
+    },
+    "KD": {
+      "votes": 417490,
+      "vote_share_percentage_points": 6.169107943356332,
+      "seats": 22
+    },
+    "S": {
+      "votes": 1895989,
+      "vote_share_percentage_points": 28.016385543165654,
+      "seats": 99
+    },
+    "V": {
+      "votes": 568781,
+      "vote_share_percentage_points": 8.404683669381681,
+      "seats": 30
+    },
+    "MP": {
+      "votes": 414307,
+      "vote_share_percentage_points": 6.122073833356803,
+      "seats": 22
+    },
+    "SD": {
+      "votes": 1183248,
+      "vote_share_percentage_points": 17.48445384502741,
+      "seats": 62
+    }
+  },
+  "notes": {
+    "denominator_definition": "rosterPaverkaMandat.antalRoster - national votes for parties that take part in the mandate distribution; blank and otherwise invalid ballots are excluded.",
+    "source_counting_round": "slutlig",
+    "source_title": "Val till riksdagen - Slutligt valresultat",
+    "districts_counted": "6626/6626",
+    "source_last_modified_http": "Sat, 19 Sep 2026 12:55:36 GMT",
+    "decision_protocol_url": "https://resultat.val.se/protokoll/protokoll_Val_2026_00_RD.pdf",
+    "total_ballots_cast": "6 834 413",
+    "turnout": "84,89 %"
+  }
+}

@@ -1167,9 +1167,10 @@ WEBSITE_GATE_COMMANDS: tuple[tuple[str, ...], ...] = (
 #: This ceiling is therefore not a proof that the whole job fits. Simulation,
 #: history reconstruction and the first tier all precede this one and are not
 #: bounded here, so nothing below shows a publication completes in time. What
-#: it does give is a bound on *this tier's* contribution: seven suites at five
-#: minutes is 35 minutes of absolute worst case against a measured 68 seconds
-#: for all seven, and the slowest suite in the tier takes about 18 seconds. So
+#: it does give is a bound on *this tier's* contribution: eight suites at five
+#: minutes is 40 minutes of absolute worst case against a measured 68 seconds
+#: for the original seven plus about 20 for election-result, and the slowest
+#: suite in the tier takes about 20 seconds. So
 #: a hung suite here cannot quietly become the reason a publication is cut off,
 #: and adding suites to this tier later cannot grow its worst case unnoticed.
 #: Whether the job as a whole survives its timeout is a separate question, and
@@ -1184,6 +1185,9 @@ WEBSITE_PUSH_GATE_COMMANDS: tuple[tuple[str, ...], ...] = (
     ("node", "browser-tests/alternatives.smoke.mjs", "_site"),
     ("node", "browser-tests/histogram-copy.smoke.mjs", "_site"),
     ("node", "browser-tests/party-timeseries.contract.mjs", "_site"),
+    # The certified-result hero, the forecast-against-result panel and the
+    # result marks on the chart all read the publication and the history.
+    ("node", "browser-tests/election-result.smoke.mjs", "_site"),
 )
 
 

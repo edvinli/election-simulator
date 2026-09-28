@@ -115,3 +115,14 @@ uv run python -m scripts.publication_pipeline --as-of 2026-09-01 --samples 10000
 # 2. Mirror that certified generation into the website repository
 uv run python -m scripts.site_publisher --site-repo ../edvinli.github.io
 ```
+
+After an election, the website also shows the certified result and sets the
+forecast against it. That file is built from the same Valmyndigheten evidence
+the prospective benchmark scores against,
+`data/raw/elections/val2026/official_result_manifest.json`, and is checked by
+the same strict loader:
+
+```bash
+# Write files/election-simulator/results/2026.json (no simulation, no commit)
+uv run python -m scripts.site_publisher.election_result --site-repo ../edvinli.github.io
+```
