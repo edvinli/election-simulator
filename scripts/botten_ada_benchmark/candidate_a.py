@@ -7,7 +7,7 @@ from datetime import date
 import json
 from pathlib import Path
 
-from scripts.simulator.config import DEFAULT_ELECTION_DATE, DEFAULT_SIMULATION_SEED, DEFAULT_SIMULATION_SAMPLES, MODEL_VERSION
+from scripts.simulator.config import DEFAULT_SIMULATION_SEED, DEFAULT_SIMULATION_SAMPLES, MODEL_VERSION
 from scripts.simulator.engine import simulate_election
 from scripts.simulator.pipeline import build_canonical_summary_dict
 
@@ -17,7 +17,9 @@ from .adapters import bundle_from_simulation_result, write_bundle
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Export unmodified ElectionSimulator draws for Botten Ada comparison")
     parser.add_argument("--as-of", required=True, help="Forecast cutoff date (YYYY-MM-DD)")
-    parser.add_argument("--election-date", default=DEFAULT_ELECTION_DATE)
+    # Pinned: this benchmark compares against the 2026 election and its 2022
+    # baseline, whatever election the production default later targets.
+    parser.add_argument("--election-date", default="2026-09-13")
     parser.add_argument("--baseline-year", type=int, default=2022)
     parser.add_argument("--samples", type=int, default=DEFAULT_SIMULATION_SAMPLES)
     parser.add_argument("--seed", type=int, default=DEFAULT_SIMULATION_SEED)

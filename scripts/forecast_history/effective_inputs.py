@@ -18,6 +18,7 @@ import subprocess
 import tempfile
 from typing import Any, Iterator, Mapping
 
+import numpy as np
 import pandas as pd
 
 from scripts.election_layer_v2.config import ALL_HISTORICAL_ELECTIONS, CANONICAL_WINDOW_DAYS
@@ -28,7 +29,9 @@ from scripts.pollofpolls.state_config import (
     COVARIANCE_LOOKBACK_YEARS, MAX_ESTIMATE_MATCH_LAG_DAYS, MIN_RESIDUAL_POLLS,
     RECENT_POLL_LOOKBACK_DAYS,
 )
-from scripts.simulator.config import DEFAULT_GEOGRAPHY_BASELINE_YEAR
+from scripts.simulator.election_cycles import (
+    FIXED_SEATS_STAND_IN_YEARS, fixed_seats_for, geography_baseline_year_for,
+)
 
 VERSION = 1
 ROOT = Path(__file__).resolve().parents[2]
@@ -104,16 +107,34 @@ class EffectiveInputs:
             }))
         # Geography's numerical baseline and chronological electorate projection
         # consume these tables. Canonical records ignore serialization order.
+        # What a forecast for this target may depend on, and nothing else: the
+        # baseline election's constituency votes, and the electorate history up
+        # to the target with the target's own outcome masked -- a forecast
+        # never reads its election's valid votes. Adding a later election's
+        # rows, or certifying the target itself, therefore leaves every
+        # fingerprint minted for that target unchanged.
+        baseline_year = geography_baseline_year_for(election_date.year)
         geography = {}
         for filename in DATA_FILES[-2:]:
             frame = pd.read_csv(data_dir / filename)
             if "party_votes" in filename:
-                frame = frame[frame["election_year"] == DEFAULT_GEOGRAPHY_BASELINE_YEAR]
+                frame = frame[frame["election_year"] == baseline_year]
+            else:
+                frame = frame[frame["election_year"] <= election_date.year].copy()
+                own = frame["election_year"] == election_date.year
+                frame.loc[own, ["valid_votes", "turnout_rate"]] = np.nan
             geography[filename] = _ordered(json.loads(frame.to_json(orient="records")))
-        self.static = digest({
+        static: dict[str, Any] = {
             "model": {f: hashlib.sha256((source_root / f).read_bytes()).hexdigest() for f in MODEL_FILES},
             "geography": geography,
-        })
+        }
+        # Official fixed seats live in mandates/config.py, which is hashed
+        # above. A declared stand-in is chosen by the cycle rules instead, so
+        # it is hashed by value; replacing it with the real distribution
+        # changes the fingerprint, as it must.
+        if election_date.year in FIXED_SEATS_STAND_IN_YEARS:
+            static["fixed_seats_stand_in"] = dict(sorted(fixed_seats_for(election_date.year).items()))
+        self.static = digest(static)
 
     def fingerprint(self, as_of: date) -> str:
         return digest(self.for_date(as_of))
