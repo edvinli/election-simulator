@@ -211,10 +211,28 @@ class TestSlotTimingOutcome(unittest.TestCase):
                 self.assertEqual(outcome["capture_status"], "COMPLETE")
 
     def test_a_slot_with_no_capture_is_distinguished_from_an_ineligible_one(self) -> None:
-        outcome = slot_timing_outcome(ARCHIVE, "2026-09-12")
+        # Asserted on a copy of the real index with one slot removed. The
+        # test used to read 2026-09-12 from the live archive, written before
+        # that slot was captured; the archive has since recorded it, which
+        # is the evidence working as intended, not a regression.
+        index = json.loads((ARCHIVE / "index.json").read_text())
+        index["captures"] = [row for row in index["captures"]
+                             if row.get("scheduled_date") != "2026-09-12"]
+        with tempfile.TemporaryDirectory() as temporary:
+            (Path(temporary) / "index.json").write_text(json.dumps(index), encoding="utf-8")
+            outcome = slot_timing_outcome(Path(temporary), "2026-09-12")
         self.assertEqual(outcome["outcome"], "NO_DURABLE_CAPTURE")
         self.assertIsNone(outcome["capture_id"])
         self.assertFalse(outcome["timing_eligible"])
+
+    def test_the_final_slot_was_captured_on_time(self) -> None:
+        """The committed evidence for 2026-09-12, as recorded."""
+
+        outcome = slot_timing_outcome(ARCHIVE, "2026-09-12")
+        self.assertEqual(outcome["outcome"], "TIMING_ELIGIBLE")
+        self.assertEqual(outcome["timing_status"], "ON_TIME_ELIGIBLE")
+        self.assertEqual(outcome["capture_status"], "COMPLETE")
+        self.assertEqual(outcome["capture_id"], "20260912T213000Z")
 
     def test_the_earlier_start_does_not_reclassify_september_4_or_5(self) -> None:
         index = json.loads((ARCHIVE / "index.json").read_text())
