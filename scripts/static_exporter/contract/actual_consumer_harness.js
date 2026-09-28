@@ -230,7 +230,6 @@ function buildDocument(publicationBase, statusSettled) {
     "election-party-cards",
     "election-seats",
     "election-seat-bars",
-    "election-parliament",
     "election-government-builder",
     "election-available-parties",
     "election-government-parties",
@@ -552,7 +551,7 @@ async function main() {
   const status = document._elements.get(STATUS_ID);
   const statusText = status.textContent;
   const errored = status.className.indexOf("election-status--error") !== -1;
-  const parliament = document._elements.get("election-parliament");
+  const seatsSection = document._elements.get("election-seats");
   const builderInitial = coalitionSnapshot(document);
   let builderGovernment = null;
   let builderWithSupport = null;
@@ -574,9 +573,9 @@ async function main() {
     status_text: statusText,
     certified: statusText === "Certified forecast loaded.",
     error: errored ? statusText.replace(/^Forecast unavailable: /, "") : null,
-    // aria-label records which seat-allocation path the production file took.
-    parliament_aria_label: parliament.getAttribute("aria-label"),
-    seat_nodes: parliament.children.length,
+    // Which seat-allocation path the production file validated. The page no
+    // longer draws a simulated chamber; it records the path on the section.
+    seat_allocation_source: seatsSection.getAttribute("data-seat-allocation-source"),
     requested_paths: requested,
     builder_initial: builderInitial,
     builder_government: builderGovernment,

@@ -131,8 +131,7 @@ class ActualBrowserConsumerTests(unittest.TestCase):
         self.assertTrue(verdict["accepted"], verdict)
         self.assertEqual(verdict["status_text"], "Certified forecast loaded.")
         self.assertTrue(verdict["certified"])
-        self.assertEqual(verdict["seat_nodes"], 349)
-        self.assertIn("representative joint simulation draw", verdict["parliament_aria_label"])
+        self.assertEqual(verdict["seat_allocation_source"], "representative_joint_simulation_draw")
 
     #: Lookup files outside the frozen publication bundle. The page requests
     #: the certified election result independently of the publication, and
@@ -435,8 +434,7 @@ class ActualBrowserConsumerTests(unittest.TestCase):
         self.assertTrue(verdict["accepted"], verdict)
         self.assertEqual(verdict["status_text"], "Forecast loaded, but it is not certified.")
         self.assertFalse(verdict["certified"])
-        self.assertIn("legacy normalized marginal medians", verdict["parliament_aria_label"])
-        self.assertEqual(verdict["seat_nodes"], 349)
+        self.assertEqual(verdict["seat_allocation_source"], "legacy_normalized_marginal_medians")
         self.assertEqual(self._publication_requests(verdict)[0], "current.json")
 
 
