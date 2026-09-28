@@ -44,6 +44,9 @@ from scripts.simulator.config import (
     DEFAULT_SIMULATION_SEED,
 )
 from scripts.simulator.engine import simulate_election
+from scripts.simulator.election_cycles import (
+    dynamics_cap_start_for, history_start_for, previous_election_date,
+)
 from scripts.simulator.reproducibility import (
     compute_file_sha256,
     get_git_commit_hash,
@@ -76,6 +79,10 @@ DEFAULT_POLL_FILE = DEFAULT_PROCESSED_ROOT / "pollofpolls" / "swedishpolls_indiv
 DEFAULT_TIMESERIES_FILE = DEFAULT_PROCESSED_ROOT / "pollofpolls" / "pollofpolls_timeseries.csv"
 DEFAULT_ARCHIVE_DIR = DEFAULT_PROCESSED_ROOT / "prospective_forecasts"
 DEFAULT_HISTORY_OUTPUT = REPOSITORY_ROOT / "files" / "election-simulator" / "history" / "coalition-timeseries.json"
+# The 2026 cycle's schedule, kept as named constants because fixtures and
+# tests pin them. Every schedule function derives its defaults from the target
+# election instead (`history_start_for`, `dynamics_cap_start_for`), which
+# reproduces exactly these two dates for 2026-09-13.
 HISTORY_START_DATE = date(2022, 9, 18)
 HISTORY_CAP_DATE = date(2026, 5, 24)
 DEFAULT_HISTORY_SAMPLES = 10_000
@@ -362,10 +369,10 @@ def serialize_poll_of_polls_timeseries(
 
 def build_history_dates(
     *,
-    start_date: str | date = HISTORY_START_DATE,
+    start_date: str | date | None = None,
     latest_date: str | date,
     election_date: str | date = DEFAULT_ELECTION_DATE,
-    dynamics_cap_date: str | date = HISTORY_CAP_DATE,
+    dynamics_cap_date: str | date | None = None,
 ) -> list[date]:
     """Return weekly pre-cap and daily post-cap observation dates.
 
@@ -374,10 +381,12 @@ def build_history_dates(
     are never generated after the requested latest source date or election.
     """
 
-    start = _coerce_date(start_date, name="start_date")
-    latest = _coerce_date(latest_date, name="latest_date")
     election = _coerce_date(election_date, name="election_date")
-    cap = _coerce_date(dynamics_cap_date, name="dynamics_cap_date")
+    start = _coerce_date(start_date if start_date is not None else history_start_for(election),
+                         name="start_date")
+    latest = _coerce_date(latest_date, name="latest_date")
+    cap = _coerce_date(dynamics_cap_date if dynamics_cap_date is not None
+                       else dynamics_cap_start_for(election), name="dynamics_cap_date")
     if start > latest:
         return []
     if latest > election:
@@ -414,6 +423,31 @@ def _latest_timeseries_date(path: Path) -> date:
     if latest is None:
         raise ValueError(f"Poll of Polls timeseries has no dates: {path}")
     return latest
+
+
+def first_post_election_timeseries_date(path: Path | str, election_date: str | date) -> date | None:
+    """The first Poll of Polls estimate after the previous election, if any.
+
+    A cycle's first history point cannot come earlier: before it, the latest
+    opinion estimate available was made before the previous election, and a
+    forecast of the next election built on it would be a pre-election
+    forecast relabelled.
+    """
+
+    source = Path(path)
+    if not source.is_file():
+        raise FileNotFoundError(f"Poll of Polls timeseries CSV not found: {source}")
+    previous = previous_election_date(election_date)
+    first: date | None = None
+    with source.open(newline="", encoding="utf-8") as handle:
+        for row in csv.DictReader(handle):
+            raw = row.get("date")
+            if not raw:
+                continue
+            parsed = _coerce_date(raw, name="timeseries date")
+            if parsed > previous and (first is None or parsed < first):
+                first = parsed
+    return first
 
 
 def _extract_matrix(result: Any, name: str) -> np.ndarray:
@@ -535,6 +569,11 @@ def _archive_point_from_record(
     except ValueError:
         return None
     if point_date > election_date:
+        return None
+    # A snapshot forecasts one election. One made for an earlier election is
+    # never a point of this election's history, however its date falls.
+    record_election = record.get("election_date", source.get("election_date"))
+    if record_election is not None and str(record_election) != election_date.isoformat():
         return None
     groups = source.get("groups", source.get("coalition_groups"))
     if not isinstance(groups, Mapping):
@@ -778,19 +817,34 @@ def first_changed_poll_date(
 def missing_curve_dates(
     payload: Mapping[str, Any],
     *,
-    dynamics_cap_date: str | date = HISTORY_CAP_DATE,
+    dynamics_cap_date: str | date | None = None,
 ) -> list[date]:
-    """Daily dates the reconstructed curve should cover but does not.
+    """Dates the reconstructed curve should cover but does not.
 
     The chart draws one continuous line through the non-archived points, so a
     date carrying only an archived prospective point is a hole in it.  Each
     publication creates one: the roll-in relabels the previous official point
-    ``prospective_archived`` and cannot simulate a replacement.  Only the
-    daily part of the schedule is considered -- before the dynamics cap the
-    series is deliberately weekly.
+    ``prospective_archived`` and cannot simulate a replacement.
+
+    Two kinds of date are due:
+
+    * every date of the schedule up to the latest point -- weekly anchors
+      before the dynamics cap, every day from it -- that has no curve point;
+    * every date that carries only an archived point, wherever it falls. In the
+      weekly part of a cycle, daily publications leave such dates between the
+      anchors; left unfilled, the chart would break its line at each of them.
+
+    The schedule is derived from the payload's own election, so a history for
+    any cycle is judged against its own weekly and daily regimes.
     """
 
-    cap = _coerce_date(dynamics_cap_date, name="dynamics_cap_date")
+    try:
+        election = _coerce_date(payload.get("election_date") or DEFAULT_ELECTION_DATE,
+                                name="election_date")
+    except (TypeError, ValueError):
+        return []
+    cap = _coerce_date(dynamics_cap_date if dynamics_cap_date is not None
+                       else dynamics_cap_start_for(election), name="dynamics_cap_date")
     curve_dates: set[date] = set()
     all_dates: set[date] = set()
     for point in payload.get("series") or []:
@@ -803,20 +857,28 @@ def missing_curve_dates(
             curve_dates.add(point_date)
     if not all_dates:
         return []
-    latest = max(all_dates)
-    missing: list[date] = []
-    current = max(cap, min(all_dates))
-    while current <= latest:
-        if current not in curve_dates:
-            missing.append(current)
-        current += timedelta(days=1)
-    return missing
+    # A history that started a new cycle declares where its schedule begins,
+    # before its first point exists. Any other history is scheduled from its
+    # own first point, as it always was.
+    declared_start = (payload.get("schedule") or {}).get("cycle_start_date")
+    try:
+        start = _coerce_date(declared_start, name="cycle_start_date") if declared_start else min(all_dates)
+    except ValueError:
+        start = min(all_dates)
+    schedule = build_history_dates(
+        start_date=start,
+        latest_date=max(all_dates),
+        election_date=election,
+        dynamics_cap_date=cap,
+    )
+    due = set(schedule) | (all_dates - curve_dates)
+    return sorted(point_date for point_date in due if point_date not in curve_dates)
 
 
 def build_history(
     *,
     election_date: str | date = DEFAULT_ELECTION_DATE,
-    start_date: str | date = HISTORY_START_DATE,
+    start_date: str | date | None = None,
     latest_date: str | date | None = None,
     dates: Sequence[str | date] | None = None,
     samples: int = DEFAULT_HISTORY_SAMPLES,
@@ -850,6 +912,9 @@ def build_history(
     if samples <= 0 or production_latest_samples <= 0:
         raise ValueError("samples must be positive")
     election = _coerce_date(election_date, name="election_date")
+    if start_date is None:
+        start_date = history_start_for(election)
+    dynamics_cap = dynamics_cap_start_for(election)
     poll_path = Path(poll_file)
     timeseries_path = Path(timeseries_file)
     if dates is None:
@@ -1233,8 +1298,8 @@ def build_history(
         },
         "schedule": {
             "start_date": _coerce_date(start_date, name="start_date").isoformat(),
-            "weekly_until": (HISTORY_CAP_DATE - timedelta(days=1)).isoformat(),
-            "daily_from": HISTORY_CAP_DATE.isoformat(),
+            "weekly_until": (dynamics_cap - timedelta(days=1)).isoformat(),
+            "daily_from": dynamics_cap.isoformat(),
             "observation_count": len(series),
         },
         "poll_date_range": {
@@ -1344,6 +1409,9 @@ def update_history_with_production_result(
     # archive entry can still supply the exact generation/provenance linkage.
     archive_metadata: dict[date, Mapping[str, Any]] = {}
     for record in _load_archive_records(archive_dir):
+        record_election = record.get("election_date")
+        if record_election is not None and str(record_election) != election.isoformat():
+            continue
         raw_date = record.get("as_of", record.get("snapshot_date"))
         try:
             record_date = _coerce_date(raw_date, name="archive snapshot date")
@@ -1482,6 +1550,69 @@ def update_history_with_production_result(
     return payload
 
 
+def start_new_cycle_history(
+    production_result: Any,
+    *,
+    election_date: str | date,
+    poll_file: Path | str = DEFAULT_POLL_FILE,
+    timeseries_file: Path | str = DEFAULT_TIMESERIES_FILE,
+    archive_dir: Path | str | None = DEFAULT_ARCHIVE_DIR,
+    coalitions: Mapping[str, Sequence[str]] = DEFAULT_COALITIONS,
+    publication_generation: str | None = None,
+    deterministic_payload_sha256: str | None = None,
+    generated_at_utc: str | None = None,
+    model_commit: str | None = None,
+    source_worktree_clean: bool | None = None,
+) -> dict[str, Any]:
+    """The first history of a new election cycle: the certified point alone.
+
+    Used when the existing artifact targets an earlier election. Nothing of
+    that history is carried over -- its points forecast a different election,
+    and the website keeps it as a frozen archive of its own. The schedule
+    starts at the first Poll of Polls estimate after the previous election;
+    the backfill that follows fills the scheduled dates from there.
+    """
+
+    election = _coerce_date(election_date, name="election_date")
+    as_of = _result_as_of(production_result)
+    if as_of is None:
+        raise ValueError("production_result must carry an as_of date")
+    start = first_post_election_timeseries_date(timeseries_file, election)
+    if start is None or start > as_of:
+        raise ValueError(
+            f"No Poll of Polls estimate after {previous_election_date(election)} is available "
+            f"by {as_of}; the {election.year} cycle cannot start yet")
+    summary = getattr(production_result, "summary", None)
+    samples = int(getattr(summary, "total_samples", 0) or 0) or len(
+        _extract_matrix(production_result, "seats_matrix"))
+    history = build_history(
+        election_date=election,
+        start_date=start,
+        dates=[as_of],
+        poll_file=poll_file,
+        timeseries_file=timeseries_file,
+        archive_dir=archive_dir,
+        latest_result=production_result,
+        production_latest_samples=samples,
+        coalitions=coalitions,
+        model_commit=model_commit,
+        generated_at_utc=generated_at_utc,
+        source_worktree_clean=source_worktree_clean,
+        production_metadata={
+            "publication_generation": publication_generation,
+            "deterministic_payload_sha256": deterministic_payload_sha256,
+            "generated_at_utc": generated_at_utc,
+        },
+    )
+    # Declared, so the backfill and the completeness check both schedule from
+    # the cycle's start rather than from the certified point, which is the
+    # history's only point so far.
+    history["schedule"]["cycle_start_date"] = start.isoformat()
+    history["deterministic_content_sha256"] = deterministic_history_sha256(history)
+    validate_history_contract(history)
+    return history
+
+
 def generate_history(**kwargs: Any) -> dict[str, Any]:
     """Backward-compatible descriptive alias for :func:`build_history`."""
 
@@ -1541,6 +1672,9 @@ def backfill_reconstructed_curve(
         official_samples = int(official[-1]["samples"]) if official else 100_000
     filled = build_history(
         election_date=election_date,
+        # The payload's own schedule, not the cycle default: a cycle that
+        # started at its first post-election estimate keeps that start.
+        start_date=(payload.get("schedule") or {}).get("start_date"),
         dates=dates,
         samples=samples,
         seed=seed,
@@ -1576,6 +1710,10 @@ def backfill_reconstructed_curve(
         if key not in filled:
             filled[key] = value
             carried = True
+    cycle_start = (payload.get("schedule") or {}).get("cycle_start_date")
+    if cycle_start and (filled.get("schedule") or {}).get("cycle_start_date") != cycle_start:
+        filled.setdefault("schedule", {})["cycle_start_date"] = cycle_start
+        carried = True
     # The digest covers the whole payload, so it has to be taken after the
     # carried-across views are back in place.
     if carried:
@@ -1602,7 +1740,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         default=None,
         help="Generate one explicit date (repeat for chunked/resumable runs)",
     )
-    parser.add_argument("--start-date", default=HISTORY_START_DATE.isoformat())
+    parser.add_argument("--start-date", default=None,
+                        help="First history date; defaults to a week after the previous election")
     parser.add_argument("--latest-date", default=None)
     parser.add_argument("--election-date", default=DEFAULT_ELECTION_DATE)
     parser.add_argument("--samples", type=int, default=DEFAULT_HISTORY_SAMPLES)
@@ -1672,6 +1811,8 @@ __all__ = [
     "DEFAULT_TIMESERIES_FILE",
     "HISTORY_CAP_DATE",
     "HISTORY_START_DATE",
+    "first_post_election_timeseries_date",
+    "start_new_cycle_history",
     "build_history",
     "build_history_dates",
     "generate_history",

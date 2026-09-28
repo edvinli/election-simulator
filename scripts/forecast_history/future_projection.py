@@ -36,6 +36,7 @@ from .contract import (
     validate_history_contract,
     validate_publication_chronology,
 )
+from .generate import start_new_cycle_history
 from .generate import update_history_with_production_result as _update_history_with_production_result
 from .projection_simulator import ELECTION_NOISE_RNG_POLICY, simulate_conditional_projection
 
@@ -552,6 +553,16 @@ def roll_in_certified_point(
     nothing and keeps them consistent with what was actually published.
     """
 
+    # The first forecast for a later election starts that election's own
+    # history. The existing artifact forecasts an election that has been
+    # decided; none of its points belongs to the new one.
+    target = history_kwargs.get("election_date")
+    if target is not None and str(existing_payload.get("election_date", "")) < (
+            target.isoformat() if isinstance(target, date) else str(target)):
+        history = start_new_cycle_history(production_result, **history_kwargs)
+        validate_publication_chronology(history, _certified_current_point(history)["date"])
+        return history
+
     historical_payload = _discard_persisted_projection_rows(existing_payload)
     # Chronology is checked here, against the payload the base updater will
     # actually ingest: before it, leaked projection rows would inflate the
@@ -692,8 +703,11 @@ def finalize_future_views(history: dict[str, Any]) -> dict[str, Any]:
 
     history["deterministic_content_sha256"] = deterministic_history_sha256(history)
     validate_history_contract(history)
-    validate_future_projection_contract(history)
-    validate_secondary_projection_role(history["future_projection"])
+    # Outside an election's final 112 days neither view is built (see
+    # `future_views_required`), so each is validated when present.
+    if "future_projection" in history:
+        validate_future_projection_contract(history)
+        validate_secondary_projection_role(history["future_projection"])
     if "future_campaign_paths" in history:
         validate_future_campaign_paths_contract(history)
     return history

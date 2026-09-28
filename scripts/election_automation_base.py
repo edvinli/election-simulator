@@ -81,6 +81,7 @@ from scripts.static_exporter import (
     validate_published_directory,
 )
 from scripts.simulator.config import DEFAULT_ELECTION_DATE, DEFAULT_SIMULATION_SEED
+from scripts.simulator.election_cycles import dynamics_cap_start_for, previous_election_date
 from scripts.simulator.exact_draw_sidecar import (
     SIDECAR_DRAWS_FILENAME,
     SIDECAR_METADATA_FILENAME,
@@ -175,6 +176,31 @@ def _timed_stage(stage: str, callback: StageCallback | None):
 
 class AfterElectionDay(AutomationError):
     """The explicit stop guard has passed the election date."""
+
+
+class AwaitingPostElectionPolls(AutomationError):
+    """The target's cycle has no Poll of Polls estimate after the previous election yet.
+
+    A forecast for the next election built on an estimate made before the
+    previous one would be that election's forecast relabelled. Nothing is
+    certified until the first post-election estimate exists; it is an
+    expected, temporary state, not a failure.
+    """
+
+
+def guard_cycle_started(pop_estimate_date: str, election_date: date) -> None:
+    """Refuse to certify before the cycle's first post-election estimate."""
+
+    previous = previous_election_date(election_date)
+    try:
+        estimate = date.fromisoformat(str(pop_estimate_date))
+    except ValueError:
+        # "UNAVAILABLE": certification has its own check for a missing estimate.
+        return
+    if estimate <= previous:
+        raise AwaitingPostElectionPolls(
+            f"the latest Poll of Polls estimate ({pop_estimate_date}) predates the "
+            f"{previous} election; the {election_date.year} forecast waits for a newer one")
 
 
 @dataclass
@@ -1632,6 +1658,20 @@ CURVE_INCOMPLETE = "INCOMPLETE"
 VIEW_REBUILT = "REBUILT"
 VIEW_OMITTED = "OMITTED"
 VIEW_NOT_REQUIRED = "NOT_REQUIRED_ON_ELECTION_DAY"
+VIEW_OUTSIDE_WINDOW = "NOT_REQUIRED_OUTSIDE_CAMPAIGN_WINDOW"
+
+
+def future_views_required(*, origin_date: str, election_date: str) -> bool:
+    """Whether a forecast made on ``origin_date`` carries the future views.
+
+    Only inside the election's final 112 days, the same window in which the
+    dynamics layer models the full remaining horizon. Further out, the
+    secondary fan would need one full simulation per remaining day and the
+    campaign paths an array per day of the horizon -- about 1,440 of each four
+    years out -- to describe a road the model itself caps at 112 days.
+    """
+
+    return origin_date >= dynamics_cap_start_for(date.fromisoformat(election_date)).isoformat()
 
 
 def _future_views_report(
@@ -1644,6 +1684,14 @@ def _future_views_report(
 
     certified = _current_production_point(history)
     origin = str(certified.get("date") or "")
+    if not future_views_required(origin_date=origin, election_date=election_date.isoformat()):
+        return {
+            "status": CURVE_COMPLETE,
+            "secondary_projection": VIEW_OUTSIDE_WINDOW,
+            "primary_campaign_paths": VIEW_OUTSIDE_WINDOW,
+            "missing": [],
+            "error": error,
+        }
     campaign_required = origin < election_date.isoformat()
     present = isinstance(history.get("future_campaign_paths"), Mapping)
     if present:
@@ -1665,6 +1713,8 @@ def _future_views_report(
 def required_history_views(*, origin_date: str, election_date: str) -> tuple[str, ...]:
     """The view sections a history for ``origin_date`` must carry."""
 
+    if not future_views_required(origin_date=origin_date, election_date=election_date):
+        return ()
     if origin_date < election_date:
         return ("future_projection", "future_campaign_paths")
     return ("future_projection",)
@@ -1817,41 +1867,50 @@ def render_history_for_generation(
     history.pop("future_campaign_paths", None)
 
     views_error: str | None = None
+    views_due = future_views_required(
+        origin_date=str(certified_point.get("date") or ""),
+        election_date=election_date.isoformat())
     with _timed_stage("history projections", stage_callback):
-        # `model_data_dir` is the processed root the pinned inputs live under,
-        # which is what both views must simulate from: a projection drawn from
-        # newer polling than the forecast saw is not that forecast's
-        # projection.
-        #
-        # The secondary fan is required -- a history without it is not
-        # publishable -- so its failure propagates.
-        history = attach_secondary_projection(
-            history,
-            production_result,
-            projection_data_dir=model_data_dir,
-            projection_runner=projection_runner,
-        )
-        try:
-            history = attach_primary_campaign_paths(
+        if not views_due:
+            # Outside the final 112 days: neither view is built or required,
+            # and the artifact carries neither (both were dropped above).
+            _log_stage("history projections", "SKIPPED outside the campaign window")
+        else:
+            # `model_data_dir` is the processed root the pinned inputs live
+            # under, which is what both views must simulate from: a projection
+            # drawn from newer polling than the forecast saw is not that
+            # forecast's projection.
+            #
+            # The secondary fan is required -- a history without it is not
+            # publishable -- so its failure propagates.
+            history = attach_secondary_projection(
                 history,
                 production_result,
                 projection_data_dir=model_data_dir,
-                campaign_path_simulator=campaign_path_simulator,
+                projection_runner=projection_runner,
             )
-        except Exception as error:  # noqa: BLE001 - reported, never guessed at
-            # The primary view's entire claim is that its election-day
-            # endpoint is bitwise identical to the certified draws. If that
-            # cannot be established, there are three options and only one is
-            # honest: publish a view whose guarantee is false, keep another
-            # generation's view, or publish none and say so.
-            #
-            # Only a caller that asked for degraded rendering gets the third.
-            # For everyone else -- publication above all -- this still fails.
-            if not allow_degraded_views:
-                raise
-            views_error = f"{type(error).__name__}: {error}"
-            history.pop("future_campaign_paths", None)
-            _log_stage("history projections", f"PRIMARY VIEW OMITTED {views_error}")
+            try:
+                history = attach_primary_campaign_paths(
+                    history,
+                    production_result,
+                    projection_data_dir=model_data_dir,
+                    campaign_path_simulator=campaign_path_simulator,
+                )
+            except Exception as error:  # noqa: BLE001 - reported, never guessed at
+                # The primary view's entire claim is that its election-day
+                # endpoint is bitwise identical to the certified draws. If that
+                # cannot be established, there are three options and only one
+                # is honest: publish a view whose guarantee is false, keep
+                # another generation's view, or publish none and say so.
+                #
+                # Only a caller that asked for degraded rendering gets the
+                # third. For everyone else -- publication above all -- this
+                # still fails.
+                if not allow_degraded_views:
+                    raise
+                views_error = f"{type(error).__name__}: {error}"
+                history.pop("future_campaign_paths", None)
+                _log_stage("history projections", f"PRIMARY VIEW OMITTED {views_error}")
         history = finalize_future_views(history)
     # Checked at the one place both publication and rendering pass through, so
     # a future writer cannot mutate the payload between construction and
@@ -1885,7 +1944,7 @@ def deployed_render_state(
     *,
     site_repo: Path,
     generation: str,
-    election_date: date | str = ELECTION_DAY,
+    election_date: date | str | None = None,
 ) -> dict[str, Any]:
     """Whether the website already serves this generation, and completely.
 
@@ -1909,9 +1968,12 @@ def deployed_render_state(
     """
 
     site = Path(site_repo)
+    # Judged against the election the deployed history itself forecasts
+    # unless the caller names one: a generation certified for one election is
+    # never measured against another's campaign window.
     election = (
         election_date.isoformat() if isinstance(election_date, date)
-        else str(election_date)
+        else (str(election_date) if election_date is not None else None)
     )
 
     def outcome(**fields: Any) -> dict[str, Any]:
@@ -1969,6 +2031,8 @@ def deployed_render_state(
         )
 
     origin = str(certified.get("date") or "")
+    if election is None:
+        election = str(history.get("election_date") or "")
     missing_views = [
         name for name in required_history_views(origin_date=origin, election_date=election)
         if not isinstance(history.get(name), Mapping)
@@ -2013,7 +2077,7 @@ def render_certified_generation(
     site: Path,
     generation: str,
     certification_commit: str | None = None,
-    election_date: date | str = ELECTION_DAY,
+    election_date: date | str | None = None,
     history_workers: int | None = None,
     repair: bool = False,
     projection_runner: Callable[..., Any] | None = None,
@@ -2068,7 +2132,18 @@ def render_certified_generation(
         }
     certified = load_certified_generation(
         root, generation=generation, certification_commit=certification_commit)
-    election = election_date if isinstance(election_date, date) else date.fromisoformat(str(election_date))
+    # The election is the generation's own, read from its immutable snapshot.
+    # Rendering a 2026 generation after the default has moved to 2030 must
+    # still render it for 2026; a caller that names a different election than
+    # the one the generation was certified for is refused.
+    certified_election = date.fromisoformat(str(certified.snapshot["election_date"]))
+    if election_date is not None:
+        requested = election_date if isinstance(election_date, date) else date.fromisoformat(str(election_date))
+        if requested != certified_election:
+            raise AutomationError(
+                f"{generation} was certified for the {certified_election} election, "
+                f"not {requested}")
+    election = certified_election
 
     publication_destination = root / "files" / "election-simulator"
     history_destination = publication_destination / "history" / "coalition-timeseries.json"
@@ -3042,6 +3117,8 @@ def run_automation(
                 pop_timeseries,
                 as_of=today,
             )
+            if resolved_mode != "probe":
+                guard_cycle_started(summary.pop_estimate_date, election)
 
             # A source commit without a successful publication is a durable
             # pending marker.  It must force the next retry even though the
@@ -3117,11 +3194,12 @@ def run_automation(
                     pending = str(probe.get("generation", ""))
                     summary.publication_generation = pending or "NONE"
                     try:
+                        # The pending generation's own election: after a
+                        # cycle switch it may be the previous one.
                         rendered = render_certified_generation(
                             root=root,
                             site=site,
                             generation=pending,
-                            election_date=election,
                             history_workers=history_workers,
                             website_check_fn=website_check_fn,
                             website_push_check_fn=website_push_check_fn,
@@ -3273,6 +3351,10 @@ def run_automation(
         summary.deployment_status = "STOPPED_AFTER_ELECTION"
         summary.failure = str(exc)
         return AutomationResult(status="STOPPED_AFTER_ELECTION", summary=summary)
+    except AwaitingPostElectionPolls as exc:
+        summary.deployment_status = "AWAITING_POST_ELECTION_POLLS"
+        summary.failure = str(exc)
+        return AutomationResult(status="AWAITING_POST_ELECTION_POLLS", summary=summary)
     except Exception as exc:  # noqa: BLE001 - CLI converts all gates to one summary
         summary.deployment_status = "FAILED"
         summary.failure = str(exc)
@@ -3306,7 +3388,9 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Override ELECTION_AUTOMATION_ENABLED for this invocation",
     )
-    parser.add_argument("--election-date", default=ELECTION_DAY.isoformat())
+    # Publication targets the configured election; rendering defaults to the
+    # election the generation itself was certified for.
+    parser.add_argument("--election-date", default=None)
     parser.add_argument("--summary-path", type=Path, default=None)
     parser.add_argument(
         "--history-workers",
@@ -3500,7 +3584,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         schedule=args.schedule,
         mode=args.mode,
         automation_enabled=args.automation_enabled,
-        election_date=args.election_date,
+        election_date=args.election_date or ELECTION_DAY.isoformat(),
         commit=commit,
         push=push,
         stage_callback=_log_stage,
@@ -3516,6 +3600,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "PUBLISHED",
         "SOURCE_CHECKED",
         "STOPPED_AFTER_ELECTION",
+        "AWAITING_POST_ELECTION_POLLS",
         "DISABLED_BY_REPOSITORY_KILL_SWITCH",
         "DEFERRED_BENCHMARK_WINDOW",
         "WEBSITE_RECOVERED",
