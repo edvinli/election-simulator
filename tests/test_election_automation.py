@@ -27,7 +27,6 @@ import numpy as np
 from scripts import election_automation_base as base
 from scripts.election_automation import (
     DAILY_SCHEDULE_UTC,
-    ELECTION_DAY,
     BROWSER_SMOKE_TIMEOUT_SECONDS,
     JEKYLL_BUILD_TIMEOUT_SECONDS,
     INTRADAY_SCHEDULE_UTC,
@@ -36,14 +35,14 @@ from scripts.election_automation import (
     automation_enabled_for_event,
     classify_run_type,
     current_stockholm_date,
-    guard_election_date,
+    guard_election_date as _guard_election_date,
     _log_stage,
     latest_pop_observation_date,
     model_relevant_snapshot_sha256,
     refresh_polling_snapshot,
     resolve_mode,
-    run_automation,
-    run_production_event,
+    run_automation as _run_automation,
+    run_production_event as _run_production_event,
     run_website_checks,
     should_publish,
 )
@@ -64,6 +63,7 @@ from scripts.forecast_history.generate import (
 from scripts.publication_pipeline.pipeline import run_publication_pipeline
 from scripts.site_publisher import GENERATION_FILES, publish_generation_to_site, sync_history_to_site
 from scripts.static_exporter import validate_published_directory
+from scripts.simulator.config import DEFAULT_ELECTION_DATE
 from scripts.simulator.engine import SimulationResult, simulate_election
 from scripts.simulator.reproducibility import compute_file_sha256
 from scripts.rendering import (
@@ -92,6 +92,28 @@ from tests.site_publication_fixture import (
     install_frozen_site_publication,
 )
 from tests.support.git_fixtures import disable_background_maintenance
+
+
+# These tests exercise the 2026 campaign's mechanics on 2026 fixtures: the
+# final-week cadence, election day, the stop after it. The production target
+# has since moved to the next election (docs/election_cycle_2030.md), so the
+# election they model is pinned here rather than taken from the default. The
+# functions under test are otherwise called exactly as before.
+ELECTION_DAY = date(2026, 9, 13)
+
+
+def run_automation(*args, **kwargs):
+    kwargs.setdefault("election_date", ELECTION_DAY)
+    return _run_automation(*args, **kwargs)
+
+
+def run_production_event(*args, **kwargs):
+    kwargs.setdefault("election_date", ELECTION_DAY)
+    return _run_production_event(*args, **kwargs)
+
+
+def guard_election_date(today, election_date=ELECTION_DAY):
+    return _guard_election_date(today, election_date)
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
@@ -2411,6 +2433,16 @@ time.sleep(60)
         """
 
         existing = json.loads(LIVE_HISTORY_ARTIFACT.read_text())
+        # Resuming is something only the target election's history does. Once
+        # the target has moved on, the committed artifact is a decided
+        # election's final history, which no publication resumes (the next
+        # one starts a fresh cycle); the model files it was reconstructed
+        # under have also legitimately moved. The lane resumes with the first
+        # history for the new target.
+        if existing["election_date"] != DEFAULT_ELECTION_DATE:
+            self.skipTest(
+                f"the committed history is the decided {existing['election_date']} election's; "
+                f"the target is {DEFAULT_ELECTION_DATE}")
 
         # A date that already carries a reconstructed point must not be
         # resimulated *while its effective model inputs are unchanged*. That
@@ -2606,6 +2638,7 @@ time.sleep(60)
         updated = update_history_with_production_result(
             existing,
             result,
+            election_date=existing["election_date"],
             poll_file=REPOSITORY_ROOT / "data/processed/pollofpolls/swedishpolls_individual_polls.csv",
             timeseries_file=REPOSITORY_ROOT / "data/processed/pollofpolls/pollofpolls_timeseries.csv",
             archive_dir=REPOSITORY_ROOT / "data/processed/prospective_forecasts",

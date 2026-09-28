@@ -18,7 +18,7 @@ import json
 import os
 import signal
 import sys
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 from scripts import election_automation_base as base
@@ -84,6 +84,8 @@ def main() -> int:
         website_check_fn=lambda _root: {"status": "PASS"},
         website_push_check_fn=lambda _root: {"status": "PASS"},
         generated_at_utc=f"{as_of}T08:00:00+00:00",
+        # The 2026 campaign these fixtures model, not the configured target.
+        election_date=date(2026, 9, 13),
     )
     # Only reached if the kill never happened, which is itself the diagnosis.
     # Only reached if the kill never happened, which is itself the diagnosis.

@@ -5,10 +5,15 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Mapping
 
-DEFAULT_ELECTION_DATE: str = "2026-09-13"
+# The election the production forecast targets. The 2026 election is decided;
+# the cycle moved to the next ordinary election (docs/election_cycle_2030.md).
+DEFAULT_ELECTION_DATE: str = "2030-09-08"
 DEFAULT_SIMULATION_SAMPLES: int = 100_000
 DEFAULT_SIMULATION_SEED: int = 12345
-DEFAULT_GEOGRAPHY_BASELINE_YEAR: int = 2022
+# The baseline for the default target only. Callers resolve the baseline from
+# their own target through scripts.simulator.election_cycles, and the engine
+# refuses a baseline that does not precede its target.
+DEFAULT_GEOGRAPHY_BASELINE_YEAR: int = 2026
 DEFAULT_MAJORITY_THRESHOLD: int = 175
 
 # Advanced from 1.0.0-rc1 when the preregistered historical evaluation selected the
