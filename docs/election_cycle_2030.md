@@ -69,6 +69,46 @@ deployed 2026 history unchanged. That was verified against `main`.
     is still the pre-election count.
   - 29 rows for **2030** repeat the 2026 electorate as a stand-in.
 
+## History and automation for a new cycle
+
+None of this changes anything while the target is 2026. Each 2026 answer is
+asserted unchanged by `tests/test_election_cycle_2030_history.py`.
+
+**A new cycle starts a fresh history.** When the existing artifact forecasts
+an earlier election, the roll-in builds a new history holding the certified
+point alone. Nothing of the old history is carried over: its points forecast
+a decided election, and the website keeps it as a frozen archive at
+`history/2026/`. The history's `schedule.cycle_start_date` is the first Poll of
+Polls estimate after the previous election, and the backfill fills the
+schedule from there.
+
+**No forecast of the next election on a pre-election estimate.** Publication
+refuses to certify while the latest Poll of Polls estimate is on or before the
+previous election. It reports `AWAITING_POST_ELECTION_POLLS`, a successful
+no-op, until a newer estimate exists.
+
+**The schedule is the election's own.** Weekly anchors run from the cycle
+start, and dates are daily from the election's dynamics cap.
+`missing_curve_dates` also treats every publication day that carries only an
+archived point as a hole, wherever it falls. In the weekly part of a cycle,
+daily publications leave such days between the anchors, and the chart would
+otherwise break its line at each of them.
+
+**Elections are kept apart:**
+
+- A snapshot made for an earlier election is never a point of a later
+  election's history.
+- The first forecast of a cycle has no "change since prior".
+- Rendering takes the election from the generation's own snapshot and
+  refuses a caller that names another.
+- The completeness check reads the election from the deployed history.
+
+**Future views only in the final 112 days.** Both the secondary fan and the
+campaign paths are built and required only from the election's dynamics cap
+(2030-05-19). Four years out, they would take about 1,440 simulations and
+about 17 GB of path arrays per publication, to describe movement the model
+caps at 112 days. The website already works without them.
+
 ## Stand-ins to replace
 
 | Input | Stand-in | Replace when |

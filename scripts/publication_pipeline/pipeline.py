@@ -276,8 +276,17 @@ def _temporary_canonical_artifacts(result: SimulationResult, directory: Path) ->
     return canonical, sidecar
 
 
-def _load_prior_snapshot(archive_dir: Path | str, current_as_of: str) -> dict[str, Any] | None:
-    """Load the latest immutable snapshot strictly before the current as-of date."""
+def _load_prior_snapshot(
+    archive_dir: Path | str,
+    current_as_of: str,
+    election_date: str | None = None,
+) -> dict[str, Any] | None:
+    """Load the latest immutable snapshot strictly before the current as-of date.
+
+    Only snapshots for the same election qualify: the first forecast of a new
+    cycle has no prior, rather than a "change since" measured against the last
+    forecast of the previous election.
+    """
 
     root = Path(archive_dir)
     index_path = root / "index.json"
@@ -286,7 +295,8 @@ def _load_prior_snapshot(archive_dir: Path | str, current_as_of: str) -> dict[st
     with index_path.open(encoding="utf-8") as handle:
         index = json.load(handle)
     entries = index.get("snapshots", [])
-    prior = [entry for entry in entries if str(entry.get("snapshot_date", "")) < str(current_as_of)]
+    prior = [entry for entry in entries if str(entry.get("snapshot_date", "")) < str(current_as_of)
+             and (election_date is None or str(entry.get("election_date", "")) == str(election_date))]
     if not prior:
         return None
     # Several snapshots may share a calendar day.  Break ties on the sortable
@@ -408,7 +418,7 @@ def run_publication_pipeline(
         if requires_source_certification:
             run.stages.append({"name": "source_certification", "status": "PASS"})
 
-        prior_snapshot = _load_prior_snapshot(archive_dir, result.summary.as_of)
+        prior_snapshot = _load_prior_snapshot(archive_dir, result.summary.as_of, str(election_date))
         # One canonical generation id links the archive snapshot to the
         # published version directory.  An export without an archive append
         # derives its own id from the same timestamp and payload.
