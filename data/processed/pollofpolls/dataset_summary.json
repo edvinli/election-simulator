@@ -44,10 +44,10 @@
   ],
   "supplementary_earliest_interview_start": "1944-08-13",
   "supplementary_earliest_publication": "1944-08-30",
-  "supplementary_individual_polls": 2658,
-  "supplementary_latest_interview_end": "2026-09-11",
-  "supplementary_latest_publication": "2026-09-11",
-  "supplementary_long_rows": 26580,
+  "supplementary_individual_polls": 2673,
+  "supplementary_latest_interview_end": "2026-09-25",
+  "supplementary_latest_publication": "2026-09-28",
+  "supplementary_long_rows": 26730,
   "supplementary_original_pollsters": [
     "Demoskop",
     "Demoskop valdag",
@@ -91,9 +91,9 @@
     "SD",
     "V"
   ],
-  "supplementary_polls_with_interview_span": 2320,
-  "supplementary_polls_with_publication_date": 2307,
-  "supplementary_polls_with_sample_size": 2506,
+  "supplementary_polls_with_interview_span": 2335,
+  "supplementary_polls_with_publication_date": 2324,
+  "supplementary_polls_with_sample_size": 2510,
   "supplementary_polls_with_source_references": 463,
   "supplementary_pollsters": [
     "Demoskop",

@@ -11,18 +11,18 @@ Swedish election project. It does **not** contain forecasting or simulation code
   (14,500 long-format rows), with interview spans from
   2009-01-02 through
   2026-09-11.
-- Supplementary SwedishPolls dataset: **2,658** polls
-  (26,580 long-format rows), published from
+- Supplementary SwedishPolls dataset: **2,673** polls
+  (26,730 long-format rows), published from
   1944-08-30 through
-  2026-09-11; available interview spans run from
+  2026-09-28; available interview spans run from
   1944-08-13 through
-  2026-09-11.
+  2026-09-25.
 - Unique pollster/interview-span metadata matches: **1,194**;
   unmatched or ambiguous Pollofpolls polls: **256**.
 - Supplementary field coverage: publication date on
-  **2,307** polls, interview span on
-  **2,320**, sample size on
-  **2,506**, and row source references on
+  **2,324** polls, interview span on
+  **2,335**, sample size on
+  **2,510**, and row source references on
   **463**.
 - Parties/categories present in source values: `C`, `FI`, `KD`, `L`, `M`, `MP`, `S`, `SD`, `V`, `other`.
 - Pollsters present: Demoskop, Indikator, Inizio, Ipsos, Novus, SCB, Sentio, Sifo, Skop, United Minds, YouGov.
