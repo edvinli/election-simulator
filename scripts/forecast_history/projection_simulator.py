@@ -26,7 +26,7 @@ from scripts.hindcasts.models import (
     derive_shared_dynamics_seed,
     sample_shared_symmetric_dynamics,
 )
-from scripts.mandates.config import FIXED_SEATS_2018, FIXED_SEATS_2022, FIXED_SEATS_2026
+from scripts.simulator.election_cycles import fixed_seats_for, geography_baseline_year_for
 from scripts.pollofpolls.clr import clr_to_composition_matrix
 from scripts.pollofpolls.state import OpinionState, estimate_opinion, load_timeseries_dataset
 from scripts.pollofpolls.state_config import ALL_CATEGORIES
@@ -167,12 +167,7 @@ def _allocate_seats(
     base = base.copy()
     row_int = _apportion_constituency_units_of_25(row_targets.copy(), total_national_votes)
     row_col = row_int[:, np.newaxis].astype(np.float64)
-    if target_year == 2018:
-        fixed = FIXED_SEATS_2018
-    elif target_year == 2022:
-        fixed = FIXED_SEATS_2022
-    else:
-        fixed = FIXED_SEATS_2026
+    fixed = fixed_seats_for(target_year)
     fixed_arr = np.array([fixed[code] for code in OFFICIAL_CONSTITUENCY_CODES], dtype=np.int64)
 
     seats = np.zeros((national.shape[0], len(PARLIAMENTARY_PARTIES_8)), dtype=np.int64)
@@ -207,7 +202,7 @@ def simulate_conditional_projection(
     seed: int,
     data_dir: Path | str | None = None,
     opinion_state: OpinionState | None = None,
-    baseline_year: int = 2022,
+    baseline_year: int | None = None,
     total_national_votes: int = 6_500_000,
 ) -> ProjectionSimulationResult:
     """Simulate one projection point with a frozen state and explicit horizon."""
@@ -229,6 +224,8 @@ def simulate_conditional_projection(
         data_dir=root,
     )
     geo_dir = root / "geography" if data_dir is not None else DEFAULT_PROCESSED_GEOGRAPHY_DIR
+    if baseline_year is None:
+        baseline_year = geography_baseline_year_for(election.year)
     seats = _allocate_seats(
         national,
         election_date=election,

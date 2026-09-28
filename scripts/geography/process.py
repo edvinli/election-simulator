@@ -57,6 +57,57 @@ def _parse_xlsx_sheet(xlsx_path: Path, sheet_name: str) -> list[dict[str, str | 
         return rows
 
 
+#: Valmyndigheten's certified 2026 result: the same evidence the prospective
+#: benchmark scores against, verified by its strict loader before any row is
+#: read from it.
+VAL2026_RESULT_MANIFEST = (
+    Path(__file__).resolve().parents[2] / "data" / "raw" / "elections" / "val2026"
+    / "official_result_manifest.json"
+)
+
+#: The 2030 electorate per constituency is not published until August 2030.
+#: Until then the 2026 electorate stands in for it; with the 2026 turnout as
+#: the baseline rate, the projected 2030 constituency totals equal the 2026
+#: valid votes exactly.
+STAND_IN_ELECTORATE_YEARS: dict[int, int] = {2030: 2026}
+
+
+def load_val2026_constituency_votes(
+    manifest_path: Path | str = VAL2026_RESULT_MANIFEST,
+) -> dict[str, dict[str, Any]]:
+    """Certified 2026 constituency votes as {code: {"valid": n, "votes": {party: n}}}.
+
+    The denominator is ``rosterPaverkaMandat.antalRoster``: votes for parties
+    taking part in the seat distribution, which is how the 2018 and 2022 rows
+    are defined. Parties outside the eight are summed into REST.
+    """
+
+    from scripts.prospective_benchmark_2026.results import load_official_result
+
+    official = load_official_result(manifest_path)
+    raw = json.loads(official.raw_path.read_text(encoding="utf-8"))
+    out: dict[str, dict[str, Any]] = {}
+    for constituency in raw["valkretsar"]:
+        code = CONSTITUENCY_NAME_TO_CODE[constituency["namn"].strip()]
+        counted = constituency["rosterPaverkaMandat"]
+        votes: dict[str, int] = {p: 0 for p in MODEL_PARTIES_9}
+        for row in counted["partiroster"]:
+            party = row["partiforkortning"]
+            votes[party if party in votes and party != "REST" else "REST"] += int(row["antalRoster"])
+        votes["REST"] += int((counted.get("rosterOvrigaPartier") or {}).get("antalRoster") or 0)
+        valid = int(counted["antalRoster"])
+        if sum(votes.values()) != valid:
+            raise ValueError(f"2026 constituency {code}: party votes do not sum to {valid}")
+        out[code] = {"valid": valid, "votes": votes}
+    if sorted(out) != sorted(OFFICIAL_CONSTITUENCY_CODES):
+        raise ValueError("2026 result does not cover exactly the 29 official constituencies")
+    for party in official.votes:
+        national = sum(entry["votes"][party] for entry in out.values())
+        if national != official.votes[party]:
+            raise ValueError(f"2026 {party}: constituencies sum to {national}, certified {official.votes[party]}")
+    return out
+
+
 def process_constituency_electorates(
     raw_geo_dir: Path | str | None = None,
     raw_mandates_dir: Path | str | None = None,
@@ -144,20 +195,38 @@ def process_constituency_electorates(
         if vk_code and tot and vk_code in el_2026:
             el_2026[vk_code] += int(float(tot))
 
+    # The electorate is the pre-election count; valid votes are certified.
+    votes_2026 = load_val2026_constituency_votes()
     for code in OFFICIAL_CONSTITUENCY_CODES:
+        valid_26 = votes_2026[code]["valid"]
         records.append({
             "election_year": 2026,
             "constituency_code": code,
             "constituency_name": CODE_TO_CONSTITUENCY_NAME[code],
             "eligible_voters": el_2026[code],
-            "valid_votes": None,
-            "turnout_rate": None,
+            "valid_votes": valid_26,
+            "turnout_rate": round(valid_26 / el_2026[code], 6) if el_2026[code] > 0 else 0.0,
         })
+
+    # 4. Stand-in electorates for elections whose own count is not yet published.
+    for year, source_year in STAND_IN_ELECTORATE_YEARS.items():
+        source = el_2026 if source_year == 2026 else None
+        if source is None:
+            raise ValueError(f"No electorate source for stand-in year {year}")
+        for code in OFFICIAL_CONSTITUENCY_CODES:
+            records.append({
+                "election_year": year,
+                "constituency_code": code,
+                "constituency_name": CODE_TO_CONSTITUENCY_NAME[code],
+                "eligible_voters": source[code],
+                "valid_votes": None,
+                "turnout_rate": None,
+            })
 
     df = pd.DataFrame(records)
     out_file = p_dir / "constituency_electorates_2014_2026.csv"
     df.to_csv(out_file, index=False)
-    print(f"Generated {out_file} ({len(df)} rows across 2014-2026)")
+    print(f"Generated {out_file} ({len(df)} rows across 2014-2026, plus stand-ins)")
     return out_file
 
 
@@ -166,7 +235,11 @@ def process_constituency_party_votes(
     raw_mandates_dir: Path | str | None = None,
     processed_dir: Path | str | None = None,
 ) -> Path:
-    """Normalize historical 9-party constituency vote matrices for 2014, 2018, and 2022."""
+    """Normalize historical 9-party constituency vote matrices for 2014-2026.
+
+    The output keeps its historical file name, which the frozen projection
+    module reads by name.
+    """
     r_geo = Path(raw_geo_dir) if raw_geo_dir else DEFAULT_RAW_GEOGRAPHY_DIR
     r_man = Path(raw_mandates_dir) if raw_mandates_dir else DEFAULT_RAW_GEOGRAPHY_DIR.parents[0] / "mandates"
     p_dir = Path(processed_dir) if processed_dir else DEFAULT_PROCESSED_GEOGRAPHY_DIR
@@ -238,12 +311,26 @@ def process_constituency_party_votes(
                     "party_share": v_p / const_valid if const_valid > 0 else 0.0,
                 })
 
+    # 3. 2026 Votes from the certified Valmyndigheten result
+    for code, entry in load_val2026_constituency_votes().items():
+        for p in MODEL_PARTIES_9:
+            v_p = entry["votes"][p]
+            records.append({
+                "election_year": 2026,
+                "constituency_code": code,
+                "constituency_name": CODE_TO_CONSTITUENCY_NAME[code],
+                "party": p,
+                "votes": v_p,
+                "constituency_valid_votes": entry["valid"],
+                "party_share": v_p / entry["valid"] if entry["valid"] > 0 else 0.0,
+            })
+
     df = pd.DataFrame(records)
     df = df.sort_values(by=["election_year", "constituency_code", "party"]).reset_index(drop=True)
 
     out_file = p_dir / "constituency_party_votes_2014_2022.csv"
     df.to_csv(out_file, index=False)
-    print(f"Generated {out_file} ({len(df)} rows across 2014, 2018, 2022)")
+    print(f"Generated {out_file} ({len(df)} rows across 2014, 2018, 2022, 2026)")
     return out_file
 
 

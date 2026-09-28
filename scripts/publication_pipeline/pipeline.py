@@ -37,7 +37,8 @@ from scripts.elections.load import load_election_targets_for_forecasting
 from scripts.pollofpolls.normalize import parse_percentage
 from scripts.pollofpolls.validate import validation_report
 from scripts.prospective_archive.archive import SnapshotCollisionError, write_snapshot
-from scripts.simulator.config import MODEL_PARTIES_9, PARLIAMENTARY_PARTIES_8
+from scripts.simulator.config import DEFAULT_ELECTION_DATE, MODEL_PARTIES_9, PARLIAMENTARY_PARTIES_8
+from scripts.simulator.election_cycles import geography_baseline_year_for
 from scripts.simulator.engine import SimulationResult, simulate_election
 from scripts.simulator.pipeline import build_canonical_summary_dict
 from scripts.static_exporter import export_static_data
@@ -331,10 +332,10 @@ def _next_stage_name(run: PipelineRun, *, append_archive: bool, export_publicati
 def run_publication_pipeline(
     *,
     as_of: str | None = None,
-    election_date: str = "2026-09-13",
+    election_date: str = DEFAULT_ELECTION_DATE,
     samples: int = 100_000,
     seed: int = 12_345,
-    baseline_year: int = 2022,
+    baseline_year: int | None = None,
     processed_root: Path | str = DEFAULT_PROCESSED_ROOT,
     archive_dir: Path | str = DEFAULT_ARCHIVE_DIR,
     publication_dir: Path | str = DEFAULT_PUBLICATION_DIR,
@@ -367,6 +368,11 @@ def run_publication_pipeline(
         )
         run.stages.append({"name": "input_validation", "status": "PASS", "detail": run.input_manifest["status"]})
 
+        # Stated explicitly rather than left to the engine's default, so the
+        # simulation receives -- and the run records -- a concrete year: the
+        # previous ordinary election.
+        if baseline_year is None:
+            baseline_year = geography_baseline_year_for(int(str(election_date)[:4]))
         simulation_kwargs: dict[str, Any] = {
             "as_of": as_of,
             "election_date": election_date,
@@ -473,10 +479,11 @@ def main(argv: list[str] | None = None) -> int:
         description="Run the offline-first ElectionSimulator publication pipeline"
     )
     parser.add_argument("--as-of", default=None, help="Poll cutoff date (YYYY-MM-DD)")
-    parser.add_argument("--election-date", default="2026-09-13")
+    parser.add_argument("--election-date", default=DEFAULT_ELECTION_DATE)
     parser.add_argument("--samples", type=int, default=100_000)
     parser.add_argument("--seed", type=int, default=12_345)
-    parser.add_argument("--baseline-year", type=int, default=2022)
+    parser.add_argument("--baseline-year", type=int, default=None,
+                        help="Geography baseline year; defaults to the previous ordinary election")
     parser.add_argument("--processed-root", type=Path, default=DEFAULT_PROCESSED_ROOT)
     parser.add_argument("--archive-dir", type=Path, default=DEFAULT_ARCHIVE_DIR)
     parser.add_argument("--publication-dir", type=Path, default=DEFAULT_PUBLICATION_DIR)

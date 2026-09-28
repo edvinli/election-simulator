@@ -1,0 +1,91 @@
+# The 2030 election cycle
+
+The 2026 election (13 September 2026) is decided. The same model now forecasts
+the next ordinary election, **8 September 2030**. This note records what
+changes between the cycles, what does not, and which inputs are stand-ins
+that must be replaced before 2030.
+
+It is a design note, not a benchmark amendment. The 2026 prospective benchmark
+(its dates, selection, weighting and scoring) is untouched, and all 2026
+evidence stays pinned to 2026.
+
+## What stays the same
+
+- **The model.** `MODEL_VERSION` is unchanged, and so is the methodology: the
+  OpinionState, Dynamics v2 with its 112-day cap, ElectionNoise B, the
+  geographic projection and the mandate allocator. The frozen implementation
+  files are byte-identical.
+- **The election-noise pool.** It stays K = 6 (2002–2022). Adding 2026 would
+  change the model, and that is a separate, governed decision.
+- **2026-target forecasts are bit-identical.** A 2026 target still resolves
+  to the 2022 baseline and the 2026 fixed seats. Only the recorded geography
+  data hash moves, because the tables gained rows.
+
+## What is derived from the target election
+
+`scripts/simulator/election_cycles.py` derives every cycle-dependent value
+from the target election rather than from 2026 constants:
+
+| | 2026 cycle | 2030 cycle |
+|---|---|---|
+| Ordinary election day | 2026-09-13 | 2030-09-08 |
+| Geography baseline | 2022 | 2026 |
+| Fixed seats | `FIXED_SEATS_2026` | `FIXED_SEATS_2026` (stand-in) |
+| First history point | 2022-09-18 | 2026-09-20 |
+| Dynamics cap starts | 2026-05-24 | 2030-05-19 |
+
+**Production callers pass the resolved baseline explicitly.** That covers
+the publication pipeline and the projection simulator. `engine.py` itself is
+unchanged in this step, because it is a hashed model file: editing it would
+invalidate every reconstructed point of the deployed 2026 history. Two engine
+changes come with the switch to 2030: resolving its own default baseline, and
+refusing a baseline that does not precede its target.
+
+**The input fingerprint hashes only what a forecast may depend on.** That
+means:
+
+- the baseline election's constituency votes;
+- the electorate history up to the target, with the target's own outcome
+  masked;
+- a declared fixed-seat stand-in, by value.
+
+Adding the certified 2026 rows therefore leaves every fingerprint in the
+deployed 2026 history unchanged. That was verified against `main`.
+
+## Data added
+
+- `data/processed/geography/constituency_party_votes_2014_2022.csv` now also
+  holds the certified **2026** constituency votes: 29 × 9 rows. The name stays
+  because the frozen projection module reads the file by name. The rows are
+  parsed from Valmyndigheten's committed `RD_S.json` by
+  `scripts/geography/process.py` and verified by the benchmark's strict
+  result loader. The tests check that:
+  - they sum to the certified national votes;
+  - the same file's previous-election fields reproduce the existing 2022 rows
+    cell for cell;
+  - the statutory allocator turns them into the certified seats.
+- `constituency_electorates_2014_2026.csv`:
+  - The 2026 rows now carry certified valid votes and turnout. The electorate
+    is still the pre-election count.
+  - 29 rows for **2030** repeat the 2026 electorate as a stand-in.
+
+## Stand-ins to replace
+
+| Input | Stand-in | Replace when |
+|---|---|---|
+| 2030 fixed seats per constituency | the 2026 distribution | Valmyndigheten decides them (spring 2030) |
+| 2030 electorate per constituency | the 2026 electorate | the 2030 count is published (August 2030) |
+
+With the 2026 turnout as the baseline rate, the projected 2030 constituency
+totals equal the 2026 valid votes exactly.
+
+A side effect of the fixed-seat stand-in: the frozen `fast_allocator` labels
+a 2030 dispatch's fixed-seat configuration "2026", because the arrays are
+equal. That is expected and is not a 2026 target.
+
+## Known limitation
+
+Dynamics are capped at 112 days, with no √h scaling. A forecast made years
+before the election therefore carries only 112 days of movement uncertainty.
+The website says so ("Mer än 112 dagar före ett val …"). This is unchanged
+from how the 2022–2026 history was built.

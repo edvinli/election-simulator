@@ -15,13 +15,14 @@ ignores it unless it validates whole.
 from __future__ import annotations
 
 import argparse
-from datetime import date, timedelta
+from datetime import date
 import json
 from pathlib import Path
 import sys
 from typing import Any
 
 from scripts.mandates.config import TOTAL_RIKSDAG_SEATS
+from scripts.simulator.election_cycles import ordinary_election_date
 from scripts.prospective_benchmark_2026.results import (
     PARTY_ORDER,
     OfficialResultError,
@@ -48,19 +49,6 @@ SITE_RESULT_SHARE_DIGITS = 4
 
 def site_result_relative(year: int) -> Path:
     return SITE_PUBLICATION_RELATIVE / "results" / f"{year}.json"
-
-
-#: From the 2014 election the ordinary election day is the second Sunday in
-#: September; before that it was the third.
-SECOND_SUNDAY_FROM_YEAR = 2014
-
-
-def ordinary_election_date(year: int) -> date:
-    """The ordinary Riksdag election day in ``year``."""
-
-    first = date(year, 9, 1)
-    first_sunday = first + timedelta(days=(6 - first.weekday()) % 7)
-    return first_sunday + timedelta(days=7 if year >= SECOND_SUNDAY_FROM_YEAR else 14)
 
 
 def _parse_turnout(notes: Any) -> float | None:

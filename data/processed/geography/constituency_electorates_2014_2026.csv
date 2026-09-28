@@ -86,32 +86,61 @@ election_year,constituency_code,constituency_name,eligible_voters,valid_votes,tu
 2022,27,Jämtlands län,101363,85024.0,0.838807
 2022,28,Västerbottens län,209485,177543.0,0.847521
 2022,29,Norrbottens län,193011,161456.0,0.836512
-2026,01,Stockholms kommun,764889,,
-2026,02,Stockholms län,1067172,,
-2026,03,Uppsala län,309333,,
-2026,04,Södermanlands län,229568,,
-2026,05,Östergötlands län,367060,,
-2026,06,Jönköpings län,279005,,
-2026,07,Kronobergs län,151650,,
-2026,08,Kalmar län,191083,,
-2026,09,Gotlands län,48435,,
-2026,10,Blekinge län,123298,,
-2026,11,Malmö kommun,267820,,
-2026,12,Skåne läns västra,246130,,
-2026,13,Skåne läns södra,313023,,
-2026,14,Skåne läns norra och östra,248742,,
-2026,15,Hallands län,268009,,
-2026,16,Göteborgs kommun,462708,,
-2026,17,Västra Götalands läns västra,297167,,
-2026,18,Västra Götalands läns norra,210138,,
-2026,19,Västra Götalands läns södra,174136,,
-2026,20,Västra Götalands läns östra,210051,,
-2026,21,Värmlands län,219299,,
-2026,22,Örebro län,238704,,
-2026,23,Västmanlands län,213717,,
-2026,24,Dalarnas län,223629,,
-2026,25,Gävleborgs län,222290,,
-2026,26,Västernorrlands län,189501,,
-2026,27,Jämtlands län,103291,,
-2026,28,Västerbottens län,213611,,
-2026,29,Norrbottens län,193266,,
+2026,01,Stockholms kommun,764889,652543.0,0.853121
+2026,02,Stockholms län,1067172,887078.0,0.831242
+2026,03,Uppsala län,309333,265992.0,0.859889
+2026,04,Södermanlands län,229568,190962.0,0.831832
+2026,05,Östergötlands län,367060,311207.0,0.847837
+2026,06,Jönköpings län,279005,236678.0,0.848293
+2026,07,Kronobergs län,151650,128547.0,0.847656
+2026,08,Kalmar län,191083,161796.0,0.846732
+2026,09,Gotlands län,48435,41526.0,0.857355
+2026,10,Blekinge län,123298,104309.0,0.845991
+2026,11,Malmö kommun,267820,212965.0,0.79518
+2026,12,Skåne läns västra,246130,200979.0,0.816556
+2026,13,Skåne läns södra,313023,271168.0,0.866288
+2026,14,Skåne läns norra och östra,248742,206399.0,0.829771
+2026,15,Hallands län,268009,230235.0,0.859057
+2026,16,Göteborgs kommun,462708,380417.0,0.822153
+2026,17,Västra Götalands läns västra,297167,258972.0,0.87147
+2026,18,Västra Götalands läns norra,210138,176511.0,0.839977
+2026,19,Västra Götalands läns södra,174136,146081.0,0.83889
+2026,20,Västra Götalands läns östra,210051,179042.0,0.852374
+2026,21,Värmlands län,219299,184781.0,0.842598
+2026,22,Örebro län,238704,203013.0,0.85048
+2026,23,Västmanlands län,213717,176628.0,0.826457
+2026,24,Dalarnas län,223629,187850.0,0.840007
+2026,25,Gävleborgs län,222290,184537.0,0.830163
+2026,26,Västernorrlands län,189501,158985.0,0.838967
+2026,27,Jämtlands län,103291,86814.0,0.84048
+2026,28,Västerbottens län,213611,181055.0,0.847592
+2026,29,Norrbottens län,193266,160359.0,0.829732
+2030,01,Stockholms kommun,764889,,
+2030,02,Stockholms län,1067172,,
+2030,03,Uppsala län,309333,,
+2030,04,Södermanlands län,229568,,
+2030,05,Östergötlands län,367060,,
+2030,06,Jönköpings län,279005,,
+2030,07,Kronobergs län,151650,,
+2030,08,Kalmar län,191083,,
+2030,09,Gotlands län,48435,,
+2030,10,Blekinge län,123298,,
+2030,11,Malmö kommun,267820,,
+2030,12,Skåne läns västra,246130,,
+2030,13,Skåne läns södra,313023,,
+2030,14,Skåne läns norra och östra,248742,,
+2030,15,Hallands län,268009,,
+2030,16,Göteborgs kommun,462708,,
+2030,17,Västra Götalands läns västra,297167,,
+2030,18,Västra Götalands läns norra,210138,,
+2030,19,Västra Götalands läns södra,174136,,
+2030,20,Västra Götalands läns östra,210051,,
+2030,21,Värmlands län,219299,,
+2030,22,Örebro län,238704,,
+2030,23,Västmanlands län,213717,,
+2030,24,Dalarnas län,223629,,
+2030,25,Gävleborgs län,222290,,
+2030,26,Västernorrlands län,189501,,
+2030,27,Jämtlands län,103291,,
+2030,28,Västerbottens län,213611,,
+2030,29,Norrbottens län,193266,,
