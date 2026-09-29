@@ -38,7 +38,7 @@ from .data import load_elections, load_polls, sha256_file
 
 PROTOCOL_PATH = REPOSITORY_ROOT / "docs" / "poll_aggregate_replay_protocol.md"
 #: Set to the protocol's SHA-256 when it is agreed; ``None`` refuses scoring.
-AGREED_PROTOCOL_SHA256: str | None = None
+AGREED_PROTOCOL_SHA256: str | None = "3a34221883158a76b2b1021605c2cb1f636a44bba26b06063b2e727c6dc1be5c"
 
 #: The fixed baseline (the committed step-1 aggregate). Scored inputs and model
 #: code must be byte-identical to it; only this harness may differ.
