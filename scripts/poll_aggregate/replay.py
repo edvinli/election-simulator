@@ -16,6 +16,7 @@ import argparse
 import csv
 import json
 import os
+import subprocess
 import tempfile
 from concurrent.futures import ProcessPoolExecutor
 from datetime import date, timedelta
@@ -38,6 +39,12 @@ from .data import load_elections, load_polls, sha256_file
 PROTOCOL_PATH = REPOSITORY_ROOT / "docs" / "poll_aggregate_replay_protocol.md"
 #: Set to the protocol's SHA-256 when it is agreed; ``None`` refuses scoring.
 AGREED_PROTOCOL_SHA256: str | None = None
+
+#: The fixed baseline (the committed step-1 aggregate). Scored inputs and model
+#: code must be byte-identical to it; only this harness may differ.
+BASELINE_COMMIT = "fd405558ce95388d19da1b04077c19639bc61256"
+BASELINE_PATHS: tuple[str, ...] = ("data", "scripts", "diagnostics", "pyproject.toml", "uv.lock")
+HARNESS_PATH = "scripts/poll_aggregate/replay.py"
 
 ELECTIONS: tuple[date, ...] = (date(2018, 9, 9), date(2022, 9, 11), date(2026, 9, 13))
 HORIZONS: tuple[int, ...] = (112, 84, 56, 28, 14, 7)
@@ -151,6 +158,85 @@ def load_truth() -> dict[int, dict]:
     return truth
 
 
+def _git(*args: str) -> subprocess.CompletedProcess:
+    return subprocess.run(["git", *args], cwd=REPOSITORY_ROOT, capture_output=True, text=True)
+
+
+def verify_baseline() -> dict:
+    """Refuse to score unless the checkout is clean and inputs match the baseline.
+
+    Clean means no modified, staged or untracked file. Matching means no
+    difference between the baseline commit and HEAD under the model-input and
+    code paths, except this harness; with a clean checkout, the files the
+    harness reads are then exactly the baseline's.
+    """
+
+    status = _git("status", "--porcelain", "--untracked-files=all")
+    if status.returncode != 0:
+        raise RuntimeError(f"git status failed: {status.stderr.strip()}")
+    if status.stdout.strip():
+        raise RuntimeError(f"Scoring needs a clean checkout; found:\n{status.stdout}")
+    diff = _git("diff", "--name-only", BASELINE_COMMIT, "HEAD", "--", *BASELINE_PATHS, f":(exclude){HARNESS_PATH}")
+    if diff.returncode != 0:
+        raise RuntimeError(f"git diff against the baseline failed: {diff.stderr.strip()}")
+    if diff.stdout.strip():
+        raise RuntimeError(f"Inputs or model code differ from baseline {BASELINE_COMMIT}:\n{diff.stdout}")
+    return {
+        "baseline_commit": BASELINE_COMMIT,
+        "head_commit": _git("rev-parse", "HEAD").stdout.strip(),
+        "clean_checkout": True,
+        "inputs_match_baseline": True,
+        "checked_paths": list(BASELINE_PATHS),
+    }
+
+
+def _aggregate_row(aggregate_file: Path, day: str) -> dict | None:
+    with aggregate_file.open(encoding="utf-8", newline="") as handle:
+        for row in csv.DictReader(handle):
+            if row["date"] == day:
+                return row
+    return None
+
+
+def selected_estimate(job: dict, as_of: date) -> dict:
+    """The timeseries row OpinionState actually selects, as the engine calls it.
+
+    For arms reading the aggregate, the selected values must equal the
+    aggregate row of that date, and that row's information date must not be
+    after ``as_of``.
+    """
+
+    from scripts.pollofpolls.state import estimate_opinion
+
+    state = estimate_opinion(as_of=as_of, data_dir=Path(job["data_root"]) / "pollofpolls")
+    record = {
+        "selected_estimate_date": state.estimate_date.isoformat(),
+        "selected_estimate_pct": "|".join(f"{state.mean_pct[p]:.4f}" for p in PARTIES),
+        "aggregate_row_matches": "",
+        "aggregate_information_date": "",
+    }
+    if job["aggregate_file"]:
+        row = _aggregate_row(Path(job["aggregate_file"]), record["selected_estimate_date"])
+        matches = row is not None and all(
+            abs(float(row[p]) - state.mean_pct[p]) <= 1e-6 for p in PARTIES
+        )
+        record["aggregate_row_matches"] = bool(matches)
+        if row is not None:
+            record["aggregate_information_date"] = json.loads(row["source_extra_json"])["information_date"]
+    return record
+
+
+def case_dates_ok(row: dict) -> bool:
+    """G6's date condition: the selected estimate is dated on ``as_of`` and, for
+    arms reading the aggregate, is that row with information known by then."""
+
+    if row["selected_estimate_date"] != row["as_of"]:
+        return False
+    if row["arm"] == CONTROL:
+        return True
+    return row["aggregate_row_matches"] is True and row["aggregate_information_date"] <= row["as_of"]
+
+
 def run_case(job: dict) -> dict:
     """One (arm, election, horizon) forecast; scores it only when asked to."""
 
@@ -169,6 +255,7 @@ def run_case(job: dict) -> dict:
         "horizon_days": job["horizon"],
         "as_of": as_of.isoformat(),
         "opinion_as_of": str(result.summary.as_of),
+        **selected_estimate(job, as_of),
         "gated": job["gated"],
         "seat_total_always_349": bool(np.all(seats.sum(axis=1) == 349)),
         "all_finite": bool(np.all(np.isfinite(votes))),
@@ -193,7 +280,7 @@ def run_case(job: dict) -> dict:
     return row
 
 
-def _jobs(roots: dict[str, Path], truth: dict[int, dict] | None) -> list[dict]:
+def _jobs(roots: dict[str, Path], truth: dict[int, dict] | None, aggregate_file: Path) -> list[dict]:
     categories = (*PARTIES, "REST")
     jobs = []
     for arm in ARMS:
@@ -212,6 +299,7 @@ def _jobs(roots: dict[str, Path], truth: dict[int, dict] | None) -> list[dict]:
                         "election": election.isoformat(),
                         "horizon": horizon,
                         "data_root": str(roots[arm]),
+                        "aggregate_file": "" if arm == CONTROL else str(aggregate_file),
                         "gated": arm != DIAGNOSTIC,
                         "truth": case_truth,
                     }
@@ -269,7 +357,7 @@ def evaluate_gates(rows: list[dict]) -> dict:
     gated = [r for r in rows if r["gated"]]
     complete = all(sum(1 for r in gated if r["arm"] == arm) == expected for arm in (c, s))
     integrity = all(
-        r["seat_total_always_349"] and r["all_finite"] and r["opinion_as_of"] == r["as_of"] for r in gated
+        r["seat_total_always_349"] and r["all_finite"] and case_dates_ok(r) for r in gated
     )
     gates["G6_integrity"] = {"complete": complete, "valid_draws_and_dates": integrity,
                              "pass": complete and integrity}
@@ -289,12 +377,13 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.score and not protocol_is_agreed():
         parser.error("the replay protocol is not agreed (AGREED_PROTOCOL_SHA256 unset or mismatched)")
+    baseline = verify_baseline() if args.score else None
     truth = load_truth() if args.score else None
     aggregate_file = DEFAULT_OUTPUT_DIR / TIMESERIES_FILENAME
 
     with tempfile.TemporaryDirectory(prefix="poll-aggregate-replay-") as tmp:
         roots = {arm: build_data_root(arm, Path(tmp), aggregate_file) for arm in ARMS}
-        jobs = _jobs(roots, truth)
+        jobs = _jobs(roots, truth, aggregate_file)
         with ProcessPoolExecutor(max_workers=args.workers) as pool:
             rows = list(pool.map(run_case, jobs))
 
@@ -313,6 +402,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "draws": DRAWS,
         "seed": SEED,
         "cases": len(rows),
+        "baseline": baseline,
     }
     (args.output_dir / name.replace(".csv", "_provenance.json")).write_text(
         json.dumps(provenance, indent=2, sort_keys=True) + "\n", encoding="utf-8"
@@ -328,7 +418,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                           "gates": {k: v["pass"] for k, v in decision["gates"].items()}}))
     else:
         failures = [r for r in rows if not (r["seat_total_always_349"] and r["all_finite"]
-                                            and r["opinion_as_of"] == r["as_of"])]
+                                            and case_dates_ok(r))]
         print(json.dumps({"dry_run_integrity_failures": len(failures)}))
     return 0
 

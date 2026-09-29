@@ -106,10 +106,39 @@ The candidate **passes** only if every gate holds.
 | G3 seats | pooled ES_seat(candidate) ≤ 1.05 × control, and pooled Brier_coalition(candidate) ≤ control + 0.01 |
 | G4 thresholds | pooled Brier_threshold(candidate) ≤ control + 0.01 |
 | G5 calibration | Coverage_90(candidate) ≥ 0.80 and ≥ control − 0.05; Coverage_50(candidate) ≥ 0.35 and ≥ control − 0.10 |
-| G6 integrity | all 18 cases complete in both arms; every draw allocates 349 seats; the aggregate row used for each case is dated on its `as_of` |
+| G6 integrity | all 18 cases complete in both arms; every draw allocates 349 seats; the estimate each case actually uses is dated on its `as_of` (section 7.1) |
 
 The gates test **non-inferiority**, not superiority, because the control is
 advantaged (section 8).
+
+### 7.1 How G6's date condition is checked
+
+The simulation summary's `as_of` only echoes the requested date, so it is not
+used. For every case the harness calls `estimate_opinion` exactly as the
+engine does, on the same data folder, and records the date and values of the
+timeseries row it selects (`selected_estimate_date`, `selected_estimate_pct`).
+A gated case satisfies G6's date condition only if:
+
+- the selected row is dated on the case's `as_of` (both arms); and
+- for the candidate, the selected values equal the aggregate's row for that
+  date (within 1e-6 pp per party), and that row's `information_date` is not
+  after `as_of`.
+
+### 7.2 Scored inputs must be the fixed baseline
+
+The protocol hash locks this document, not the files the harness reads, so
+`--score` additionally refuses to run unless:
+
+- the checkout is clean: no modified, staged or untracked file; and
+- `git diff` between the baseline commit
+  `fd405558ce95388d19da1b04077c19639bc61256` and HEAD is empty under `data/`,
+  `scripts/`, `diagnostics/`, `pyproject.toml` and `uv.lock`, with the single
+  exception of the harness `scripts/poll_aggregate/replay.py`.
+
+With a clean checkout, the aggregate, the polling snapshot, the election and
+mandate data, the geography and the simulator code read during scoring are
+then byte-identical to the baseline. The HEAD commit and these checks are
+written into the scored provenance.
 
 ## 8. Why every case is retrospective
 

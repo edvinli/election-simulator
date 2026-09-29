@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -23,7 +24,10 @@ def scored_rows(**candidate_overrides) -> list[dict]:
         for election in R.ELECTIONS:
             for horizon in R.HORIZONS:
                 row = {**base, "arm": arm, "election": election.isoformat(), "horizon_days": horizon,
-                       "as_of": "d", "opinion_as_of": "d", "gated": True}
+                       "as_of": "2018-08-12", "selected_estimate_date": "2018-08-12",
+                       "aggregate_row_matches": True if arm == R.CANDIDATE else "",
+                       "aggregate_information_date": "2018-08-10" if arm == R.CANDIDATE else "",
+                       "gated": True}
                 if arm == R.CANDIDATE:
                     row.update(candidate_overrides.get(election.isoformat(), {}))
                     row.update({k: v for k, v in candidate_overrides.items() if not isinstance(v, dict)})
@@ -55,6 +59,19 @@ class GateTests(unittest.TestCase):
         rows = scored_rows()
         rows.pop()
         self.assertFalse(R.evaluate_gates(rows)["gates"]["G6_integrity"]["pass"])
+
+    def test_a_selected_estimate_not_dated_on_as_of_fails_integrity(self) -> None:
+        rows = scored_rows()
+        rows[0]["selected_estimate_date"] = "2018-08-11"  # a control row
+        self.assertFalse(R.evaluate_gates(rows)["gates"]["G6_integrity"]["pass"])
+
+    def test_a_candidate_row_that_is_not_the_aggregate_fails_integrity(self) -> None:
+        self.assertFalse(
+            R.evaluate_gates(scored_rows(aggregate_row_matches=False))["gates"]["G6_integrity"]["pass"])
+
+    def test_an_aggregate_row_using_later_information_fails_integrity(self) -> None:
+        self.assertFalse(
+            R.evaluate_gates(scored_rows(aggregate_information_date="2018-08-13"))["gates"]["G6_integrity"]["pass"])
 
     def test_diagnostic_rows_never_enter_the_gates(self) -> None:
         rows = scored_rows()
@@ -90,6 +107,46 @@ class HarnessTests(unittest.TestCase):
         self.assertEqual(len(polls), written)
         self.assertEqual(issues["incomplete_main_party_values"], 0)
         self.assertTrue(all(p.publication_date is not None for p in polls))
+
+    def test_candidate_selects_the_aggregate_row_of_its_as_of(self) -> None:
+        from datetime import date
+        aggregate = R.DEFAULT_OUTPUT_DIR / R.TIMESERIES_FILENAME
+        with tempfile.TemporaryDirectory() as tmp:
+            root = R.build_data_root(R.CANDIDATE, Path(tmp), aggregate)
+            record = R.selected_estimate(
+                {"data_root": str(root), "aggregate_file": str(aggregate)}, date(2018, 8, 12))
+        self.assertEqual(record["selected_estimate_date"], "2018-08-12")
+        self.assertIs(record["aggregate_row_matches"], True)
+        self.assertLessEqual(record["aggregate_information_date"], "2018-08-12")
+
+    def test_baseline_check_refuses_a_dirty_checkout(self) -> None:
+        def fake_git(*args):
+            out = " M data/processed/poll_aggregate/x.csv\n" if args[0] == "status" else ""
+            return subprocess.CompletedProcess(args, 0, out, "")
+        with patch.object(R, "_git", side_effect=fake_git):
+            with self.assertRaisesRegex(RuntimeError, "clean checkout"):
+                R.verify_baseline()
+
+    def test_baseline_check_refuses_inputs_changed_since_the_baseline(self) -> None:
+        def fake_git(*args):
+            out = "data/processed/poll_aggregate/x.csv\n" if args[0] == "diff" else ""
+            return subprocess.CompletedProcess(args, 0, out, "")
+        with patch.object(R, "_git", side_effect=fake_git):
+            with self.assertRaisesRegex(RuntimeError, "differ from baseline"):
+                R.verify_baseline()
+
+    def test_baseline_check_excludes_only_the_harness(self) -> None:
+        calls = []
+        def fake_git(*args):
+            calls.append(args)
+            return subprocess.CompletedProcess(args, 0, "", "")
+        with patch.object(R, "_git", side_effect=fake_git):
+            R.verify_baseline()
+        diff = next(c for c in calls if c[0] == "diff")
+        self.assertIn(R.BASELINE_COMMIT, diff)
+        self.assertEqual([a for a in diff if a.startswith(":(exclude)")], [f":(exclude){R.HARNESS_PATH}"])
+        for path in ("data", "scripts", "diagnostics", "uv.lock"):
+            self.assertIn(path, diff)
 
     def test_scoring_is_refused_until_the_protocol_is_agreed(self) -> None:
         with patch.object(R, "AGREED_PROTOCOL_SHA256", None):
