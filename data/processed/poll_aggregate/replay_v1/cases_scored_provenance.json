@@ -1,0 +1,22 @@
+{
+  "aggregate_sha256": "d54cf2ba6b2fc66daa309ce0e2601fff4be08814e9ba39ac003945feeae86e90",
+  "baseline": {
+    "baseline_commit": "fd405558ce95388d19da1b04077c19639bc61256",
+    "checked_paths": [
+      "data",
+      "scripts",
+      "diagnostics",
+      "pyproject.toml",
+      "uv.lock"
+    ],
+    "clean_checkout": true,
+    "head_commit": "0a50073d1614369cce188cff923fdd66ee95be9e",
+    "inputs_match_baseline": true
+  },
+  "cases": 54,
+  "draws": 20000,
+  "protocol_agreed": true,
+  "protocol_sha256": "3a34221883158a76b2b1021605c2cb1f636a44bba26b06063b2e727c6dc1be5c",
+  "scored": true,
+  "seed": 20260929
+}
