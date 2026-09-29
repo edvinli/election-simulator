@@ -7,8 +7,9 @@ pollofpolls.se for its opinion input.
 
 **Status: shadow only.** Nothing in production reads it. It is not in
 `MODEL_RELEVANT_INPUTS`, the publication pipeline, rendering pins, the history
-start or the cycle guard. Those migrate together, after the historical replay
-in the next step has been agreed and passed.
+start or the cycle guard. Those migrate together, only after the full-forecast
+replay in `docs/poll_aggregate_replay_protocol.md` has been agreed and passed
+(`uv run python -m scripts.poll_aggregate.replay`).
 
 ## Usage
 
@@ -133,12 +134,19 @@ moved from 17.54 to 18.42 against a result of 19.85.
 - **Level relative to PoP.** On the eves of 2018 and 2022 PoP was much
   closer to the result than this aggregate, which tracks the raw poll average
   (2018 S: aggregate 24.6, raw two-week poll mean 24.6, PoP 27.2, result
-  28.3). PoP applies corrections this model does not have. Whether those
-  corrections were available in real time cannot be established from the
-  stored series; the repository's revision audit only covers a trailing
-  window. On the eve of 2026 (prospective for both) the two are comparable.
-  The downstream election-residual layer is calibrated against PoP, so it
-  must be recalibrated against this series in any case.
+  28.3). PoP applies corrections this model does not have. The stored PoP
+  values are also not what was visible in real time: the series is
+  fieldwork-dated and backfilled as later polls are published, with measured
+  look-ahead of up to 21 days
+  (`docs/election_noise_v2_historical_pop_extension.md`, section 4), so the
+  PoP side of these comparisons is retrospective and advantaged. On the eve of
+  2026 the two are comparable.
+- **The election-noise layer does not depend on PoP.** (An earlier version of
+  this document said it did.) Its residuals are the result minus a consensus
+  of each pollster's last poll, built from SwedishPolls, and its draws are
+  centred, so it neither needs recalibrating for this series nor corrects a
+  level difference. The full-forecast comparison is fixed in
+  `docs/poll_aggregate_replay_protocol.md`.
 - **Persistent house effects were tried and rejected**: forcing near-zero
   house drift lowers the likelihood substantially and does not improve eve
   accuracy.
