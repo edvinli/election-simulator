@@ -31,6 +31,8 @@ from .config import (
     OUTPUT_SHARE_DIGITS,
     PARTIES,
     SOURCE_URL,
+    SPEC_V01,
+    AggregateSpec,
 )
 from .data import AggregateInputError, Observation
 from .model import FilterState, Hyperparameters, SupportFilter
@@ -50,6 +52,7 @@ class Segment:
     reference_election: str
     optimizer_iterations: int
     optimizer_converged: bool
+    consensus_weights: dict[str, float] | None = None
 
 
 @dataclass
@@ -129,6 +132,20 @@ def fit_hyperparameters(
     return Hyperparameters.from_log(best.x), -float(best.fun), iterations, bool(best.success)
 
 
+def consensus_weights_at(polls: Sequence[Observation], fit_date: date, window_days: int) -> dict[str, float]:
+    """Each pollster's share of effective sample among polls known at ``fit_date``
+    whose fieldwork midpoint lies in the trailing window. Fixed for the segment."""
+
+    total: dict[str, float] = {}
+    for o in polls:
+        if o.available <= fit_date and (fit_date - o.obs_date).days < window_days:
+            total[o.house] = total.get(o.house, 0.0) + float(o.sample_size)
+    grand = sum(total.values())
+    if grand <= 0:
+        raise AggregateInputError(f"No polls in the {window_days}-day consensus window before {fit_date}")
+    return {h: v / grand for h, v in sorted(total.items())}
+
+
 class _CheckpointedRunner:
     """Re-runs the filter per information set, resuming from the longest shared prefix."""
 
@@ -167,8 +184,13 @@ def build_aggregate(
     elections: Sequence[Observation],
     fit: Callable[..., tuple[Hyperparameters, float, int, bool]] = fit_hyperparameters,
     end: date | None = None,
+    spec: AggregateSpec = SPEC_V01,
 ) -> AggregateResult:
-    """The daily causal series from the second anchor election's result onward."""
+    """The daily causal series from the second anchor election's result onward.
+
+    The spec only chooses the reported level (latent support, or the
+    consensus reading); the filter and its fit are the same for every spec.
+    """
 
     everything = sorted([*polls, *elections], key=Observation.sort_key)
     houses = sorted({o.house for o in polls})
@@ -190,8 +212,12 @@ def build_aggregate(
         reference = max((o for o in known if o.kind == "election"), key=lambda o: o.obs_date)
         params, loglik, iterations, converged = fit(known, houses, reference.shares, previous_params)
         previous_params = params
+        weights = (
+            consensus_weights_at(polls, fit_date, spec.consensus_window_days)
+            if spec.consensus_window_days is not None else None
+        )
         segments.append(
-            Segment(fit_date, params, loglik, len(known), reference.key, iterations, converged)
+            Segment(fit_date, params, loglik, len(known), reference.key, iterations, converged, weights)
         )
 
         model = SupportFilter(houses, reference.shares, params)
@@ -206,7 +232,10 @@ def build_aggregate(
             until = dates[c_index + 1] - timedelta(days=1) if c_index + 1 < len(dates) else segment_end
             day = info_date
             while day <= until:
-                mean, cov = model.support_at(state, day)
+                if weights is None:
+                    mean, cov = model.support_at(state, day)
+                else:
+                    mean, cov = model.consensus_reading_at(state, day, weights)
                 rows.append(
                     AggregateRow(
                         day, mean, np.sqrt(np.diag(cov)), info_date, fit_date, len(polls_known), latest_publication
@@ -227,7 +256,7 @@ def _round(value: float) -> float:
     return round(float(value), OUTPUT_SHARE_DIGITS)
 
 
-def write_timeseries(result: AggregateResult, path: Path) -> None:
+def write_timeseries(result: AggregateResult, path: Path, version: str = AGGREGATE_VERSION) -> None:
     """Rows in pollofpolls_timeseries.csv's columns; other parties go in ``other``."""
 
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -241,7 +270,7 @@ def write_timeseries(result: AggregateResult, path: Path) -> None:
             record["other"] = f"{_round(100.0 - row.mean.sum()):.{OUTPUT_SHARE_DIGITS}f}"
             record["source_extra_json"] = json.dumps(
                 {
-                    "aggregate_version": AGGREGATE_VERSION,
+                    "aggregate_version": version,
                     "sd": {p: _round(v) for p, v in zip(PARTIES, row.sd)},
                     "information_date": row.information_date.isoformat(),
                     "hyperparameters_fit_date": row.fit_date.isoformat(),

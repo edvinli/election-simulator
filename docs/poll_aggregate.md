@@ -11,6 +11,23 @@ start or the cycle guard. Those migrate together, only after the full-forecast
 replay in `docs/poll_aggregate_replay_protocol.md` has been agreed and passed
 (`uv run python -m scripts.poll_aggregate.replay`).
 
+## Versions
+
+| version | reported level | build |
+| --- | --- | --- |
+| v0.1 | latent support `s`, whose level is tied to past results through the house effects | `uv run python -m scripts.poll_aggregate` (writes `data/processed/poll_aggregate/`) |
+| v0.2 | the consensus reading `s + Σ_h w_h b_h` | `uv run python -m scripts.poll_aggregate --version v0.2` (writes `data/processed/poll_aggregate/v0_2/`) |
+
+Both run the same observations, filter and hyperparameter fits; v0.2's
+fitted hyperparameters equal v0.1's. For v0.2, `w_h` is each pollster's share
+of effective sample among polls known at the segment's fit date whose
+fieldwork midpoint is in the preceding 365 days, fixed for the segment. The
+reading is what a sample-weighted mix of current pollsters would report, the
+scale on which the election-noise residuals are defined (result minus a
+sample-weighted pollster consensus). Why v0.2 exists is in
+`docs/poll_aggregate_level_investigation.md`; it is scored under
+`docs/poll_aggregate_replay_protocol_v2.md`.
+
 ## Usage
 
 ```bash

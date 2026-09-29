@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 
@@ -84,3 +85,27 @@ OPTIMIZER_TOLERANCE: float = 1e-4
 CHECKPOINT_WINDOW: int = 96
 
 OUTPUT_SHARE_DIGITS: int = 2
+
+
+@dataclass(frozen=True)
+class AggregateSpec:
+    """One frozen aggregate version.
+
+    Both versions run the same filter, fit and observations. They differ only
+    in the level they report. v0.1 reports latent support ``s``, whose level
+    is tied to past election results through the house effects. v0.2 reports
+    the consensus reading ``s + sum_h w_h b_h``: what a mix of pollsters,
+    weighted by their share of effective sample in the
+    ``consensus_window_days`` before the segment's fit date, would read. That
+    is the scale the election-noise residuals are defined on (result minus a
+    sample-weighted pollster consensus).
+    """
+
+    version: str
+    output_dir: Path
+    consensus_window_days: int | None = None
+
+
+SPEC_V01 = AggregateSpec(AGGREGATE_VERSION, DEFAULT_OUTPUT_DIR)
+SPEC_V02 = AggregateSpec("SwedishPollsAggregate-v0.2", DEFAULT_OUTPUT_DIR / "v0_2", consensus_window_days=365)
+SPECS: dict[str, AggregateSpec] = {"v0.1": SPEC_V01, "v0.2": SPEC_V02}

@@ -165,6 +165,34 @@ class SupportFilter:
                 checkpoints.append((obs.key, state.copy()))
         return state
 
+    def consensus_reading_at(
+        self, state: FilterState, day: date, weights: dict[str, float]
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Mean and covariance of what a weighted mix of pollsters would read on ``day``.
+
+        The reading is ``s + sum_h w_h b_h``: latent support plus the
+        weighted mean house effect. It does not alter the filter; it only
+        reports the level on the poll-consensus scale. Each house effect's
+        drift since it was last read is included, as the filter would add it.
+        """
+
+        gap = (day - state.day).days
+        if gap < 0:
+            raise ValueError(f"Cannot report {day} from a state on {state.day}")
+        total = sum(weights.values())
+        selector = np.zeros((K, self.dim))
+        selector[:, :K] = np.eye(K)
+        cov = state.cov.copy()
+        cov[:K, :K] += self.params.process * gap * multinomial_shape(state.mean[:K])
+        for house, weight in weights.items():
+            index = self.house_index[house]
+            lo = K * (1 + index)
+            selector[:, lo : lo + K] = (weight / total) * np.eye(K)
+            last = state.house_last_day.get(index)
+            if last is not None:
+                cov[lo : lo + K, lo : lo + K] += self.params.house_drift * (day - last).days * self.reference_shape
+        return selector @ state.mean, selector @ cov @ selector.T
+
     def support_at(self, state: FilterState, day: date) -> tuple[np.ndarray, np.ndarray]:
         """Mean and covariance of the named shares on ``day`` (not before the state)."""
 

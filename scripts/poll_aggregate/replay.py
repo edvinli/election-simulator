@@ -19,6 +19,7 @@ import os
 import subprocess
 import tempfile
 from concurrent.futures import ProcessPoolExecutor
+from dataclasses import dataclass
 from datetime import date, timedelta
 from pathlib import Path
 from typing import Sequence
@@ -60,6 +61,35 @@ PROCESSED_ROOT = REPOSITORY_ROOT / "data" / "processed"
 MANDATES_FILE = PROCESSED_ROOT / "mandates" / "historical_certified_mandates.csv"
 DEFAULT_REPLAY_DIR = DEFAULT_OUTPUT_DIR / "replay_v1"
 THRESHOLD_PCT = 4.0
+
+
+@dataclass(frozen=True)
+class ReplayConfig:
+    """One frozen replay: its protocol, agreement, baseline and aggregate.
+
+    Every replay shares the arms, cases, draws, seed, metrics and gates;
+    those are fixed by each protocol to be the v1 values.
+    """
+
+    name: str
+    protocol_path: Path
+    agreed_sha256: str | None
+    baseline_commit: str | None
+    aggregate_file: Path
+    output_dir: Path
+
+
+REPLAY_V1 = ReplayConfig(
+    "v1", PROTOCOL_PATH, AGREED_PROTOCOL_SHA256, BASELINE_COMMIT,
+    DEFAULT_OUTPUT_DIR / TIMESERIES_FILENAME, DEFAULT_REPLAY_DIR,
+)
+#: v2 scores SwedishPollsAggregate-v0.2. Its agreement hash and baseline commit
+#: are set together, in their own commit, after the v2 protocol is committed.
+REPLAY_V2 = ReplayConfig(
+    "v2", REPOSITORY_ROOT / "docs" / "poll_aggregate_replay_protocol_v2.md", None, None,
+    DEFAULT_OUTPUT_DIR / "v0_2" / TIMESERIES_FILENAME, DEFAULT_OUTPUT_DIR / "replay_v2",
+)
+REPLAYS: dict[str, ReplayConfig] = {"v1": REPLAY_V1, "v2": REPLAY_V2}
 
 INDIVIDUAL_POLL_FIELDS = (
     "poll_id", "pollster", "pollster_original", "interview_start", "interview_end",
@@ -162,7 +192,7 @@ def _git(*args: str) -> subprocess.CompletedProcess:
     return subprocess.run(["git", *args], cwd=REPOSITORY_ROOT, capture_output=True, text=True)
 
 
-def verify_baseline() -> dict:
+def verify_baseline(config: ReplayConfig = REPLAY_V1) -> dict:
     """Refuse to score unless the checkout is clean and inputs match the baseline.
 
     Clean means no modified, staged or untracked file. Matching means no
@@ -171,18 +201,22 @@ def verify_baseline() -> dict:
     harness reads are then exactly the baseline's.
     """
 
+    if config.baseline_commit is None:
+        raise RuntimeError(f"Replay {config.name} has no baseline commit recorded")
     status = _git("status", "--porcelain", "--untracked-files=all")
     if status.returncode != 0:
         raise RuntimeError(f"git status failed: {status.stderr.strip()}")
     if status.stdout.strip():
         raise RuntimeError(f"Scoring needs a clean checkout; found:\n{status.stdout}")
-    diff = _git("diff", "--name-only", BASELINE_COMMIT, "HEAD", "--", *BASELINE_PATHS, f":(exclude){HARNESS_PATH}")
+    diff = _git("diff", "--name-only", config.baseline_commit, "HEAD", "--", *BASELINE_PATHS,
+                f":(exclude){HARNESS_PATH}")
     if diff.returncode != 0:
         raise RuntimeError(f"git diff against the baseline failed: {diff.stderr.strip()}")
     if diff.stdout.strip():
-        raise RuntimeError(f"Inputs or model code differ from baseline {BASELINE_COMMIT}:\n{diff.stdout}")
+        raise RuntimeError(f"Inputs or model code differ from baseline {config.baseline_commit}:\n{diff.stdout}")
     return {
-        "baseline_commit": BASELINE_COMMIT,
+        "replay": config.name,
+        "baseline_commit": config.baseline_commit,
         "head_commit": _git("rev-parse", "HEAD").stdout.strip(),
         "clean_checkout": True,
         "inputs_match_baseline": True,
@@ -364,22 +398,29 @@ def evaluate_gates(rows: list[dict]) -> dict:
     return {"gates": gates, "decision": "PASS" if all(g["pass"] for g in gates.values()) else "FAIL"}
 
 
-def protocol_is_agreed() -> bool:
-    return AGREED_PROTOCOL_SHA256 is not None and sha256_file(PROTOCOL_PATH) == AGREED_PROTOCOL_SHA256
+def protocol_is_agreed(config: ReplayConfig = REPLAY_V1) -> bool:
+    return (
+        config.agreed_sha256 is not None
+        and config.protocol_path.exists()
+        and sha256_file(config.protocol_path) == config.agreed_sha256
+    )
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--score", action="store_true", help="score against outcomes (agreed protocol only)")
-    parser.add_argument("--output-dir", type=Path, default=DEFAULT_REPLAY_DIR)
+    parser.add_argument("--replay", choices=sorted(REPLAYS), default="v1")
+    parser.add_argument("--output-dir", type=Path, default=None)
     parser.add_argument("--workers", type=int, default=6)
     args = parser.parse_args(argv)
 
-    if args.score and not protocol_is_agreed():
-        parser.error("the replay protocol is not agreed (AGREED_PROTOCOL_SHA256 unset or mismatched)")
-    baseline = verify_baseline() if args.score else None
+    config = REPLAYS[args.replay]
+    args.output_dir = args.output_dir or config.output_dir
+    if args.score and not protocol_is_agreed(config):
+        parser.error(f"replay {config.name}'s protocol is not agreed (agreement hash unset or mismatched)")
+    baseline = verify_baseline(config) if args.score else None
     truth = load_truth() if args.score else None
-    aggregate_file = DEFAULT_OUTPUT_DIR / TIMESERIES_FILENAME
+    aggregate_file = config.aggregate_file
 
     with tempfile.TemporaryDirectory(prefix="poll-aggregate-replay-") as tmp:
         roots = {arm: build_data_root(arm, Path(tmp), aggregate_file) for arm in ARMS}
@@ -395,8 +436,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         writer.writeheader()
         writer.writerows(rows)
     provenance = {
-        "protocol_sha256": sha256_file(PROTOCOL_PATH),
-        "protocol_agreed": protocol_is_agreed(),
+        "replay": config.name,
+        "protocol_sha256": sha256_file(config.protocol_path) if config.protocol_path.exists() else None,
+        "protocol_agreed": protocol_is_agreed(config),
         "scored": args.score,
         "aggregate_sha256": sha256_file(aggregate_file),
         "draws": DRAWS,

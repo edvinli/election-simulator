@@ -17,7 +17,8 @@ from scripts.poll_aggregate.build import (
     fit_hyperparameters,
     write_timeseries,
 )
-from scripts.poll_aggregate.config import HYPERPARAMETER_BOUNDS, HYPERPARAMETER_NAMES, PARTIES
+from scripts.poll_aggregate.build import consensus_weights_at
+from scripts.poll_aggregate.config import HYPERPARAMETER_BOUNDS, HYPERPARAMETER_NAMES, PARTIES, SPEC_V01, SPEC_V02
 from scripts.poll_aggregate.data import AggregateInputError, Observation, load_elections, load_polls
 from scripts.poll_aggregate.model import Hyperparameters, SupportFilter
 from scripts.pollofpolls.validate import TIMESERIES_FIELDS as POP_TIMESERIES_FIELDS
@@ -323,6 +324,68 @@ class BuildTests(unittest.TestCase):
         self.assertEqual(first["FI"], "")
         extra = json.loads(first["source_extra_json"])
         self.assertEqual(set(extra["sd"]), set(PARTIES))
+
+
+class ConsensusReadingTests(unittest.TestCase):
+    """v0.2 reports s + sum_h w_h b_h; the filter itself is v0.1's."""
+
+    def test_weights_use_only_known_polls_in_the_window(self) -> None:
+        fit = date(2022, 1, 10)
+        polls = [
+            poll("in-a", date(2021, 6, 1), date(2021, 6, 5), house="Sifo", n=3000.0),
+            poll("in-b", date(2021, 12, 1), date(2021, 12, 5), house="Novus", n=1000.0),
+            poll("old", date(2020, 12, 1), date(2020, 12, 5), house="Skop", n=5000.0),
+            poll("unpublished", date(2022, 1, 5), date(2022, 1, 20), house="YouGov", n=5000.0),
+        ]
+        self.assertEqual(consensus_weights_at(polls, fit, 365), {"Novus": 0.25, "Sifo": 0.75})
+
+    def test_reading_adds_the_weighted_house_effects(self) -> None:
+        model = SupportFilter(["Novus", "Sifo"], BASE, PARAMS)
+        state = model.initial_state(date(2022, 1, 1), BASE)
+        state.mean[len(PARTIES):2 * len(PARTIES)] = 1.0     # Novus
+        state.mean[2 * len(PARTIES):] = -3.0                 # Sifo
+        mean, _ = model.consensus_reading_at(state, date(2022, 1, 1), {"Novus": 0.75, "Sifo": 0.25})
+        np.testing.assert_allclose(mean, np.array(BASE) + 0.75 - 0.75, rtol=0, atol=1e-12)
+        mean, _ = model.consensus_reading_at(state, date(2022, 1, 1), {"Sifo": 2.0})
+        np.testing.assert_allclose(mean, np.array(BASE) - 3.0, rtol=0, atol=1e-12)
+
+    def test_reading_variance_includes_house_uncertainty(self) -> None:
+        polls, elections = synthetic_history()
+        model = SupportFilter(["Novus", "Sifo"], BASE, PARAMS)
+        state = model.run(model.initial_state(elections[0].obs_date, BASE),
+                          _known([*polls, *elections], date(2021, 6, 1)))
+        _, support_cov = model.support_at(state, date(2021, 6, 1))
+        _, reading_cov = model.consensus_reading_at(state, date(2021, 6, 1), {"Novus": 0.5, "Sifo": 0.5})
+        self.assertTrue(np.all(np.linalg.eigvalsh(reading_cov) > 0))
+        self.assertFalse(np.allclose(support_cov, reading_cov))
+
+    def test_v02_uses_v01s_fit_and_differs_only_in_the_reported_level(self) -> None:
+        polls, elections = synthetic_history()
+        seen = {}
+
+        def recording_fit(observations, houses, reference, initial=None):
+            seen.setdefault(len(seen), [o.key for o in observations])
+            return fixed_fit(observations, houses, reference, initial)
+
+        v1 = build_aggregate(polls, elections, fit=fixed_fit, end=date(2022, 2, 20), spec=SPEC_V01)
+        v2 = build_aggregate(polls, elections, fit=recording_fit, end=date(2022, 2, 20), spec=SPEC_V02)
+        self.assertEqual([r.day for r in v1.rows], [r.day for r in v2.rows])
+        self.assertTrue(all(s.consensus_weights for s in v2.segments))
+        self.assertTrue(all(s.consensus_weights is None for s in v1.segments))
+        # Sifo reads 0.5 pp high on M and Novus 0.5 pp low; reading follows the weighted mix.
+        self.assertFalse(np.allclose(v1.rows[-1].mean, v2.rows[-1].mean))
+
+    def test_v02_later_information_never_changes_earlier_rows(self) -> None:
+        polls, elections = synthetic_history()
+        cutoff = date(2021, 8, 1)
+        extra = [poll("revealed", date(2021, 5, 1), cutoff + timedelta(days=1), SHIFTED, "Skop")]
+        a = build_aggregate(polls, elections, fit=fixed_fit, end=date(2022, 2, 20), spec=SPEC_V02)
+        b = build_aggregate([*polls, *extra], elections, fit=fixed_fit, end=date(2022, 2, 20), spec=SPEC_V02)
+        for ra, rb in zip(a.rows, b.rows):
+            if ra.day > cutoff:
+                break
+            np.testing.assert_allclose(ra.mean, rb.mean, rtol=0, atol=1e-10)
+            np.testing.assert_allclose(ra.sd, rb.sd, rtol=0, atol=1e-10)
 
 
 if __name__ == "__main__":

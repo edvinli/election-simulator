@@ -8,11 +8,10 @@ from pathlib import Path
 from typing import Sequence
 
 from .config import (
-    AGGREGATE_VERSION,
     DEFAULT_2026_RESULT_MANIFEST,
     DEFAULT_ELECTION_RESULTS_FILE,
-    DEFAULT_OUTPUT_DIR,
     DEFAULT_POLLS_FILE,
+    SPECS,
     HISTORICAL_RESULT_AVAILABILITY_LAG_DAYS,
     HISTORY_START_ELECTION,
     METADATA_FILENAME,
@@ -28,18 +27,25 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--election-results", type=Path, default=DEFAULT_ELECTION_RESULTS_FILE)
     parser.add_argument("--certified-result", type=Path, action="append", default=None,
                         help="Certified result manifest (repeatable); defaults to the 2026 manifest")
-    parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
+    parser.add_argument("--version", choices=sorted(SPECS), default="v0.1", dest="aggregate_version",
+                        help="frozen aggregate version to build (default v0.1)")
+    parser.add_argument("--output-dir", type=Path, default=None,
+                        help="defaults to the version's own directory")
     args = parser.parse_args(argv)
+    spec = SPECS[args.aggregate_version]
+    args.output_dir = args.output_dir or spec.output_dir
 
     manifests = args.certified_result if args.certified_result is not None else [DEFAULT_2026_RESULT_MANIFEST]
     elections = load_elections(args.election_results, manifests)
     dataset = load_polls(args.polls, [e.obs_date for e in elections])
-    result = build_aggregate(dataset.polls, elections)
+    result = build_aggregate(dataset.polls, elections, spec=spec)
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    write_timeseries(result, args.output_dir / TIMESERIES_FILENAME)
+    write_timeseries(result, args.output_dir / TIMESERIES_FILENAME, version=spec.version)
     metadata = {
-        "aggregate_version": AGGREGATE_VERSION,
+        "aggregate_version": spec.version,
+        "reported_level": "consensus_reading" if spec.consensus_window_days else "latent_support",
+        "consensus_window_days": spec.consensus_window_days,
         "inputs": {
             "polls": {"path": str(args.polls.name), "sha256": sha256_file(args.polls)},
             "election_results": {"path": str(args.election_results.name),
@@ -65,6 +71,9 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "optimizer_iterations": s.optimizer_iterations,
                 "optimizer_converged": s.optimizer_converged,
                 "hyperparameters": {k: float(f"{v:.6g}") for k, v in s.params.to_dict().items()},
+                "consensus_weights": (
+                    {h: round(w, 6) for h, w in s.consensus_weights.items()} if s.consensus_weights else None
+                ),
             }
             for s in result.segments
         ],

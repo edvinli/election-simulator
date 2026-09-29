@@ -119,6 +119,18 @@ class HarnessTests(unittest.TestCase):
         self.assertIs(record["aggregate_row_matches"], True)
         self.assertLessEqual(record["aggregate_information_date"], "2018-08-12")
 
+    def test_v2_is_refused_until_its_own_protocol_is_agreed(self) -> None:
+        self.assertIsNone(R.REPLAY_V2.agreed_sha256)
+        self.assertFalse(R.protocol_is_agreed(R.REPLAY_V2))
+        with self.assertRaises(SystemExit):
+            R.main(["--replay", "v2", "--score"])
+        with self.assertRaisesRegex(RuntimeError, "no baseline commit"):
+            R.verify_baseline(R.REPLAY_V2)
+
+    def test_v1_remains_agreed_to_its_frozen_protocol(self) -> None:
+        self.assertTrue(R.protocol_is_agreed(R.REPLAY_V1))
+        self.assertEqual(R.REPLAY_V1.aggregate_file, R.DEFAULT_OUTPUT_DIR / R.TIMESERIES_FILENAME)
+
     def test_baseline_check_refuses_a_dirty_checkout(self) -> None:
         def fake_git(*args):
             out = " M data/processed/poll_aggregate/x.csv\n" if args[0] == "status" else ""
@@ -149,12 +161,12 @@ class HarnessTests(unittest.TestCase):
             self.assertIn(path, diff)
 
     def test_scoring_is_refused_until_the_protocol_is_agreed(self) -> None:
-        with patch.object(R, "AGREED_PROTOCOL_SHA256", None):
-            self.assertFalse(R.protocol_is_agreed())
+        from dataclasses import replace
+        with patch.dict(R.REPLAYS, {"v1": replace(R.REPLAY_V1, agreed_sha256=None)}):
+            self.assertFalse(R.protocol_is_agreed(R.REPLAYS["v1"]))
             with self.assertRaises(SystemExit):
                 R.main(["--score"])
-        with patch.object(R, "AGREED_PROTOCOL_SHA256", "0" * 64):
-            self.assertFalse(R.protocol_is_agreed())
+        self.assertFalse(R.protocol_is_agreed(replace(R.REPLAY_V1, agreed_sha256="0" * 64)))
 
 
 if __name__ == "__main__":
