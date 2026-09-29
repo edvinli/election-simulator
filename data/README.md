@@ -5,27 +5,27 @@ Swedish election project. It does **not** contain forecasting or simulation code
 
 ## Snapshot summary
 
-- Poll of Polls estimates: **4,380** daily observations,
-  2014-09-15 through 2026-09-11.
-- Reconstructed individual polls: **1,450** polls
-  (14,500 long-format rows), with interview spans from
+- Poll of Polls estimates: **4,396** daily observations,
+  2014-09-15 through 2026-09-27.
+- Reconstructed individual polls: **1,452** polls
+  (14,520 long-format rows), with interview spans from
   2009-01-02 through
-  2026-09-11.
-- Supplementary SwedishPolls dataset: **2,673** polls
-  (26,730 long-format rows), published from
+  2026-09-27.
+- Supplementary SwedishPolls dataset: **2,674** polls
+  (26,740 long-format rows), published from
   1944-08-30 through
-  2026-09-28; available interview spans run from
+  2026-09-29; available interview spans run from
   1944-08-13 through
-  2026-09-25.
-- Unique pollster/interview-span metadata matches: **1,194**;
-  unmatched or ambiguous Pollofpolls polls: **256**.
+  2026-09-27.
+- Unique pollster/interview-span metadata matches: **1,195**;
+  unmatched or ambiguous Pollofpolls polls: **257**.
 - Supplementary field coverage: publication date on
-  **2,324** polls, interview span on
-  **2,335**, sample size on
-  **2,510**, and row source references on
+  **2,325** polls, interview span on
+  **2,336**, sample size on
+  **2,511**, and row source references on
   **463**.
 - Parties/categories present in source values: `C`, `FI`, `KD`, `L`, `M`, `MP`, `S`, `SD`, `V`, `other`.
-- Pollsters present: Demoskop, Indikator, Inizio, Ipsos, Novus, SCB, Sentio, Sifo, Skop, United Minds, YouGov.
+- Pollsters present: Demoskop, Indikator, Inizio, Ipsos, Novus, Riksdagsval, SCB, Sentio, Sifo, Skop, United Minds, YouGov.
 - Supplementary parties reported: `C`, `FI`, `KD`, `L`, `M`, `MP`, `S`, `SD`, `V`.
 - Supplementary pollsters present: Demoskop, Gallup, Indikator, Infostat, Inizio, Ipsos, Novus, SCB, SVT, Sentio, Sifo, Skop, TV4, United Minds, YouGov.
 - Retrieval method(s) for this raw snapshot: `direct_repository_http`, `first_party_http`.
