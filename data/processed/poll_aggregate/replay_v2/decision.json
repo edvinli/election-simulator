@@ -1,0 +1,86 @@
+{
+  "decision": "FAIL",
+  "gates": {
+    "G1_accuracy": {
+      "candidate": 3.7246751284525867,
+      "control": 3.026880031093155,
+      "pass": false
+    },
+    "G2_per_election": {
+      "elections": {
+        "2018-09-09": {
+          "candidate": 4.680187571887476,
+          "control": 3.4196964852876306,
+          "pass": false
+        },
+        "2022-09-11": {
+          "candidate": 2.3660017794695647,
+          "control": 2.156384467807255,
+          "pass": true
+        },
+        "2026-09-13": {
+          "candidate": 4.12783603400072,
+          "control": 3.5045591401845795,
+          "pass": false
+        }
+      },
+      "pass": false
+    },
+    "G3_seats": {
+      "brier_coalition": {
+        "candidate": 0.026424061650262468,
+        "control": 0.021579798334426945
+      },
+      "pass": false,
+      "seat_energy_score": {
+        "candidate": 17.023555555555554,
+        "control": 13.834233333333334
+      }
+    },
+    "G4_thresholds": {
+      "candidate": 0.08488289354166666,
+      "control": 0.06346031829861111,
+      "pass": false
+    },
+    "G5_calibration": {
+      "coverage_50": {
+        "candidate": 0.419753086419753,
+        "control": 0.48148148148148145
+      },
+      "coverage_90": {
+        "candidate": 0.7839506172839507,
+        "control": 0.8703703703703705
+      },
+      "pass": false
+    },
+    "G6_integrity": {
+      "complete": true,
+      "pass": true,
+      "valid_draws_and_dates": true
+    }
+  },
+  "provenance": {
+    "aggregate_sha256": "23ce416d2f76cad53acbf0da1eb67fc101b028b346c4e63c3065e98cecc7fb8f",
+    "baseline": {
+      "baseline_commit": "7153bcbef80518a3c3e32f76ca35ec6034a69557",
+      "checked_paths": [
+        "data",
+        "scripts",
+        "diagnostics",
+        "pyproject.toml",
+        "uv.lock"
+      ],
+      "clean_checkout": true,
+      "head_commit": "dfdf925816f220578e0623a2ab49a1f2b0e3bfc2",
+      "inputs_match_baseline": true,
+      "replay": "v2"
+    },
+    "cases": 54,
+    "draws": 20000,
+    "protocol_agreed": true,
+    "protocol_sha256": "fe6c52299b9bab10c1c0972e0027e7842cd69096251325959397b3c52ce0a7f9",
+    "replay": "v2",
+    "scored": true,
+    "seed": 20260929
+  }
+}
