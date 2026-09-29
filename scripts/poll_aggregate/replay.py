@@ -86,7 +86,9 @@ REPLAY_V1 = ReplayConfig(
 #: v2 scores SwedishPollsAggregate-v0.2. Its agreement hash and baseline commit
 #: are set together, in their own commit, after the v2 protocol is committed.
 REPLAY_V2 = ReplayConfig(
-    "v2", REPOSITORY_ROOT / "docs" / "poll_aggregate_replay_protocol_v2.md", None, None,
+    "v2", REPOSITORY_ROOT / "docs" / "poll_aggregate_replay_protocol_v2.md",
+    "fe6c52299b9bab10c1c0972e0027e7842cd69096251325959397b3c52ce0a7f9",
+    "7153bcbef80518a3c3e32f76ca35ec6034a69557",
     DEFAULT_OUTPUT_DIR / "v0_2" / TIMESERIES_FILENAME, DEFAULT_OUTPUT_DIR / "replay_v2",
 )
 REPLAYS: dict[str, ReplayConfig] = {"v1": REPLAY_V1, "v2": REPLAY_V2}

@@ -119,13 +119,17 @@ class HarnessTests(unittest.TestCase):
         self.assertIs(record["aggregate_row_matches"], True)
         self.assertLessEqual(record["aggregate_information_date"], "2018-08-12")
 
-    def test_v2_is_refused_until_its_own_protocol_is_agreed(self) -> None:
-        self.assertIsNone(R.REPLAY_V2.agreed_sha256)
-        self.assertFalse(R.protocol_is_agreed(R.REPLAY_V2))
-        with self.assertRaises(SystemExit):
-            R.main(["--replay", "v2", "--score"])
-        with self.assertRaisesRegex(RuntimeError, "no baseline commit"):
-            R.verify_baseline(R.REPLAY_V2)
+    def test_v2_is_agreed_to_its_frozen_protocol_and_baseline(self) -> None:
+        self.assertTrue(R.protocol_is_agreed(R.REPLAY_V2))
+        self.assertEqual(R.REPLAY_V2.baseline_commit, "7153bcbef80518a3c3e32f76ca35ec6034a69557")
+        self.assertEqual(R.REPLAY_V2.aggregate_file, R.DEFAULT_OUTPUT_DIR / "v0_2" / R.TIMESERIES_FILENAME)
+        self.assertNotEqual(R.REPLAY_V2.output_dir, R.REPLAY_V1.output_dir)
+
+    def test_v2_gates_section_is_v1s_word_for_word(self) -> None:
+        def section(path):
+            text = path.read_text(encoding="utf-8")
+            return text[text.index("## 6. Metrics"):text.index("### 7.1")]
+        self.assertEqual(section(R.REPLAY_V1.protocol_path), section(R.REPLAY_V2.protocol_path))
 
     def test_v1_remains_agreed_to_its_frozen_protocol(self) -> None:
         self.assertTrue(R.protocol_is_agreed(R.REPLAY_V1))
