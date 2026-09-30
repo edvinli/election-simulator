@@ -1,0 +1,13 @@
+{
+  "aggregate_version": "SwedishPollsConsensusBaseline-v1",
+  "window_days": 60,
+  "polls": {
+    "path": "swedishpolls_individual_polls.csv",
+    "sha256": "cad057436bd3122d11df98c00acbf9c013303a338fb220efe3a54cb7ac6d8253"
+  },
+  "rows": 5847,
+  "first_date": "2010-09-26",
+  "last_date": "2026-09-28",
+  "min_pollsters": 1,
+  "days_below_three_pollsters": 42
+}

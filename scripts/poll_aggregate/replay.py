@@ -55,6 +55,7 @@ SEED: int = 20260929
 CONTROL = "CONTROL_POP"
 CANDIDATE = "CANDIDATE_SWEDISHPOLLS"
 DIAGNOSTIC = "DIAGNOSTIC_TS_ONLY"
+BASELINE = "CONTROL_SWEDISHPOLLS_CONSENSUS"
 ARMS: tuple[str, ...] = (CONTROL, CANDIDATE, DIAGNOSTIC)
 
 PROCESSED_ROOT = REPOSITORY_ROOT / "data" / "processed"
@@ -67,8 +68,8 @@ THRESHOLD_PCT = 4.0
 class ReplayConfig:
     """One frozen replay: its protocol, agreement, baseline and aggregate.
 
-    Every replay shares the arms, cases, draws, seed, metrics and gates;
-    those are fixed by each protocol to be the v1 values.
+    Every replay shares the cases, draws, seed, metrics and gates, fixed by
+    each protocol to the v1 values; the arms and the control can differ.
     """
 
     name: str
@@ -77,6 +78,11 @@ class ReplayConfig:
     baseline_commit: str | None
     aggregate_file: Path
     output_dir: Path
+    arms: tuple[str, ...] = ARMS
+    control: str = CONTROL
+    #: For a series control (not PoP): the timeseries its arm reads, with the
+    #: same SwedishPolls individual polls as the candidate.
+    control_timeseries: Path | None = None
 
 
 REPLAY_V1 = ReplayConfig(
@@ -91,7 +97,15 @@ REPLAY_V2 = ReplayConfig(
     "7153bcbef80518a3c3e32f76ca35ec6034a69557",
     DEFAULT_OUTPUT_DIR / "v0_2" / TIMESERIES_FILENAME, DEFAULT_OUTPUT_DIR / "replay_v2",
 )
-REPLAYS: dict[str, ReplayConfig] = {"v1": REPLAY_V1, "v2": REPLAY_V2}
+#: v4 benchmarks v0.2 against the SwedishPolls-only consensus baseline, not
+#: against backfilled PoP. Agreement and baseline are set in their own commit.
+REPLAY_V4 = ReplayConfig(
+    "v4", REPOSITORY_ROOT / "docs" / "poll_aggregate_replay_protocol_v4.md", None, None,
+    DEFAULT_OUTPUT_DIR / "v0_2" / TIMESERIES_FILENAME, DEFAULT_OUTPUT_DIR / "replay_v4",
+    arms=(BASELINE, CANDIDATE), control=BASELINE,
+    control_timeseries=DEFAULT_OUTPUT_DIR / "consensus_baseline" / TIMESERIES_FILENAME,
+)
+REPLAYS: dict[str, ReplayConfig] = {"v1": REPLAY_V1, "v2": REPLAY_V2, "v4": REPLAY_V4}
 
 INDIVIDUAL_POLL_FIELDS = (
     "poll_id", "pollster", "pollster_original", "interview_start", "interview_end",
@@ -141,8 +155,13 @@ def write_swedishpolls_individual_polls(dest: Path, polls_file: Path = DEFAULT_P
     return len(written)
 
 
-def build_data_root(arm: str, parent: Path, aggregate_file: Path) -> Path:
-    """A processed-data folder identical to production except the arm's two files."""
+def build_data_root(arm: str, parent: Path, aggregate_file: Path, control_timeseries: Path | None = None) -> Path:
+    """A processed-data folder identical to production except the arm's two files.
+
+    With ``control_timeseries``, the control arm reads that series and the
+    candidate's SwedishPolls individual polls, so the two arms differ only in
+    their timeseries.
+    """
 
     root = parent / arm
     (root / "pollofpolls").mkdir(parents=True)
@@ -153,12 +172,16 @@ def build_data_root(arm: str, parent: Path, aggregate_file: Path) -> Path:
         CONTROL: set(),
         CANDIDATE: {"pollofpolls_timeseries.csv", "individual_polls.csv"},
         DIAGNOSTIC: {"pollofpolls_timeseries.csv"},
+        BASELINE: {"pollofpolls_timeseries.csv", "individual_polls.csv"},
     }[arm]
+    series = control_timeseries if arm == BASELINE else aggregate_file
+    if arm == BASELINE and control_timeseries is None:
+        raise ValueError("the consensus baseline arm needs its timeseries")
     for child in (PROCESSED_ROOT / "pollofpolls").iterdir():
         if child.name not in replaced:
             os.symlink(child, root / "pollofpolls" / child.name)
     if "pollofpolls_timeseries.csv" in replaced:
-        os.symlink(aggregate_file, root / "pollofpolls" / "pollofpolls_timeseries.csv")
+        os.symlink(series, root / "pollofpolls" / "pollofpolls_timeseries.csv")
     if "individual_polls.csv" in replaced:
         write_swedishpolls_individual_polls(root / "pollofpolls" / "individual_polls.csv")
     return root
@@ -268,7 +291,7 @@ def case_dates_ok(row: dict) -> bool:
 
     if row["selected_estimate_date"] != row["as_of"]:
         return False
-    if row["arm"] == CONTROL:
+    if row["aggregate_row_matches"] == "":  # the arm reads production PoP, not a series file
         return True
     return row["aggregate_row_matches"] is True and row["aggregate_information_date"] <= row["as_of"]
 
@@ -316,10 +339,12 @@ def run_case(job: dict) -> dict:
     return row
 
 
-def _jobs(roots: dict[str, Path], truth: dict[int, dict] | None, aggregate_file: Path) -> list[dict]:
+def _jobs(roots: dict[str, Path], truth: dict[int, dict] | None, aggregate_file: Path,
+          config: "ReplayConfig | None" = None) -> list[dict]:
+    config = config or REPLAY_V1
     categories = (*PARTIES, "REST")
     jobs = []
-    for arm in ARMS:
+    for arm in config.arms:
         for election in ELECTIONS:
             for horizon in HORIZONS:
                 case_truth = None
@@ -335,7 +360,11 @@ def _jobs(roots: dict[str, Path], truth: dict[int, dict] | None, aggregate_file:
                         "election": election.isoformat(),
                         "horizon": horizon,
                         "data_root": str(roots[arm]),
-                        "aggregate_file": "" if arm == CONTROL else str(aggregate_file),
+                        "aggregate_file": (
+                            "" if arm == CONTROL
+                            else str(config.control_timeseries) if arm == BASELINE
+                            else str(aggregate_file)
+                        ),
                         "gated": arm != DIAGNOSTIC,
                         "truth": case_truth,
                     }
@@ -353,13 +382,13 @@ def _pooled(rows: list[dict], arm: str, metric: str, election: str | None = None
     return float(np.mean(values))
 
 
-def evaluate_gates(rows: list[dict]) -> dict:
+def evaluate_gates(rows: list[dict], control: str = CONTROL) -> dict:
     """The protocol's section-7 gates on scored case rows."""
 
     def pooled(arm: str, metric: str, election: str | None = None) -> float:
         return _pooled(rows, arm, metric, election)
 
-    c, s = CONTROL, CANDIDATE
+    c, s = control, CANDIDATE
     gates: dict[str, dict] = {}
     es_c, es_s = pooled(c, "es_9cat"), pooled(s, "es_9cat")
     gates["G1_accuracy"] = {"candidate": es_s, "control": es_c, "pass": es_s <= 1.05 * es_c}
@@ -425,8 +454,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     aggregate_file = config.aggregate_file
 
     with tempfile.TemporaryDirectory(prefix="poll-aggregate-replay-") as tmp:
-        roots = {arm: build_data_root(arm, Path(tmp), aggregate_file) for arm in ARMS}
-        jobs = _jobs(roots, truth, aggregate_file)
+        roots = {arm: build_data_root(arm, Path(tmp), aggregate_file, config.control_timeseries)
+                 for arm in config.arms}
+        jobs = _jobs(roots, truth, aggregate_file, config)
         with ProcessPoolExecutor(max_workers=args.workers) as pool:
             rows = list(pool.map(run_case, jobs))
 
@@ -453,7 +483,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     print(json.dumps(provenance))
     if args.score:
-        decision = evaluate_gates(rows)
+        decision = evaluate_gates(rows, config.control)
         (args.output_dir / "decision.json").write_text(
             json.dumps({**decision, "provenance": provenance}, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
