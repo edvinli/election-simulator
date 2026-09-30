@@ -358,7 +358,6 @@ def serialize_poll_of_polls_timeseries(
     source_path = Path(path)
     if not source_path.is_file():
         raise FileNotFoundError(f"Opinion timeseries CSV not found: {source_path}")
-    aggregate = source_path.name == AGGREGATE_TIMESERIES.name
     by_date: dict[date, dict[str, float]] = {}
     with source_path.open(newline="", encoding="utf-8") as handle:
         reader = csv.DictReader(handle)
@@ -367,9 +366,8 @@ def serialize_poll_of_polls_timeseries(
             if not raw_date:
                 continue
             d = _coerce_date(raw_date, name="timeseries date")
-            # The aggregate may carry its latest row forward, so it needs the
-            # row before the range too; a legacy series is read in range only.
-            if d > end or (d < start and not aggregate):
+            # The latest row before the range may be carried into it.
+            if d > end:
                 continue
             parties: dict[str, float] = {}
             for party in HISTORY_PARTY_ORDER:
@@ -378,11 +376,14 @@ def serialize_poll_of_polls_timeseries(
                     raise ValueError(f"Missing or invalid {party} in opinion timeseries on {raw_date}")
                 parties[party] = val
             by_date[d] = parties
-    if not aggregate:
-        return [{"date": d.isoformat(), "parties": by_date[d]} for d in sorted(by_date)]
-    # The aggregate ends at its latest information date. Between information
-    # dates its mean is constant by construction (only its uncertainty grows),
-    # so the value on a later date up to ``end`` is exactly its latest row.
+    # A series ends at its latest estimate: the aggregate at its latest
+    # information date, Poll of Polls at its latest published row. The
+    # forecast on a later date uses exactly that latest estimate (OpinionState
+    # selects the latest row on or before as_of), and the aggregate's mean is
+    # constant between information dates by construction, so a date up to
+    # ``end`` without its own row carries the latest earlier one. Without this a
+    # new cycle, whose chart starts on the forecast date, got an empty series
+    # whenever the source lagged that date (production run 36634190401).
     records: list[dict[str, Any]] = []
     known = sorted(by_date)
     latest: dict[str, float] | None = None

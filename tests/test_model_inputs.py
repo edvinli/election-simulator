@@ -89,9 +89,22 @@ class OpinionSeriesSerializationTests(unittest.TestCase):
         self.assertEqual([r["date"] for r in records], ["2026-09-30", "2026-10-01"])
         self.assertEqual(records[0]["parties"]["M"], 19.0)
 
-    def test_a_legacy_series_is_read_strictly_within_the_range(self) -> None:
+    def test_a_lagging_legacy_series_also_carries_its_latest_estimate(self) -> None:
+        # Production run 36634190401: PoP's latest row was 2026-09-27, the new
+        # cycle's chart began on 2026-09-29, and the history update failed.
+        from scripts.forecast_history.generate import serialize_poll_of_polls_timeseries
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self.write(Path(tmp), "pollofpolls_timeseries.csv", [
+                "2026-09-11,17,4,8,6,27,8,7,19",
+                "2026-09-27,19.6,7.5,7.4,6.1,26.6,8.2,6.0,17.1",
+            ])
+            records = serialize_poll_of_polls_timeseries(path, start_date="2026-09-29", end_date="2026-09-29")
+        self.assertEqual(records, [{"date": "2026-09-29", "parties": {
+            "M": 19.6, "L": 7.5, "C": 7.4, "KD": 6.1, "S": 26.6, "V": 8.2, "MP": 6.0, "SD": 17.1}}])
+
+    def test_nothing_is_invented_before_the_first_row(self) -> None:
         from scripts.forecast_history.generate import serialize_poll_of_polls_timeseries
         with tempfile.TemporaryDirectory() as tmp:
             path = self.write(Path(tmp), "pollofpolls_timeseries.csv", ["2026-09-11,17,4,8,6,27,8,7,19"])
-            self.assertEqual(
-                serialize_poll_of_polls_timeseries(path, start_date="2026-09-30", end_date="2026-10-01"), [])
+            records = serialize_poll_of_polls_timeseries(path, start_date="2026-09-09", end_date="2026-09-12")
+        self.assertEqual([r["date"] for r in records], ["2026-09-11", "2026-09-12"])
