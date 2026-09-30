@@ -74,6 +74,7 @@ from scripts.pollofpolls.transitions import (
     filter_transitions_as_of,
 )
 from scripts.simulator.config import DEFAULT_SIMULATION_SEED
+from scripts.simulator.model_inputs import opinion_inputs
 from scripts.vote_share_calibration.config import MIN_SHARE_PCT
 from scripts.vote_share_calibration.election_noise_b import (
     MODEL_ID as ADOPTED_NOISE_MODEL,
@@ -443,7 +444,8 @@ def simulate_campaign_paths(
         raise ValueError("representative_paths must be a positive integer")
 
     root = Path(data_dir) if data_dir is not None else Path(__file__).resolve().parents[2] / "data" / "processed"
-    state = opinion_state or estimate_opinion(as_of=origin, data_dir=root / "pollofpolls")
+    inputs = opinion_inputs(root)
+    state = opinion_state or estimate_opinion(as_of=origin, timeseries_file=inputs.timeseries, polls_file=inputs.polls)
     if state.as_of != origin:
         raise ValueError("OpinionState cutoff differs from the requested frozen origin")
 
@@ -459,7 +461,7 @@ def simulate_campaign_paths(
     state_clr = log_state - np.mean(log_state, axis=1, keepdims=True)
 
     # 2. Leakage-safe historical trajectory pool aligned with production.
-    timeseries = load_timeseries_dataset(root / "pollofpolls" / "pollofpolls_timeseries.csv")
+    timeseries = load_timeseries_dataset(inputs.timeseries)
     pool = build_campaign_path_pool(timeseries, origin, path_days)
 
     # 3. Production's Dynamics v2 sub-seed and draw order.

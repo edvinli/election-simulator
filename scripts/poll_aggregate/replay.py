@@ -36,6 +36,7 @@ from .config import (
     TIMESERIES_FILENAME,
 )
 from .data import load_elections, load_polls, sha256_file
+from .outputs import INDIVIDUAL_POLL_FIELDS, write_individual_polls
 
 PROTOCOL_PATH = REPOSITORY_ROOT / "docs" / "poll_aggregate_replay_protocol.md"
 #: Set to the protocol's SHA-256 when it is agreed; ``None`` refuses scoring.
@@ -109,52 +110,14 @@ REPLAY_V4 = ReplayConfig(
 )
 REPLAYS: dict[str, ReplayConfig] = {"v1": REPLAY_V1, "v2": REPLAY_V2, "v4": REPLAY_V4}
 
-INDIVIDUAL_POLL_FIELDS = (
-    "poll_id", "pollster", "pollster_original", "interview_start", "interview_end",
-    "publication_date", "party", "support", "source_value", "support_status", "sample_size",
-    "poll_method", "source_url", "retrieved_at", "metadata_source_url", "metadata_retrieved_at",
-    "metadata_match_status", "metadata_row_source_references_json",
-)
 
 
 def write_swedishpolls_individual_polls(dest: Path, polls_file: Path = DEFAULT_POLLS_FILE) -> int:
-    """SwedishPolls polls that pass the aggregate's cleaning, in individual_polls.csv's schema.
-
-    Sample sizes are the reported ones (blank when unreported); the
-    aggregate's overlap discount and imputation are its own concerns.
-    """
+    """SwedishPolls polls that pass the aggregate's cleaning, in individual_polls.csv's schema."""
 
     elections = load_elections(DEFAULT_ELECTION_RESULTS_FILE, [DEFAULT_2026_RESULT_MANIFEST])
     eligible = {o.key for o in load_polls(polls_file, [e.obs_date for e in elections]).polls}
-    written = set()
-    with polls_file.open(encoding="utf-8", newline="") as src, dest.open(
-        "w", encoding="utf-8", newline=""
-    ) as out:
-        writer = csv.DictWriter(out, fieldnames=INDIVIDUAL_POLL_FIELDS, lineterminator="\n")
-        writer.writeheader()
-        for row in csv.DictReader(src):
-            if row["poll_id"] not in eligible or row["party"] not in PARTIES:
-                continue
-            written.add(row["poll_id"])
-            writer.writerow(
-                {
-                    "poll_id": row["poll_id"],
-                    "pollster": row["pollster"],
-                    "pollster_original": row["pollster_original"],
-                    "interview_start": row["interview_start"],
-                    "interview_end": row["interview_end"],
-                    "publication_date": row["publication_date"],
-                    "party": row["party"],
-                    "support": row["support"],
-                    "source_value": row["source_value"],
-                    "support_status": row["support_status"],
-                    "sample_size": row["sample_size"],
-                    "source_url": row["dataset_source_url"],
-                    "metadata_match_status": "swedishpolls",
-                    "metadata_row_source_references_json": "[]",
-                }
-            )
-    return len(written)
+    return write_individual_polls(polls_file, eligible, dest)
 
 
 def build_data_root(arm: str, parent: Path, aggregate_file: Path, control_timeseries: Path | None = None) -> Path:

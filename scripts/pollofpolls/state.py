@@ -350,6 +350,8 @@ def estimate_opinion(
     as_of: str | date | None = None,
     *,
     data_dir: Path | str | None = None,
+    timeseries_file: Path | str | None = None,
+    polls_file: Path | str | None = None,
 ) -> OpinionState:
     """Estimate Swedish parliamentary party support and uncertainty as of a specific date.
 
@@ -358,14 +360,16 @@ def estimate_opinion(
                If omitted (None), defaults to the maximum date in pollofpolls_timeseries.csv.
         data_dir: Optional path to directory containing data/processed/pollofpolls.
                   If None, resolves relative to repository layout.
+        timeseries_file, polls_file: Explicit opinion inputs; each overrides the
+                  file of that name under ``data_dir``.
 
     Returns:
         OpinionState object containing point estimates, ALR covariance, diagnostics,
         and Monte Carlo sampling methods.
     """
     base_path = Path(data_dir) if data_dir else Path(__file__).resolve().parents[2] / "data" / "processed" / "pollofpolls"
-    ts_file = base_path / "pollofpolls_timeseries.csv"
-    ind_file = base_path / "individual_polls.csv"
+    ts_file = Path(timeseries_file) if timeseries_file else base_path / "pollofpolls_timeseries.csv"
+    ind_file = Path(polls_file) if polls_file else base_path / "individual_polls.csv"
 
     timeseries_data = load_timeseries_dataset(ts_file)
     individual_polls, load_diagnostics = load_individual_polls_dataset(ind_file)

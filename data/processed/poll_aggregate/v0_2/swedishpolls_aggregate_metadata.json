@@ -1242,6 +1242,13 @@
         "house_prior": 0.000869688,
         "process": 1.14365e-05
       },
+      "hyperparameters_exact": {
+        "design_effect": 1.050944741636061,
+        "election_n": 4325.064215878676,
+        "house_drift": 1.0287311514749363e-06,
+        "house_prior": 0.000869687802668939,
+        "process": 1.1436450178023374e-05
+      },
       "hyperparameters_fit_date": "2010-09-26",
       "log_likelihood": -2519.8942,
       "observations": 263,
@@ -1267,6 +1274,13 @@
         "house_drift": 6.43296e-07,
         "house_prior": 0.000462023,
         "process": 1.28851e-05
+      },
+      "hyperparameters_exact": {
+        "design_effect": 1.005155429865479,
+        "election_n": 1168.2084141911175,
+        "house_drift": 6.432959032233723e-07,
+        "house_prior": 0.0004620234852634149,
+        "process": 1.2885109564177725e-05
       },
       "hyperparameters_fit_date": "2014-09-21",
       "log_likelihood": -5729.8938,
@@ -1294,6 +1308,13 @@
         "house_prior": 0.000566023,
         "process": 1.33846e-05
       },
+      "hyperparameters_exact": {
+        "design_effect": 0.9524013259036103,
+        "election_n": 1033.08170229818,
+        "house_drift": 1.0771691017640346e-06,
+        "house_prior": 0.0005660230471230853,
+        "process": 1.3384637843380145e-05
+      },
       "hyperparameters_fit_date": "2018-09-16",
       "log_likelihood": -9313.786,
       "observations": 1009,
@@ -1319,6 +1340,13 @@
         "house_prior": 0.00059859,
         "process": 1.45163e-05
       },
+      "hyperparameters_exact": {
+        "design_effect": 0.8724524173996794,
+        "election_n": 1425.1335902231897,
+        "house_drift": 1.153358360750131e-06,
+        "house_prior": 0.000598589723603821,
+        "process": 1.4516254440580255e-05
+      },
       "hyperparameters_fit_date": "2022-09-18",
       "log_likelihood": -12245.6016,
       "observations": 1354,
@@ -1343,6 +1371,13 @@
         "house_drift": 1.07527e-06,
         "house_prior": 0.000526019,
         "process": 1.38378e-05
+      },
+      "hyperparameters_exact": {
+        "design_effect": 0.8553955558042075,
+        "election_n": 1357.501853733247,
+        "house_drift": 1.0752680121307708e-06,
+        "house_prior": 0.0005260193057896604,
+        "process": 1.383778537427652e-05
       },
       "hyperparameters_fit_date": "2026-09-19",
       "log_likelihood": -14482.8161,

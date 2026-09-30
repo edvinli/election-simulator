@@ -185,11 +185,15 @@ def build_aggregate(
     fit: Callable[..., tuple[Hyperparameters, float, int, bool]] = fit_hyperparameters,
     end: date | None = None,
     spec: AggregateSpec = SPEC_V01,
+    stored_fits: dict[date, tuple[Hyperparameters, float, int, bool]] | None = None,
 ) -> AggregateResult:
     """The daily causal series from the second anchor election's result onward.
 
     The spec only chooses the reported level (latent support, or the
     consensus reading); the filter and its fit are the same for every spec.
+    ``stored_fits`` reuses a segment's recorded fit instead of refitting it:
+    a fit depends only on information known at its fit date, so production
+    refits only when a new election result becomes available.
     """
 
     everything = sorted([*polls, *elections], key=Observation.sort_key)
@@ -210,7 +214,10 @@ def build_aggregate(
         segment_end = min(segment_end, last)
         known = _known(everything, fit_date)
         reference = max((o for o in known if o.kind == "election"), key=lambda o: o.obs_date)
-        params, loglik, iterations, converged = fit(known, houses, reference.shares, previous_params)
+        if stored_fits is not None and fit_date in stored_fits:
+            params, loglik, iterations, converged = stored_fits[fit_date]
+        else:
+            params, loglik, iterations, converged = fit(known, houses, reference.shares, previous_params)
         previous_params = params
         weights = (
             consensus_weights_at(polls, fit_date, spec.consensus_window_days)
