@@ -42,7 +42,6 @@ class Observation:
     house: str | None = None
     sample_size: float | None = None  # effective size after fieldwork overlap
     rounding_pp: float = 0.0
-    fieldwork_start: date | None = None  # polls only; not used by the filter
 
     def sort_key(self) -> tuple[date, date, str]:
         return (self.obs_date, self.available, self.key)
@@ -192,7 +191,6 @@ def load_polls(path: Path | str, election_dates: Iterable[date]) -> PollDataset:
                 house=house,
                 sample_size=size * new_days / days,
                 rounding_pp=_rounding_resolution(values),
-                fieldwork_start=poll["start"],
             )
         )
 
