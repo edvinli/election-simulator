@@ -21,6 +21,7 @@ from scripts.hindcasts.models import (
 )
 from scripts.pollofpolls.clr import clr_to_composition_matrix
 from scripts.pollofpolls.state import OpinionState, estimate_opinion, load_timeseries_dataset
+from scripts.simulator.model_inputs import opinion_inputs
 from scripts.pollofpolls.state_config import ALL_CATEGORIES
 from scripts.pollofpolls.transitions import (
     HistoricalTransition,
@@ -104,10 +105,11 @@ def generate_national_vote_shares(
     root_data = Path(data_dir) if data_dir else Path(__file__).resolve().parents[2] / "data" / "processed"
     p_file = Path(polls_file) if polls_file else root_data / "pollofpolls" / "swedishpolls_individual_polls.csv"
     e_file = Path(elections_file) if elections_file else root_data / "elections" / "riksdag_election_results.csv"
-    ts_file = root_data / "pollofpolls" / "pollofpolls_timeseries.csv"
+    inputs = opinion_inputs(root_data)
+    ts_file = inputs.timeseries
 
     # 1. Fit OpinionState v1.1
-    opinion_state = estimate_opinion(as_of=as_of, data_dir=root_data / "pollofpolls")
+    opinion_state = estimate_opinion(as_of=as_of, timeseries_file=inputs.timeseries, polls_file=inputs.polls)
     as_of_date = opinion_state.as_of
     horizon_days = max(1, (elec_date - as_of_date).days)
 

@@ -32,6 +32,7 @@ from typing import Any
 
 import numpy as np
 
+from scripts.simulator.model_inputs import AGGREGATE_DIR, AGGREGATE_POLLS, AGGREGATE_TIMESERIES
 from scripts.forecast_history.contract import (
     DEFAULT_COALITIONS,
     HISTORY_PARTY_ORDER,
@@ -179,6 +180,11 @@ def freeze_poll_inputs(pollofpolls_dir: Path, *, as_of: str = FROZEN_AS_OF) -> N
     _truncate(pollofpolls_dir / "swedishpolls_individual_polls.csv", "publication_date", as_of)
     _truncate(pollofpolls_dir / "individual_polls.csv", "publication_date", as_of)
     _truncate(pollofpolls_dir / "pollofpolls_timeseries.csv", "date", as_of)
+    # The model's opinion inputs from 1.2.0: the aggregate beside the table.
+    aggregate = pollofpolls_dir.parent / AGGREGATE_DIR
+    if aggregate.is_dir():
+        _truncate(aggregate / AGGREGATE_POLLS.name, "publication_date", as_of)
+        _truncate(aggregate / AGGREGATE_TIMESERIES.name, "date", as_of)
 
 
 def freeze_archive_inputs(archive_dir: Path, *, as_of: str = FROZEN_AS_OF) -> None:

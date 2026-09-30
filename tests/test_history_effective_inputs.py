@@ -152,9 +152,11 @@ class EffectiveInputReuseTests(unittest.TestCase):
 
     def test_opinion_selection_matches_canonical_estimator(self):
         from scripts.pollofpolls.state import estimate_opinion
+        from scripts.simulator.model_inputs import opinion_inputs
         inputs = EffectiveInputs(self.data, election_date=date(2026, 9, 13), seed=12345)
         for day in (date(2022, 10, 2), date(2026, 5, 24), date(2026, 9, 5)):
-            state = estimate_opinion(as_of=day, data_dir=self.data / 'pollofpolls')
+            opinion = opinion_inputs(self.data)
+            state = estimate_opinion(as_of=day, timeseries_file=opinion.timeseries, polls_file=opinion.polls)
             selected = inputs.for_date(day)['opinion']
             self.assertEqual(len(selected['residuals']), state.residual_poll_count)
             self.assertEqual(len(selected['recent']), state.recent_poll_count)

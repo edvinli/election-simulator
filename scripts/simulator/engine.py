@@ -31,7 +31,10 @@ from .config import (
 )
 from .fast_allocator import dispatch_production_allocation, fast_allocate_seats_from_matrix
 from .reproducibility import build_reproducibility_manifest
+from .model_inputs import opinion_inputs
 from .summary import GroupSummary, GroupSummaryHelper, SimulationSummary, compute_simulation_summary
+
+DEFAULT_PROCESSED_ROOT = Path(__file__).resolve().parents[2] / "data" / "processed"
 
 
 @dataclass(frozen=True)
@@ -315,6 +318,7 @@ def simulate_election(
     largest_seat_parties = [PARLIAMENTARY_PARTIES_8[idx] for idx in largest_seat_idx]
 
     # 4. Reproducibility Manifest
+    opinion = opinion_inputs(data_root or DEFAULT_PROCESSED_ROOT)
     manifest = build_reproducibility_manifest(
         as_of=as_of_date.isoformat(),
         election_date=elec_date.isoformat(),
@@ -327,12 +331,15 @@ def simulate_election(
             "geography_baseline_year": baseline_year,
             "total_national_votes": total_national_votes,
             "constituency_vote_unit": 25,
+            "opinion_input": opinion.source,
         },
         poll_data_path=(data_root / "pollofpolls" / "swedishpolls_individual_polls.csv") if data_root else None,
         election_data_path=(data_root / "elections" / "riksdag_election_results.csv") if data_root else None,
         mandate_data_path=(data_root / "mandates" / "historical_certified_mandates.csv") if data_root else None,
         geography_data_path=(data_root / "geography" / "constituency_party_votes_2014_2022.csv") if data_root else None,
         repo_dir=repo_dir,
+        opinion_timeseries_path=opinion.timeseries,
+        opinion_polls_path=opinion.polls,
     )
 
     # 5. Compute Summary Statistics

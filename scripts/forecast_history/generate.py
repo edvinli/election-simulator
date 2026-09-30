@@ -7,7 +7,8 @@ joint vote and seat matrices by :mod:`scripts.forecast_history.contract`.
 
 Provenance classification:
 - ``reconstructed_current_model``: Historical backfill simulations using the
-  current model and finalized historical Poll of Polls timeseries.
+  current model and the opinion timeseries (the SwedishPolls aggregate from
+  model 1.2.0; the finalized Poll of Polls series before it).
 - ``prospective_archived``: Genuine prospective archived forecast runs. These
   are only substituted when the archive contains the required joint coalition
   draws / distributions needed to compute non-linear coalition quantiles correctly;
@@ -38,6 +39,7 @@ from typing import Any, Callable, Iterable, Mapping, Sequence
 
 import numpy as np
 
+from scripts.simulator.model_inputs import AGGREGATE_POLLS, AGGREGATE_TIMESERIES
 from scripts.pollofpolls.normalize import normalize_party, parse_date
 from scripts.simulator.config import (
     DEFAULT_ELECTION_DATE,
@@ -76,7 +78,16 @@ from .party_contract import (
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_PROCESSED_ROOT = REPOSITORY_ROOT / "data" / "processed"
 DEFAULT_POLL_FILE = DEFAULT_PROCESSED_ROOT / "pollofpolls" / "swedishpolls_individual_polls.csv"
-DEFAULT_TIMESERIES_FILE = DEFAULT_PROCESSED_ROOT / "pollofpolls" / "pollofpolls_timeseries.csv"
+DEFAULT_TIMESERIES_FILE = DEFAULT_PROCESSED_ROOT / AGGREGATE_TIMESERIES
+#: Website-facing description of how the history was made (model 1.2.0 on).
+PROVENANCE_NOTE = (
+    "Historiska prognoser är rekonstruerade i efterhand med dagens modell och ett opinionsunderlag "
+    "byggt enbart på SwedishPolls, där varje datum bara använder undersökningar som var publicerade då. "
+    "Den senaste punkten visar den officiella aktuella valprognosen. "
+    "Äkta prospektiva arkivpunkter ersätts inte där arkivet saknar de gemensamma koalitionsdragningar som krävs för att beräkna koalitionsintervall korrekt. "
+    "Koalitionernas röstandelar beräknas över de åtta riksdagspartierna; "
+    "enskilda partiers röstandelar redovisas över hela valmanskåren."
+)
 DEFAULT_ARCHIVE_DIR = DEFAULT_PROCESSED_ROOT / "prospective_forecasts"
 DEFAULT_HISTORY_OUTPUT = REPOSITORY_ROOT / "files" / "election-simulator" / "history" / "coalition-timeseries.json"
 # The 2026 cycle's schedule, kept as named constants because fixtures and
@@ -334,7 +345,11 @@ def serialize_poll_of_polls_timeseries(
     start_date: str | date,
     end_date: str | date,
 ) -> list[dict[str, Any]]:
-    """Serialize daily eight-party Poll of Polls observations for the chart range."""
+    """Serialize daily eight-party opinion-series observations for the chart range.
+
+    The published field keeps its historical name ``poll_of_polls`` (the
+    website contract); from model 1.2.0 it carries the SwedishPolls aggregate.
+    """
 
     start = _coerce_date(start_date, name="start_date")
     end = _coerce_date(end_date, name="end_date")
@@ -342,8 +357,8 @@ def serialize_poll_of_polls_timeseries(
         raise ValueError("start_date must not be after end_date")
     source_path = Path(path)
     if not source_path.is_file():
-        raise FileNotFoundError(f"Poll of Polls timeseries CSV not found: {source_path}")
-    records: list[dict[str, Any]] = []
+        raise FileNotFoundError(f"Opinion timeseries CSV not found: {source_path}")
+    by_date: dict[date, dict[str, float]] = {}
     with source_path.open(newline="", encoding="utf-8") as handle:
         reader = csv.DictReader(handle)
         for row in reader:
@@ -351,18 +366,36 @@ def serialize_poll_of_polls_timeseries(
             if not raw_date:
                 continue
             d = _coerce_date(raw_date, name="timeseries date")
-            if start <= d <= end:
-                parties: dict[str, float] = {}
-                for party in HISTORY_PARTY_ORDER:
-                    val = _parse_support(row.get(party))
-                    if val is None:
-                        raise ValueError(f"Missing or invalid {party} in PoP timeseries on {raw_date}")
-                    parties[party] = val
-                records.append({
-                    "date": d.isoformat(),
-                    "parties": parties,
-                })
-    records.sort(key=lambda item: item["date"])
+            # The latest row before the range may be carried into it.
+            if d > end:
+                continue
+            parties: dict[str, float] = {}
+            for party in HISTORY_PARTY_ORDER:
+                val = _parse_support(row.get(party))
+                if val is None:
+                    raise ValueError(f"Missing or invalid {party} in opinion timeseries on {raw_date}")
+                parties[party] = val
+            by_date[d] = parties
+    # A series ends at its latest estimate: the aggregate at its latest
+    # information date, Poll of Polls at its latest published row. The
+    # forecast on a later date uses exactly that latest estimate (OpinionState
+    # selects the latest row on or before as_of), and the aggregate's mean is
+    # constant between information dates by construction, so a date up to
+    # ``end`` without its own row carries the latest earlier one. Without this a
+    # new cycle, whose chart starts on the forecast date, got an empty series
+    # whenever the source lagged that date (production run 36634190401).
+    records: list[dict[str, Any]] = []
+    known = sorted(by_date)
+    latest: dict[str, float] | None = None
+    index = 0
+    day = start
+    while day <= end:
+        while index < len(known) and known[index] <= day:
+            latest = by_date[known[index]]
+            index += 1
+        if latest is not None:
+            records.append({"date": day.isoformat(), "parties": dict(latest)})
+        day += timedelta(days=1)
     return records
 
 
@@ -411,7 +444,7 @@ def build_history_dates(
 
 def _latest_timeseries_date(path: Path) -> date:
     if not path.is_file():
-        raise FileNotFoundError(f"Poll of Polls timeseries CSV not found: {path}")
+        raise FileNotFoundError(f"Opinion timeseries CSV not found: {path}")
     latest: date | None = None
     with path.open(newline="", encoding="utf-8") as handle:
         reader = csv.DictReader(handle)
@@ -421,23 +454,34 @@ def _latest_timeseries_date(path: Path) -> date:
                 parsed = _coerce_date(raw, name="timeseries date")
                 latest = parsed if latest is None else max(latest, parsed)
     if latest is None:
-        raise ValueError(f"Poll of Polls timeseries has no dates: {path}")
+        raise ValueError(f"Opinion timeseries has no dates: {path}")
     return latest
 
 
 def first_post_election_timeseries_date(path: Path | str, election_date: str | date) -> date | None:
-    """The first Poll of Polls estimate after the previous election, if any.
+    """The first date the opinion input reflects a poll fielded after the previous election.
 
-    A cycle's first history point cannot come earlier: before it, the latest
-    opinion estimate available was made before the previous election, and a
-    forecast of the next election built on it would be a pre-election
-    forecast relabelled.
+    A cycle's first history point cannot come earlier: before it, every
+    opinion estimate available was built only from polls fielded before the
+    previous election, and a forecast of the next election built on it would
+    be a pre-election forecast relabelled.
+
+    For the SwedishPolls aggregate (model 1.2.0 on) the aggregate writes a row
+    every day, so a row date proves nothing; the answer is the first
+    publication date of an eligible poll (its cleaned polls file sits beside
+    the series) whose fieldwork began after the previous election. For a
+    legacy Poll of Polls series it is the first estimate dated after it.
     """
 
     source = Path(path)
     if not source.is_file():
-        raise FileNotFoundError(f"Poll of Polls timeseries CSV not found: {source}")
+        raise FileNotFoundError(f"Opinion timeseries CSV not found: {source}")
     previous = previous_election_date(election_date)
+    polls = source.parent / AGGREGATE_POLLS.name
+    if source.name == AGGREGATE_TIMESERIES.name:
+        if not polls.is_file():
+            raise FileNotFoundError(f"The aggregate's polls file is missing: {polls}")
+        return _first_post_election_publication(polls, previous)
     first: date | None = None
     with source.open(newline="", encoding="utf-8") as handle:
         for row in csv.DictReader(handle):
@@ -447,6 +491,19 @@ def first_post_election_timeseries_date(path: Path | str, election_date: str | d
             parsed = _coerce_date(raw, name="timeseries date")
             if parsed > previous and (first is None or parsed < first):
                 first = parsed
+    return first
+
+
+def _first_post_election_publication(polls_file: Path, previous: date) -> date | None:
+    first: date | None = None
+    with polls_file.open(newline="", encoding="utf-8") as handle:
+        for row in csv.DictReader(handle):
+            started, published = row.get("interview_start"), row.get("publication_date")
+            if not started or not published:
+                continue
+            if _coerce_date(started, name="interview_start") > previous:
+                day = _coerce_date(published, name="publication_date")
+                first = day if first is None or day < first else first
     return first
 
 
@@ -1306,13 +1363,7 @@ def build_history(
             "start_date": chart_start.isoformat(),
             "end_date": chart_end.isoformat(),
         },
-        "provenance_note": (
-            "Historiska prognoser är rekonstruerade i efterhand med dagens modell och den slutliga historiska Poll of Polls-serien. "
-            "Den senaste punkten visar den officiella aktuella valprognosen. "
-            "Äkta prospektiva arkivpunkter ersätts inte där arkivet saknar de gemensamma koalitionsdragningar som krävs för att beräkna koalitionsintervall korrekt. "
-            "Koalitionernas röstandelar beräknas över de åtta riksdagspartierna; "
-            "enskilda partiers röstandelar redovisas över hela valmanskåren."
-        ),
+        "provenance_note": PROVENANCE_NOTE,
         "archive_diagnostics": {
             "rich_archived_points_used": len(archived_by_date),
             "legacy_or_incomplete_archives_skipped": skipped_archives,
@@ -1512,7 +1563,9 @@ def update_history_with_production_result(
             "start_date": chart_start.isoformat(),
             "end_date": chart_end.isoformat(),
         },
-        "provenance_note": existing_payload.get("provenance_note"),
+        # The note describes how today's points are made, so it follows the
+        # model rather than the payload being rolled forward.
+        "provenance_note": PROVENANCE_NOTE,
         "archive_diagnostics": dict(existing_payload.get("archive_diagnostics") or {}),
         "source_worktree_clean": (
             bool(source_worktree_clean)
@@ -1569,7 +1622,7 @@ def start_new_cycle_history(
     Used when the existing artifact targets an earlier election. Nothing of
     that history is carried over -- its points forecast a different election,
     and the website keeps it as a frozen archive of its own. The schedule
-    starts at the first Poll of Polls estimate after the previous election;
+    starts at the first opinion input reflecting a poll fielded after the previous election;
     the backfill that follows fills the scheduled dates from there.
     """
 
@@ -1580,8 +1633,8 @@ def start_new_cycle_history(
     start = first_post_election_timeseries_date(timeseries_file, election)
     if start is None or start > as_of:
         raise ValueError(
-            f"No Poll of Polls estimate after {previous_election_date(election)} is available "
-            f"by {as_of}; the {election.year} cycle cannot start yet")
+            f"No poll fielded after {previous_election_date(election)} is reflected in the opinion "
+            f"input by {as_of}; the {election.year} cycle cannot start yet")
     summary = getattr(production_result, "summary", None)
     samples = int(getattr(summary, "total_samples", 0) or 0) or len(
         _extract_matrix(production_result, "seats_matrix"))

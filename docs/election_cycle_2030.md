@@ -78,14 +78,16 @@ asserted unchanged by `tests/test_election_cycle_2030_history.py`.
 an earlier election, the roll-in builds a new history holding the certified
 point alone. Nothing of the old history is carried over: its points forecast
 a decided election, and the website keeps it as a frozen archive at
-`history/2026/`. The history's `schedule.cycle_start_date` is the first Poll of
-Polls estimate after the previous election, and the backfill fills the
-schedule from there.
+`history/2026/`. The history's `schedule.cycle_start_date` is the first
+publication date of an eligible poll fielded after the previous election. (It
+was the first Poll of Polls estimate after it before model 1.2.0-rc1.) The
+backfill fills the schedule from there.
 
 **No forecast of the next election on a pre-election estimate.** Publication
-refuses to certify while the latest Poll of Polls estimate is on or before the
-previous election. It reports `AWAITING_POST_ELECTION_POLLS`, a successful
-no-op, until a newer estimate exists.
+refuses to certify until an eligible poll whose fieldwork began after the
+previous election has been published. The model's opinion aggregate writes a
+row every day, so a row date proves nothing. It reports
+`AWAITING_POST_ELECTION_POLLS`, a successful no-op, until then.
 
 **The schedule is the election's own.** Weekly anchors run from the cycle
 start, and dates are daily from the election's dynamics cap.
@@ -145,8 +147,8 @@ switch and fires after every publication run. The sequence is:
    - the pointer names the 2030 generation.
 5. Re-enable the variable.
 
-Until a post-election Poll of Polls estimate exists, every run reports
-`AWAITING_POST_ELECTION_POLLS` and changes nothing.
+Until a poll fielded after the previous election has been published, every
+run reports `AWAITING_POST_ELECTION_POLLS` and changes nothing.
 
 ## Stand-ins to replace
 

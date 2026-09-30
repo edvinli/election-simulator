@@ -13,7 +13,7 @@ from datetime import date, datetime, timezone
 import csv
 import io
 from pathlib import Path
-from typing import Any
+from typing import Any, Sequence
 from urllib.parse import urlparse
 
 from .config import SOURCES, Source
@@ -381,8 +381,14 @@ def acquire_all(
     offline: bool = False,
     allow_archive_fallback: bool = True,
     timeout: float = 45.0,
+    sources: Sequence[Source] | None = None,
+    manifest_filename: str = "retrieval_manifest.json",
 ) -> tuple[dict[str, Any], list[str]]:
     """Acquire configured sources, validating bodies before accepting them.
+
+    ``sources`` and ``manifest_filename`` let a caller acquire a subset under
+    its own manifest (the SwedishPolls-only production refresh) without
+    touching the full manifest the research tools read.
 
     A 455 response, TLS certificate error, or connection-level failure opens a
     circuit breaker for the Pollofpolls host.  A semantically invalid 200 is
@@ -392,8 +398,10 @@ def acquire_all(
     reached, so a malformed response can never replace a verified raw payload.
     """
 
+    # Resolved at call time, so the module-level SOURCES stays the default.
+    sources = SOURCES if sources is None else tuple(sources)
     raw_dir.mkdir(parents=True, exist_ok=True)
-    manifest_path = raw_dir / "retrieval_manifest.json"
+    manifest_path = raw_dir / manifest_filename
     old_manifest = _load_manifest(manifest_path)
     old_sources = old_manifest.get("sources", {})
     records: dict[str, Any] = {}
@@ -402,7 +410,7 @@ def acquire_all(
     source_outcomes: dict[str, str] = {}
     live_host_unavailable = False
 
-    for index, source in enumerate(SOURCES):
+    for index, source in enumerate(sources):
         destination = raw_dir / source.raw_filename
         old_record = old_sources.get(source.key)
 
@@ -596,7 +604,7 @@ def acquire_all(
         records[source.key] = record
 
         # One request at a time; a modest delay is enough for these small assets.
-        if index != len(SOURCES) - 1:
+        if index != len(sources) - 1:
             time.sleep(0.75)
 
     manifest = {

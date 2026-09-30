@@ -43,6 +43,7 @@ from scripts.simulator.engine import SimulationResult, simulate_election
 from scripts.simulator.pipeline import build_canonical_summary_dict
 from scripts.static_exporter import export_static_data
 from scripts.simulator.reproducibility import compute_file_sha256
+from scripts.simulator.model_inputs import AGGREGATE_POLLS, AGGREGATE_TIMESERIES, SWEDISHPOLLS_POLLS
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
@@ -52,8 +53,12 @@ DEFAULT_PUBLICATION_DIR = REPOSITORY_ROOT / "files" / "election-simulator"
 StageCallback = Callable[[str, str, float | None], None]
 
 TIMESERIES_FIELDS = ("date", "M", "L", "C", "KD", "S", "V", "MP", "SD", "FI", "other")
+#: A current run requires the SwedishPolls aggregate; the legacy PoP files are
+#: never accepted here (they can only be read when rendering a generation
+#: pinned before model 1.2.0).
 REQUIRED_INPUTS = {
-    "poll_timeseries": Path("pollofpolls") / "pollofpolls_timeseries.csv",
+    "poll_timeseries": AGGREGATE_TIMESERIES,
+    "opinion_polls": AGGREGATE_POLLS,
     "election_results": Path("elections") / "riksdag_election_results.csv",
     "mandates": Path("mandates") / "historical_certified_mandates.csv",
     "geography_votes": Path("geography") / "constituency_party_votes_2014_2022.csv",
@@ -174,12 +179,9 @@ def validate_existing_inputs(
             + ", ".join(f"{name} ({resolved[name]})" for name in missing)
         )
 
-    poll_dir = root / "pollofpolls"
     timeseries_path = resolved["poll_timeseries"]
-    individual_path = poll_dir / "individual_polls.csv"
-    supplementary_path = poll_dir / "swedishpolls_individual_polls.csv"
-    if not individual_path.is_file():
-        raise PipelineInputError(f"Missing normalized individual polls: {individual_path}")
+    individual_path = resolved["opinion_polls"]
+    supplementary_path = root / SWEDISHPOLLS_POLLS
     if include_supplementary and not supplementary_path.is_file():
         raise PipelineInputError(f"Missing normalized supplementary polls: {supplementary_path}")
 
@@ -202,7 +204,6 @@ def validate_existing_inputs(
         raise PipelineInputError("Canonical election results contain no election targets")
 
     hashes = {name: compute_file_sha256(path) for name, path in resolved.items()}
-    hashes["individual_polls"] = compute_file_sha256(individual_path)
     if supplementary_path.exists():
         hashes["supplementary_polls"] = compute_file_sha256(supplementary_path)
     return {

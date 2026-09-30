@@ -21,6 +21,7 @@ from scripts.election_layer_v2.transfer import apply_batch_simplex_transfer
 from scripts.geography.config import DEFAULT_PROCESSED_GEOGRAPHY_DIR, OFFICIAL_CONSTITUENCY_CODES
 from scripts.geography.integerization import biproportional_controlled_rounding
 from scripts.geography.projection import _get_cached_geography_structures
+from scripts.simulator.model_inputs import opinion_inputs
 from scripts.hindcasts.models import (
     derive_opinion_state_seed,
     derive_shared_dynamics_seed,
@@ -94,7 +95,7 @@ def _sample_national_shares(
         eligible_count = 0
     else:
         eval_h = min(dynamics_horizon_days, 112)
-        timeseries = load_timeseries_dataset(data_dir / "pollofpolls" / "pollofpolls_timeseries.csv")
+        timeseries = load_timeseries_dataset(opinion_inputs(data_dir).timeseries)
         all_transitions = build_all_historical_transitions(timeseries, horizons=[eval_h])
         eligible = filter_transitions_as_of(all_transitions[eval_h], as_of_date)
         if len(eligible) < 30:
@@ -212,7 +213,10 @@ def simulate_conditional_projection(
     if dynamics_horizon_days < 0 or dynamics_horizon_days > (election - origin).days:
         raise ValueError("dynamics_horizon_days must be between zero and the natural remaining horizon")
     root = Path(data_dir) if data_dir is not None else Path(__file__).resolve().parents[2] / "data" / "processed"
-    state = opinion_state or estimate_opinion(as_of=origin, data_dir=root / "pollofpolls")
+    if opinion_state is None:
+        inputs = opinion_inputs(root)
+        opinion_state = estimate_opinion(as_of=origin, timeseries_file=inputs.timeseries, polls_file=inputs.polls)
+    state = opinion_state
     if state.as_of != origin:
         raise ValueError("OpinionState cutoff differs from requested frozen as_of")
     national, diagnostics = _sample_national_shares(

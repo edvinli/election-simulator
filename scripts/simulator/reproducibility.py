@@ -194,8 +194,15 @@ def build_reproducibility_manifest(
     geography_data_path: Path | str | None = None,
     model_config: dict[str, Any] | None = None,
     repo_dir: Path | str | None = None,
+    opinion_timeseries_path: Path | str | None = None,
+    opinion_polls_path: Path | str | None = None,
 ) -> dict[str, Any]:
-    """Generate canonical reproducibility manifest for a simulation execution."""
+    """Generate canonical reproducibility manifest for a simulation execution.
+
+    The opinion inputs (the SwedishPolls aggregate and its cleaned polls from
+    model 1.2.0) are hashed when given, so a change to them is visible in the
+    published provenance.
+    """
     root_dir = Path(repo_dir) if repo_dir else Path(__file__).resolve().parents[2]
     
     p_poll = Path(poll_data_path) if poll_data_path else root_dir / "data" / "processed" / "pollofpolls" / "swedishpolls_individual_polls.csv"
@@ -230,6 +237,10 @@ def build_reproducibility_manifest(
         "source_worktree_clean": is_git_worktree_clean(root_dir),
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
     }
+    if opinion_timeseries_path is not None:
+        manifest["opinion_timeseries_hash"] = compute_file_sha256(Path(opinion_timeseries_path))
+    if opinion_polls_path is not None:
+        manifest["opinion_polls_hash"] = compute_file_sha256(Path(opinion_polls_path))
     # Keep the original field for consumers of the v1 manifest schema.
     manifest["git_commit"] = manifest["source_git_commit"]
     return manifest

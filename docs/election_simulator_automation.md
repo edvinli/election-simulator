@@ -24,12 +24,14 @@ acquisition (and an absent variable is treated as false), while manual
 dispatch is always allowed. Set it explicitly to `true` before enabling the
 cron schedules.
 `runs-on` reads the repository variable `ELECTION_SIMULATOR_RUNNER` and falls
-back to `ubuntu-latest`, so a self-hosted runner can be selected if
-`pollofpolls.se` blocks GitHub-hosted traffic. The explicit Stockholm date
+back to `ubuntu-latest`. From model 1.2.0-rc1 production fetches only
+SwedishPolls from raw.githubusercontent.com, so pollofpolls.se's blocking of
+GitHub-hosted traffic no longer applies. The explicit Stockholm date
 guard stops all work after the target election (`DEFAULT_ELECTION_DATE`,
 currently 2030-09-08; it stopped the 2026 cycle after 2026-09-13). A new
-cycle does not certify until a Poll of Polls estimate after the previous
-election exists (`AWAITING_POST_ELECTION_POLLS`, a successful no-op); see
+cycle does not certify until an eligible poll whose fieldwork began after the
+previous election has been published (`AWAITING_POST_ELECTION_POLLS`, a
+successful no-op); see
 [`election_cycle_2030.md`](election_cycle_2030.md).
 
 The selected runner must provide outbound HTTPS access to the polling sources,
@@ -48,6 +50,18 @@ website without credentials under `$RUNNER_TEMP`. The workflow verifies the
 relevant Git roots and clean statuses before acquisition. The publishing job
 also configures both fresh checkouts with the non-secret `github-actions[bot]`
 identity before any polling or publication commit is possible.
+
+**Model 1.2.0-rc1 and later.** The production refresh
+(`scripts/poll_aggregate/refresh.py`) acquires only the two SwedishPolls files,
+under their own manifest `swedishpolls_retrieval_manifest.json`. It
+normalizes them to `data/processed/pollofpolls/swedishpolls_individual_polls.csv`,
+then rebuilds `SwedishPollsAggregate-v0.2` and its cleaned polls in
+`data/processed/poll_aggregate/v0_2/`, reusing the recorded segment fits. The
+model-relevant inputs are those three files, and all three directories are
+staged, installed and committed together. The Poll of Polls files under
+`data/processed/pollofpolls/` are no longer refreshed. They remain only as
+research data and as the pinned inputs of generations certified before 1.2.0.
+The semantic probe below still governs the SwedishPolls sources.
 
 Before a response is accepted, acquisition performs a source-kind semantic
 probe. The homepage must contain a parseable latest-polls table; the canonical

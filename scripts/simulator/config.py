@@ -22,8 +22,14 @@ DEFAULT_MAJORITY_THRESHOLD: int = 175
 # fix, so the minor version advances and the candidate letter follows the adopted
 # challenger. RC status is retained: the repository convention has not declared a
 # stable release.
-MODEL_VERSION: str = "1.1.0-rc1"
-RELEASE_TAG: str = "election-simulator-v1.1-rc1"
+#
+# Advanced from 1.1.0-rc1 when the opinion inputs moved from pollofpolls.se to
+# SwedishPolls only (SwedishPollsAggregate-v0.2 and its cleaned polls). The
+# ElectionNoise law is unchanged. This is a model-input change, so the minor
+# version advances. It was released under an explicit exception: replay v4
+# failed only G5 calibration (docs/poll_aggregate_replay_protocol_v4_amendment_001.md).
+MODEL_VERSION: str = "1.2.0-rc1"
+RELEASE_TAG: str = "election-simulator-v1.2-rc1"
 
 # TWO DISTINCT NAMESPACES SHARE THE LETTER "B". Do not merge them.
 #

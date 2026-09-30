@@ -32,6 +32,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
+from scripts.simulator.model_inputs import AGGREGATE_POLLS
 from scripts.election_automation import (
     DAILY_SCHEDULE_UTC,
     ELECTION_DAY,
@@ -88,14 +89,18 @@ def _forbidden_refresh(*args, **kwargs):
 def _seed_processed_inputs(root: Path) -> None:
     """The processed files the summary reads after a successful acquisition.
 
-    Only the Poll-of-Polls timeseries needs real shape: the run reports its
-    latest observation date.  Acquisition itself is replaced in these tests,
-    so nothing here has to be a plausible polling snapshot.
+    Only the model's cleaned polls need real shape: the run reports the latest
+    fieldwork start among them.  Acquisition itself is replaced in these
+    tests, so nothing here has to be a plausible polling snapshot.
     """
 
-    timeseries = root / "data/processed/pollofpolls/pollofpolls_timeseries.csv"
-    timeseries.parent.mkdir(parents=True, exist_ok=True)
-    timeseries.write_text("date,M\n2026-09-05,20\n2026-09-06,21\n", encoding="utf-8")
+    polls = root / "data/processed" / AGGREGATE_POLLS
+    polls.parent.mkdir(parents=True, exist_ok=True)
+    polls.write_text(
+        "poll_id,interview_start,publication_date,party\n"
+        "a,2026-09-01,2026-09-05,M\nb,2026-09-02,2026-09-06,M\n",
+        encoding="utf-8",
+    )
 
 
 class _Reached(RuntimeError):

@@ -45,7 +45,23 @@ AUTOMATION_CHANGED = {
 CYCLE_2030_CHANGED = {
     "scripts/simulator/config.py",
 }
-KNOWN_POST_FREEZE_CHANGES = PARTY_CHART_MERGE_CHANGED | AUTOMATION_CHANGED | CYCLE_2030_CHANGED
+# Model 1.2.0 moves the opinion inputs from pollofpolls.se to the SwedishPolls
+# aggregate: estimate_opinion gains optional explicit input paths (default
+# behaviour unchanged), the national engine resolves its inputs per revision,
+# and provenance hashes the opinion inputs. The freeze is not re-issued; the
+# drift is named here so it stays visible and bounded
+# (docs/poll_aggregate_replay_protocol_v4_amendment_001.md).
+SWEDISHPOLLS_MIGRATION_CHANGED = {
+    "scripts/pollofpolls/state.py",
+    "scripts/simulator/reproducibility.py",
+    "scripts/static_exporter/exporter.py",
+    "scripts/vote_share_calibration/national_engine.py",
+    # The current model version moves to 1.2.0-rc1; the frozen records keep 1.1.0-rc1.
+    "tests/test_production_default_is_b.py",
+}
+KNOWN_POST_FREEZE_CHANGES = (
+    PARTY_CHART_MERGE_CHANGED | AUTOMATION_CHANGED | CYCLE_2030_CHANGED | SWEDISHPOLLS_MIGRATION_CHANGED
+)
 
 def _commit_available(sha: str) -> bool:
     """True when the object exists locally.
