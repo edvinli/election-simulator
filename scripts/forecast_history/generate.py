@@ -358,7 +358,8 @@ def serialize_poll_of_polls_timeseries(
     source_path = Path(path)
     if not source_path.is_file():
         raise FileNotFoundError(f"Opinion timeseries CSV not found: {source_path}")
-    records: list[dict[str, Any]] = []
+    aggregate = source_path.name == AGGREGATE_TIMESERIES.name
+    by_date: dict[date, dict[str, float]] = {}
     with source_path.open(newline="", encoding="utf-8") as handle:
         reader = csv.DictReader(handle)
         for row in reader:
@@ -366,18 +367,34 @@ def serialize_poll_of_polls_timeseries(
             if not raw_date:
                 continue
             d = _coerce_date(raw_date, name="timeseries date")
-            if start <= d <= end:
-                parties: dict[str, float] = {}
-                for party in HISTORY_PARTY_ORDER:
-                    val = _parse_support(row.get(party))
-                    if val is None:
-                        raise ValueError(f"Missing or invalid {party} in PoP timeseries on {raw_date}")
-                    parties[party] = val
-                records.append({
-                    "date": d.isoformat(),
-                    "parties": parties,
-                })
-    records.sort(key=lambda item: item["date"])
+            # The aggregate may carry its latest row forward, so it needs the
+            # row before the range too; a legacy series is read in range only.
+            if d > end or (d < start and not aggregate):
+                continue
+            parties: dict[str, float] = {}
+            for party in HISTORY_PARTY_ORDER:
+                val = _parse_support(row.get(party))
+                if val is None:
+                    raise ValueError(f"Missing or invalid {party} in opinion timeseries on {raw_date}")
+                parties[party] = val
+            by_date[d] = parties
+    if not aggregate:
+        return [{"date": d.isoformat(), "parties": by_date[d]} for d in sorted(by_date)]
+    # The aggregate ends at its latest information date. Between information
+    # dates its mean is constant by construction (only its uncertainty grows),
+    # so the value on a later date up to ``end`` is exactly its latest row.
+    records: list[dict[str, Any]] = []
+    known = sorted(by_date)
+    latest: dict[str, float] | None = None
+    index = 0
+    day = start
+    while day <= end:
+        while index < len(known) and known[index] <= day:
+            latest = by_date[known[index]]
+            index += 1
+        if latest is not None:
+            records.append({"date": day.isoformat(), "parties": dict(latest)})
+        day += timedelta(days=1)
     return records
 
 

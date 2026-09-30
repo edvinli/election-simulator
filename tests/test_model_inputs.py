@@ -66,3 +66,32 @@ class StoredFitTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class OpinionSeriesSerializationTests(unittest.TestCase):
+    """The chart's ``poll_of_polls`` field from the aggregate and from legacy PoP."""
+
+    HEADER = "date,M,L,C,KD,S,V,MP,SD\n"
+
+    def write(self, root: Path, name: str, rows: list[str]) -> Path:
+        path = root / name
+        path.write_text(self.HEADER + "".join(r + "\n" for r in rows), encoding="utf-8")
+        return path
+
+    def test_the_aggregate_carries_its_latest_row_to_the_end_of_the_range(self) -> None:
+        from scripts.forecast_history.generate import serialize_poll_of_polls_timeseries
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self.write(Path(tmp), MI.AGGREGATE_TIMESERIES.name, [
+                "2026-09-27,18,4,7,6,28,8,6,19",
+                "2026-09-29,19,4,7,6,28,8,6,18",
+            ])
+            records = serialize_poll_of_polls_timeseries(path, start_date="2026-09-30", end_date="2026-10-01")
+        self.assertEqual([r["date"] for r in records], ["2026-09-30", "2026-10-01"])
+        self.assertEqual(records[0]["parties"]["M"], 19.0)
+
+    def test_a_legacy_series_is_read_strictly_within_the_range(self) -> None:
+        from scripts.forecast_history.generate import serialize_poll_of_polls_timeseries
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self.write(Path(tmp), "pollofpolls_timeseries.csv", ["2026-09-11,17,4,8,6,27,8,7,19"])
+            self.assertEqual(
+                serialize_poll_of_polls_timeseries(path, start_date="2026-09-30", end_date="2026-10-01"), [])
