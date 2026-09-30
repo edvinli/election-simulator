@@ -100,7 +100,9 @@ REPLAY_V2 = ReplayConfig(
 #: v4 benchmarks v0.2 against the SwedishPolls-only consensus baseline, not
 #: against backfilled PoP. Agreement and baseline are set in their own commit.
 REPLAY_V4 = ReplayConfig(
-    "v4", REPOSITORY_ROOT / "docs" / "poll_aggregate_replay_protocol_v4.md", None, None,
+    "v4", REPOSITORY_ROOT / "docs" / "poll_aggregate_replay_protocol_v4.md",
+    "daaac76c3765f869d3e4b5f35bbbca6c76670a875b0d2b42c0448ef965a76c64",
+    "286b6a274cb31e188f557d3592d88207f46b39f8",
     DEFAULT_OUTPUT_DIR / "v0_2" / TIMESERIES_FILENAME, DEFAULT_OUTPUT_DIR / "replay_v4",
     arms=(BASELINE, CANDIDATE), control=BASELINE,
     control_timeseries=DEFAULT_OUTPUT_DIR / "consensus_baseline" / TIMESERIES_FILENAME,
