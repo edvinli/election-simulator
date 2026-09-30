@@ -1,4 +1,12 @@
 poll_id,pollster,pollster_original,interview_start,interview_end,publication_date,party,support,source_value,support_status,sample_size,poll_method,source_url,retrieved_at,metadata_source_url,metadata_retrieved_at,metadata_match_status,metadata_row_source_references_json
+swp-5168f8dbfab8f5c7ede6,Ipsos,Ipsos,2026-09-15,2026-09-27,2026-09-29,M,22.0,22.0,reported,1694,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-5168f8dbfab8f5c7ede6,Ipsos,Ipsos,2026-09-15,2026-09-27,2026-09-29,L,4.0,4.0,reported,1694,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-5168f8dbfab8f5c7ede6,Ipsos,Ipsos,2026-09-15,2026-09-27,2026-09-29,C,7.0,7.0,reported,1694,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-5168f8dbfab8f5c7ede6,Ipsos,Ipsos,2026-09-15,2026-09-27,2026-09-29,KD,6.0,6.0,reported,1694,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-5168f8dbfab8f5c7ede6,Ipsos,Ipsos,2026-09-15,2026-09-27,2026-09-29,S,28.0,28.0,reported,1694,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-5168f8dbfab8f5c7ede6,Ipsos,Ipsos,2026-09-15,2026-09-27,2026-09-29,V,8.0,8.0,reported,1694,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-5168f8dbfab8f5c7ede6,Ipsos,Ipsos,2026-09-15,2026-09-27,2026-09-29,MP,6.0,6.0,reported,1694,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-5168f8dbfab8f5c7ede6,Ipsos,Ipsos,2026-09-15,2026-09-27,2026-09-29,SD,17.0,17.0,reported,1694,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
 swp-d5ed5dd37910269b57ce,Sentio,Sentio,2026-09-21,2026-09-25,2026-09-28,M,22.7,22.7,reported,905,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
 swp-d5ed5dd37910269b57ce,Sentio,Sentio,2026-09-21,2026-09-25,2026-09-28,L,4.1,4.1,reported,905,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
 swp-d5ed5dd37910269b57ce,Sentio,Sentio,2026-09-21,2026-09-25,2026-09-28,C,5.4,5.4,reported,905,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
