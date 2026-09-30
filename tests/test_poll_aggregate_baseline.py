@@ -78,6 +78,12 @@ class ReplayV4ConfigTests(unittest.TestCase):
             b = (roots[R.CANDIDATE] / "pollofpolls" / "individual_polls.csv").read_bytes()
             self.assertEqual(a, b)
 
+    def test_v4_metrics_and_gates_are_v1s_word_for_word(self) -> None:
+        def section(path):
+            text = path.read_text(encoding="utf-8")
+            return text[text.index("## 6. Metrics"):text.index("The gates test")]
+        self.assertEqual(section(R.REPLAY_V1.protocol_path), section(R.REPLAY_V4.protocol_path))
+
     def test_a_series_control_must_match_its_own_file(self) -> None:
         row = {"arm": R.BASELINE, "as_of": "2018-08-12", "selected_estimate_date": "2018-08-12",
                "aggregate_row_matches": False, "aggregate_information_date": "2018-08-10"}
