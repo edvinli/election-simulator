@@ -46,6 +46,7 @@ from scripts.forecast_history.contract import DEFAULT_COALITIONS
 from scripts.forecast_history.future_projection import roll_in_certified_point
 from scripts.publication_pipeline.pipeline import _load_prior_snapshot
 from scripts.site_publisher import sync_history_to_site
+from scripts.simulator.model_inputs import AGGREGATE_POLLS, AGGREGATE_TIMESERIES
 
 try:
     from . import history_fixtures as fixtures
@@ -56,6 +57,25 @@ except ImportError:  # pragma: no cover - direct module execution
 ROOT = Path(__file__).resolve().parents[1]
 PROCESSED = ROOT / "data" / "processed"
 ARCHIVE = PROCESSED / "prospective_forecasts"
+# After the certified 2026 result, before the first 2030 publication
+# (2026-09-29). The committed archive and polling files move with every
+# production publication; tests about "the first 2030 forecast" pin their
+# inputs to this moment instead of reading whatever was published last.
+FROZEN_BEFORE_FIRST_2030 = "2026-09-20"
+
+
+def frozen_archive(parent: Path, as_of: str = FROZEN_BEFORE_FIRST_2030) -> Path:
+    """The committed archive as it stood on ``as_of``: pruned index, linked generations."""
+
+    root = parent / "prospective_forecasts"
+    root.mkdir()
+    for child in ARCHIVE.iterdir():
+        if child.name == "index.json":
+            shutil.copyfile(child, root / child.name)
+        else:
+            (root / child.name).symlink_to(child, target_is_directory=child.is_dir())
+    fixtures.freeze_archive_inputs(root, as_of=as_of)
+    return root
 E2026 = date(2026, 9, 13)
 E2030 = date(2030, 9, 8)
 
@@ -114,8 +134,11 @@ class MissingCurveDatesTests(unittest.TestCase):
 
 
 class ElectionFiltersTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.archive = frozen_archive(Path(self.enterContext(tempfile.TemporaryDirectory())))
+
     def test_a_2026_snapshot_is_never_a_2030_point(self) -> None:
-        records = [record for record in _load_archive_records(ARCHIVE) if isinstance(record.get("groups"), dict)]
+        records = [record for record in _load_archive_records(self.archive) if isinstance(record.get("groups"), dict)]
         self.assertTrue(records)
         coalitions = {key: list(value) for key, value in DEFAULT_COALITIONS.items()}
         record = records[-1]
@@ -123,8 +146,21 @@ class ElectionFiltersTests(unittest.TestCase):
         self.assertIsNone(_archive_point_from_record(record, election_date=E2030, coalitions=coalitions))
 
     def test_the_first_2030_forecast_has_no_prior(self) -> None:
-        self.assertIsNotNone(_load_prior_snapshot(ARCHIVE, "2026-10-01", "2026-09-13"))
-        self.assertIsNone(_load_prior_snapshot(ARCHIVE, "2026-10-01", "2030-09-08"))
+        self.assertIsNotNone(_load_prior_snapshot(self.archive, "2026-10-01", "2026-09-13"))
+        self.assertIsNone(_load_prior_snapshot(self.archive, "2026-10-01", "2030-09-08"))
+
+    def test_a_published_2030_snapshot_is_never_a_2026_point_or_prior(self) -> None:
+        # The other direction, on the live archive once a 2030 generation exists.
+        coalitions = {key: list(value) for key, value in DEFAULT_COALITIONS.items()}
+        records = [r for r in _load_archive_records(ARCHIVE)
+                   if isinstance(r.get("groups"), dict) and r.get("election_date") == "2030-09-08"]
+        if not records:
+            self.skipTest("no 2030 generation is archived yet")
+        for record in records:
+            self.assertIsNone(_archive_point_from_record(record, election_date=E2026, coalitions=coalitions))
+            self.assertIsNotNone(_archive_point_from_record(record, election_date=E2030, coalitions=coalitions))
+        prior = _load_prior_snapshot(ARCHIVE, "2030-01-01", "2030-09-08")
+        self.assertEqual(prior["election_date"], "2030-09-08")
 
 
 class FutureViewsWindowTests(unittest.TestCase):
@@ -162,7 +198,11 @@ class NewCycleBootstrapTests(unittest.TestCase):
         with source.open(newline="", encoding="utf-8") as handle:
             rows = list(csv.DictReader(handle))
         self.fields = list(rows[0].keys())
-        self.rows = rows
+        # The series as it stood before any post-election estimate: the tests
+        # add their own post-election rows. The committed series gains real
+        # ones as pollofpolls.se publishes them.
+        self.rows = [row for row in rows if row["date"] <= E2026.isoformat()]
+        self.archive = frozen_archive(self.tmp)
 
     def _write_timeseries(self, extra_dates: list[str]) -> None:
         rows = list(self.rows)
@@ -189,7 +229,7 @@ class NewCycleBootstrapTests(unittest.TestCase):
             self._result(as_of),
             poll_file=PROCESSED / "pollofpolls" / "swedishpolls_individual_polls.csv",
             timeseries_file=self.timeseries,
-            archive_dir=ARCHIVE,
+            archive_dir=self.archive,
             election_date=E2030,
             publication_generation="20261005T040000Z-0000c0de",
             deterministic_payload_sha256="b" * 64,
@@ -222,7 +262,7 @@ class NewCycleBootstrapTests(unittest.TestCase):
             self._result("2026-10-05"),
             poll_file=PROCESSED / "pollofpolls" / "swedishpolls_individual_polls.csv",
             timeseries_file=self.timeseries,
-            archive_dir=ARCHIVE,
+            archive_dir=self.archive,
             model_data_dir=PROCESSED,
             election_date=E2030,
             publication_generation="20261005T040000Z-0000c0de",
@@ -242,6 +282,37 @@ class NewCycleBootstrapTests(unittest.TestCase):
 
     def test_no_post_election_estimate_no_cycle(self) -> None:
         self._write_timeseries([])
+        with self.assertRaisesRegex(ValueError, "cannot start yet"):
+            self._roll("2026-10-05")
+
+    # Model 1.2.0: the production input is the SwedishPolls aggregate, which
+    # writes a row every day; the cycle starts at the first publication of an
+    # eligible poll whose fieldwork began after the previous election.
+    def _aggregate_inputs(self, polls_published_by: str) -> Path:
+        directory = self.tmp / "aggregate"
+        directory.mkdir(exist_ok=True)
+        for relative, column in ((AGGREGATE_TIMESERIES, "date"), (AGGREGATE_POLLS, "publication_date")):
+            with (PROCESSED / relative).open(newline="", encoding="utf-8") as handle:
+                reader = csv.DictReader(handle)
+                fields, rows = reader.fieldnames, [r for r in reader if (r[column] or "") <= polls_published_by]
+            with (directory / relative.name).open("w", newline="", encoding="utf-8") as handle:
+                writer = csv.DictWriter(handle, fieldnames=fields)
+                writer.writeheader()
+                writer.writerows(rows)
+        return directory / AGGREGATE_TIMESERIES.name
+
+    def test_the_aggregate_cycle_starts_at_the_first_post_election_poll(self) -> None:
+        # Sentio, fielded 2026-09-21..25, published 2026-09-28.
+        self.timeseries = self._aggregate_inputs("2026-10-05")
+        self.assertEqual(first_post_election_timeseries_date(self.timeseries, E2030), date(2026, 9, 28))
+        history = self._roll("2026-10-05")
+        self.assertEqual(history["schedule"]["cycle_start_date"], "2026-09-28")
+
+    def test_daily_aggregate_rows_alone_never_start_a_cycle(self) -> None:
+        # Rows exist for every day after the election, but no poll fielded
+        # after it was published by 2026-09-27.
+        self.timeseries = self._aggregate_inputs("2026-09-27")
+        self.assertIsNone(first_post_election_timeseries_date(self.timeseries, E2030))
         with self.assertRaisesRegex(ValueError, "cannot start yet"):
             self._roll("2026-10-05")
 
