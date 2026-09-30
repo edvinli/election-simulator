@@ -2,10 +2,12 @@
 
 **Outcome.** Replay v2 scored `SwedishPollsAggregate-v0.2` under its frozen
 protocol and it **FAILS**, like v0.1 under replay v1. Both aggregates stay in
-shadow mode; production still runs on pollofpolls.se (PoP). The main reason is
-now measured: most of the stored PoP series' short-horizon advantage is
-hindsight that no causal aggregate can have. The remaining gap comes from
-PoP's own departures from the poll consensus. Every result here is
+shadow mode; production still runs on pollofpolls.se (PoP). Part of the
+reason is now measured: the stored PoP series carries hindsight. Giving v0.1
+14 days of it recovers 42 % of the pooled gap and about 60 % of the gap at
+7–14 days, so hindsight is substantial but does not explain most of the
+pooled gap. The rest is not fully explained; PoP's own departures from the
+poll consensus are one identified contributor. Every result here is
 retrospective. None of it is independent validation.
 
 | | |
@@ -131,14 +133,17 @@ v0.2 was not tuned after this score.
 
 ## 5. Diagnosis
 
-1. **The v1/v2 gates cannot be passed by any causal aggregate in
-   retrospect.** They are non-inferiority against stored PoP, whose 7–14 day
-   values carry roughly two to three weeks of hindsight. An aggregate given
-   14 days of hindsight still fails G1.
-2. **The level is fixed to the extent the evidence allows.** v0.2's consensus
-   reading removes v0.1's arbitrary prior-set level. The rest of the gap to
-   PoP is PoP's own correction, and it can't be reverse-engineered without
-   fitting to a series that itself has look-ahead.
+1. **The control is advantaged, by an amount now partly measured.** The
+   v1/v2 gates test non-inferiority against stored PoP, whose short-horizon
+   values behave as if they had roughly two to three weeks of hindsight.
+   These two candidates failed, and so did a v0.1 variant given 14 days of
+   hindsight. That is evidence about these aggregates, not proof that no
+   causal aggregate could pass.
+2. **v0.2 fixes the level problem that was identified.** Its consensus
+   reading removes v0.1's arbitrary prior-set level. PoP's own departures
+   from the consensus account for part of the remaining gap. Copying them
+   would mean fitting to a series that itself has look-ahead. The rest of the
+   gap is unexplained.
 3. **The only fair comparison available is at the margin.** On the two
    real-time 2026 cases, the causal aggregates are within about 5 % of real
    PoP; on long horizons they are level with stored PoP.
@@ -166,8 +171,8 @@ v0.2 was not tuned after this score.
 - **Keep production on PoP.** Do not switch, and do not change the v1/v2
   gates to release the 2030 forecast.
 - **The decision needed from you: the basis of comparison.** Retrospective
-  replays against stored PoP cannot answer the original question, because
-  they grade PoP's hindsight. A fair basis has to be prospective and use
+  replays against stored PoP are confounded by PoP's hindsight, so they
+  cannot separate method from look-ahead. A fair basis has to be prospective and use
   real-time PoP vintages.
 - **Recommended next step:** a protocol v3 that archives, every day, the
   real-time PoP vintage and v0.2's row with timestamps, and scores both
