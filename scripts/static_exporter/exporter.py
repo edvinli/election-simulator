@@ -777,6 +777,7 @@ def _build_contracts(
         "input_hashes": {
             key: manifest.get(key)
             for key in ("poll_data_hash", "election_data_hash", "mandate_data_hash", "geography_data_hash", "model_config_hash")
+            + tuple(k for k in ("opinion_timeseries_hash", "opinion_polls_hash") if k in manifest)
         },
         "deterministic_payload_sha256": deterministic_payload_sha256,
         "rest_semantics": forecast["rest_semantics"],

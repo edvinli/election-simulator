@@ -241,7 +241,17 @@ def load_certified_generation(
         source_git_commit=source_commit,
     )
 
+# From model 1.2.0 the opinion inputs are the SwedishPolls aggregate and its
+# cleaned polls; all three files are required at such a revision.
 MODEL_INPUT_PATHS = (
+    "data/processed/pollofpolls/swedishpolls_individual_polls.csv",
+    "data/processed/poll_aggregate/v0_2/swedishpolls_aggregate_timeseries.csv",
+    "data/processed/poll_aggregate/v0_2/individual_polls.csv",
+)
+# A generation certified before model 1.2.0 read the Poll of Polls files, and
+# must render from exactly those. individual_polls.csv is not present in every
+# such revision.
+LEGACY_MODEL_INPUT_PATHS = (
     "data/processed/pollofpolls/swedishpolls_individual_polls.csv",
     "data/processed/pollofpolls/pollofpolls_timeseries.csv",
     "data/processed/pollofpolls/individual_polls.csv",
@@ -304,15 +314,20 @@ def materialize_pinned_model_inputs(
             "checkout, so the model inputs it used cannot be pinned"
         )
     written = 0
-    for relative in MODEL_INPUT_PATHS:
+    has_aggregate = subprocess.run(
+        ["git", "cat-file", "-e", f"{source_git_commit}:{MODEL_INPUT_PATHS[1]}"],
+        cwd=repo, capture_output=True, check=False,
+    ).returncode == 0
+    paths = MODEL_INPUT_PATHS if has_aggregate else LEGACY_MODEL_INPUT_PATHS
+    for relative in paths:
         shown = subprocess.run(
             ["git", "show", f"{source_git_commit}:{relative}"],
             cwd=repo, capture_output=True, check=False,
         )
         if shown.returncode != 0:
-            # individual_polls.csv is not present in every revision; the two
+            # A legacy revision may lack PoP's individual_polls.csv; the two
             # files the history builder actually reads are required.
-            if relative.endswith("individual_polls.csv") and "swedishpolls" not in relative:
+            if not has_aggregate and relative == LEGACY_MODEL_INPUT_PATHS[2]:
                 continue
             raise CertifiedGenerationError(
                 f"model input {relative} is absent at certified revision "

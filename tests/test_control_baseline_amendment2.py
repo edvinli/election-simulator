@@ -280,6 +280,8 @@ class EvaluatorFreezeTest(unittest.TestCase):
         "scripts/simulator/engine.py",
         "scripts/simulator/reproducibility.py",
         "scripts/vote_share_calibration/national_engine.py",
+        # Model 1.2.0 (SwedishPolls opinion inputs): explicit input paths, default unchanged.
+        "scripts/pollofpolls/state.py",
     }
 
     def test_freeze_self_verifies(self) -> None:

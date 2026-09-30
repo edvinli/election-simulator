@@ -53,6 +53,7 @@ REPLAY_EQUIVALENCE_PATHS: tuple[str, ...] = (
     "scripts",
     *REPLAY_DEPENDENCY_PATHS,
     "data/processed/pollofpolls",
+    "data/processed/poll_aggregate",
     "data/processed/elections",
     "data/processed/mandates",
     "data/processed/geography",

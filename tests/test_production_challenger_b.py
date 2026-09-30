@@ -186,6 +186,9 @@ INTENTIONALLY_CHANGED = {
     # use; see data/README.md.
     "scripts/pollofpolls/normalize.py",
     "scripts/pollofpolls/validate.py",
+    # Model 1.2.0 (SwedishPolls opinion inputs): estimate_opinion gains optional
+    # explicit input paths; its default behaviour is unchanged.
+    "scripts/pollofpolls/state.py",
 }
 
 

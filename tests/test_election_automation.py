@@ -25,6 +25,8 @@ from unittest.mock import Mock, call, patch
 import numpy as np
 
 from scripts import election_automation_base as base
+from scripts.election_automation_base import MODEL_RELEVANT_INPUTS
+from scripts.simulator.model_inputs import AGGREGATE_DIR, AGGREGATE_POLLS, AGGREGATE_TIMESERIES, opinion_inputs
 from scripts.election_automation import (
     DAILY_SCHEDULE_UTC,
     BROWSER_SMOKE_TIMEOUT_SECONDS,
@@ -37,7 +39,7 @@ from scripts.election_automation import (
     current_stockholm_date,
     guard_election_date as _guard_election_date,
     _log_stage,
-    latest_pop_observation_date,
+    latest_poll_fieldwork_start,
     model_relevant_snapshot_sha256,
     refresh_polling_snapshot,
     resolve_mode,
@@ -333,11 +335,7 @@ class ElectionAutomationTests(unittest.TestCase):
 
     @staticmethod
     def _write_model_inputs(root: Path, *, suffix: str = "") -> None:
-        for relative in (
-            "data/processed/pollofpolls/pollofpolls_timeseries.csv",
-            "data/processed/pollofpolls/individual_polls.csv",
-            "data/processed/pollofpolls/swedishpolls_individual_polls.csv",
-        ):
+        for relative in MODEL_RELEVANT_INPUTS:
             path = root / relative
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(f"header\nvalue{suffix}\n", encoding="utf-8")
@@ -448,6 +446,10 @@ class ElectionAutomationTests(unittest.TestCase):
             processed / "pollofpolls",
         )
         shutil.copytree(
+            REPOSITORY_ROOT / "data/processed" / AGGREGATE_DIR,
+            processed / AGGREGATE_DIR,
+        )
+        shutil.copytree(
             REPOSITORY_ROOT / "data/processed/prospective_forecasts",
             processed / "prospective_forecasts",
         )
@@ -504,7 +506,7 @@ class ElectionAutomationTests(unittest.TestCase):
                 raise AssertionError("unchanged intraday polling must not simulate")
 
             with patch(
-                "scripts.election_automation.latest_pop_observation_date",
+                "scripts.election_automation.latest_poll_fieldwork_start",
                 return_value="2026-09-05",
             ):
                 result = run_automation(
@@ -530,7 +532,7 @@ class ElectionAutomationTests(unittest.TestCase):
             def refresh(raw, processed, **kwargs):
                 calls.append(kwargs)
                 raw.mkdir(parents=True, exist_ok=True)
-                path = processed / "individual_polls.csv"
+                path = processed.parent / AGGREGATE_POLLS
                 path.write_text("header\nchanged\n", encoding="utf-8")
                 return {"messages": []}
 
@@ -551,7 +553,7 @@ class ElectionAutomationTests(unittest.TestCase):
 
             def refresh(raw, processed, **kwargs):
                 raw.mkdir(parents=True, exist_ok=True)
-                path = processed / "individual_polls.csv"
+                path = processed.parent / AGGREGATE_POLLS
                 self._change_normalized_poll_support(path)
                 return {"messages": []}
 
@@ -657,7 +659,7 @@ class ElectionAutomationTests(unittest.TestCase):
 
             def refresh(raw, processed, **kwargs):
                 raw.mkdir(parents=True, exist_ok=True)
-                self._change_normalized_poll_support(processed / "individual_polls.csv")
+                self._change_normalized_poll_support(processed.parent / AGGREGATE_POLLS)
                 return {"messages": []}
 
             def runner(**kwargs):
@@ -783,7 +785,7 @@ class ElectionAutomationTests(unittest.TestCase):
                     def refresh(raw, processed, **kwargs):
                         raw.mkdir(parents=True, exist_ok=True)
                         self._change_normalized_poll_support(
-                            processed / "individual_polls.csv")
+                            processed.parent / AGGREGATE_POLLS)
                         return {"messages": []}
 
                     def runner(**kwargs):
@@ -887,7 +889,7 @@ class ElectionAutomationTests(unittest.TestCase):
 
             def refresh(raw, processed, **kwargs):
                 raw.mkdir(parents=True, exist_ok=True)
-                self._change_normalized_poll_support(processed / "individual_polls.csv")
+                self._change_normalized_poll_support(processed.parent / AGGREGATE_POLLS)
                 return {"messages": []}
 
             def runner(**kwargs):
@@ -1070,7 +1072,7 @@ class ElectionAutomationTests(unittest.TestCase):
 
             def refresh(raw, processed, **kwargs):
                 raw.mkdir(parents=True, exist_ok=True)
-                path = processed / "individual_polls.csv"
+                path = processed.parent / AGGREGATE_POLLS
                 self._change_normalized_poll_support(path)
                 return {"messages": []}
 
@@ -1230,7 +1232,7 @@ class ElectionAutomationTests(unittest.TestCase):
                 }}}
 
             with patch(
-                "scripts.election_automation.latest_pop_observation_date",
+                "scripts.election_automation.latest_poll_fieldwork_start",
                 return_value="2026-09-05",
             ):
                 live = run_automation(
@@ -1249,7 +1251,7 @@ class ElectionAutomationTests(unittest.TestCase):
                 return {"messages": ["first-party host unavailable; retained verified raw file"]}
 
             with patch(
-                "scripts.election_automation.latest_pop_observation_date",
+                "scripts.election_automation.latest_poll_fieldwork_start",
                 return_value="2026-09-05",
             ):
                 fallback = run_automation(
@@ -1271,7 +1273,7 @@ class ElectionAutomationTests(unittest.TestCase):
             self._init_git(root)
 
             def mixed_refresh(raw, processed, **kwargs):
-                (processed / "individual_polls.csv").write_text("header\nnew poll\n", encoding="utf-8")
+                (processed.parent / AGGREGATE_POLLS).write_text("header\nnew poll\n", encoding="utf-8")
                 return {"messages": ["timeseries: first-party host unavailable; retained verified raw file"]}
 
             polling = refresh_polling_snapshot(root, refresh_fn=mixed_refresh)
@@ -1736,7 +1738,7 @@ time.sleep(60)
 
             def refresh(raw, processed, **kwargs):
                 raw.mkdir(parents=True, exist_ok=True)
-                self._change_normalized_poll_support(processed / "individual_polls.csv")
+                self._change_normalized_poll_support(processed.parent / AGGREGATE_POLLS)
                 return {"messages": []}
 
             def runner(**kwargs):
@@ -1880,7 +1882,7 @@ time.sleep(60)
 
             def refresh(raw, processed, **kwargs):
                 raw.mkdir(parents=True, exist_ok=True)
-                path = processed / "individual_polls.csv"
+                path = processed.parent / AGGREGATE_POLLS
                 self._change_normalized_poll_support(path)
                 return {"messages": []}
 
@@ -1978,7 +1980,7 @@ time.sleep(60)
 
             def refresh(raw, processed, **kwargs):
                 raw.mkdir(parents=True, exist_ok=True)
-                path = processed / "individual_polls.csv"
+                path = processed.parent / AGGREGATE_POLLS
                 self._change_normalized_poll_support(path)
                 return {"messages": []}
 
@@ -2143,7 +2145,7 @@ time.sleep(60)
             subprocess.run(["git", "add", "files/election-simulator"], cwd=site, check=True)
             subprocess.run(["git", "commit", "-qm", "fixture: certify baseline"], cwd=site, check=True)
 
-            changed_poll = source / "data/processed/pollofpolls/individual_polls.csv"
+            changed_poll = source / "data/processed" / AGGREGATE_POLLS
             self._change_normalized_poll_support(changed_poll)
             subprocess.run(["git", "add", str(changed_poll.relative_to(source))], cwd=source, check=True)
             subprocess.run(["git", "commit", "-qm", "fixture: committed polling refresh"], cwd=source, check=True)
@@ -2388,17 +2390,19 @@ time.sleep(60)
         with self.assertRaises(Exception):
             guard_election_date(ELECTION_DAY.replace(day=14))
 
-    def test_future_as_of_uses_latest_available_pop_observation(self) -> None:
+    def test_latest_fieldwork_start_counts_only_polls_published_by_as_of(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            path = Path(tmp) / "timeseries.csv"
+            path = Path(tmp) / "individual_polls.csv"
             with path.open("w", newline="", encoding="utf-8") as handle:
                 writer = csv.writer(handle)
-                writer.writerow(["date", "M"])
-                writer.writerow(["2026-09-04", "20"])
-                writer.writerow(["2026-09-05", "21"])
+                writer.writerow(["poll_id", "interview_start", "publication_date", "party"])
+                writer.writerow(["a", "2026-09-01", "2026-09-04", "M"])
+                writer.writerow(["b", "2026-09-03", "2026-09-05", "M"])
+                writer.writerow(["later", "2026-09-06", "2026-09-07", "M"])
+                writer.writerow(["undated", "", "2026-09-05", "M"])
             self.assertEqual(
-                latest_pop_observation_date(path, as_of="2026-09-06"),
-                "2026-09-05",
+                latest_poll_fieldwork_start(path, as_of="2026-09-06"),
+                "2026-09-03",
             )
 
     def test_date_guard_stops_before_acquisition(self) -> None:
@@ -3042,6 +3046,8 @@ class PublicationCurveContinuityTests(unittest.TestCase):
         shutil.copytree(
             REPOSITORY_ROOT / "data/processed/pollofpolls", processed / "pollofpolls")
         shutil.copytree(
+            REPOSITORY_ROOT / "data/processed" / AGGREGATE_DIR, processed / AGGREGATE_DIR)
+        shutil.copytree(
             REPOSITORY_ROOT / "data/processed/prospective_forecasts",
             processed / "prospective_forecasts",
         )
@@ -3062,7 +3068,7 @@ class PublicationCurveContinuityTests(unittest.TestCase):
             ElectionAutomationTests._result(day),
             allow_degraded_views=allow_degraded_views,
             poll_file=processed / "pollofpolls" / "swedishpolls_individual_polls.csv",
-            timeseries_file=processed / "pollofpolls" / "pollofpolls_timeseries.csv",
+            timeseries_file=processed / AGGREGATE_TIMESERIES,
             archive_dir=processed / "prospective_forecasts",
             model_data_dir=processed,
             election_date=self.ELECTION,
@@ -3404,7 +3410,7 @@ class DegradedRenderRepairTests(unittest.TestCase):
         def refresh(raw, processed, **kwargs):
             raw.mkdir(parents=True, exist_ok=True)
             ElectionAutomationTests._change_normalized_poll_support(
-                processed / "individual_polls.csv")
+                processed.parent / AGGREGATE_POLLS)
             return {"messages": []}
 
         def runner(**kwargs):
@@ -4000,6 +4006,21 @@ class PinnedModelInputsTests(unittest.TestCase):
         return materialize_pinned_model_inputs(
             REPOSITORY_ROOT, source_git_commit=head, destination=destination)
 
+    def test_a_pre_migration_revision_pins_its_own_pop_inputs(self) -> None:
+        # 7a63bbe predates the aggregate's cleaned polls file, so it is a
+        # legacy revision: it must render from the Poll of Polls files it had.
+        legacy = "7a63bbe"
+        present = subprocess.run(["git", "cat-file", "-e", f"{legacy}^{{commit}}"],
+                                 cwd=REPOSITORY_ROOT, capture_output=True).returncode == 0
+        if not present:
+            self.skipTest("the legacy revision is not in this checkout")
+        with tempfile.TemporaryDirectory() as tmp:
+            processed = materialize_pinned_model_inputs(
+                REPOSITORY_ROOT, source_git_commit=legacy, destination=Path(tmp))
+            self.assertTrue((processed / "pollofpolls/pollofpolls_timeseries.csv").is_file())
+            self.assertFalse((processed / AGGREGATE_POLLS).exists())
+            self.assertTrue(opinion_inputs(processed).is_legacy)
+
     def test_the_pinned_root_carries_every_table_the_model_reads(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             processed = self._pin(Path(tmp))
@@ -4013,10 +4034,11 @@ class PinnedModelInputsTests(unittest.TestCase):
                 # own signature does not name -- found only after the three
                 # above were pinned and the backfill failed on the next file.
                 "geography/constituency_electorates_2014_2026.csv",
-                # The polling snapshot, which is why pinning exists at all.
+                # The polling snapshot, which is why pinning exists at all:
+                # from model 1.2.0 the SwedishPolls aggregate and its polls.
                 "pollofpolls/swedishpolls_individual_polls.csv",
-                "pollofpolls/pollofpolls_timeseries.csv",
-                "pollofpolls/individual_polls.csv",
+                AGGREGATE_TIMESERIES.as_posix(),
+                AGGREGATE_POLLS.as_posix(),
             ):
                 with self.subTest(relative=relative):
                     self.assertTrue(
@@ -4130,7 +4152,7 @@ class CertifiedGenerationLoaderTests(unittest.TestCase):
         def refresh(raw, processed, **kwargs):
             raw.mkdir(parents=True, exist_ok=True)
             ElectionAutomationTests._change_normalized_poll_support(
-                processed / "individual_polls.csv")
+                processed.parent / AGGREGATE_POLLS)
             return {"messages": []}
 
         def runner(**kwargs):

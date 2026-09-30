@@ -46,6 +46,9 @@ KNOWN_POST_FREEZE_CHANGES = {
     "scripts/simulator/engine.py",
     "scripts/simulator/config.py",
     "scripts/simulator/reproducibility.py",
+} | {
+    # Model 1.2.0 (SwedishPolls opinion inputs): explicit input paths, default unchanged.
+    "scripts/pollofpolls/state.py",
 }
 
 def _sha256(b: bytes) -> str:

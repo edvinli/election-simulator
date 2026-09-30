@@ -8,6 +8,7 @@ import unittest
 from unittest.mock import patch
 
 from scripts.election_automation import _source_provenance, refresh_polling_snapshot
+from scripts.election_automation_base import MODEL_RELEVANT_INPUTS
 from scripts.pollofpolls.acquire import (
     AcquisitionError,
     _record,
@@ -309,11 +310,7 @@ class SemanticAcquisitionTests(unittest.TestCase):
     def test_retained_diagnostics_produce_unavailable_stale_fallback_status(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            for relative in (
-                "data/processed/pollofpolls/pollofpolls_timeseries.csv",
-                "data/processed/pollofpolls/individual_polls.csv",
-                "data/processed/pollofpolls/swedishpolls_individual_polls.csv",
-            ):
+            for relative in MODEL_RELEVANT_INPUTS:
                 path = root / relative
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text("header\nverified\n", encoding="utf-8")

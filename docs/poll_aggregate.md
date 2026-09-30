@@ -5,11 +5,14 @@ only from [SwedishPolls](https://github.com/MansMeg/SwedishPolls) and certified
 election results. It exists so the simulator can stop depending on
 pollofpolls.se for its opinion input.
 
-**Status: shadow only.** Nothing in production reads it. It is not in
-`MODEL_RELEVANT_INPUTS`, the publication pipeline, rendering pins, the history
-start or the cycle guard. Those migrate together, only after the full-forecast
-replay in `docs/poll_aggregate_replay_protocol.md` has been agreed and passed
-(`uv run python -m scripts.poll_aggregate.replay`).
+**Status: production opinion input from model 1.2.0-rc1 (v0.2).** Replays v1
+and v2 (against stored Poll of Polls) and v4 (against a SwedishPolls-only
+consensus baseline) all remain FAIL. v4 failed only G5 calibration, and v0.2
+was released under an explicit exception recorded in
+`docs/poll_aggregate_replay_protocol_v4_amendment_001.md`. That is not a gate
+pass, and 90 % interval calibration remains an open issue. All historical
+testing is retrospective, because v0.2 was developed after the 2018, 2022 and
+2026 elections.
 
 ## Versions
 

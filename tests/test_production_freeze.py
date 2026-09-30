@@ -64,7 +64,18 @@ AUTOMATION_CHANGED = {
     "scripts/publication_pipeline/pipeline.py",
     "scripts/simulator/engine.py",
 }
-KNOWN_POST_FREEZE_CHANGES = PART7B1_METADATA_CHANGED | AUTOMATION_CHANGED
+# Model 1.2.0 moves the opinion inputs from pollofpolls.se to the SwedishPolls
+# aggregate: estimate_opinion gains optional explicit input paths (default
+# behaviour unchanged), the national engine resolves its inputs per revision,
+# and provenance hashes the opinion inputs. The freeze is not re-issued; the
+# drift is named here so it stays visible and bounded
+# (docs/poll_aggregate_replay_protocol_v4_amendment_001.md).
+SWEDISHPOLLS_MIGRATION_CHANGED = {
+    "scripts/pollofpolls/state.py",
+    "scripts/simulator/reproducibility.py",
+    "scripts/vote_share_calibration/national_engine.py",
+}
+KNOWN_POST_FREEZE_CHANGES = PART7B1_METADATA_CHANGED | AUTOMATION_CHANGED | SWEDISHPOLLS_MIGRATION_CHANGED
 
 
 def _sha(b: bytes) -> str:

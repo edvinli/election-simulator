@@ -55,10 +55,15 @@ from scripts.forecast_history.future_projection import (
     finalize_future_views,
     roll_in_certified_point,
 )
-from scripts.pollofpolls.__main__ import (
-    PollingValidationError,
-    refresh_snapshot,
+from scripts.poll_aggregate.refresh import refresh_snapshot
+from scripts.simulator.model_inputs import (
+    AGGREGATE_DIR,
+    AGGREGATE_POLLS,
+    AGGREGATE_TIMESERIES,
+    SWEDISHPOLLS_POLLS,
+    opinion_inputs,
 )
+from scripts.pollofpolls.__main__ import PollingValidationError
 from scripts.pollofpolls.acquire import AcquisitionError
 from scripts.publication_pipeline.pipeline import (
     PipelineRun,
@@ -133,10 +138,18 @@ SENSITIVE_ENV_NAME_FRAGMENTS = (
     "TOKEN",
 )
 
+#: Model 1.2.0 reads only SwedishPolls: the v0.2 aggregate, its cleaned polls,
+#: and the SwedishPolls table (election-noise pool and chart feed).
 MODEL_RELEVANT_INPUTS: tuple[Path, ...] = (
-    Path("data/processed/pollofpolls/pollofpolls_timeseries.csv"),
-    Path("data/processed/pollofpolls/individual_polls.csv"),
-    Path("data/processed/pollofpolls/swedishpolls_individual_polls.csv"),
+    Path("data/processed") / AGGREGATE_TIMESERIES,
+    Path("data/processed") / AGGREGATE_POLLS,
+    Path("data/processed") / SWEDISHPOLLS_POLLS,
+)
+#: Directories the polling refresh stages, installs and commits together.
+POLLING_DIRECTORIES: tuple[Path, ...] = (
+    Path("data/raw/pollofpolls"),
+    Path("data/processed/pollofpolls"),
+    Path("data/processed") / AGGREGATE_DIR,
 )
 
 POLLING_STATUS_VALUES = {
@@ -179,28 +192,33 @@ class AfterElectionDay(AutomationError):
 
 
 class AwaitingPostElectionPolls(AutomationError):
-    """The target's cycle has no Poll of Polls estimate after the previous election yet.
+    """The target's cycle has no poll fielded after the previous election yet.
 
-    A forecast for the next election built on an estimate made before the
+    A forecast for the next election built only on polls fielded before the
     previous one would be that election's forecast relabelled. Nothing is
-    certified until the first post-election estimate exists; it is an
-    expected, temporary state, not a failure.
+    certified until an eligible poll whose fieldwork began after the previous
+    election has been published; it is an expected, temporary state, not a
+    failure.
     """
 
 
-def guard_cycle_started(pop_estimate_date: str, election_date: date) -> None:
-    """Refuse to certify before the cycle's first post-election estimate."""
+def guard_cycle_started(latest_fieldwork_start: str, election_date: date) -> None:
+    """Refuse to certify before a poll fielded after the previous election exists.
+
+    ``latest_fieldwork_start`` is the latest fieldwork start among the
+    model's eligible polls published by today (``latest_poll_fieldwork_start``).
+    """
 
     previous = previous_election_date(election_date)
     try:
-        estimate = date.fromisoformat(str(pop_estimate_date))
+        started = date.fromisoformat(str(latest_fieldwork_start))
     except ValueError:
-        # "UNAVAILABLE": certification has its own check for a missing estimate.
+        # "UNAVAILABLE": certification has its own check for missing inputs.
         return
-    if estimate <= previous:
+    if started <= previous:
         raise AwaitingPostElectionPolls(
-            f"the latest Poll of Polls estimate ({pop_estimate_date}) predates the "
-            f"{previous} election; the {election_date.year} forecast waits for a newer one")
+            f"the latest eligible poll's fieldwork began {latest_fieldwork_start}, not after the "
+            f"{previous} election; the {election_date.year} forecast waits for a poll fielded after it")
 
 
 @dataclass
@@ -242,7 +260,7 @@ class AutomationSummary:
     run_type: str
     forecast_as_of: str
     mode: str = "publish"
-    pop_estimate_date: str = "UNAVAILABLE"
+    latest_poll_fieldwork_start: str = "UNAVAILABLE"
     polling_source_status: str = "UNAVAILABLE"
     polling_source_provenance: str = "UNAVAILABLE"
     model_inputs_changed: bool = False
@@ -281,7 +299,7 @@ class AutomationSummary:
             f"Run type: {self.run_type}",
             f"Mode: {self.mode.upper()}",
             f"Forecast as_of: {self.forecast_as_of}",
-            f"PoP estimate date: {self.pop_estimate_date}",
+            f"Latest poll fieldwork start: {self.latest_poll_fieldwork_start}",
             f"Polling source status: {self.polling_source_status}",
             f"Polling source provenance: {self.polling_source_provenance}",
             f"Model-relevant inputs changed: {'yes' if self.model_inputs_changed else 'no'}",
@@ -510,33 +528,33 @@ def model_relevant_snapshot_sha256(repo_root: Path | str) -> str:
     return digest.hexdigest()
 
 
-def latest_pop_observation_date(
-    timeseries_file: Path | str,
+def latest_poll_fieldwork_start(
+    polls_file: Path | str,
     *,
     as_of: date | str,
 ) -> str:
-    """Find the latest actual PoP row on or before ``as_of``.
+    """The latest fieldwork start among eligible polls published on or before ``as_of``.
 
-    No row is synthesized for ``as_of`` when the source has not published one.
+    Reads the model's cleaned polls (``individual_polls.csv`` of the
+    aggregate). A poll without a publication or fieldwork date never counts.
     """
 
     target = as_of if isinstance(as_of, date) else date.fromisoformat(str(as_of))
     latest: date | None = None
-    with Path(timeseries_file).open(newline="", encoding="utf-8") as handle:
+    with Path(polls_file).open(newline="", encoding="utf-8") as handle:
         for row in csv.DictReader(handle):
-            raw = str(row.get("date") or "").strip()
-            if not raw:
+            published = str(row.get("publication_date") or "").strip()
+            started = str(row.get("interview_start") or "").strip()
+            if not published or not started:
                 continue
             try:
-                observed = date.fromisoformat(raw)
+                published_on, started_on = date.fromisoformat(published), date.fromisoformat(started)
             except ValueError as exc:
-                raise AutomationError(f"Invalid PoP date in {timeseries_file}: {raw!r}") from exc
-            if observed <= target and (latest is None or observed > latest):
-                latest = observed
+                raise AutomationError(f"Invalid poll date in {polls_file}: {published!r}/{started!r}") from exc
+            if published_on <= target and (latest is None or started_on > latest):
+                latest = started_on
     if latest is None:
-        raise AutomationError(
-            f"No Poll of Polls observation exists on or before {target.isoformat()}"
-        )
+        raise AutomationError(f"No eligible poll was published on or before {target.isoformat()}")
     return latest.isoformat()
 
 
@@ -724,6 +742,7 @@ def refresh_polling_snapshot(
     # worktree or a test fixture rooted elsewhere.
     current_raw = root / Path("data/raw/pollofpolls")
     current_processed = root / Path("data/processed/pollofpolls")
+    current_aggregate = root / Path("data/processed") / AGGREGATE_DIR
     current_readme = root / Path("data/README.md")
 
     temporary_context = (
@@ -740,9 +759,12 @@ def refresh_polling_snapshot(
             staging_root.mkdir(parents=True)
         staged_raw = staging_root / "data" / "raw" / "pollofpolls"
         staged_processed = staging_root / "data" / "processed" / "pollofpolls"
+        # The refresh writes the aggregate beside the staged processed table.
+        staged_aggregate = staging_root / "data" / "processed" / AGGREGATE_DIR
         staged_readme = staging_root / "data" / "README.md"
         _copy_tree_contents(current_raw, staged_raw)
         _copy_tree_contents(current_processed, staged_processed)
+        _copy_tree_contents(current_aggregate, staged_aggregate)
         if current_readme.is_file():
             staged_readme.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(current_readme, staged_readme)
@@ -795,6 +817,7 @@ def refresh_polling_snapshot(
         if changed and install:
             _sync_tree_contents(staged_raw, current_raw)
             _sync_tree_contents(staged_processed, current_processed)
+            _sync_tree_contents(staged_aggregate, current_aggregate)
             if staged_readme.is_file():
                 _copy_file_atomic(staged_readme, current_readme)
             installed_hash = model_relevant_snapshot_sha256(root)
@@ -802,7 +825,7 @@ def refresh_polling_snapshot(
                 raise AutomationError("Installed polling snapshot hash differs from staged content")
             source_commit, pushed = _git_commit_paths(
                 root,
-                ["data/raw/pollofpolls", "data/processed/pollofpolls", "data/README.md"],
+                [*(path.as_posix() for path in POLLING_DIRECTORIES), "data/README.md"],
                 "chore: refresh polling snapshot",
                 commit=commit,
                 push=push,
@@ -2170,8 +2193,9 @@ def render_certified_generation(
                 source_git_commit=certified.source_git_commit,
                 destination=temporary / "pinned",
             )
-        poll_file = processed_root / "pollofpolls" / "swedishpolls_individual_polls.csv"
-        timeseries_file = processed_root / "pollofpolls" / "pollofpolls_timeseries.csv"
+        poll_file = processed_root / SWEDISHPOLLS_POLLS
+        # A generation certified before the migration renders from its own PoP inputs.
+        timeseries_file = opinion_inputs(processed_root).timeseries
 
         # The same pipeline publication runs, in the same order, with both
         # future views: a recovery render has to reproduce a publication, not
@@ -2801,8 +2825,8 @@ def run_production_event(
         history, curve = render_history_for_generation(
             existing_history,
             result,
-            poll_file=processed_root / "pollofpolls" / "swedishpolls_individual_polls.csv",
-            timeseries_file=processed_root / "pollofpolls" / "pollofpolls_timeseries.csv",
+            poll_file=processed_root / SWEDISHPOLLS_POLLS,
+            timeseries_file=opinion_inputs(processed_root).timeseries,
             archive_dir=staged_archive,
             model_data_dir=processed_root,
             election_date=election,
@@ -3108,17 +3132,17 @@ def run_automation(
             summary.polling_source_status = polling.status
             summary.polling_source_provenance = polling.source_provenance
             summary.model_inputs_changed = polling.changed
-            pop_timeseries = (
-                Path(polling.staged_root) / "data/processed/pollofpolls/pollofpolls_timeseries.csv"
+            model_polls = (
+                Path(polling.staged_root) / "data/processed" / AGGREGATE_POLLS
                 if polling.staged_root
-                else root / "data/processed/pollofpolls/pollofpolls_timeseries.csv"
+                else root / "data/processed" / AGGREGATE_POLLS
             )
-            summary.pop_estimate_date = latest_pop_observation_date(
-                pop_timeseries,
+            summary.latest_poll_fieldwork_start = latest_poll_fieldwork_start(
+                model_polls,
                 as_of=today,
             )
             if resolved_mode != "probe":
-                guard_cycle_started(summary.pop_estimate_date, election)
+                guard_cycle_started(summary.latest_poll_fieldwork_start, election)
 
             # A source commit without a successful publication is a durable
             # pending marker.  It must force the next retry even though the
@@ -3264,6 +3288,10 @@ def run_automation(
                     _copy_tree_contents(root / "data/processed", staged_processed)
                     staged_polling = Path(polling.staged_root) / "data/processed/pollofpolls"
                     _sync_tree_contents(staged_polling, staged_processed / "pollofpolls")
+                    _sync_tree_contents(
+                        Path(polling.staged_root) / "data/processed" / AGGREGATE_DIR,
+                        staged_processed / AGGREGATE_DIR,
+                    )
                     _assert_clean(root, label="simulator before dry-run production")
                     _assert_clean(site, label="website before dry-run production")
                     run, history, website = run_production_event(
@@ -3633,7 +3661,7 @@ __all__ = [
     "daily_publication_satisfied",
     "benchmark_window_conflict",
     "guard_election_date",
-    "latest_pop_observation_date",
+    "latest_poll_fieldwork_start",
     "model_relevant_snapshot_sha256",
     "refresh_polling_snapshot",
     "run_automation",

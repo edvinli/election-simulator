@@ -1,3 +1,10 @@
+> **Model 1.2.0-rc1 and later:** production no longer fetches pollofpolls.se.
+> The Poll of Polls files below are frozen at their last refresh and are kept
+> for research and for rendering generations certified before 1.2.0. The
+> production opinion inputs are the SwedishPolls table in `processed/pollofpolls/`
+> and the aggregate in `processed/poll_aggregate/v0_2/`
+> (see `docs/poll_aggregate.md`). This summary is no longer regenerated.
+
 # Pollofpolls data
 
 This directory contains only data acquisition, normalization, and validation for the

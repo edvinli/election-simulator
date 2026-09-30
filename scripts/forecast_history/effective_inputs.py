@@ -29,6 +29,13 @@ from scripts.pollofpolls.state_config import (
     COVARIANCE_LOOKBACK_YEARS, MAX_ESTIMATE_MATCH_LAG_DAYS, MIN_RESIDUAL_POLLS,
     RECENT_POLL_LOOKBACK_DAYS,
 )
+from scripts.simulator.model_inputs import (
+    AGGREGATE_POLLS,
+    AGGREGATE_TIMESERIES,
+    LEGACY_POLLS,
+    LEGACY_TIMESERIES,
+    opinion_inputs,
+)
 from scripts.simulator.election_cycles import (
     FIXED_SEATS_STAND_IN_YEARS, fixed_seats_for, geography_baseline_year_for,
 )
@@ -51,12 +58,16 @@ MODEL_FILES = tuple(
         "elections/config", "elections/parse",
     )
 )
+# Positional: [0] opinion polls, [1] opinion timeseries, [2] SwedishPolls table,
+# [-2:] geography.
 DATA_FILES = (
-    "pollofpolls/individual_polls.csv", "pollofpolls/pollofpolls_timeseries.csv",
+    AGGREGATE_POLLS.as_posix(), AGGREGATE_TIMESERIES.as_posix(),
     "pollofpolls/swedishpolls_individual_polls.csv", "elections/riksdag_election_results.csv",
     "geography/constituency_party_votes_2014_2022.csv",
     "geography/constituency_electorates_2014_2026.csv",
 )
+#: The same positions for a revision before model 1.2.0 (Poll of Polls inputs).
+LEGACY_DATA_FILES = (LEGACY_POLLS.as_posix(), LEGACY_TIMESERIES.as_posix(), *DATA_FILES[2:])
 
 
 def digest(value: Any) -> str:
@@ -83,11 +94,12 @@ class EffectiveInputs:
                  source_root: Path = ROOT, election_date: date, seed: int):
         self.election = election_date
         self.seed = seed
-        self.timeseries = load_timeseries_dataset(data_dir / "pollofpolls/pollofpolls_timeseries.csv")
+        opinion = opinion_inputs(data_dir)
+        self.timeseries = load_timeseries_dataset(opinion.timeseries)
         self.ts_dates = [row["date"] for row in self.timeseries]
         self.ts_by_date = {row["date"]: row["composition"] for row in self.timeseries}
-        self.polls, _ = load_individual_polls_dataset(data_dir / "pollofpolls/individual_polls.csv")
-        polls_df = pd.read_csv(data_dir / "pollofpolls/swedishpolls_individual_polls.csv")
+        self.polls, _ = load_individual_polls_dataset(opinion.polls)
+        polls_df = pd.read_csv(data_dir / DATA_FILES[2])
         targets = load_election_targets_for_forecasting(data_dir / "elections/riksdag_election_results.csv")
         self.training = []
         for election in ALL_HISTORICAL_ELECTIONS:
@@ -208,14 +220,27 @@ def legacy_inputs(payload: Mapping[str, Any], *, repo: Path = ROOT) -> Iterator[
     with tempfile.TemporaryDirectory(prefix="history-inputs-") as tmp:
         root = Path(tmp)
         try:
-            for relative in (*MODEL_FILES, *("data/processed/" + f for f in DATA_FILES)):
+            def show(relative: str) -> None:
                 content = subprocess.run(["git", "show", f"{commit}:{relative}"], cwd=repo,
                                          check=True, capture_output=True).stdout
                 target = root / relative
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_bytes(content)
-            for name, field in ((DATA_FILES[2], "poll_source_sha256"),
-                                (DATA_FILES[1], "timeseries_source_sha256")):
+
+            for relative in (*MODEL_FILES, *("data/processed/" + f for f in DATA_FILES[2:])):
+                show(relative)
+            # The opinion inputs of that revision: the aggregate from model
+            # 1.2.0, the Poll of Polls files before it.
+            data_files = DATA_FILES
+            try:
+                for relative in DATA_FILES[:2]:
+                    show("data/processed/" + relative)
+            except subprocess.CalledProcessError:
+                data_files = LEGACY_DATA_FILES
+                for relative in LEGACY_DATA_FILES[:2]:
+                    show("data/processed/" + relative)
+            for name, field in ((data_files[2], "poll_source_sha256"),
+                                (data_files[1], "timeseries_source_sha256")):
                 expected = (payload.get("source_hashes") or {}).get(field, payload.get(field))
                 if hashlib.sha256((root / "data/processed" / name).read_bytes()).hexdigest() != expected:
                     raise ValueError("Legacy source revision does not match recorded input hashes")
