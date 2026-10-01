@@ -3,8 +3,9 @@
 The 2026 history is decided and frozen; the website keeps it as an archive of
 its own. What these tests guard is that a history for the 2030 election:
 
-* starts as a fresh artifact at the first Poll of Polls estimate after the
-  2026 election, and contains no 2026 point;
+* starts as a fresh artifact after a post-election poll is available, with
+  reconstruction scheduled from the day after the 2026 election, and
+  contains no point forecasting the 2026 election;
 * is scheduled from its own election (weekly anchors, then daily from its own
   dynamics cap), and has every publication day filled in, not only the daily
   part -- otherwise the chart would break its line between weekly anchors;
@@ -21,6 +22,7 @@ from datetime import date
 import json
 from pathlib import Path
 import shutil
+import subprocess
 import tempfile
 from types import SimpleNamespace
 import unittest
@@ -42,7 +44,7 @@ from scripts.forecast_history.generate import (
     first_post_election_timeseries_date,
     missing_curve_dates,
 )
-from scripts.forecast_history.contract import DEFAULT_COALITIONS
+from scripts.forecast_history.contract import DEFAULT_COALITIONS, deterministic_history_sha256
 from scripts.forecast_history.future_projection import roll_in_certified_point
 from scripts.publication_pipeline.pipeline import _load_prior_snapshot
 from scripts.site_publisher import sync_history_to_site
@@ -62,6 +64,8 @@ ARCHIVE = PROCESSED / "prospective_forecasts"
 # production publication; tests about "the first 2030 forecast" pin their
 # inputs to this moment instead of reading whatever was published last.
 FROZEN_BEFORE_FIRST_2030 = "2026-09-20"
+# The last commit whose live history artifact was the 2026 one.
+LAST_2026_HISTORY_COMMIT = "0906e6442ad39c1e39c21192909323a51e3de67f"
 
 
 def frozen_archive(parent: Path, as_of: str = FROZEN_BEFORE_FIRST_2030) -> Path:
@@ -127,8 +131,15 @@ class MissingCurveDatesTests(unittest.TestCase):
         self.assertEqual(missing_curve_dates(payload), [])
 
     def test_the_deployed_2026_history_is_complete(self) -> None:
-        live = json.loads((ROOT / "files" / "election-simulator" / "history"
-                           / "coalition-timeseries.json").read_text(encoding="utf-8"))
+        # The live path holds the 2030 history since the first 2030
+        # publication (ec416d5); the 2026 history is the file as of the last
+        # commit before it, which the website keeps frozen at history/2026/.
+        shown = subprocess.run(
+            ["git", "show", f"{LAST_2026_HISTORY_COMMIT}:files/election-simulator/history/coalition-timeseries.json"],
+            cwd=ROOT, capture_output=True, text=True)
+        if shown.returncode != 0:
+            self.skipTest("the last 2026 history commit is not in this checkout")
+        live = json.loads(shown.stdout)
         self.assertEqual(live["election_date"], "2026-09-13")
         self.assertEqual(missing_curve_dates(live), [])
 
@@ -246,9 +257,12 @@ class NewCycleBootstrapTests(unittest.TestCase):
         self.assertEqual([(p["date"], p["provenance"]) for p in history["series"]],
                          [("2026-10-05", "current_production")])
         self.assertEqual(history["series"][0]["publication_generation"], "20261005T040000Z-0000c0de")
-        self.assertEqual(history["schedule"]["cycle_start_date"], "2026-09-28")
-        # The backfill that follows fills the one weekly anchor already due.
-        self.assertEqual(missing_curve_dates(history), [date(2026, 9, 28)])
+        # The live forecast waited for the 2026-09-28 poll; the history is
+        # scheduled from the day after the election, so the curve joins the
+        # 2026 history with no hole, and the backfill fills the weekly anchors.
+        self.assertEqual(history["schedule"]["cycle_start_date"], "2026-09-14")
+        self.assertEqual(missing_curve_dates(history),
+                         [date(2026, 9, 14), date(2026, 9, 21), date(2026, 9, 28)])
         self.assertNotIn("future_projection", history)
 
     def test_publication_renders_a_complete_first_2030_history(self) -> None:
@@ -273,7 +287,10 @@ class NewCycleBootstrapTests(unittest.TestCase):
             stage_callback=None,
         )
         self.assertEqual([(p["date"], p["provenance"]) for p in history["series"]],
-                         [("2026-09-28", "reconstructed_current_model"), ("2026-10-05", "current_production")])
+                         [("2026-09-14", "reconstructed_current_model"),
+                          ("2026-09-21", "reconstructed_current_model"),
+                          ("2026-09-28", "reconstructed_current_model"),
+                          ("2026-10-05", "current_production")])
         self.assertEqual(report["status"], "COMPLETE")
         self.assertEqual(report["views"]["secondary_projection"], "NOT_REQUIRED_OUTSIDE_CAMPAIGN_WINDOW")
         self.assertNotIn("future_projection", history)
@@ -306,7 +323,25 @@ class NewCycleBootstrapTests(unittest.TestCase):
         self.timeseries = self._aggregate_inputs("2026-10-05")
         self.assertEqual(first_post_election_timeseries_date(self.timeseries, E2030), date(2026, 9, 28))
         history = self._roll("2026-10-05")
-        self.assertEqual(history["schedule"]["cycle_start_date"], "2026-09-28")
+        self.assertEqual(history["schedule"]["cycle_start_date"], "2026-09-14")
+
+    def test_a_published_later_cycle_start_is_moved_back_on_roll_in(self) -> None:
+        # The first 2030 history was published with cycle_start_date
+        # 2026-09-28 (its first post-election poll), leaving 09-14..09-27
+        # unscheduled. Rolling a new point into it reschedules from 09-14.
+        self._write_timeseries(["2026-09-28", "2026-10-05"])
+        first = self._roll("2026-10-05")
+        first["schedule"]["cycle_start_date"] = "2026-09-28"
+        first["deterministic_content_sha256"] = deterministic_history_sha256(first)
+        rolled = roll_in_certified_point(
+            first, self._result("2026-10-06"),
+            poll_file=PROCESSED / "pollofpolls" / "swedishpolls_individual_polls.csv",
+            timeseries_file=self.timeseries, archive_dir=self.archive, election_date=E2030,
+            publication_generation="20261006T040000Z-0000c0de", deterministic_payload_sha256="c" * 64,
+            generated_at_utc="2026-10-06T04:00:00+00:00", model_commit="a" * 40, source_worktree_clean=True,
+        )
+        self.assertEqual(rolled["schedule"]["cycle_start_date"], "2026-09-14")
+        self.assertEqual(missing_curve_dates(rolled)[:2], [date(2026, 9, 14), date(2026, 9, 21)])
 
     def test_daily_aggregate_rows_alone_never_start_a_cycle(self) -> None:
         # Rows exist for every day after the election, but no poll fielded

@@ -2484,11 +2484,11 @@ time.sleep(60)
             )
 
         rebuilt = build_history(
-            election_date="2026-09-13",
+            election_date=existing["election_date"],
             dates=[point["date"] for point in existing["series"]],
             existing_payload=existing,
             poll_file=REPOSITORY_ROOT / "data/processed/pollofpolls/swedishpolls_individual_polls.csv",
-            timeseries_file=REPOSITORY_ROOT / "data/processed/pollofpolls/pollofpolls_timeseries.csv",
+            timeseries_file=opinion_inputs(REPOSITORY_ROOT / "data/processed").timeseries,
             archive_dir=REPOSITORY_ROOT / "data/processed/prospective_forecasts",
             model_commit=existing["model_commit"],
             simulation_runner=unexpected_runner,
@@ -2541,13 +2541,14 @@ time.sleep(60)
         # that record verbatim -- so the prior certified point is established
         # here rather than assumed. Depending on the shipped artifact's shape
         # made this test fail on a legitimate regeneration.
+        seed_date = max(point["date"] for point in existing["series"])
         existing = update_history_with_production_result(
             existing,
-            self._result("2026-08-26"),
+            self._result(seed_date),
             poll_file=REPOSITORY_ROOT / "data/processed/pollofpolls/swedishpolls_individual_polls.csv",
-            timeseries_file=REPOSITORY_ROOT / "data/processed/pollofpolls/pollofpolls_timeseries.csv",
+            timeseries_file=opinion_inputs(REPOSITORY_ROOT / "data/processed").timeseries,
             archive_dir=REPOSITORY_ROOT / "data/processed/prospective_forecasts",
-            election_date="2026-09-13",
+            election_date=existing["election_date"],
             publication_generation="seed-generation",
             deterministic_payload_sha256="a" * 64,
             generated_at_utc="2026-08-31T21:00:00+00:00",
@@ -2562,7 +2563,9 @@ time.sleep(60)
         # must survive byte for byte. Excluding the target date explicitly is
         # the actual invariant; the previous version relied on that date not
         # being covered by the artifact, which a denser regeneration changes.
-        rollover_date = "2026-08-25"
+        # The day after the artifact's own latest point: a genuinely new
+        # publication date for whichever cycle the artifact holds.
+        rollover_date = (date.fromisoformat(seed_date) + timedelta(days=1)).isoformat()
         reconstructed = {
             point["date"]: deepcopy(point)
             for point in existing["series"]
@@ -2573,9 +2576,9 @@ time.sleep(60)
             existing,
             self._result(rollover_date),
             poll_file=REPOSITORY_ROOT / "data/processed/pollofpolls/swedishpolls_individual_polls.csv",
-            timeseries_file=REPOSITORY_ROOT / "data/processed/pollofpolls/pollofpolls_timeseries.csv",
+            timeseries_file=opinion_inputs(REPOSITORY_ROOT / "data/processed").timeseries,
             archive_dir=REPOSITORY_ROOT / "data/processed/prospective_forecasts",
-            election_date="2026-09-13",
+            election_date=existing["election_date"],
             publication_generation="new-generation",
             deterministic_payload_sha256="b" * 64,
             generated_at_utc="2026-08-31T22:00:00+00:00",
@@ -2610,9 +2613,9 @@ time.sleep(60)
             existing,
             self._result(old_current["date"]),
             poll_file=REPOSITORY_ROOT / "data/processed/pollofpolls/swedishpolls_individual_polls.csv",
-            timeseries_file=REPOSITORY_ROOT / "data/processed/pollofpolls/pollofpolls_timeseries.csv",
+            timeseries_file=opinion_inputs(REPOSITORY_ROOT / "data/processed").timeseries,
             archive_dir=REPOSITORY_ROOT / "data/processed/prospective_forecasts",
-            election_date="2026-09-13",
+            election_date=existing["election_date"],
             publication_generation="same-day-new-generation",
             deterministic_payload_sha256="c" * 64,
             generated_at_utc="2026-08-31T23:00:00+00:00",
