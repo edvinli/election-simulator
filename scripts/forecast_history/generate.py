@@ -458,6 +458,20 @@ def _latest_timeseries_date(path: Path) -> date:
     return latest
 
 
+def new_cycle_history_start(election_date: str | date) -> date:
+    """Where a new cycle's history schedule begins: the day after the previous election.
+
+    The chart joins the previous cycle's history, which ends on election day,
+    so the next cycle's curve starts the following day. Each reconstructed
+    point uses only what was known on its date (the polls published by then,
+    and the certified result once it was available). This is separate from
+    the gate on *certifying* a live forecast, which still waits for a poll
+    fielded after the election (``first_post_election_timeseries_date``).
+    """
+
+    return previous_election_date(election_date) + timedelta(days=1)
+
+
 def first_post_election_timeseries_date(path: Path | str, election_date: str | date) -> date | None:
     """The first date the opinion input reflects a poll fielded after the previous election.
 
@@ -1404,6 +1418,24 @@ def build_history(
     return payload
 
 
+def _schedule_from_cycle_start(schedule: Mapping[str, Any] | None, election: date) -> dict[str, Any]:
+    """The rolled-forward schedule, with a declared cycle start no later than the day after the election.
+
+    Histories started before this rule declared their first post-election
+    poll as the cycle start, leaving the days after the election unscheduled
+    (a hole in the chart). Moving the declaration back lets the backfill fill
+    them; a history that declares no cycle start is untouched.
+    """
+
+    rolled = dict(schedule or {})
+    declared = rolled.get("cycle_start_date")
+    if declared:
+        start = new_cycle_history_start(election)
+        if _coerce_date(declared, name="cycle_start_date") > start:
+            rolled["cycle_start_date"] = start.isoformat()
+    return rolled
+
+
 def update_history_with_production_result(
     existing_payload: Mapping[str, Any],
     production_result: Any,
@@ -1558,7 +1590,7 @@ def update_history_with_production_result(
             "timeseries_source_sha256": timeseries_hash,
         },
         "model": dict(existing_payload.get("model") or {}),
-        "schedule": dict(existing_payload.get("schedule") or {}),
+        "schedule": _schedule_from_cycle_start(existing_payload.get("schedule"), election),
         "poll_date_range": {
             "start_date": chart_start.isoformat(),
             "end_date": chart_end.isoformat(),
@@ -1630,11 +1662,16 @@ def start_new_cycle_history(
     as_of = _result_as_of(production_result)
     if as_of is None:
         raise ValueError("production_result must carry an as_of date")
-    start = first_post_election_timeseries_date(timeseries_file, election)
-    if start is None or start > as_of:
+    first_poll = first_post_election_timeseries_date(timeseries_file, election)
+    if first_poll is None or first_poll > as_of:
         raise ValueError(
             f"No poll fielded after {previous_election_date(election)} is reflected in the opinion "
             f"input by {as_of}; the {election.year} cycle cannot start yet")
+    # The certified point needs a post-election poll; the history before it
+    # is reconstructed from the day after the election, so the curve has no
+    # hole between the previous cycle's election day and this cycle's first
+    # forecast.
+    start = new_cycle_history_start(election)
     summary = getattr(production_result, "summary", None)
     samples = int(getattr(summary, "total_samples", 0) or 0) or len(
         _extract_matrix(production_result, "seats_matrix"))

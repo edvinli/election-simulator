@@ -78,10 +78,13 @@ asserted unchanged by `tests/test_election_cycle_2030_history.py`.
 an earlier election, the roll-in builds a new history holding the certified
 point alone. Nothing of the old history is carried over: its points forecast
 a decided election, and the website keeps it as a frozen archive at
-`history/2026/`. The history's `schedule.cycle_start_date` is the first
-publication date of an eligible poll fielded after the previous election. (It
-was the first Poll of Polls estimate after it before model 1.2.0-rc1.) The
-backfill fills the schedule from there.
+`history/2026/`. The history's `schedule.cycle_start_date` is the day after
+the previous election, so the curve joins the 2026 history, which ends on
+election day, with no gap. Each reconstructed point uses only what was known
+on its date. The live forecast still waits for a poll fielded after the
+election (see below). Histories published with a later declared start, the
+first post-election poll, are moved back on the next roll-in, and the
+backfill fills the days between.
 
 **No forecast of the next election on a pre-election estimate.** Publication
 refuses to certify until an eligible poll whose fieldwork began after the
