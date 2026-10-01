@@ -462,10 +462,10 @@ def new_cycle_history_start(election_date: str | date) -> date:
     """Where a new cycle's history schedule begins: the day after the previous election.
 
     The chart joins the previous cycle's history, which ends on election day,
-    so the next cycle's curve starts the following day. Each reconstructed
-    point uses only what was known on its date (the polls published by then,
-    and the certified result once it was available). This is separate from
-    the gate on *certifying* a live forecast, which still waits for a poll
+    so the next cycle's curve starts the following day. Each point's opinion
+    input uses polls published by then and election anchors only once
+    available. Noise and geography retain today's model calibration. This is
+    separate from the gate on *certifying* a live forecast, which still waits for a poll
     fielded after the election (``first_post_election_timeseries_date``).
     """
 
@@ -1419,7 +1419,7 @@ def build_history(
 
 
 def _schedule_from_cycle_start(schedule: Mapping[str, Any] | None, election: date) -> dict[str, Any]:
-    """The rolled-forward schedule, with a declared cycle start no later than the day after the election.
+    """Move a declared cycle start back to the day after the previous election.
 
     Histories started before this rule declared their first post-election
     poll as the cycle start, leaving the days after the election unscheduled
@@ -1653,9 +1653,10 @@ def start_new_cycle_history(
 
     Used when the existing artifact targets an earlier election. Nothing of
     that history is carried over -- its points forecast a different election,
-    and the website keeps it as a frozen archive of its own. The schedule
-    starts at the first opinion input reflecting a poll fielded after the previous election;
-    the backfill that follows fills the scheduled dates from there.
+    and the website keeps it as a frozen archive of its own. The reconstruction
+    schedule starts the day after the previous election; the backfill fills
+    the scheduled dates from there. The certified point still requires an
+    opinion input reflecting a poll fielded after the previous election.
     """
 
     election = _coerce_date(election_date, name="election_date")
@@ -1762,8 +1763,8 @@ def backfill_reconstructed_curve(
         official_samples = int(official[-1]["samples"]) if official else 100_000
     filled = build_history(
         election_date=election_date,
-        # The payload's own schedule, not the cycle default: a cycle that
-        # started at its first post-election estimate keeps that start.
+        # Preserve the payload's start-date metadata. The explicit dates
+        # above follow its declared (and, on roll-in, migrated) cycle start.
         start_date=(payload.get("schedule") or {}).get("start_date"),
         dates=dates,
         samples=samples,

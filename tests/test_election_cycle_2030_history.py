@@ -3,8 +3,9 @@
 The 2026 history is decided and frozen; the website keeps it as an archive of
 its own. What these tests guard is that a history for the 2030 election:
 
-* starts as a fresh artifact at the first Poll of Polls estimate after the
-  2026 election, and contains no 2026 point;
+* starts as a fresh artifact after a post-election poll is available, with
+  reconstruction scheduled from the day after the 2026 election, and
+  contains no point forecasting the 2026 election;
 * is scheduled from its own election (weekly anchors, then daily from its own
   dynamics cap), and has every publication day filled in, not only the daily
   part -- otherwise the chart would break its line between weekly anchors;
