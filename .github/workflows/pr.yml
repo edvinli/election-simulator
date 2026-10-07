@@ -24,7 +24,7 @@ jobs:
   # ---------------------------------------------------------------------------
   static:
     name: Static checks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
@@ -51,7 +51,7 @@ jobs:
   # ---------------------------------------------------------------------------
   plan:
     name: Plan affected suites
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     needs: static
     outputs:
@@ -105,7 +105,7 @@ jobs:
   # ---------------------------------------------------------------------------
   unit:
     name: Unit shard ${{ matrix.shard }} (${{ matrix.count }} modules)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     needs: plan
     if: needs.plan.outputs.empty == 'false'
@@ -169,7 +169,7 @@ jobs:
   # ---------------------------------------------------------------------------
   required:
     name: PR required checks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     needs: [static, plan, unit]
     if: always()

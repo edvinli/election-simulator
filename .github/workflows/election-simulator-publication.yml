@@ -60,7 +60,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'probe'
     permissions:
       contents: read
-    runs-on: ${{ vars.ELECTION_SIMULATOR_RUNNER || 'ubuntu-latest' }}
+    runs-on: ${{ vars.ELECTION_SIMULATOR_RUNNER || 'ubuntu-24.04' }}
     timeout-minutes: 45
     steps:
       - name: Check out simulator without persisted credentials
@@ -103,7 +103,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'dry_run'
     permissions:
       contents: read
-    runs-on: ${{ vars.ELECTION_SIMULATOR_RUNNER || 'ubuntu-latest' }}
+    runs-on: ${{ vars.ELECTION_SIMULATOR_RUNNER || 'ubuntu-24.04' }}
     timeout-minutes: 120
     steps:
       - name: Check out simulator without persisted credentials
@@ -195,7 +195,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'browser_diagnostic'
     permissions:
       contents: read
-    runs-on: ${{ vars.ELECTION_SIMULATOR_RUNNER || 'ubuntu-latest' }}
+    runs-on: ${{ vars.ELECTION_SIMULATOR_RUNNER || 'ubuntu-24.04' }}
     timeout-minutes: 45
     steps:
       - name: Check out public website without persisted credentials
@@ -326,7 +326,7 @@ jobs:
     permissions:
       actions: read
       contents: read
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     concurrency:
       group: election-simulator-fallback-preflight
@@ -471,7 +471,7 @@ jobs:
       cancel-in-progress: false
     # Set repository variable ELECTION_SIMULATOR_RUNNER to a self-hosted label
     # when pollofpolls.se refuses GitHub-hosted runner traffic.
-    runs-on: ${{ vars.ELECTION_SIMULATOR_RUNNER || 'ubuntu-latest' }}
+    runs-on: ${{ vars.ELECTION_SIMULATOR_RUNNER || 'ubuntu-24.04' }}
     timeout-minutes: 120
     steps:
       - name: Check out simulator

@@ -68,7 +68,7 @@ jobs:
     # whether it still needs rendering, so a publication that failed before
     # certifying anything new resolves the generation already deployed and
     # returns RENDER_NOT_NEEDED without pinning an input.
-    runs-on: ${{ vars.ELECTION_SIMULATOR_RUNNER || 'ubuntu-latest' }}
+    runs-on: ${{ vars.ELECTION_SIMULATOR_RUNNER || 'ubuntu-24.04' }}
     timeout-minutes: 90
     permissions:
       contents: write

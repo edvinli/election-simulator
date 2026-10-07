@@ -23,7 +23,7 @@ permissions:
 jobs:
   plan:
     name: Plan shards
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     outputs:
       matrix: ${{ steps.plan.outputs.matrix }}
@@ -53,7 +53,7 @@ jobs:
 
   unit:
     name: Unit shard ${{ matrix.shard }} (${{ matrix.count }} modules)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     needs: plan
     strategy:
@@ -108,7 +108,7 @@ jobs:
   # ---------------------------------------------------------------------------
   cross-repo-coverage:
     name: Cross-repository contract coverage (informational)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     continue-on-error: true
     steps:
@@ -142,7 +142,7 @@ jobs:
 
   required:
     name: Full CI required checks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     needs: [plan, unit]
     if: always()

@@ -28,7 +28,7 @@ jobs:
   # ---------------------------------------------------------------------------
   allocator-audit:
     name: Exhaustive 20k allocator audit
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
@@ -60,7 +60,7 @@ jobs:
   # ---------------------------------------------------------------------------
   scientific-stress:
     name: Scientific stress suites
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
@@ -95,7 +95,7 @@ jobs:
   # ---------------------------------------------------------------------------
   whole-suite-serial:
     name: Whole suite, single process (informational)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     continue-on-error: true
     steps:
@@ -122,7 +122,7 @@ jobs:
 
   nightly-required:
     name: Nightly required checks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     needs: [allocator-audit, scientific-stress]
     if: always()

@@ -47,7 +47,7 @@ concurrency:
 
 jobs:
   canary:
-    runs-on: ${{ vars.ELECTION_SIMULATOR_RUNNER || 'ubuntu-latest' }}
+    runs-on: ${{ vars.ELECTION_SIMULATOR_RUNNER || 'ubuntu-24.04' }}
     timeout-minutes: 60
     steps:
       # Only to run the script from. The repositories under test are cloned by
