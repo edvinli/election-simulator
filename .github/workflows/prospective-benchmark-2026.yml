@@ -62,7 +62,7 @@ jobs:
     permissions:
       actions: read
       contents: read
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       active: ${{ steps.resolve.outputs.active }}
       mode: ${{ steps.resolve.outputs.mode }}
@@ -214,7 +214,7 @@ jobs:
     needs: schedule_guard
     permissions:
       contents: read
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
       - name: Check out simulator without persisted credentials
@@ -276,7 +276,7 @@ jobs:
     needs: schedule_guard
     permissions:
       contents: write
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # The prewarmed start means this job idles until the frozen cutoff: up to an
     # hour of deliberate waiting, plus the capture itself. The old 45-minute
     # budget assumed a job that began at the cutoff.
