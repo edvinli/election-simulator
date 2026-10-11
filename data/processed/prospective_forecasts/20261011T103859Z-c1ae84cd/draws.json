@@ -1,0 +1,65 @@
+{
+  "schema_version": "1.0",
+  "artifact": "ElectionSimulator exact prospective predictive draws",
+  "generation_id": "20261011T103859Z-c1ae84cd",
+  "snapshot_id": "c1ae84cdf395ff2f85e08b19fb988ebde179fb245a26a444fcc78d5585257386",
+  "as_of": "2026-10-11",
+  "election_date": "2030-09-08",
+  "generated_at_utc": null,
+  "model": {
+    "name": "ElectionSimulator",
+    "version": "1.2.0-rc1"
+  },
+  "source_git_commit": "efbde3076d5ab29c32d71e8e789881022857948e",
+  "source_worktree_clean": true,
+  "seed": 12345,
+  "samples": 100000,
+  "vote_share_unit": "percentage_points",
+  "vote_party_order": [
+    "M",
+    "L",
+    "C",
+    "KD",
+    "S",
+    "V",
+    "MP",
+    "SD",
+    "REST"
+  ],
+  "seat_party_order": [
+    "M",
+    "L",
+    "C",
+    "KD",
+    "S",
+    "V",
+    "MP",
+    "SD"
+  ],
+  "deterministic_payload_sha256": "1731ccc91c38d37ffa7b91524da6688d8905b506eaaca5b60504344d72e7454f",
+  "arrays": {
+    "vote_shares_pct": {
+      "dtype": "<f8",
+      "shape": [
+        100000,
+        9
+      ],
+      "sha256": "7b416d82d4cbb0915ba3f52d1a0c737ff34f644be7582a179490a6ee582ab151"
+    },
+    "seats": {
+      "dtype": "<i8",
+      "shape": [
+        100000,
+        8
+      ],
+      "sha256": "0c1a7e0e34066f9e30f635c067b7dc689b45d7ec5eec1aca847c6df2e0fc1152"
+    }
+  },
+  "draws_file_sha256": "164deb512cd15c7e5b8d569281d1542a712440ed0eb0186ba744aed29558cdb7",
+  "runtime": {
+    "python_version": "3.12.15",
+    "python_implementation": "CPython",
+    "numpy_version": "2.5.2"
+  },
+  "draw_semantics": "Exact joint matrices emitted by the certified production SimulationResult; no draws are reconstructed from published quantiles."
+}
