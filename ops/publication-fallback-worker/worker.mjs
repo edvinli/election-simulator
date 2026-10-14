@@ -29,8 +29,8 @@
 // total, which Cloudflare rejects outright -- the schedules call is
 // all-or-nothing, so the effect is no crons at all rather than some of them.
 //
-// So the deployed schedule is a single coarse cron, "*/15 4-6 * * *", and the
-// three intended dispatch times are selected from its twelve invocations by
+// So the deployed schedule is a single coarse cron, "*/15 * * * *", and the
+// three intended dispatch times are selected from its 96 daily invocations by
 // isDispatchTick() below. One account cron slot, three logical retries, and
 // the dispatch times are unchanged: 04:45Z, 05:30Z, 06:30Z.
 //
@@ -38,6 +38,25 @@
 // only "is this the tick I meant?" -- never "should anything be published?".
 // Every rule in the list above still lives in the workflow, and the manual
 // POST endpoint deliberately bypasses the filter entirely.
+//
+// THE POLL-CHANGE WATCHER rides on the same cron.
+//
+// GitHub has also been delivering the hourly poll-change ticks late or not at
+// all, so a poll merged upstream could wait most of a day. The cron therefore
+// fires every 15 minutes, all day, and on every invocation watchPolls() asks
+// GitHub for the newest commit touching the upstream poll file. When that
+// commit is new and has stayed the newest for POLL_QUIET_MS, it dispatches the
+// workflow with mode=poll_change -- an hourly tick in every respect except
+// when it arrives. The quiet period is there because upstream often merges a
+// batch and then a correction minutes later (2026-10-14: the October polls at
+// 07:10Z, a fix to Sifo's SD figure at 07:27Z); publishing the first would put
+// a wrong number on the site until the next run.
+//
+// This is scheduler plumbing in the same sense as the tick filter: it decides
+// only when to ask. Whether the change is model-relevant, the kill switch, the
+// benchmark window and concurrency are the workflow's, exactly as for a cron
+// tick. The watcher's state is one KV key; without the POLL_STATE binding it
+// does nothing at all.
 //
 // Deploy: see README.md in this directory.
 
@@ -47,8 +66,20 @@ const REPO = "election-simulator";
 const REF = "main";
 const UA = "election-simulator-publication-fallback";
 
+// The upstream poll file the publication acquires, and the branch it is read
+// from. Only commits touching this path wake the watcher.
+export const POLL_SOURCE = {
+  owner: "MansMeg",
+  repo: "SwedishPolls",
+  path: "Data/Polls.csv",
+  ref: "master",
+};
+// How long a new upstream commit must stay the newest before it is published.
+export const POLL_QUIET_MS = 15 * 60 * 1000;
+const POLL_STATE_KEY = "poll-watch";
+
 // The three intended dispatch times, as "HH:MM" in UTC: 45, 90 and 150 minutes
-// after the 04:00Z daily cron. These are the schedule; "*/15 4-6 * * *" is
+// after the 04:00Z daily cron. These are the schedule; "*/15 * * * *" is
 // merely the delivery mechanism that can afford one account cron slot.
 export const DISPATCH_TICKS_UTC = ["04:45", "05:30", "06:30"];
 
@@ -72,7 +103,7 @@ export function scheduledTickUtc(scheduledTime) {
 /**
  * Is this invocation one of the three intended dispatch times?
  *
- * Pure, and the only thing standing between the coarse cron's twelve daily
+ * Pure, and the only thing standing between the coarse cron's 96 daily
  * invocations and the three that mean something. Anything else -- including a
  * missing or unreadable scheduledTime -- is false, so the handler no-ops
  * rather than guessing at a dispatch nobody asked for.
@@ -88,6 +119,15 @@ export function isDispatchTick(scheduledTime) {
  * report a failed dispatch to the dead-man's-switch instead of vanishing.
  */
 export async function dispatchFallback(env, fetchImpl = fetch) {
+  return dispatchWorkflow(env, { mode: "publish_if_stale" }, fetchImpl);
+}
+
+/** Ask GitHub to run the publication workflow as a poll-change check. */
+export async function dispatchPollChange(env, fetchImpl = fetch) {
+  return dispatchWorkflow(env, { mode: "poll_change" }, fetchImpl);
+}
+
+async function dispatchWorkflow(env, inputs, fetchImpl) {
   if (!env || !env.GITHUB_TOKEN) {
     return { ok: false, status: 0, reason: "GITHUB_TOKEN is not configured" };
   }
@@ -104,7 +144,7 @@ export async function dispatchFallback(env, fetchImpl = fetch) {
           "Content-Type": "application/json",
           "User-Agent": UA,
         },
-        body: JSON.stringify({ ref: REF, inputs: { mode: "publish_if_stale" } }),
+        body: JSON.stringify({ ref: REF, inputs }),
       },
     );
   } catch (error) {
@@ -119,6 +159,122 @@ export async function dispatchFallback(env, fetchImpl = fetch) {
     detail = "<unreadable body>";
   }
   return { ok: false, status: response.status, reason: detail };
+}
+
+/**
+ * The newest upstream commit touching the poll file, or a failure result.
+ *
+ * Authenticated with the Worker's own token: unauthenticated calls share a
+ * 60-an-hour limit per IP, and Workers share IPs. A fine-grained token can
+ * read any public repository, so this needs no scope beyond the dispatch's.
+ */
+export async function latestPollCommit(env, fetchImpl = fetch) {
+  if (!env || !env.GITHUB_TOKEN) {
+    return { ok: false, status: 0, reason: "GITHUB_TOKEN is not configured" };
+  }
+  const { owner, repo, path, ref } = POLL_SOURCE;
+  const query = new URLSearchParams({ path, sha: ref, per_page: "1" });
+  let response;
+  try {
+    response = await fetchImpl(
+      `https://api.github.com/repos/${owner}/${repo}/commits?${query}`,
+      {
+        headers: {
+          Accept: "application/vnd.github+json",
+          Authorization: `Bearer ${env.GITHUB_TOKEN}`,
+          "X-GitHub-Api-Version": "2022-11-28",
+          "User-Agent": UA,
+        },
+      },
+    );
+  } catch (error) {
+    return { ok: false, status: 0, reason: `commit lookup failed: ${error}` };
+  }
+  if (response.status !== 200) {
+    return { ok: false, status: response.status, reason: "commit lookup refused" };
+  }
+  let commits;
+  try {
+    commits = await response.json();
+  } catch {
+    return { ok: false, status: 200, reason: "commit lookup was not JSON" };
+  }
+  const sha = Array.isArray(commits) && commits[0] && commits[0].sha;
+  if (typeof sha !== "string" || !/^[0-9a-f]{40}$/.test(sha)) {
+    return { ok: false, status: 200, reason: "commit lookup returned no commit" };
+  }
+  return { ok: true, sha };
+}
+
+/**
+ * What the watcher should do, given the newest upstream commit and its state.
+ *
+ * Pure. The state is { dispatched, pending: { sha, seenAt } }: the commit last
+ * handed to the workflow, and a newer one waiting out the quiet period. The
+ * quiet period runs on the watcher's own clock from when it first saw the
+ * commit, not on the commit's date -- a pull request merged today can carry a
+ * commit dated last week, and that must still wait.
+ *
+ * Returns { action, state }, where action is one of:
+ *   initialise -- no state yet: adopt the current commit, publish nothing
+ *   unchanged  -- the newest commit is the one already dispatched
+ *   settling   -- a new commit, still inside its quiet period
+ *   dispatch   -- a new commit that has stayed the newest for the period
+ */
+export function pollWatchDecision(latestSha, state, now) {
+  if (!state || typeof state.dispatched !== "string") {
+    return { action: "initialise", state: { dispatched: latestSha, pending: null } };
+  }
+  if (latestSha === state.dispatched) {
+    return { action: "unchanged", state: { dispatched: state.dispatched, pending: null } };
+  }
+  const pending = state.pending;
+  if (!pending || pending.sha !== latestSha || !Number.isFinite(pending.seenAt)) {
+    return {
+      action: "settling",
+      state: { dispatched: state.dispatched, pending: { sha: latestSha, seenAt: now } },
+    };
+  }
+  if (now - pending.seenAt < POLL_QUIET_MS) {
+    return { action: "settling", state };
+  }
+  return { action: "dispatch", state: { dispatched: latestSha, pending: null } };
+}
+
+/**
+ * One watcher pass: look upstream, decide, and dispatch when it is time.
+ *
+ * The new state is written only after a successful dispatch, so a refused
+ * dispatch is retried on the next invocation rather than forgotten.
+ */
+export async function watchPolls(env, now, fetchImpl = fetch) {
+  const store = env && env.POLL_STATE;
+  if (!store) return { action: "disabled" };
+  const latest = await latestPollCommit(env, fetchImpl);
+  if (!latest.ok) {
+    console.error(`poll watch lookup failed: status=${latest.status} ${latest.reason}`);
+    return { action: "lookup_failed", status: latest.status };
+  }
+  let state = null;
+  try {
+    state = JSON.parse((await store.get(POLL_STATE_KEY)) || "null");
+  } catch {
+    state = null;
+  }
+  const decision = pollWatchDecision(latest.sha, state, now);
+  if (decision.action === "dispatch") {
+    const result = await dispatchPollChange(env, fetchImpl);
+    if (!result.ok) {
+      console.error(
+        `poll-change dispatch failed: status=${result.status} ${result.reason}`,
+      );
+      return { action: "dispatch_failed", status: result.status };
+    }
+  }
+  if (JSON.stringify(decision.state) !== JSON.stringify(state)) {
+    await store.put(POLL_STATE_KEY, JSON.stringify(decision.state));
+  }
+  return { action: decision.action, sha: latest.sha };
 }
 
 /**
@@ -142,13 +298,20 @@ export async function reportOutcome(env, result, fetchImpl = fetch) {
 
 export default {
   async scheduled(event, env, ctx) {
-    // Scheduler plumbing only. Nine of the coarse cron's twelve daily
-    // invocations are not one of the intended times, and each of those must be
-    // a clean no-op: no dispatch, no heartbeat, nothing observable. In
+    const scheduledTime = event && event.scheduledTime;
+    // The watcher runs on every invocation, independently of the tick filter
+    // below; it makes no outbound call unless POLL_STATE is bound.
+    const now = new Date(scheduledTime).getTime();
+    if (Number.isFinite(now)) {
+      ctx.waitUntil(watchPolls(env, now));
+    }
+    // Scheduler plumbing only. 93 of the coarse cron's 96 daily invocations
+    // are not one of the intended times, and for the fallback each of those
+    // must be a clean no-op: no dispatch, no heartbeat, nothing observable. In
     // particular NOT a heartbeat -- a dead-man's-switch ping from a tick that
     // was never meant to publish would report health this Worker has not
     // established, and a /fail ping would invent an incident.
-    if (!isDispatchTick(event && event.scheduledTime)) {
+    if (!isDispatchTick(scheduledTime)) {
       return;
     }
     const result = await dispatchFallback(env);

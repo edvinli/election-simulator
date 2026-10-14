@@ -17,7 +17,7 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "probe, browser_diagnostic, dry_run, publish, or publish_if_stale"
+        description: "probe, browser_diagnostic, dry_run, publish, publish_if_stale, or poll_change"
         required: true
         default: dry_run
         type: choice
@@ -32,6 +32,13 @@ on:
           # no-ops when it is not. Unlike publish it is subject to the
           # repository kill switch, because nobody is watching it.
           - publish_if_stale
+          # The poll-change watcher. An external scheduler dispatches this
+          # when the upstream poll file has changed, so a new poll does not
+          # wait for an hourly tick GitHub may deliver hours late or not at
+          # all. It is an hourly tick in every other respect: it goes through
+          # fallback_preflight, is subject to the kill switch, and publishes
+          # only when the model-relevant inputs changed.
+          - poll_change
       website_ref:
         description: "Public website branch/ref used by browser_diagnostic"
         required: false
@@ -322,7 +329,8 @@ jobs:
     if: >-
       github.event_name == 'schedule' ||
       (github.event_name == 'workflow_dispatch' &&
-       github.event.inputs.mode == 'publish_if_stale')
+       (github.event.inputs.mode == 'publish_if_stale' ||
+        github.event.inputs.mode == 'poll_change'))
     permissions:
       actions: read
       contents: read
@@ -368,7 +376,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           AUTOMATION_ENABLED: ${{ vars.ELECTION_AUTOMATION_ENABLED || 'false' }}
           BENCHMARK_WORKFLOW: prospective-benchmark-2026.yml
-          IS_FALLBACK: ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
+          IS_FALLBACK: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'publish_if_stale' && 'true' || 'false' }}
+          IS_POLL_WATCH: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'poll_change' && 'true' || 'false' }}
           # Empty for a dispatch, which is why the stand-down below keys on the
           # cron expression: no dispatch can be mistaken for the 19:00Z tick.
           EVENT_SCHEDULE: ${{ github.event.schedule }}
@@ -377,6 +386,9 @@ jobs:
           if [[ "$IS_FALLBACK" == "true" ]]; then
             run_type="FALLBACK_DAILY"
             mode_label="PUBLISH_IF_STALE"
+          elif [[ "$IS_POLL_WATCH" == "true" ]]; then
+            run_type="POLL_CHANGE"
+            mode_label="POLL_CHANGE"
           else
             run_type="SCHEDULED"
             mode_label="SCHEDULE"
@@ -400,7 +412,11 @@ jobs:
           # automation_gate, so this change adds benchmark deferral and alters
           # nothing else about how a cron behaves. An operator's explicit
           # publish is subject to neither, and does not reach this job.
-          if [[ "$IS_FALLBACK" == "true" && "${AUTOMATION_ENABLED,,}" == "false" ]]; then
+          #
+          # The poll-change watcher is unattended in exactly the same way, so
+          # the same rule applies to it.
+          if [[ ( "$IS_FALLBACK" == "true" || "$IS_POLL_WATCH" == "true" ) \
+                && "${AUTOMATION_ENABLED,,}" == "false" ]]; then
             stand_down "DISABLED_BY_REPOSITORY_KILL_SWITCH"
           fi
 
@@ -457,7 +473,8 @@ jobs:
       (github.event_name == 'schedule' ||
        (github.event_name == 'workflow_dispatch' &&
         (github.event.inputs.mode == 'publish' ||
-         github.event.inputs.mode == 'publish_if_stale'))) &&
+         github.event.inputs.mode == 'publish_if_stale' ||
+         github.event.inputs.mode == 'poll_change'))) &&
       (needs.fallback_preflight.result == 'skipped' ||
        (needs.fallback_preflight.result == 'success' &&
         needs.fallback_preflight.outputs.proceed == 'true'))
@@ -491,7 +508,8 @@ jobs:
           EVENT_SCHEDULE: ${{ github.event.schedule }}
           MODE: ${{ github.event_name == 'schedule' && 'publish' || github.event.inputs.mode }}
         run: |
-          if [[ ( "$EVENT_NAME" != "workflow_dispatch" || "$MODE" == "publish_if_stale" ) \
+          if [[ ( "$EVENT_NAME" != "workflow_dispatch" || "$MODE" == "publish_if_stale" \
+                  || "$MODE" == "poll_change" ) \
                 && "${AUTOMATION_ENABLED,,}" == "false" ]]; then
             echo "disabled=true" >> "$GITHUB_OUTPUT"
             {

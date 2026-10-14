@@ -17,10 +17,16 @@
 # than some of them (observed: HTTP 400, code 10072).
 #
 # So this Worker deploys ONE coarse cron and selects the three intended times
-# from its twelve daily invocations in the scheduled handler, via
+# from its 96 daily invocations in the scheduled handler, via
 # isDispatchTick() in worker.mjs. One account cron slot; three logical retries;
-# the same three dispatch times as before. The other nine invocations are a
-# clean no-op -- no dispatch, no heartbeat, no publication action.
+# the same three dispatch times as before. For the fallback the other 93
+# invocations are a clean no-op -- no dispatch, no heartbeat, no publication
+# action.
+#
+# The cron runs all day, rather than across 04-06Z only, for the poll-change
+# watcher: every invocation checks whether the upstream poll file has a new
+# commit and, once it has stayed the newest for 15 minutes, dispatches
+# mode=poll_change. See watchPolls() in worker.mjs.
 #
 # That selection is scheduler plumbing, not publication policy. Staleness, the
 # kill switch, the benchmark window, double-publish and concurrency all remain
@@ -37,12 +43,18 @@ main = "worker.mjs"
 compatibility_date = "2026-09-01"
 
 [triggers]
-# One coarse cron implementing three logical retries. Fires at :00/:15/:30/:45
-# across 04-06Z; worker.mjs dispatches only at 04:45Z, 05:30Z and 06:30Z and
-# no-ops on the other nine invocations. Costs one of the account's five cron
-# slots instead of three. Do not narrow this expression to the three exact
-# times -- that is what exceeds the account limit.
-crons = ["*/15 4-6 * * *"]
+# One coarse cron implementing three logical retries and the poll watcher.
+# Fires at :00/:15/:30/:45 all day; worker.mjs dispatches the fallback only at
+# 04:45Z, 05:30Z and 06:30Z. Costs one of the account's five cron slots
+# instead of three. Do not narrow this expression to the three exact times --
+# that is what exceeds the account limit, and it would stop the watcher.
+crons = ["*/15 * * * *"]
+
+# The poll watcher's only state: the upstream commit last dispatched and one
+# waiting out its quiet period. Without this binding the watcher is inert.
+[[kv_namespaces]]
+binding = "POLL_STATE"
+id = "9222b87c43a549eaa0c2c161a15e7320"
 
 # Secrets, set with `wrangler secret put` and never committed:
 #   GITHUB_TOKEN     fine-grained PAT, single repo edvinli/election-simulator,
