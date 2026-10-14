@@ -1388,7 +1388,8 @@ class ElectionAutomationTests(unittest.TestCase):
         )
         # The gate is folded across lines, so compare on normalised
         # whitespace: publish runs for every schedule tick, for an operator
-        # dispatch, and for the external fallback -- and for nothing else. It
+        # dispatch, for the external fallback and for the poll-change
+        # watcher -- and for nothing else. It
         # is additionally gated on the fallback preflight, which runs outside
         # the production concurrency group; the structural properties of that
         # split are pinned in tests.test_publication_fallback.
@@ -1396,7 +1397,8 @@ class ElectionAutomationTests(unittest.TestCase):
             "if: >- always() && (github.event_name == 'schedule' || "
             "(github.event_name == 'workflow_dispatch' && "
             "(github.event.inputs.mode == 'publish' || "
-            "github.event.inputs.mode == 'publish_if_stale'))) && "
+            "github.event.inputs.mode == 'publish_if_stale' || "
+            "github.event.inputs.mode == 'poll_change'))) && "
             "(needs.fallback_preflight.result == 'skipped' || "
             "(needs.fallback_preflight.result == 'success' && "
             "needs.fallback_preflight.outputs.proceed == 'true'))",
@@ -3875,7 +3877,7 @@ class RenderDryRunTests(unittest.TestCase):
         ]
         # `None` is the "no --mode given" case: rendering is never inferred,
         # so a render-only flag without an explicit mode is discarded too.
-        for mode in ("publish", "probe", "dry_run", "publish_if_stale", None):
+        for mode in ("publish", "probe", "dry_run", "publish_if_stale", "poll_change", None):
             for flag in flags:
                 with self.subTest(mode=mode, flag=flag[0]):
                     argv = ["--site-repo", "/tmp/site"]

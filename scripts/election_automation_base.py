@@ -119,8 +119,16 @@ BENCHMARK_SIDECAR_END = date(2026, 9, 12)
 # today's mandatory recalculation is missing.  It is a separate mode rather
 # than a flag on publish so the kill switch and the run-type label can treat
 # an automated trigger differently from an operator's explicit dispatch.
-VALID_MODES = ("probe", "dry_run", "publish", "publish_if_stale", "render")
-MUTATING_MODES = ("publish", "publish_if_stale")
+#
+# poll_change is the same idea for the poll-change check: the Cloudflare
+# watcher dispatches it when the upstream poll file has changed, and it must
+# behave exactly like an hourly cron tick -- publish only on a model-relevant
+# change, and stop for the kill switch -- rather than like an operator's
+# publish, which is always honoured.
+VALID_MODES = ("probe", "dry_run", "publish", "publish_if_stale", "poll_change", "render")
+MUTATING_MODES = ("publish", "publish_if_stale", "poll_change")
+#: Dispatched modes that arrive from an unattended external scheduler.
+UNATTENDED_DISPATCH_MODES = ("publish_if_stale", "poll_change")
 AUTOMATION_ENABLED_ENV = "ELECTION_AUTOMATION_ENABLED"
 SOURCE_PROVENANCE_DIRECT_LIVE = "DIRECT_LIVE_FETCH"
 SOURCE_PROVENANCE_VERIFIED_FALLBACK = "VERIFIED_STALE_FALLBACK"
@@ -403,8 +411,11 @@ def classify_run_type(
     """
 
     if event_name == "workflow_dispatch":
-        if str(mode or "").strip().lower() == "publish_if_stale":
+        normalized = str(mode or "").strip().lower()
+        if normalized == "publish_if_stale":
             return FALLBACK_RUN_TYPE
+        if normalized == "poll_change":
+            return "POLL_CHANGE"
         return "MANUAL"
     if schedule == DAILY_SCHEDULE_UTC:
         return "DAILY"
@@ -448,16 +459,19 @@ def automation_enabled_for_event(
     """Apply the repository kill switch to every non-operator trigger.
 
     Manual dispatch is an explicit operator action and is therefore always
-    allowed.  A ``publish_if_stale`` dispatch is not: it arrives from an
-    unattended external scheduler, so it is subject to the kill switch exactly
-    as a cron tick is.  Without this, adding a fallback would hand the
+    allowed.  A ``publish_if_stale`` or ``poll_change`` dispatch is not: it
+    arrives from an unattended external scheduler, so it is subject to the kill
+    switch exactly as a cron tick is.  Without this, adding a fallback would hand the
     automated path a way around an operator's "stop publishing".
 
     The repository variable is fail-closed: a missing value is treated as
     ``false``, and only an explicit non-false value enables the trigger.
     """
 
-    if event_name == "workflow_dispatch" and str(mode or "").strip().lower() != "publish_if_stale":
+    if (
+        event_name == "workflow_dispatch"
+        and str(mode or "").strip().lower() not in UNATTENDED_DISPATCH_MODES
+    ):
         return True
     if enabled is None:
         enabled = os.environ.get(AUTOMATION_ENABLED_ENV, "false")
@@ -3407,8 +3421,9 @@ def build_parser() -> argparse.ArgumentParser:
         required=False,
         help=(
             "probe (acquire only), dry_run (full disposable gates), "
-            "publish (commit/push), or publish_if_stale (publish only when "
-            "today's mandatory recalculation is missing)"
+            "publish (commit/push), publish_if_stale (publish only when "
+            "today's mandatory recalculation is missing), or poll_change "
+            "(an unattended poll-change check, published like a cron tick)"
         ),
     )
     parser.add_argument(

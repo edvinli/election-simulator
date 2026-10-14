@@ -43,7 +43,7 @@ after the `0 4 * * *` daily cron. They are delivered by a single coarse
 trigger:
 
 ```toml
-crons = ["*/15 4-6 * * *"]
+crons = ["*/15 * * * *"]
 ```
 
 Cloudflare's Workers Free plan allows **5 cron triggers per _account_**, not
@@ -54,10 +54,10 @@ result is *no* crons registered rather than some of them (observed: HTTP 400,
 `code: 10072`). One coarse expression costs one slot and carries all three
 times.
 
-`isDispatchTick()` in `worker.mjs` selects them from the trigger's twelve daily
+`isDispatchTick()` in `worker.mjs` selects them from the trigger's 96 daily
 invocations, reading `event.scheduledTime` as **UTC** (`getUTCHours` /
 `getUTCMinutes`, never the local-time getters -- the Worker's zone is not
-guaranteed). The other nine invocations are a clean no-op:
+guaranteed). For the fallback, the other 93 invocations are a clean no-op:
 
 | | |
 | --- | --- |
@@ -76,6 +76,38 @@ window, double-publish and concurrency remain decisions of the GitHub workflow
 entirely and dispatches immediately, because an operator asking for a dispatch
 is not a scheduled tick.
 
+## Poll-change watcher
+
+The cron runs all day because every invocation also runs `watchPolls()`.
+GitHub delivers the hourly poll-change ticks late or not at all (on
+2026-10-14 none of the 06:00-08:00Z ticks had arrived by 08:47Z), so a poll
+merged upstream could wait most of a day to be published.
+
+On each invocation the watcher asks GitHub for the newest commit touching
+`Data/Polls.csv` on `MansMeg/SwedishPolls@master`, and compares it with its
+state in the `POLL_STATE` KV namespace:
+
+| Upstream | Action |
+| --- | --- |
+| no state yet (first run) | adopt the current commit, dispatch nothing |
+| the commit last dispatched | nothing |
+| a new commit, first seen | remember it and when it was seen |
+| the same new commit, seen 15+ minutes ago | dispatch `mode=poll_change` |
+| a newer commit while waiting | restart the 15 minutes for it |
+
+The quiet period exists because upstream often merges a batch of polls and a
+correction minutes later; on 2026-10-14 the October polls landed at 07:10Z and
+a fix to Sifo's SD figure at 07:27Z. It is measured on the watcher's clock,
+not the commit date, because a merged pull request can carry an old commit.
+The state is written only after GitHub accepts the dispatch, so a refused
+dispatch is retried 15 minutes later. A new poll therefore reaches the
+workflow 15-30 minutes after it is merged upstream.
+
+`poll_change` is an hourly tick in every respect but timing: it goes through
+`fallback_preflight` (kill switch, benchmark deferral), and the automation
+classifies it as `POLL_CHANGE`, so it publishes only when the model-relevant
+inputs changed. The hourly crons stay as a second path.
+
 ## Publication semantics
 
 `publish_if_stale` is a distinct mode, not a flag on `publish`, because it
@@ -91,6 +123,10 @@ differs in exactly two ways that matter:
   semantics once the daily is accounted for.
 
 ## Deploy
+
+The `POLL_STATE` namespace already exists (its id is in `wrangler.toml`); to
+recreate it, run `npx wrangler kv namespace create POLL_STATE` and update the
+id.
 
 ```sh
 cd ops/publication-fallback-worker
@@ -114,7 +150,14 @@ Actions history whose summary reads `Daily publication: SATISFIED_TODAY` and
 ## Token scope
 
 A fine-grained PAT limited to `edvinli/election-simulator` with
-**Actions: read and write** and nothing else. It can start this workflow; it
+**Actions: read and write** and nothing else. The watcher's commit lookup on
+`MansMeg/SwedishPolls` needs no extra scope: fine-grained tokens can always
+read public repositories.
+
+Give it an expiry you will notice. From 2026-09-16 GitHub stopped accepting
+this Worker's dispatches -- it kept calling, and no run appeared -- and nobody
+saw it for a month, because `HEARTBEAT_URL` was never set. Setting it is what
+makes a dead token visible. It can start this workflow; it
 cannot read the repository's other secrets, push code, or publish anything
 directly. The publication itself still runs under the workflow's own
 `contents: write` permission inside GitHub.

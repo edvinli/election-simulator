@@ -508,7 +508,7 @@ class FallbackRunTests(unittest.TestCase):
                     event_name=event_name,
                     schedule=schedule,
                     mode=mode,
-                    commit=mode in {"publish", "publish_if_stale"},
+                    commit=mode in {"publish", "publish_if_stale", "poll_change"},
                     now=now,
                     automation_enabled=enabled,
                 )
@@ -1032,15 +1032,19 @@ class ScheduledPublicationDeferralTests(unittest.TestCase):
 
         It is an explicit human action: it bypasses the kill switch today and
         must not acquire a benchmark deferral it did not ask for.  The
-        kill-switch stand-down is likewise still scoped to the fallback
-        dispatch, so the scheduled path gained deferral and nothing else.
+        kill-switch stand-down is likewise still scoped to the unattended
+        dispatches -- the fallback and the poll-change watcher -- so the
+        scheduled path gained deferral and nothing else.
         """
 
         self.assertNotIn("inputs.mode == 'publish'\n", self.preflight)
         self.assertIn("github.event.inputs.mode == 'publish'", self.publish)
         self.assertIn("needs.fallback_preflight.result == 'skipped'", self.publish)
         self.assertIn('IS_FALLBACK: ${{ github.event_name ==', self.preflight)
-        self.assertIn('if [[ "$IS_FALLBACK" == "true" && ', self.preflight)
+        self.assertIn(
+            'if [[ ( "$IS_FALLBACK" == "true" || "$IS_POLL_WATCH" == "true" ) ',
+            self.preflight,
+        )
 
     # --- requirement: outside Sep 4-12 nothing changes
 
@@ -1241,7 +1245,8 @@ class FallbackTickFilterTests(unittest.TestCase):
         """A narrowed cron must not silently drop a retry."""
 
         invocations = _fallback_cron_invocations()
-        self.assertEqual(len(invocations), 12)
+        # Every quarter hour, all day: the poll watcher needs the whole day.
+        self.assertEqual(len(invocations), 96)
         for tick in _fallback_dispatch_ticks():
             with self.subTest(tick=tick):
                 self.assertIn(tick, invocations)
@@ -1402,3 +1407,303 @@ class IntradayScheduleShapeTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class PollChangeDispatchTests(unittest.TestCase):
+    """``poll_change``: the watcher's dispatch is an hourly tick, not an operator.
+
+    The Cloudflare watcher dispatches it when the upstream poll file changes.
+    It must behave exactly like the intraday cron -- publish only on a
+    model-relevant change, and stop for the kill switch -- and never like an
+    operator's ``publish``, which is always honoured.
+    """
+
+    WORKFLOW = (
+        Path(__file__).resolve().parents[1]
+        / ".github/workflows/election-simulator-publication.yml"
+    ).read_text(encoding="utf-8")
+
+    def _run(self, *, enabled, acquisition):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _seed_processed_inputs(root)
+            with patch(
+                "scripts.election_automation._certified_generated_at",
+                side_effect=lambda _dir: TODAY_MORNING,
+            ), patch(
+                "scripts.election_automation.refresh_polling_snapshot",
+                side_effect=acquisition,
+            ):
+                return run_automation(
+                    root,
+                    site_repo=root,
+                    event_name="workflow_dispatch",
+                    schedule=None,
+                    mode="poll_change",
+                    commit=True,
+                    now=datetime(2026, 9, 7, 9, 30, tzinfo=timezone.utc),
+                    automation_enabled=enabled,
+                )
+
+    def test_it_is_classified_as_a_poll_change_check(self) -> None:
+        self.assertEqual(
+            classify_run_type(event_name="workflow_dispatch", mode="poll_change"),
+            "POLL_CHANGE",
+        )
+        self.assertEqual(
+            classify_run_type(event_name="workflow_dispatch", mode="publish"),
+            "MANUAL",
+        )
+
+    def test_it_is_a_mutating_mode(self) -> None:
+        self.assertEqual(
+            resolve_mode(
+                event_name="workflow_dispatch", mode="poll_change", commit=True, push=True
+            ),
+            "poll_change",
+        )
+        with self.assertRaises(AutomationError):
+            resolve_mode(
+                event_name="workflow_dispatch", mode="poll_change", commit=False, push=False
+            )
+
+    def test_the_kill_switch_applies_as_for_a_cron_tick(self) -> None:
+        for enabled, expected in (("false", False), (None, False), ("true", True)):
+            with self.subTest(enabled=enabled), patch.dict(os.environ, {}, clear=False):
+                os.environ.pop("ELECTION_AUTOMATION_ENABLED", None)
+                self.assertEqual(
+                    automation_enabled_for_event(
+                        event_name="workflow_dispatch", enabled=enabled, mode="poll_change"
+                    ),
+                    expected,
+                )
+
+    def test_the_kill_switch_stops_it_before_acquisition(self) -> None:
+        result = self._run(enabled="false", acquisition=_forbidden_refresh)
+        self.assertEqual(result.status, "DISABLED_BY_REPOSITORY_KILL_SWITCH")
+        self.assertEqual(result.summary.run_type, "POLL_CHANGE")
+
+    def test_an_unchanged_source_publishes_nothing(self) -> None:
+        """A watcher dispatch on a no-op upstream commit is a cheap no-op."""
+
+        result = self._run(enabled="true", acquisition=_unchanged_polling)
+        self.assertEqual(result.summary.run_type, "POLL_CHANGE")
+        self.assertEqual(result.summary.publication_generation, "NONE")
+        self.assertNotEqual(result.summary.deployment_status, "PUBLISHED")
+
+    def test_the_workflow_offers_and_routes_the_mode(self) -> None:
+        options = self.WORKFLOW.split("options:")[1].split("website_ref:")[0]
+        self.assertIn("- poll_change", options)
+        preflight = self.WORKFLOW.split("\n  fallback_preflight:\n")[1].split("\n  publish:\n")[0]
+        publish = self.WORKFLOW.split("\n  publish:\n")[1]
+        gate = " ".join(preflight.split("permissions:")[0].split())
+        self.assertIn("github.event.inputs.mode == 'poll_change'", gate)
+        self.assertIn(
+            "IS_POLL_WATCH: ${{ github.event_name == 'workflow_dispatch' && "
+            "github.event.inputs.mode == 'poll_change' && 'true' || 'false' }}",
+            preflight,
+        )
+        # The fallback flag must not also fire for the watcher, or its run
+        # would be labelled and handled as FALLBACK_DAILY.
+        self.assertIn(
+            "IS_FALLBACK: ${{ github.event_name == 'workflow_dispatch' && "
+            "github.event.inputs.mode == 'publish_if_stale' && 'true' || 'false' }}",
+            preflight,
+        )
+        self.assertIn("github.event.inputs.mode == 'poll_change'", publish.split("permissions:")[0])
+        self.assertIn('|| "$MODE" == "poll_change" )', publish)
+
+
+# A Node driver for the poll-change watcher: a fake KV namespace and a fake
+# GitHub whose newest poll commit, and whose answer to a dispatch, each step
+# sets. Every step reports the calls made and the state left behind.
+_WATCH_PROBE = r"""
+import { pathToFileURL } from "node:url";
+
+const mod = await import(pathToFileURL(process.argv[2]).href);
+const worker = mod.default;
+
+let upstream = { status: 200, sha: null };
+let dispatchStatus = 204;
+const calls = [];
+globalThis.fetch = async (url, init = {}) => {
+  url = String(url);
+  calls.push({ url, method: init.method || "GET", body: init.body || null });
+  if (url.includes("/repos/MansMeg/SwedishPolls/commits?")) {
+    return {
+      status: upstream.status,
+      json: async () => (upstream.sha ? [{ sha: upstream.sha }] : []),
+      text: async () => "",
+    };
+  }
+  if (url.endsWith("/dispatches")) {
+    return { status: dispatchStatus, text: async () => "refused" };
+  }
+  return { status: 200, text: async () => "" };
+};
+
+const kv = new Map();
+const store = {
+  get: async (key) => (kv.has(key) ? kv.get(key) : null),
+  put: async (key, value) => { kv.set(key, value); },
+};
+const env = { GITHUB_TOKEN: "token", FALLBACK_SECRET: "secret", POLL_STATE: store };
+
+const sha = (c) => c.repeat(40);
+const minute = 60 * 1000;
+const t0 = Date.UTC(2026, 9, 14, 7, 0);
+const steps = [];
+
+async function tick(label, at, setup) {
+  setup();
+  calls.length = 0;
+  const pending = [];
+  await worker.scheduled(
+    { scheduledTime: at, cron: "*/15 * * * *" },
+    env,
+    { waitUntil: (p) => pending.push(p) },
+  );
+  await Promise.all(pending);
+  steps.push({
+    label,
+    calls: calls.map((c) => ({ url: c.url, method: c.method, body: c.body })),
+    state: JSON.parse(kv.get("poll-watch") || "null"),
+  });
+}
+
+await tick("first run adopts", t0, () => { upstream = { status: 200, sha: sha("a") }; });
+await tick("unchanged", t0 + 15 * minute, () => {});
+await tick("new commit seen", t0 + 30 * minute, () => { upstream.sha = sha("b"); });
+await tick("correction restarts", t0 + 45 * minute, () => { upstream.sha = sha("c"); });
+await tick("still settling", t0 + 55 * minute, () => {});
+await tick("quiet: dispatch", t0 + 60 * minute, () => {});
+await tick("after dispatch", t0 + 75 * minute, () => {});
+await tick("next commit", t0 + 90 * minute, () => { upstream.sha = sha("d"); });
+await tick("dispatch refused", t0 + 105 * minute, () => { dispatchStatus = 401; });
+await tick("retried", t0 + 120 * minute, () => { dispatchStatus = 204; });
+await tick("lookup fails", t0 + 135 * minute, () => { upstream = { status: 500, sha: sha("e") }; });
+await tick("empty upstream", t0 + 150 * minute, () => { upstream = { status: 200, sha: null }; });
+
+// The fallback tick is unaffected by the watcher, and vice versa.
+await tick("fallback tick", Date.UTC(2026, 9, 15, 4, 45), () => { upstream = { status: 200, sha: sha("d") }; });
+
+// Pure decisions at the quiet-period boundary.
+const q = mod.POLL_QUIET_MS;
+const pend = { dispatched: sha("a"), pending: { sha: sha("b"), seenAt: 0 } };
+const boundary = {
+  before: mod.pollWatchDecision(sha("b"), pend, q - 1).action,
+  at: mod.pollWatchDecision(sha("b"), pend, q).action,
+  corrupt: mod.pollWatchDecision(sha("b"), { dispatched: 7 }, 0).action,
+};
+
+// Without the KV binding the watcher makes no call at all.
+calls.length = 0;
+const inert = await mod.watchPolls({ GITHUB_TOKEN: "token" }, t0);
+
+console.log(JSON.stringify({ steps, boundary, inert, inertCalls: calls.length, quiet: q }));
+"""
+
+
+class PollWatcherTests(unittest.TestCase):
+    """The watcher, executed: when it asks, and when it must not."""
+
+    COMMITS = (
+        "https://api.github.com/repos/MansMeg/SwedishPolls/commits"
+        "?path=Data%2FPolls.csv&sha=master&per_page=1"
+    )
+    DISPATCH = FallbackTickFilterTests.GITHUB
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        if not shutil.which("node"):
+            raise unittest.SkipTest("node is unavailable")
+        with tempfile.TemporaryDirectory() as tmp:
+            driver = Path(tmp) / "watch.mjs"
+            driver.write_text(_WATCH_PROBE, encoding="utf-8")
+            completed = subprocess.run(
+                ["node", str(driver), str(FALLBACK_WORKER_MJS)],
+                capture_output=True, text=True, check=True,
+                env={**os.environ, "TZ": "UTC"},
+            )
+        result = json.loads(completed.stdout)
+        cls.steps = {step["label"]: step for step in result["steps"]}
+        cls.result = result
+
+    def _dispatches(self, label: str) -> list[dict]:
+        return [
+            json.loads(call["body"])
+            for call in self.steps[label]["calls"]
+            if call["url"] == self.DISPATCH
+        ]
+
+    def test_every_invocation_looks_upstream(self) -> None:
+        for label, step in self.steps.items():
+            with self.subTest(step=label):
+                self.assertEqual(step["calls"][0]["url"], self.COMMITS)
+                self.assertEqual(step["calls"][0]["method"], "GET")
+
+    def test_the_first_run_adopts_without_publishing(self) -> None:
+        self.assertEqual(self._dispatches("first run adopts"), [])
+        self.assertEqual(
+            self.steps["first run adopts"]["state"],
+            {"dispatched": "a" * 40, "pending": None},
+        )
+
+    def test_nothing_new_means_no_dispatch(self) -> None:
+        for label in ("unchanged", "after dispatch"):
+            with self.subTest(step=label):
+                self.assertEqual(self._dispatches(label), [])
+
+    def test_a_new_commit_waits_out_the_quiet_period(self) -> None:
+        self.assertEqual(self.result["quiet"], 15 * 60 * 1000)
+        self.assertEqual(self._dispatches("new commit seen"), [])
+        self.assertEqual(self.steps["new commit seen"]["state"]["pending"]["sha"], "b" * 40)
+        self.assertEqual(self.result["boundary"]["before"], "settling")
+        self.assertEqual(self.result["boundary"]["at"], "dispatch")
+
+    def test_a_correction_restarts_the_quiet_period(self) -> None:
+        """The 2026-10-14 case: a fix merged minutes after the polls."""
+
+        restarted = self.steps["correction restarts"]
+        self.assertEqual(self._dispatches("correction restarts"), [])
+        self.assertEqual(restarted["state"]["pending"]["sha"], "c" * 40)
+        self.assertEqual(self._dispatches("still settling"), [])
+
+    def test_a_quiet_commit_dispatches_a_poll_change_check(self) -> None:
+        self.assertEqual(
+            self._dispatches("quiet: dispatch"),
+            [{"ref": "main", "inputs": {"mode": "poll_change"}}],
+        )
+        self.assertEqual(
+            self.steps["quiet: dispatch"]["state"],
+            {"dispatched": "c" * 40, "pending": None},
+        )
+
+    def test_a_refused_dispatch_is_retried_not_forgotten(self) -> None:
+        refused = self.steps["dispatch refused"]
+        self.assertEqual(len(self._dispatches("dispatch refused")), 1)
+        self.assertEqual(refused["state"]["dispatched"], "c" * 40)
+        self.assertEqual(refused["state"]["pending"]["sha"], "d" * 40)
+        self.assertEqual(len(self._dispatches("retried")), 1)
+        self.assertEqual(self.steps["retried"]["state"]["dispatched"], "d" * 40)
+
+    def test_a_failed_or_empty_lookup_changes_nothing(self) -> None:
+        for label in ("lookup fails", "empty upstream"):
+            with self.subTest(step=label):
+                self.assertEqual(self._dispatches(label), [])
+                self.assertEqual(
+                    self.steps[label]["state"], {"dispatched": "d" * 40, "pending": None}
+                )
+
+    def test_a_corrupt_state_is_re_adopted_not_published(self) -> None:
+        self.assertEqual(self.result["boundary"]["corrupt"], "initialise")
+
+    def test_the_fallback_tick_still_dispatches_publish_if_stale_alone(self) -> None:
+        self.assertEqual(
+            self._dispatches("fallback tick"),
+            [{"ref": "main", "inputs": {"mode": "publish_if_stale"}}],
+        )
+
+    def test_without_the_kv_binding_the_watcher_is_inert(self) -> None:
+        self.assertEqual(self.result["inert"], {"action": "disabled"})
+        self.assertEqual(self.result["inertCalls"], 0)
