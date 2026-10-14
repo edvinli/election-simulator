@@ -1,0 +1,88 @@
+{
+  "acquisition_diagnostics": [
+    {
+      "byte_length": 272279,
+      "bytes": 272279,
+      "content_type": "text/plain; charset=utf-8",
+      "final_host": "raw.githubusercontent.com",
+      "final_host_path": "raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv",
+      "final_path": "/MansMeg/SwedishPolls/master/Data/Polls.csv",
+      "http_status": 200,
+      "requested_url": "https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv",
+      "retained_previous": false,
+      "retrieval_method": "direct_repository_http",
+      "semantic": "PASS",
+      "semantic_validation": "PASS",
+      "source_key": "swedishpolls"
+    },
+    {
+      "byte_length": 22726,
+      "bytes": 22726,
+      "content_type": "text/plain; charset=utf-8",
+      "final_host": "raw.githubusercontent.com",
+      "final_host_path": "raw.githubusercontent.com/MansMeg/SwedishPolls/master/Sources/sources.csv",
+      "final_path": "/MansMeg/SwedishPolls/master/Sources/sources.csv",
+      "http_status": 200,
+      "requested_url": "https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Sources/sources.csv",
+      "retained_previous": false,
+      "retrieval_method": "direct_repository_http",
+      "semantic": "PASS",
+      "semantic_validation": "PASS",
+      "source_key": "swedishpolls_sources"
+    }
+  ],
+  "description": "Raw polling-source retrieval provenance; hashes cover exact payloads.",
+  "schema_version": 1,
+  "source_outcomes": {
+    "swedishpolls": "saved",
+    "swedishpolls_sources": "saved"
+  },
+  "sources": {
+    "swedishpolls": {
+      "bytes": 272279,
+      "final_host": "raw.githubusercontent.com",
+      "final_path": "/MansMeg/SwedishPolls/master/Data/Polls.csv",
+      "final_url": "https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv",
+      "http_headers": {
+        "content-length": "272279",
+        "content-type": "text/plain; charset=utf-8",
+        "date": "Wed, 14 Oct 2026 09:02:13 GMT",
+        "etag": "\"3313d6f9394578ebff127aec4e5921aabcb2a51fca6f3a122fe6d62a14f17e1f\""
+      },
+      "http_status": 200,
+      "raw_filename": "swedishpolls_polls.csv",
+      "retrieval_method": "direct_repository_http",
+      "retrieval_url": "https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv",
+      "retrieved_at": "2026-10-14T09:02:13+00:00",
+      "semantic_validation": "PASS",
+      "sha256": "4338e4d2bb2bc9642942331c7b9d3f16fb759109ce6490220ef6a7e44f72554a",
+      "source_key": "swedishpolls",
+      "source_page_url": "https://github.com/MansMeg/SwedishPolls/blob/master/Data/Polls.csv",
+      "source_url": "https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv",
+      "upstream_capture_at": null
+    },
+    "swedishpolls_sources": {
+      "bytes": 22726,
+      "final_host": "raw.githubusercontent.com",
+      "final_path": "/MansMeg/SwedishPolls/master/Sources/sources.csv",
+      "final_url": "https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Sources/sources.csv",
+      "http_headers": {
+        "content-length": "22726",
+        "content-type": "text/plain; charset=utf-8",
+        "date": "Wed, 14 Oct 2026 09:02:14 GMT",
+        "etag": "\"8d575ef90c4f8cb29636a1541c97a85df5e5aa8d777ea99715aafdbcd5f725b2\""
+      },
+      "http_status": 200,
+      "raw_filename": "swedishpolls_sources.csv",
+      "retrieval_method": "direct_repository_http",
+      "retrieval_url": "https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Sources/sources.csv",
+      "retrieved_at": "2026-10-14T09:02:14+00:00",
+      "semantic_validation": "PASS",
+      "sha256": "d454be5b65e73ae02904c7761cbf58d00ca4ab6a46739aa08baf1a08fa06daa3",
+      "source_key": "swedishpolls_sources",
+      "source_page_url": "https://github.com/MansMeg/SwedishPolls/blob/master/Sources/sources.csv",
+      "source_url": "https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Sources/sources.csv",
+      "upstream_capture_at": null
+    }
+  }
+}
