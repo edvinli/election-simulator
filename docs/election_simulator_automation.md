@@ -14,6 +14,20 @@ The fixed schedules are:
 - `0 6,8,10,12,14,16,18,20 * * *` UTC: 08:00–22:00 Europe/Stockholm,
   publish only after a semantic polling-input change.
 
+**A check with nothing to publish stops early.** Before the backend contract
+suite (about twelve minutes) the publish job asks
+`election_automation --precheck`, which runs `poll_change_work()` read-only.
+For a `POLL_CHANGE` event -- an intraday tick, or a `poll_change` dispatch
+from the Cloudflare watcher in `ops/publication-fallback-worker` -- with
+unchanged model-relevant inputs, no committed refresh awaiting publication,
+and a website that neither lags the certified generation nor awaits its
+render, it reports `work=false`, and the suite, the Jekyll/Chromium setup and
+the automation are all skipped; the summary reads
+`Backend contract tests: SKIPPED_NOTHING_TO_PUBLISH`. Every other run type
+always runs in full, and so does any event the precheck cannot read: an
+error there is `work=true`, never a skip. A real publication is unchanged --
+the suite still runs before it.
+
 The workflow also supports an explicit `workflow_dispatch` mode:
 `probe` acquires/normalizes/validates only, `dry_run` runs the complete
 simulation/publication/website gates in disposable trees, and `publish`

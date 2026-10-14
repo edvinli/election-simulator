@@ -3436,6 +3436,20 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--election-date", default=None)
     parser.add_argument("--summary-path", type=Path, default=None)
     parser.add_argument(
+        "--precheck",
+        action="store_true",
+        help=(
+            "read-only: report whether this event has anything to do "
+            "(work=true|false) and exit; any doubt reports work=true"
+        ),
+    )
+    parser.add_argument(
+        "--precheck-output",
+        type=Path,
+        default=None,
+        help="file to append the --precheck result to, e.g. $GITHUB_OUTPUT",
+    )
+    parser.add_argument(
         "--history-workers",
         type=int,
         default=DEFAULT_HISTORY_WORKERS,
@@ -3599,6 +3613,104 @@ def render_only_arguments_misused(args: argparse.Namespace) -> list[str]:
     ]
 
 
+def poll_change_work(
+    repo_root: Path | str,
+    *,
+    site_repo: Path | str,
+    event_name: str | None = None,
+    schedule: str | None = None,
+    mode: str | None = None,
+    refresh_fn: Callable[..., dict[str, Any]] = refresh_snapshot,
+) -> tuple[bool, str]:
+    """Does this event have anything to do?  ``(work, reason)``, read-only.
+
+    The publish job runs the backend contract suite before the automation,
+    which costs about twelve minutes, and most poll-change checks then find
+    the source unchanged and publish nothing.  This answers the question
+    first, so such a check can skip both.
+
+    It answers "no" for a POLL_CHANGE event alone, and only when the
+    automation would certainly do nothing: the model-relevant inputs are
+    unchanged, no committed polling refresh awaits publication, and the
+    website neither lags the certified generation nor awaits its render.
+    Every other run type -- the daily, the fallback, an operator's publish --
+    always has work, and so does any event this cannot read: an error here
+    means "run the full path", never "skip".
+
+    Nothing is installed, committed or pushed.  Acquisition runs in a
+    disposable tree, exactly as a probe's does.
+    """
+
+    run_type = classify_run_type(event_name=event_name, schedule=schedule, mode=mode)
+    if run_type != "POLL_CHANGE":
+        return True, f"RUN_TYPE_{run_type}"
+    if str(mode or "publish").strip().lower() not in MUTATING_MODES:
+        return True, "NOT_A_PUBLISHING_MODE"
+    root = Path(repo_root).resolve()
+    site = Path(site_repo).resolve()
+    try:
+        polling = refresh_polling_snapshot(
+            root, commit=False, push=False, refresh_fn=refresh_fn, install=False,
+        )
+        if polling.changed:
+            return True, "MODEL_INPUTS_CHANGED"
+        publication = root / "files/election-simulator"
+        if _has_unpublished_polling_commit(root, publication):
+            return True, "POLLING_PUBLICATION_PENDING"
+        if root != site:
+            try:
+                _certified_current_generation(publication)
+            except (AutomationError, OSError, ValueError):
+                pass
+            else:
+                needs_mirror, probe = _website_needs_recovery(source_repo=root, site_repo=site)
+                if needs_mirror:
+                    return True, "WEBSITE_RECOVERY_PENDING"
+                if probe.get("render_state") == "CERTIFIED_NOT_RENDERED":
+                    return True, "WEBSITE_RENDER_PENDING"
+        return False, polling.status
+    except Exception as error:  # noqa: BLE001 - any doubt runs the full path
+        detail = " ".join(str(error).split())[:200]
+        return True, f"PRECHECK_FAILED: {type(error).__name__}: {detail}"
+
+
+def _precheck_from_cli(args: argparse.Namespace) -> int:
+    """``--precheck``: report whether the event has work, and never fail.
+
+    Writes ``work=true|false`` and ``reason=...`` to ``--precheck-output``
+    (the step's ``$GITHUB_OUTPUT``).  When there is nothing to do it also
+    writes the run's summary, since the automation step that would otherwise
+    write it is skipped.
+    """
+
+    work, reason = poll_change_work(
+        args.repo_root,
+        site_repo=args.site_repo,
+        event_name=args.event_name,
+        schedule=args.schedule,
+        mode=args.mode,
+    )
+    line = f"work={'true' if work else 'false'}\nreason={reason}\n"
+    if args.precheck_output:
+        with Path(args.precheck_output).open("a", encoding="utf-8") as handle:
+            handle.write(line)
+    print(line, end="")
+    if not work and args.summary_path:
+        args.summary_path.parent.mkdir(parents=True, exist_ok=True)
+        with args.summary_path.open("a", encoding="utf-8") as handle:
+            handle.write(
+                "Run type: POLL_CHANGE\n"
+                f"Mode: {str(args.mode or 'publish').upper()}\n"
+                f"Polling source status: {reason}\n"
+                "Model-relevant inputs changed: no\n"
+                "Simulation samples: 0\n"
+                "Publication generation: NONE\n"
+                "Deployment status: NO_PUBLICATION_NEEDED\n"
+                "Backend contract tests: SKIPPED_NOTHING_TO_PUBLISH\n"
+            )
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -3614,6 +3726,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
     if args.mode == "render":
         return _render_from_cli(args)
+    if args.precheck:
+        return _precheck_from_cli(args)
     if args.mode in MUTATING_MODES:
         commit = True
         push = True
@@ -3678,6 +3792,7 @@ __all__ = [
     "guard_election_date",
     "latest_poll_fieldwork_start",
     "model_relevant_snapshot_sha256",
+    "poll_change_work",
     "refresh_polling_snapshot",
     "run_automation",
     "run_production_event",

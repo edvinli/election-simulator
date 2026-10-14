@@ -594,8 +594,40 @@ jobs:
           test "$(git -C website config user.name)" = "github-actions[bot]"
           test "$(git -C website config user.email)" = "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Run backend and history contract tests
+      # Most poll-change checks find nothing new, and the contract suite
+      # below costs about twelve minutes before the automation even looks.
+      # This asks first, read-only: a POLL_CHANGE event with unchanged
+      # inputs, nothing pending and an up-to-date website skips the suite and
+      # the automation alike. Every other run type, and any doubt -- an error
+      # here included -- takes the full path. The decision is
+      # poll_change_work() in scripts/election_automation_base.py.
+      - name: Check whether there is anything to publish
+        id: precheck
         if: steps.automation_gate.outputs.disabled != 'true'
+        working-directory: simulator
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_SCHEDULE: ${{ github.event.schedule }}
+          MODE: ${{ github.event_name == 'schedule' && 'publish' || github.event.inputs.mode }}
+        run: |
+          if ! uv run python -m scripts.election_automation \
+            --repo-root "$GITHUB_WORKSPACE/simulator" \
+            --site-repo "$GITHUB_WORKSPACE/website" \
+            --event-name "$EVENT_NAME" \
+            --schedule "$EVENT_SCHEDULE" \
+            --mode "$MODE" \
+            --precheck \
+            --precheck-output "$GITHUB_OUTPUT" \
+            --summary-path "$GITHUB_STEP_SUMMARY"; then
+            echo "work=true" >> "$GITHUB_OUTPUT"
+            echo "reason=PRECHECK_FAILED" >> "$GITHUB_OUTPUT"
+          fi
+          test -z "$(git status --porcelain --untracked-files=all)"
+          test -z "$(git -C "$GITHUB_WORKSPACE/website" status --porcelain --untracked-files=all)"
+
+      - name: Run backend and history contract tests
+        if: steps.automation_gate.outputs.disabled != 'true' && steps.precheck.outputs.work != 'false'
         working-directory: simulator
         run: |
           uv run python -m unittest \
@@ -611,11 +643,11 @@ jobs:
             tests.test_election_automation
 
       - name: Set up Jekyll and Chromium
-        if: steps.automation_gate.outputs.disabled != 'true'
+        if: steps.automation_gate.outputs.disabled != 'true' && steps.precheck.outputs.work != 'false'
         uses: ./simulator/.github/actions/setup-jekyll-and-chromium
 
       - name: Acquire, validate, publish, test, and sync
-        if: steps.automation_gate.outputs.disabled != 'true'
+        if: steps.automation_gate.outputs.disabled != 'true' && steps.precheck.outputs.work != 'false'
         working-directory: simulator
         shell: bash
         env:

@@ -21,7 +21,9 @@ would say nothing extra about these decisions.
 
 from __future__ import annotations
 
+import contextlib
 from datetime import date, datetime, timedelta, timezone
+import io
 import json
 import os
 from pathlib import Path
@@ -42,6 +44,8 @@ from scripts.election_automation import (
     PollingRefresh,
     automation_enabled_for_event,
     classify_run_type,
+    main as automation_main,
+    poll_change_work,
     resolve_mode,
     run_automation as _run_automation,
     should_publish,
@@ -1707,3 +1711,157 @@ class PollWatcherTests(unittest.TestCase):
     def test_without_the_kv_binding_the_watcher_is_inert(self) -> None:
         self.assertEqual(self.result["inert"], {"action": "disabled"})
         self.assertEqual(self.result["inertCalls"], 0)
+
+
+class PollChangePrecheckTests(unittest.TestCase):
+    """``poll_change_work``: skip the twelve-minute suite only when certain.
+
+    The publish job asks it before running the backend contract suite. A
+    "no" skips both the suite and the automation, so a "no" must mean the
+    automation would certainly have done nothing; everything else is "yes".
+    """
+
+    INTRADAY = dict(event_name="schedule", schedule=INTRADAY_SCHEDULE_UTC, mode="publish")
+
+    def _work(self, *, polling=None, refresh_error=None, pending=False,
+              certified=True, recovery=(False, {"render_state": "DEPLOYED"}),
+              site="other", **event):
+        event = event or self.INTRADAY
+
+        def refresh(*args, **kwargs):
+            if refresh_error is not None:
+                raise refresh_error
+            return polling or _unchanged_polling()
+
+        def certified_generation(_path):
+            if not certified:
+                raise AutomationError("no certified generation")
+            return {"generation": "20261014T090220Z-e541c78a"}
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "simulator"
+            root.mkdir()
+            site_repo = root if site == "same" else Path(tmp) / "website"
+            site_repo.mkdir(exist_ok=True)
+            with patch(
+                "scripts.election_automation.refresh_polling_snapshot", side_effect=refresh,
+            ), patch(
+                "scripts.election_automation._has_unpublished_polling_commit",
+                return_value=pending,
+            ), patch(
+                "scripts.election_automation._certified_current_generation",
+                side_effect=certified_generation,
+            ), patch(
+                "scripts.election_automation._website_needs_recovery",
+                return_value=recovery,
+            ):
+                return poll_change_work(root, site_repo=site_repo, **event)
+
+    def test_an_unchanged_poll_change_check_has_nothing_to_do(self) -> None:
+        self.assertEqual(self._work(), (False, "UNCHANGED"))
+        self.assertEqual(
+            self._work(event_name="workflow_dispatch", mode="poll_change"),
+            (False, "UNCHANGED"),
+        )
+
+    def test_every_other_run_type_always_has_work(self) -> None:
+        for event, reason in (
+            (dict(event_name="schedule", schedule=DAILY_SCHEDULE_UTC, mode="publish"), "RUN_TYPE_DAILY"),
+            (dict(event_name="workflow_dispatch", mode="publish_if_stale"), f"RUN_TYPE_{FALLBACK_RUN_TYPE}"),
+            (dict(event_name="workflow_dispatch", mode="publish"), "RUN_TYPE_MANUAL"),
+        ):
+            with self.subTest(reason=reason):
+                self.assertEqual(
+                    self._work(refresh_error=AssertionError("must not acquire"), **event),
+                    (True, reason),
+                )
+
+    def test_changed_inputs_are_work(self) -> None:
+        changed = PollingRefresh(
+            status="SOURCE_UPDATED", changed=True, old_hash="a" * 64, new_hash="b" * 64
+        )
+        self.assertEqual(self._work(polling=changed), (True, "MODEL_INPUTS_CHANGED"))
+
+    def test_a_pending_publication_is_work(self) -> None:
+        self.assertEqual(self._work(pending=True), (True, "POLLING_PUBLICATION_PENDING"))
+
+    def test_a_lagging_website_is_work(self) -> None:
+        self.assertEqual(
+            self._work(recovery=(True, {"render_state": "RENDERED_NOT_DEPLOYED"})),
+            (True, "WEBSITE_RECOVERY_PENDING"),
+        )
+        self.assertEqual(
+            self._work(recovery=(False, {"render_state": "CERTIFIED_NOT_RENDERED"})),
+            (True, "WEBSITE_RENDER_PENDING"),
+        )
+
+    def test_without_a_certified_generation_there_is_nothing_to_recover(self) -> None:
+        self.assertEqual(
+            self._work(certified=False, recovery=(True, {})), (False, "UNCHANGED")
+        )
+
+    def test_any_doubt_runs_the_full_path(self) -> None:
+        work, reason = self._work(refresh_error=AutomationError("simulator is dirty"))
+        self.assertTrue(work)
+        self.assertTrue(reason.startswith("PRECHECK_FAILED: AutomationError"), reason)
+
+    def test_the_cli_reports_and_summarises_a_skip(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / "output"
+            summary = Path(tmp) / "summary"
+            with patch(
+                "scripts.election_automation.poll_change_work",
+                return_value=(False, "SOURCE_UNCHANGED"),
+            ), contextlib.redirect_stdout(io.StringIO()):
+                code = automation_main([
+                    "--site-repo", tmp, "--event-name", "schedule",
+                    "--schedule", INTRADAY_SCHEDULE_UTC, "--mode", "publish",
+                    "--precheck", "--precheck-output", str(output),
+                    "--summary-path", str(summary),
+                ])
+            self.assertEqual(code, 0)
+            self.assertEqual(output.read_text(), "work=false\nreason=SOURCE_UNCHANGED\n")
+            self.assertIn("Deployment status: NO_PUBLICATION_NEEDED", summary.read_text())
+            self.assertIn("Backend contract tests: SKIPPED_NOTHING_TO_PUBLISH", summary.read_text())
+
+    def test_the_cli_leaves_the_summary_to_the_automation_when_there_is_work(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / "output"
+            summary = Path(tmp) / "summary"
+            with patch(
+                "scripts.election_automation.poll_change_work",
+                return_value=(True, "MODEL_INPUTS_CHANGED"),
+            ), contextlib.redirect_stdout(io.StringIO()):
+                automation_main([
+                    "--site-repo", tmp, "--mode", "publish", "--precheck",
+                    "--precheck-output", str(output), "--summary-path", str(summary),
+                ])
+            self.assertEqual(output.read_text(), "work=true\nreason=MODEL_INPUTS_CHANGED\n")
+            self.assertFalse(summary.exists())
+
+    def test_the_workflow_gates_the_suite_and_the_automation_on_it(self) -> None:
+        workflow = (
+            Path(__file__).resolve().parents[1]
+            / ".github/workflows/election-simulator-publication.yml"
+        ).read_text(encoding="utf-8")
+        publish = workflow.split("\n  publish:\n")[1]
+        precheck = publish.split("- name: Check whether there is anything to publish")[1].split("- name:")[0]
+        self.assertIn("id: precheck", precheck)
+        self.assertIn("--precheck", precheck)
+        # A failed precheck is work, never a skip.
+        self.assertIn('echo "work=true" >> "$GITHUB_OUTPUT"', precheck)
+        # And it leaves both checkouts as it found them.
+        self.assertIn("git status --porcelain", precheck)
+        self.assertLess(
+            publish.index("- name: Check whether there is anything to publish"),
+            publish.index("- name: Run backend and history contract tests"),
+        )
+        gate = "steps.precheck.outputs.work != 'false'"
+        for step in (
+            "Run backend and history contract tests",
+            "Set up Jekyll and Chromium",
+            "Acquire, validate, publish, test, and sync",
+        ):
+            with self.subTest(step=step):
+                body = publish.split(f"- name: {step}")[1].split("\n      - ")[0]
+                self.assertIn(gate, body.split("\n")[1])
