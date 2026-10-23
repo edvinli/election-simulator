@@ -2310,6 +2310,61 @@ time.sleep(60)
             self.assertEqual(self._git_status(source), "")
             self.assertEqual(self._git_status(site), "")
 
+    def test_failed_pending_render_is_a_failed_cli_outcome_without_simulation(self) -> None:
+        """A certified generation with no rendered history cannot become a green no-op."""
+
+        with tempfile.TemporaryDirectory() as tmp:
+            source, site = self._production_fixture(Path(tmp))
+            generation = json.loads(
+                (source / "files/election-simulator/current.json").read_text()
+            )["publication_generation"]
+            refresh = base.PollingRefresh(
+                status="SOURCE_UNCHANGED",
+                changed=False,
+                old_hash="same",
+                new_hash="same",
+            )
+            pending = {
+                "generation": generation,
+                "render_state": "CERTIFIED_NOT_RENDERED",
+            }
+
+            def forbidden_publication(*args, **kwargs):
+                raise AssertionError("a pending render recovery must not simulate")
+
+            output = io.StringIO()
+            with patch.object(base, "current_stockholm_date", return_value=date(2026, 10, 23)), \
+                    patch.object(base, "refresh_polling_snapshot", return_value=refresh), \
+                    patch.object(base, "latest_poll_fieldwork_start", return_value="2026-09-20"), \
+                    patch.object(base, "_has_unpublished_polling_commit", return_value=False), \
+                    patch.object(base, "_recover_website_from_source", return_value=None), \
+                    patch.object(base, "_website_needs_recovery", return_value=(False, pending)), \
+                    patch.object(
+                        base,
+                        "render_certified_generation",
+                        side_effect=RuntimeError("pending render gate failed"),
+                    ), \
+                    patch.object(base, "run_production_event", forbidden_publication), \
+                    contextlib.redirect_stdout(output):
+                exit_code = base.main([
+                    "--repo-root", str(source),
+                    "--site-repo", str(site),
+                    "--mode", "publish",
+                    "--schedule", INTRADAY_SCHEDULE_UTC,
+                    "--automation-enabled", "true",
+                ])
+
+            self.assertEqual(exit_code, 1, output.getvalue())
+            result = json.loads(output.getvalue().splitlines()[-1])
+            self.assertEqual(result["status"], "FAILED")
+            self.assertIn(f"Publication generation: {generation}", result["summary"])
+            self.assertIn("Recovery status: CERTIFIED_NOT_RENDERED", result["summary"])
+            self.assertIn("Deployment status: RENDER_FAILED", result["summary"])
+            self.assertIn("Failure: pending render gate failed", result["summary"])
+            # The generation is an already-saved certification. This run did
+            # not certify another forecast; it failed while rendering it.
+            self.assertIn("Certification: NOT_REACHED", result["summary"])
+
     def test_exact_sidecar_failure_leaves_live_repositories_untouched(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             source, site = self._production_fixture(Path(tmp))

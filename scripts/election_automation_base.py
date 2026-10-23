@@ -3251,6 +3251,14 @@ def run_automation(
                         summary.recovery_status = "CERTIFIED_NOT_RENDERED"
                         summary.deployment_status = "RENDER_FAILED"
                         summary.failure = str(error)
+                        # This is still a no-publication recovery. Return its
+                        # failed outcome now so it cannot fall through to the
+                        # healthy no-op below or start a new simulation.
+                        return AutomationResult(
+                            status="FAILED",
+                            summary=summary,
+                            polling=polling,
+                        )
                     else:
                         summary.recovery_status = (
                             "WEBSITE_RENDERED" if effective_commit
