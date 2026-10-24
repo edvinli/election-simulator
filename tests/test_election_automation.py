@@ -165,19 +165,45 @@ def _reuse_partition(existing: dict) -> tuple[set[str], set[str]]:
     return stable, revised
 
 
-def _model_code_changed_since(commit: str) -> bool:
-    """Whether any numerical model file differs between ``commit`` and the tree.
+def _fingerprinted_before_last_model_change(existing: dict) -> bool:
+    """Whether the artifact's points carry the fingerprints of the code just
+    before the most recent change to a numerical model file.
 
-    False when the commit is not available locally (a shallow clone): the
-    caller then keeps its strictest expectation rather than excusing it.
+    MODEL_FILES are part of every fingerprint, so such a change invalidates
+    every reconstructed point by design. If some recorded fingerprint matches
+    what the previous model code produces for the same inputs, the reuse
+    cache worked and the change alone explains why nothing survives now. A
+    fingerprint that matches under neither version is not explained, and the
+    caller keeps its strict expectation -- as it does when git history is
+    unavailable (a shallow clone).
     """
 
     def git(*args: str) -> subprocess.CompletedProcess:
         return subprocess.run(["git", *args], cwd=REPOSITORY_ROOT, capture_output=True)
 
-    if git("cat-file", "-e", f"{commit}^{{commit}}").returncode != 0:
+    change = git("log", "-1", "--format=%H", "--", *MODEL_FILES).stdout.decode().strip()
+    if not change or git("cat-file", "-e", f"{change}^{{commit}}").returncode != 0:
         return False
-    return git("diff", "--quiet", commit, "--", *MODEL_FILES).returncode != 0
+    with tempfile.TemporaryDirectory() as tmp:
+        for relative in MODEL_FILES:
+            blob = git("show", f"{change}^:{relative}")
+            if blob.returncode != 0:
+                return False
+            target = Path(tmp) / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(blob.stdout)
+        previous = EffectiveInputs(
+            REPOSITORY_ROOT / "data/processed",
+            source_root=Path(tmp),
+            election_date=date.fromisoformat(existing["election_date"]),
+            seed=int(existing["model"]["seed"]),
+        )
+    recorded = previous_fingerprints(existing)
+    return any(
+        recorded.get(point["date"]) == previous.fingerprint(date.fromisoformat(point["date"]))
+        for point in existing["series"]
+        if point["provenance"] == "reconstructed_current_model"
+    )
 
 
 def _forecast_utc(hour: int, minute: int = 0) -> datetime:
@@ -2602,11 +2628,11 @@ time.sleep(60)
         #
         # Except after a change to the numerical model code itself: MODEL_FILES
         # are part of every fingerprint precisely so that such a change does
-        # not reuse old draws, so then a full rebuild is the intended outcome,
-        # and the first certification under the new code performs it. Without
-        # this the gate would refuse that very certification, and no history
-        # could ever be rebuilt.
-        if not _model_code_changed_since(existing["model_commit"]):
+        # not reuse old draws, so then nothing can survive, by design. That is
+        # excused only when the recorded fingerprints are exactly what the
+        # previous model code produced; otherwise this gate would refuse every
+        # publication after any model change (it did, after a424b1c).
+        if not input_stable and not _fingerprinted_before_last_model_change(existing):
             self.assertTrue(
                 input_stable,
                 "no point survived the refresh; the resume cache reused nothing",
