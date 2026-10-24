@@ -55,7 +55,7 @@ from scripts.forecast_history.contract import (
     deterministic_history_sha256,
     validate_history_contract,
 )
-from scripts.forecast_history.effective_inputs import EffectiveInputs, previous_fingerprints
+from scripts.forecast_history.effective_inputs import MODEL_FILES, EffectiveInputs, previous_fingerprints
 from scripts.forecast_history.generate import (
     DEFAULT_SIMULATION_SEED,
     build_history,
@@ -163,6 +163,21 @@ def _reuse_partition(existing: dict) -> tuple[set[str], set[str]]:
         current = inputs.fingerprint(date.fromisoformat(day))
         (stable if recorded.get(day) == current else revised).add(day)
     return stable, revised
+
+
+def _model_code_changed_since(commit: str) -> bool:
+    """Whether any numerical model file differs between ``commit`` and the tree.
+
+    False when the commit is not available locally (a shallow clone): the
+    caller then keeps its strictest expectation rather than excusing it.
+    """
+
+    def git(*args: str) -> subprocess.CompletedProcess:
+        return subprocess.run(["git", *args], cwd=REPOSITORY_ROOT, capture_output=True)
+
+    if git("cat-file", "-e", f"{commit}^{{commit}}").returncode != 0:
+        return False
+    return git("diff", "--quiet", commit, "--", *MODEL_FILES).returncode != 0
 
 
 def _forecast_utc(hour: int, minute: int = 0) -> datetime:
@@ -2584,10 +2599,18 @@ time.sleep(60)
         # invalidated everything would satisfy the assertions above while
         # making reconstruction a full rebuild -- the failure mode the resume
         # cache exists to prevent -- so the reused majority is asserted too.
-        self.assertTrue(
-            input_stable,
-            "no point survived the refresh; the resume cache reused nothing",
-        )
+        #
+        # Except after a change to the numerical model code itself: MODEL_FILES
+        # are part of every fingerprint precisely so that such a change does
+        # not reuse old draws, so then a full rebuild is the intended outcome,
+        # and the first certification under the new code performs it. Without
+        # this the gate would refuse that very certification, and no history
+        # could ever be rebuilt.
+        if not _model_code_changed_since(existing["model_commit"]):
+            self.assertTrue(
+                input_stable,
+                "no point survived the refresh; the resume cache reused nothing",
+            )
         for point_date in input_stable:
             self.assertEqual(after.get(point_date), before[point_date], point_date)
 
