@@ -24,23 +24,37 @@
 // mirroring how the browser distinguishes a missing pointer (404, a valid
 // legacy publication) from any other failure (a hard error).
 
-const PUBLICATION_FILES = [
+const BASE_PUBLICATION_CONTRACTS = [
   "forecast.json",
   "parties.json",
   "seats.json",
   "groups.json",
   "calibration.json",
   "metadata.json",
-  "manifest.json",
 ];
-const PUBLICATION_CONTRACTS = PUBLICATION_FILES.slice(0, 6);
+const PUBLICATION_FILES = BASE_PUBLICATION_CONTRACTS.concat(["geography.json", "manifest.json"]);
+const PUBLICATION_CONTRACTS = BASE_PUBLICATION_CONTRACTS.concat(["geography.json"]);
 const POINTER_PATH_PATTERN = /^versions\/[A-Za-z0-9_-]+$/;
-// 1.4 is 1.3 plus metadata only (election_noise_law / election_noise_candidate);
-// groups.json keeps the 1.3 coalition contract, histograms included.
-const SUPPORTED_SCHEMA_VERSIONS = new Set(["1.0", "1.1", "1.2", "1.3", "1.4"]);
-const HISTOGRAM_SCHEMA_VERSIONS = new Set(["1.3", "1.4"]);
-const COALITION_BUILDER_SCHEMA_VERSIONS = new Set(["1.2", "1.3", "1.4"]);
+// 1.4 adds the ElectionNoise identity; 1.5 adds exact-draw geography summaries.
+const SUPPORTED_SCHEMA_VERSIONS = new Set(["1.0", "1.1", "1.2", "1.3", "1.4", "1.5"]);
+const HISTOGRAM_SCHEMA_VERSIONS = new Set(["1.3", "1.4", "1.5"]);
+const COALITION_BUILDER_SCHEMA_VERSIONS = new Set(["1.2", "1.3", "1.4", "1.5"]);
 const COALITION_PARTY_ORDER = ["M", "L", "C", "KD", "S", "V", "MP", "SD"];
+const GEOGRAPHY_PARTY_ORDER = COALITION_PARTY_ORDER.concat(["REST"]);
+const GEOGRAPHY_QUANTILE_FIELDS = ["p05", "p25", "p50", "p75", "p95"];
+const GEOGRAPHY_CONSTITUENCIES = [
+  ["01", "Stockholms kommun"], ["02", "Stockholms län"], ["03", "Uppsala län"],
+  ["04", "Södermanlands län"], ["05", "Östergötlands län"], ["06", "Jönköpings län"],
+  ["07", "Kronobergs län"], ["08", "Kalmar län"], ["09", "Gotlands län"],
+  ["10", "Blekinge län"], ["11", "Malmö kommun"], ["12", "Skåne läns västra"],
+  ["13", "Skåne läns södra"], ["14", "Skåne läns norra och östra"], ["15", "Hallands län"],
+  ["16", "Göteborgs kommun"], ["17", "Västra Götalands läns västra"],
+  ["18", "Västra Götalands läns norra"], ["19", "Västra Götalands läns södra"],
+  ["20", "Västra Götalands läns östra"], ["21", "Värmlands län"], ["22", "Örebro län"],
+  ["23", "Västmanlands län"], ["24", "Dalarnas län"], ["25", "Gävleborgs län"],
+  ["26", "Västernorrlands län"], ["27", "Jämtlands län"], ["28", "Västerbottens län"],
+  ["29", "Norrbottens län"],
+];
 const COALITION_SUMMARY_FIELDS = [
   "mask",
   "parties",
@@ -101,12 +115,16 @@ async function getJson(fetchText, root, name) {
 
 async function loadContracts(fetchText, root, pointer) {
   const files = [];
-  for (const name of PUBLICATION_CONTRACTS) {
+  for (const name of BASE_PUBLICATION_CONTRACTS) {
     files.push(await getJson(fetchText, root, name));
   }
+  const schemaVersion = pointer ? pointer.schema_version : files[5] && files[5].schema_version;
+  const geographyRequired = schemaVersion === "1.5";
   if (!pointer) {
     const manifest = await getJson(fetchText, root, "manifest.json");
-    return { files: files.concat([manifest]), manifest_sha256: null };
+    const withManifest = files.concat([manifest]);
+    if (geographyRequired) withManifest.push(await getJson(fetchText, root, "geography.json"));
+    return { files: withManifest, manifest_sha256: null };
   }
   // Hash the exact manifest bytes addressed by current.json.  Parsing and
   // re-serializing JSON would hide whitespace/content tampering.
@@ -118,7 +136,9 @@ async function loadContracts(fetchText, root, pointer) {
     throw new Error("Publication manifest is not valid JSON");
   }
   const manifestHash = await sha256Hex(manifestText);
-  return { files: files.concat([manifest]), manifest_sha256: manifestHash };
+  const withManifest = files.concat([manifest]);
+  if (geographyRequired) withManifest.push(await getJson(fetchText, root, "geography.json"));
+  return { files: withManifest, manifest_sha256: manifestHash };
 }
 
 function isValidPointer(pointer) {
@@ -342,6 +362,70 @@ function validateCoalitionPublication(forecast, groups) {
   }
 }
 
+function hasExactKeys(value, fields) {
+  if (!isObject(value)) return false;
+  const keys = Object.keys(value);
+  return keys.length === fields.length && fields.every((field, index) => keys[index] === field);
+}
+
+function validateGeographyPublication(forecast, metadata, geography, payloadHash) {
+  if (!isObject(geography) || !payloadHash || geography.deterministic_payload_sha256 !== payloadHash) {
+    throw new Error("Publication files do not all link the deterministic simulation payload");
+  }
+  if (!hasExactKeys(geography, ["schema_version", "party_order", "sample_count", "baseline_year",
+    "constituencies", "deterministic_payload_sha256"]) || geography.schema_version !== "1.5") {
+    throw new Error("geography.json has invalid schema or fields");
+  }
+  if (!Array.isArray(geography.party_order) ||
+      geography.party_order.length !== GEOGRAPHY_PARTY_ORDER.length ||
+      !geography.party_order.every((party, index) => party === GEOGRAPHY_PARTY_ORDER[index])) {
+    throw new Error("geography.json has incorrect canonical party order");
+  }
+  if (!forecast || geography.sample_count !== forecast.total_samples ||
+      !metadata || geography.baseline_year !== metadata.geography_baseline_year ||
+      !isInteger(geography.baseline_year) || geography.baseline_year < 1900 ||
+      !Array.isArray(geography.constituencies) || geography.constituencies.length !== 29) {
+    throw new Error("geography.json metadata is inconsistent");
+  }
+  geography.constituencies.forEach((constituency, index) => {
+    const [code, name] = GEOGRAPHY_CONSTITUENCIES[index];
+    if (!hasExactKeys(constituency, ["code", "name", "baseline_actual_vote_share", "parties"]) ||
+        constituency.code !== code || constituency.name !== name ||
+        !hasExactKeys(constituency.baseline_actual_vote_share, GEOGRAPHY_PARTY_ORDER) ||
+        !hasExactKeys(constituency.parties, GEOGRAPHY_PARTY_ORDER)) {
+      throw new Error("geography constituency " + code + " has invalid fields");
+    }
+    GEOGRAPHY_PARTY_ORDER.forEach((party) => {
+      const baseline = constituency.baseline_actual_vote_share[party];
+      if (!isFiniteNumber(baseline) || baseline < 0 || baseline > 100) {
+        throw new Error("geography constituency " + code + " has invalid baseline vote shares");
+      }
+    });
+    let largestTotal = 0;
+    GEOGRAPHY_PARTY_ORDER.forEach((party) => {
+      const entry = constituency.parties[party];
+      if (!hasExactKeys(entry, ["vote_share_quantiles", "prob_largest"]) ||
+          !hasExactKeys(entry.vote_share_quantiles, GEOGRAPHY_QUANTILE_FIELDS)) {
+        throw new Error("geography constituency " + code + " party " + party + " has invalid fields");
+      }
+      const quantiles = GEOGRAPHY_QUANTILE_FIELDS.map((field) => entry.vote_share_quantiles[field]);
+      if (!quantiles.every((value) => isFiniteNumber(value) && value >= 0 && value <= 100) ||
+          !quantiles.every((value, quantileIndex) => quantileIndex === 0 || value >= quantiles[quantileIndex - 1])) {
+        throw new Error("geography constituency " + code + " party " + party + " has invalid quantiles");
+      }
+      const probability = entry.prob_largest;
+      if (!isFiniteNumber(probability) || probability < 0 || probability > 1 ||
+          (party === "REST" && probability !== 0)) {
+        throw new Error("geography constituency " + code + " party " + party + " has invalid probability");
+      }
+      largestTotal += probability;
+    });
+    if (Math.abs(largestTotal - 1) > 1e-12) {
+      throw new Error("geography constituency " + code + " largest-party probabilities must sum to one");
+    }
+  });
+}
+
 function validatePublicationBundle(data, pointer, manifestHash) {
   const manifest = data[6] || {};
   if (manifest.publication_state && manifest.publication_state !== "COMPLETE") {
@@ -354,6 +438,9 @@ function validatePublicationBundle(data, pointer, manifestHash) {
     throw new Error("Certified publication has dirty or incomplete source provenance");
   }
   const expected = manifest.deterministic_payload_sha256;
+  const geographyRequired = manifest.schema_version === "1.5";
+  // The six contracts every schema shares; geography.json's identity is
+  // checked with the rest of it below, as the website does.
   const identities = data
     .slice(0, 6)
     .map((value) => value && value.deterministic_payload_sha256)
@@ -368,6 +455,7 @@ function validatePublicationBundle(data, pointer, manifestHash) {
     throw new Error("Publication pointer and manifest do not agree");
   }
   validateCoalitionPublication(data[0], data[3]);
+  if (geographyRequired) validateGeographyPublication(data[0], data[5], data[7], expected);
 }
 
 function requireRepresentativeAllocation(seats, order) {

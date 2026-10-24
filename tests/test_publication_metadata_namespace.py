@@ -72,8 +72,8 @@ class Namespaces(unittest.TestCase):
 
 class SchemaVersions(unittest.TestCase):
     def test_publication_schema_bumped_additively(self):
-        self.assertEqual(PUBLICATION_SCHEMA_VERSION, "1.4")
-        for old in ("1.0", "1.1", "1.2", "1.3"):
+        self.assertEqual(PUBLICATION_SCHEMA_VERSION, "1.5")
+        for old in ("1.0", "1.1", "1.2", "1.3", "1.4"):
             self.assertIn(old, SUPPORTED_PUBLICATION_SCHEMA_VERSIONS,
                           "historical publications must stay valid")
 

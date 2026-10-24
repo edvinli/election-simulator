@@ -13,6 +13,13 @@
       "retrieved_at_utc": "2026-08-26T16:42:00.194433+00:00",
       "byte_count": 12008,
       "sha256": "48b038f9734fdeb179b6d6e4d2431320b63d16c42aa5383f03c308c7dacbdc90"
+    },
+    {
+      "filename": "swedish_municipalities_okfse.geojson",
+      "source_url": "https://raw.githubusercontent.com/okfse/sweden-geojson/ff67bcb030d7d09032ae5f443d27130f05fdf1e0/swedish_municipalities.geojson",
+      "retrieved_at_utc": "2026-10-24T08:05:00+00:00",
+      "byte_count": 818064,
+      "sha256": "2ec4ad1facf704435e177c32f304cb0b207c42ce1b173e16b33241a18825e2a9"
     }
   ]
 }

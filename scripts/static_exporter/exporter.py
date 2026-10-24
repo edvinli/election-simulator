@@ -21,6 +21,7 @@ import uuid
 
 import numpy as np
 
+from scripts.geography.config import CODE_TO_CONSTITUENCY_NAME, OFFICIAL_CONSTITUENCY_CODES
 from scripts.simulator.config import (
     BENCHMARK_LINEAGE_CANDIDATE,
     DEFAULT_MAJORITY_THRESHOLD,
@@ -44,11 +45,13 @@ from scripts.simulator.reproducibility import (
 # 1.0 is the pre-extraction publication schema.  1.1 adds ``source_repository``
 # to metadata and manifests.  1.2 adds the precomputed coalition-builder
 # summaries to groups.json.  1.3 adds exact contiguous integer seat
-# histograms for those coalitions.  Validators accept every historical version
-# so existing immutable publications stay readable and are never rewritten;
-# only 1.3 is written by this exporter.
-PUBLICATION_SCHEMA_VERSION = "1.4"
-SUPPORTED_PUBLICATION_SCHEMA_VERSIONS: tuple[str, ...] = ("1.0", "1.1", "1.2", "1.3", "1.4")
+# histograms for those coalitions. 1.4 adds the explicit ElectionNoise identity.
+# 1.5 adds geography.json. Validators accept every historical version so existing
+# immutable publications stay readable and are never rewritten; only 1.5 is written.
+PUBLICATION_SCHEMA_VERSION = "1.5"
+SUPPORTED_PUBLICATION_SCHEMA_VERSIONS: tuple[str, ...] = (
+    "1.0", "1.1", "1.2", "1.3", "1.4", "1.5",
+)
 
 #: Schema 1.4 adds ``election_noise_law`` and ``election_noise_candidate`` to
 #: ``metadata.json`` and ``forecast.json``, following the additive-field convention
@@ -69,6 +72,13 @@ PUBLICATION_FILES: tuple[str, ...] = (
     "calibration.json",
     "metadata.json",
 )
+CURRENT_PUBLICATION_FILES: tuple[str, ...] = (*PUBLICATION_FILES, "geography.json")
+GEOGRAPHY_QUANTILE_FIELDS: tuple[str, ...] = ("p05", "p25", "p50", "p75", "p95")
+
+
+def _publication_files_for_schema(schema_version: Any) -> tuple[str, ...]:
+    return CURRENT_PUBLICATION_FILES if schema_version == "1.5" else PUBLICATION_FILES
+
 
 # The publication is a public artifact, so it must never carry the local
 # filesystem layout of whichever machine generated it.  Calibration sources are
@@ -645,6 +655,14 @@ def _build_contracts(
     for row in groups.values():
         row["parties"] = list(row["parties"])
     coalition_builder = _build_coalition_builder(result)
+    geography_summary = result.geography_summary
+    if not isinstance(geography_summary, Mapping):
+        raise ValueError("Schema 1.5 publication requires exact geography summaries")
+    geography_contract = {
+        "schema_version": PUBLICATION_SCHEMA_VERSION,
+        **geography_summary,
+        "deterministic_payload_sha256": deterministic_payload_sha256,
+    }
 
     calibration: dict[str, Any] = {
         "schema_version": PUBLICATION_SCHEMA_VERSION,
@@ -771,6 +789,7 @@ def _build_contracts(
             "ElectionNoise v2 competition; B is the adopted challenger, CONTROL the "
             "superseded empirical bootstrap. Unrelated to model.candidate."
         ),
+        "geography_baseline_year": (manifest.get("model_config") or {}).get("geography_baseline_year"),
         "source_repository": SOURCE_REPOSITORY,
         "source_git_commit": manifest.get("source_git_commit", manifest.get("git_commit")),
         "source_worktree_clean": manifest.get("source_worktree_clean"),
@@ -791,13 +810,92 @@ def _build_contracts(
         "groups.json": group_contract,
         "calibration.json": calibration,
         "metadata.json": metadata,
+        "geography.json": geography_contract,
     }
+
+
+def _validate_geography_contract(
+    geography: Mapping[str, Any],
+    *,
+    expected_samples: Any,
+    expected_baseline_year: Any,
+) -> None:
+    expected_fields = [
+        "schema_version",
+        "party_order",
+        "sample_count",
+        "baseline_year",
+        "constituencies",
+        "deterministic_payload_sha256",
+    ]
+    if list(geography) != expected_fields:
+        raise ValueError("geography.json has unexpected or unordered fields")
+    if geography.get("party_order") != list(MODEL_PARTIES_9):
+        raise ValueError("geography.json has incorrect canonical party order")
+    if geography.get("sample_count") != expected_samples:
+        raise ValueError("geography.json sample_count disagrees with forecast.json")
+    if geography.get("baseline_year") != expected_baseline_year:
+        raise ValueError("geography.json baseline_year disagrees with the simulation manifest")
+    if (
+        not isinstance(expected_baseline_year, int)
+        or isinstance(expected_baseline_year, bool)
+        or expected_baseline_year < 1900
+    ):
+        raise ValueError("geography.json baseline_year is invalid")
+    constituencies = geography.get("constituencies")
+    if not isinstance(constituencies, list) or len(constituencies) != len(OFFICIAL_CONSTITUENCY_CODES):
+        raise ValueError("geography.json must contain exactly 29 constituencies")
+
+    for index, code in enumerate(OFFICIAL_CONSTITUENCY_CODES):
+        constituency = constituencies[index]
+        if not isinstance(constituency, Mapping) or list(constituency) != [
+            "code", "name", "baseline_actual_vote_share", "parties",
+        ]:
+            raise ValueError(f"geography constituency {code} has unexpected or unordered fields")
+        if constituency.get("code") != code or constituency.get("name") != CODE_TO_CONSTITUENCY_NAME[code]:
+            raise ValueError(f"geography constituency {code} has inconsistent code or name")
+        baseline = constituency.get("baseline_actual_vote_share")
+        parties = constituency.get("parties")
+        if not isinstance(baseline, Mapping) or list(baseline) != list(MODEL_PARTIES_9):
+            raise ValueError(f"geography constituency {code} has invalid baseline parties")
+        if not isinstance(parties, Mapping) or list(parties) != list(MODEL_PARTIES_9):
+            raise ValueError(f"geography constituency {code} has invalid forecast parties")
+        if any(
+            not _is_finite_number(baseline[party]) or not 0 <= float(baseline[party]) <= 100
+            for party in MODEL_PARTIES_9
+        ):
+            raise ValueError(f"geography constituency {code} has invalid baseline vote shares")
+
+        largest_total = 0.0
+        for party in MODEL_PARTIES_9:
+            entry = parties[party]
+            if not isinstance(entry, Mapping) or list(entry) != ["vote_share_quantiles", "prob_largest"]:
+                raise ValueError(f"geography constituency {code} party {party} has invalid fields")
+            quantiles = entry.get("vote_share_quantiles")
+            if not isinstance(quantiles, Mapping) or list(quantiles) != list(GEOGRAPHY_QUANTILE_FIELDS):
+                raise ValueError(f"geography constituency {code} party {party} has invalid quantiles")
+            values = [quantiles[field] for field in GEOGRAPHY_QUANTILE_FIELDS]
+            if any(not _is_finite_number(value) or not 0 <= float(value) <= 100 for value in values):
+                raise ValueError(f"geography constituency {code} party {party} has out-of-range quantiles")
+            if values != sorted(values):
+                raise ValueError(f"geography constituency {code} party {party} quantiles are not monotone")
+            probability = entry.get("prob_largest")
+            if not _is_finite_number(probability) or not 0 <= float(probability) <= 1:
+                raise ValueError(f"geography constituency {code} party {party} has invalid probability")
+            if party == "REST" and probability != 0:
+                raise ValueError("REST cannot be largest parliamentary party")
+            largest_total += float(probability)
+        if not np.isclose(largest_total, 1.0, rtol=0.0, atol=1e-12):
+            raise ValueError(f"geography constituency {code} largest-party probabilities must sum to one")
 
 
 def validate_publication_contract(contracts: Mapping[str, Mapping[str, Any]]) -> None:
     """Validate all compact publication contracts before any directory swap."""
-    if set(contracts) != set(PUBLICATION_FILES):
-        raise ValueError(f"Publication files must be exactly {list(PUBLICATION_FILES)}")
+    metadata = contracts.get("metadata.json")
+    schema_version = metadata.get("schema_version") if isinstance(metadata, Mapping) else None
+    expected_files = _publication_files_for_schema(schema_version)
+    if set(contracts) != set(expected_files):
+        raise ValueError(f"Publication files must be exactly {list(expected_files)}")
     for name, value in contracts.items():
         if value.get("schema_version") not in SUPPORTED_PUBLICATION_SCHEMA_VERSIONS:
             raise ValueError(f"{name} has unsupported schema version")
@@ -850,9 +948,8 @@ def validate_publication_contract(contracts: Mapping[str, Mapping[str, Any]]) ->
         if not isinstance(coalition_builder, Mapping):
             raise ValueError("Schema 1.2 groups.json must include coalition_builder")
         _validate_coalition_builder(coalition_builder)
-    elif groups.get("schema_version") in ("1.3", "1.4"):
-        # 1.4 is additive over 1.3 on metadata only; groups.json keeps the 1.3
-        # coalition-builder contract, including the exact seat histograms.
+    elif groups.get("schema_version") in ("1.3", "1.4", "1.5"):
+        # Later schemas are additive over the exact coalition histograms.
         version = groups.get("schema_version")
         coalition_builder = groups.get("coalition_builder")
         if not isinstance(coalition_builder, Mapping):
@@ -870,9 +967,18 @@ def validate_publication_contract(contracts: Mapping[str, Mapping[str, Any]]) ->
             require_histogram=True,
         )
     elif "coalition_builder" in groups:
-        raise ValueError("coalition_builder is only valid in schema 1.2, 1.3 or 1.4 groups.json")
+        raise ValueError("coalition_builder is only valid in schema 1.2 through 1.5 groups.json")
     metadata = contracts["metadata.json"]
-    if not metadata.get("deterministic_payload_sha256"):
+    if metadata.get("schema_version") == "1.5":
+        geography = contracts["geography.json"]
+        if geography.get("schema_version") != "1.5":
+            raise ValueError("geography.json must use schema 1.5")
+        _validate_geography_contract(
+            geography,
+            expected_samples=forecast.get("total_samples"),
+            expected_baseline_year=metadata.get("geography_baseline_year"),
+        )
+    if not metadata.get("deterministic_payload_sha256"): 
         raise ValueError("metadata.json must link the deterministic simulation payload")
     # An unresolvable Git commit and a dirty worktree are both hard
     # certification failures; neither may reach a published artifact.
@@ -907,8 +1013,16 @@ def _validate_publication_version(
 ) -> dict[str, Any]:
     """Validate one immutable version directory and its manifest hashes."""
 
+    metadata_path = root / "metadata.json"
+    if metadata_path.is_symlink() or not metadata_path.is_file():
+        raise ValueError(f"Published metadata must be a real file: {metadata_path}")
+    with metadata_path.open(encoding="utf-8") as handle:
+        published_metadata = json.load(handle)
+    if not isinstance(published_metadata, dict):
+        raise ValueError(f"Published contract is not a JSON object: {metadata_path}")
+    publication_files = _publication_files_for_schema(published_metadata.get("schema_version"))
     contracts: dict[str, dict[str, Any]] = {}
-    for filename in PUBLICATION_FILES:
+    for filename in publication_files:
         path = root / filename
         # Every published version file must be a real file.  A symlink would
         # not survive static hosting and would break the immutability promise.
@@ -954,13 +1068,13 @@ def _validate_publication_version(
     if manifest.get("source_worktree_clean") is not True:
         raise ValueError("Published manifest is not certified from a clean source worktree")
     expected_file_hashes = {
-        filename: compute_file_sha256(root / filename) for filename in PUBLICATION_FILES
+        filename: compute_file_sha256(root / filename) for filename in publication_files
     }
     if manifest.get("publication_files") != expected_file_hashes:
         raise ValueError("Published file hashes do not match manifest")
     expected_deterministic_hashes = {
         filename: _sha256_bytes(_canonical_bytes(_strip_runtime_timestamps(contracts[filename])))
-        for filename in PUBLICATION_FILES
+        for filename in publication_files
     }
     if manifest.get("deterministic_content_hashes") != expected_deterministic_hashes:
         raise ValueError("Published deterministic content hashes do not match manifest")
@@ -1152,15 +1266,15 @@ def export_static_data(
     output.parent.mkdir(parents=True, exist_ok=True)
     staging: Path | None = Path(tempfile.mkdtemp(prefix=f".{output.name}.staging-", dir=output.parent))
     try:
-        for filename in PUBLICATION_FILES:
+        for filename in CURRENT_PUBLICATION_FILES:
             _write_json(staging / filename, contracts[filename])
         file_hashes = {
             filename: compute_file_sha256(staging / filename)
-            for filename in PUBLICATION_FILES
+            for filename in CURRENT_PUBLICATION_FILES
         }
         deterministic_file_hashes = {
             filename: _sha256_bytes(_canonical_bytes(_strip_runtime_timestamps(contracts[filename])))
-            for filename in PUBLICATION_FILES
+            for filename in CURRENT_PUBLICATION_FILES
         }
         deterministic_manifest_hash = _sha256_bytes(_canonical_bytes(deterministic_file_hashes))
         if generation_id is None:

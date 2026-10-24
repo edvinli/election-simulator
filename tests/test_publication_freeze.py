@@ -59,8 +59,16 @@ SWEDISHPOLLS_MIGRATION_CHANGED = {
     # The current model version moves to 1.2.0-rc1; the frozen records keep 1.1.0-rc1.
     "tests/test_production_default_is_b.py",
 }
+# Publication schema 1.5 adds geography.json, summarized from the same local
+# draws the seat allocation already used; engine.py and exporter.py are named
+# above, and the exporter tests gain the new artifact. Every number in the
+# schema-1.4 contracts is unchanged (docs/static_publication.md).
+GEOGRAPHY_PUBLICATION_CHANGED = {
+    "tests/test_static_exporter.py",
+}
 KNOWN_POST_FREEZE_CHANGES = (
     PARTY_CHART_MERGE_CHANGED | AUTOMATION_CHANGED | CYCLE_2030_CHANGED | SWEDISHPOLLS_MIGRATION_CHANGED
+    | GEOGRAPHY_PUBLICATION_CHANGED
 )
 
 def _commit_available(sha: str) -> bool:

@@ -5,12 +5,12 @@
 
 ```text
 current.json
-versions/<generation>/{forecast,parties,seats,groups,calibration,metadata,manifest}.json
+versions/<generation>/{forecast,parties,seats,groups,calibration,metadata,geography,manifest}.json
 ```
 
 That is the entire canonical contract. The pointer plus one immutable version
-directory; nothing else is written. The seven files in a version directory are
-always **real files, never symlinks**, so they survive static hosting and can be
+directory; nothing else is written. The eight files in a current version directory
+are always **real files, never symlinks**, so they survive static hosting and can be
 committed to a Jekyll site unchanged.
 
 `<generation>` is the sortable canonical generation id
@@ -148,14 +148,24 @@ subsets of the canonical parliamentary party order and no raw draws. Publication
 schema `1.3` extends each coalition with an exact contiguous integer
 `seat_histogram` (`min_seats` plus counts for each seat value through the
 observed maximum). Publication schema `1.4` adds `election_noise_law` and
-`election_noise_candidate` to `metadata.json` and `forecast.json`. Archive schema
+`election_noise_candidate` to `metadata.json` and `forecast.json`. Publication
+schema `1.5` adds `geography.json`: all 29 constituencies with canonical codes
+and names, baseline actual vote shares, and per-party vote-share quantiles and
+largest-party probabilities computed from the same authoritative post-rounding
+local draws used for seat allocation. It contains summaries only, never raw local
+draw matrices or distributions reconstructed from national marginals. The
+website draws it over constituency outlines that are not part of the
+publication: `scripts/geography/boundaries.py` builds
+`data/processed/geography/constituency_boundaries.json` from pinned municipality
+polygons and the municipality lists in Vallagen (2005:837) 4 kap. 2 §, and the
+website carries a byte-identical copy at
+`files/election-simulator/geography/constituency-boundaries.json`. Archive schema
 `1.1` adds `generation_id` to snapshots and index entries and moves snapshots to
 `<generation_id>/snapshot.json`; archive schema `1.2` adds the same two
 ElectionNoise fields to the snapshot `model` block.
 
-Only `1.4` is written by the current exporter. Validators accept `1.0`, `1.1`,
-`1.2`, `1.3`, and `1.4` so every historical publication stays readable and valid
-without modification.
+Only `1.5` is written by the current exporter. Validators accept `1.0` through
+`1.5` so every historical publication stays readable and valid without modification.
 
 ### Two candidate namespaces — do not conflate them
 
@@ -225,8 +235,8 @@ uv run python -m scripts.site_publisher --site-repo ../edvinli.github.io
 ```
 
 It requires `--site-repo`, validates the certified source generation, refuses to
-overwrite an existing destination generation, copies exactly seven real files,
-validates the destination independently, and only then writes the website's
+overwrite an existing destination generation, copies the manifest-listed real files
+(eight for current generations), validates the destination independently, and only then writes the website's
 `current.json`. Review and commit the resulting working-tree change yourself,
 committing the version directory before the pointer.
 

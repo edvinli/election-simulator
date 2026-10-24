@@ -130,6 +130,18 @@ class ReferencePublicationContractTests(unittest.TestCase):
                 self.assertFalse(verdict["accepted"], verdict)
                 self.assertIn("coalition", verdict["error"])
 
+    def test_reference_validator_rejects_invalid_geography_probabilities(self) -> None:
+        def mutate(root: Path, version: Path) -> None:
+            path = version / "geography.json"
+            geography = json.loads(path.read_text(encoding="utf-8"))
+            geography["constituencies"][0]["parties"]["M"]["prob_largest"] = 0.5
+            path.write_text(json.dumps(geography, indent=2) + "\n", encoding="utf-8")
+            self._repair_manifest(version)
+
+        verdict = run_reference_validator(self._mutated_copy(mutate))
+        self.assertFalse(verdict["accepted"], verdict)
+        self.assertIn("geography", verdict["error"])
+
     def test_reference_validator_keeps_schema_1_2_builder_compatible_without_histograms(self) -> None:
         def mutate(root: Path, version: Path) -> None:
             for name in ("forecast.json", "parties.json", "seats.json", "groups.json", "calibration.json", "metadata.json"):
@@ -154,7 +166,7 @@ class ReferencePublicationContractTests(unittest.TestCase):
         self.assertTrue(verdict["accepted"], verdict)
         self.assertEqual(verdict["schema_version"], "1.2")
 
-    def test_published_version_contains_seven_real_files_and_no_symlinks(self) -> None:
+    def test_published_version_contains_eight_real_files_and_no_symlinks(self) -> None:
         self.assertEqual(
             {path.name for path in self.version.iterdir()},
             {
@@ -164,6 +176,7 @@ class ReferencePublicationContractTests(unittest.TestCase):
                 "groups.json",
                 "calibration.json",
                 "metadata.json",
+                "geography.json",
                 "manifest.json",
             },
         )
@@ -238,6 +251,7 @@ class ReferencePublicationContractTests(unittest.TestCase):
                 "groups.json",
                 "calibration.json",
                 "metadata.json",
+                "geography.json",
                 "manifest.json",
             ):
                 shutil.copyfile(version / name, root / name)
@@ -285,8 +299,8 @@ class ReferencePublicationContractTests(unittest.TestCase):
         self.assertFalse(verdict["accepted"])
         self.assertIn("representative joint allocation", verdict["error"])
 
-    def test_all_six_contracts_must_share_the_deterministic_payload_hash(self) -> None:
-        for name in ("forecast.json", "parties.json", "seats.json", "groups.json", "calibration.json", "metadata.json"):
+    def test_all_seven_contracts_must_share_the_deterministic_payload_hash(self) -> None:
+        for name in ("forecast.json", "parties.json", "seats.json", "groups.json", "calibration.json", "metadata.json", "geography.json"):
             with self.subTest(contract=name):
 
                 def mutate(root: Path, version: Path, name=name) -> None:

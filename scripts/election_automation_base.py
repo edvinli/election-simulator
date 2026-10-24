@@ -71,9 +71,9 @@ from scripts.publication_pipeline.pipeline import (
 )
 from scripts.prospective_archive.archive import _validate_index
 from scripts.site_publisher.publisher import (
-    GENERATION_FILES,
     SITE_HISTORY_RELATIVE,
     SITE_PUBLICATION_RELATIVE,
+    generation_files,
     publish_generation_to_site,
     sync_history_to_site,
 )
@@ -945,11 +945,14 @@ def _stage_copy_generation(
     source_version = staged_publication / "versions" / generation
     destination_version = destination_publication / "versions" / generation
     validate_publication_version(source_version, expected_generation=generation)
+    files = generation_files(source_version)
     if os.path.lexists(destination_version):
         if not destination_version.is_dir():
             raise AutomationError(f"Existing publication generation is not a directory: {destination_version}")
         validate_publication_version(destination_version, expected_generation=generation)
-        for filename in GENERATION_FILES:
+        if generation_files(destination_version) != files:
+            raise AutomationError(f"Existing publication generation differs: {destination_version}")
+        for filename in files:
             if (destination_version / filename).read_bytes() != (source_version / filename).read_bytes():
                 raise AutomationError(f"Existing publication generation differs: {destination_version}")
         if (destination_version / "manifest.json").read_bytes() != (source_version / "manifest.json").read_bytes():
@@ -960,7 +963,7 @@ def _stage_copy_generation(
     temporary = Path(tempfile.mkdtemp(prefix=f".{generation}.staging-", dir=versions))
     installed = False
     try:
-        for filename in GENERATION_FILES:
+        for filename in files:
             _copy_file_atomic(source_version / filename, temporary / filename)
         os.replace(temporary, destination_version)
         installed = True
@@ -1458,8 +1461,10 @@ def _verify_website_artifacts(
 ) -> None:
     source_version = source_publication / "versions" / generation
     site_version = site_root / SITE_PUBLICATION_RELATIVE / "versions" / generation
-    for filename in GENERATION_FILES:
-        if (source_version / filename).read_bytes() != (site_version / filename).read_bytes():
+    for filename in generation_files(source_version):
+        if not (site_version / filename).is_file() or (
+            (source_version / filename).read_bytes() != (site_version / filename).read_bytes()
+        ):
             raise AutomationError(f"Simulator and website publication differ: {filename}")
     if source_history.read_bytes() != (site_root / SITE_HISTORY_RELATIVE).read_bytes():
         raise AutomationError("Simulator and website history artifacts differ")
@@ -1610,7 +1615,7 @@ def _website_needs_recovery(*, source_repo: Path, site_repo: Path) -> tuple[bool
     if not site_version.is_dir():
         needs_recovery = True
     else:
-        for filename in GENERATION_FILES:
+        for filename in generation_files(source_version):
             if not (site_version / filename).is_file() or (
                 site_version / filename
             ).read_bytes() != (source_version / filename).read_bytes():

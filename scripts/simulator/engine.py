@@ -5,11 +5,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
+import tempfile
 from typing import Any, Sequence
 import numpy as np
 import pandas as pd
 
 from scripts.geography.config import (
+    CODE_TO_CONSTITUENCY_NAME,
     DEFAULT_PROCESSED_GEOGRAPHY_DIR,
     OFFICIAL_CONSTITUENCY_CODES,
 )
@@ -50,6 +52,7 @@ class SimulationResult:
     group_helper: GroupSummaryHelper
     manifest: dict[str, Any]
     quantization_audit: dict[str, Any] | None = None
+    geography_summary: dict[str, Any] | None = None
 
     def summarize_group(
         self,
@@ -74,6 +77,69 @@ class SimulationResult:
             row["largest_seat_party"] = self.largest_seat_parties[i]
             records.append(row)
         return pd.DataFrame(records)
+
+
+def _summarize_geography_draws(
+    vote_shares: np.ndarray,
+    *,
+    baseline_votes: np.ndarray,
+    baseline_year: int,
+) -> dict[str, Any]:
+    """Summarize exact local draws without retaining the draw cube in the result."""
+
+    draws = np.asarray(vote_shares, dtype=np.float64)
+    baseline = np.asarray(baseline_votes, dtype=np.float64)
+    expected_shape = (len(OFFICIAL_CONSTITUENCY_CODES), len(MODEL_PARTIES_9))
+    if draws.ndim != 3 or draws.shape[1:] != expected_shape or draws.shape[0] == 0:
+        raise ValueError("Geography draws must have shape (N, 29, 9) with N > 0")
+    if baseline.shape != expected_shape or not np.all(np.isfinite(baseline)):
+        raise ValueError("Geography baseline must be a finite 29 by 9 vote matrix")
+    if not np.all(np.isfinite(draws)) or np.any(draws < 0) or np.any(draws > 100):
+        raise ValueError("Geography vote shares must be finite percentages in 0–100")
+    if not isinstance(baseline_year, int) or isinstance(baseline_year, bool):
+        raise ValueError("Geography baseline year must be an integer")
+
+    quantile_levels = (0.05, 0.25, 0.50, 0.75, 0.95)
+    quantile_fields = ("p05", "p25", "p50", "p75", "p95")
+    baseline_totals = np.sum(baseline, axis=1, keepdims=True)
+    if np.any(baseline_totals <= 0) or np.any(baseline < 0):
+        raise ValueError("Geography baseline rows must contain non-negative votes and positive totals")
+    baseline_shares = baseline / baseline_totals * 100.0
+    sample_count = int(draws.shape[0])
+    constituencies = []
+    for constituency_index, code in enumerate(OFFICIAL_CONSTITUENCY_CODES):
+        local_draws = draws[:, constituency_index, :]
+        largest_indices = np.argmax(local_draws[:, :len(PARLIAMENTARY_PARTIES_8)], axis=1)
+        largest_counts = np.bincount(largest_indices, minlength=len(PARLIAMENTARY_PARTIES_8))
+        quantiles = np.quantile(local_draws, quantile_levels, axis=0)
+        parties = {}
+        for party_index, party in enumerate(MODEL_PARTIES_9):
+            parties[party] = {
+                "vote_share_quantiles": {
+                    field: round(float(quantiles[level_index, party_index]), 6)
+                    for level_index, field in enumerate(quantile_fields)
+                },
+                "prob_largest": (
+                    float(largest_counts[party_index] / sample_count)
+                    if party_index < len(PARLIAMENTARY_PARTIES_8)
+                    else 0.0
+                ),
+            }
+        constituencies.append({
+            "code": code,
+            "name": CODE_TO_CONSTITUENCY_NAME[code],
+            "baseline_actual_vote_share": {
+                party: round(float(baseline_shares[constituency_index, party_index]), 6)
+                for party_index, party in enumerate(MODEL_PARTIES_9)
+            },
+            "parties": parties,
+        })
+    return {
+        "party_order": list(MODEL_PARTIES_9),
+        "sample_count": sample_count,
+        "baseline_year": baseline_year,
+        "constituencies": constituencies,
+    }
 
 
 def _apportion_constituency_units_of_25(R_continuous: np.ndarray, total_national_votes: int) -> np.ndarray:
@@ -206,6 +272,13 @@ def simulate_election(
         }
 
     X_buf = np.empty((29, 9), dtype=np.float64)
+    geography_tempdir = tempfile.TemporaryDirectory(prefix="election-geography-")
+    geography_draws = np.memmap(
+        Path(geography_tempdir.name) / "vote-shares.dat",
+        dtype=np.float64,
+        mode="w+",
+        shape=(samples, len(OFFICIAL_CONSTITUENCY_CODES), len(MODEL_PARTIES_9)),
+    )
 
     for i in range(samples):
         # Exact integer national party targets C_int
@@ -223,6 +296,7 @@ def simulate_election(
         # Exact-margin controlled rounding preserving BOTH R_int and C_int
         cr_res = biproportional_controlled_rounding(X_buf, R_int, C_int, solver="auto")
         int_mat = cr_res.rounded_matrix
+        geography_draws[i] = int_mat / R_col_vec * 100.0
 
         if quantization_audit is not None:
             # Compare the continuous IPF share with the actual post-rounding
@@ -305,6 +379,16 @@ def simulate_election(
                 if np.any(25 * int_mat[:, p_idx] >= 3 * const_valid_i):
                     local_12_pct_flags[i, p_idx] = True
 
+    try:
+        geography_summary = _summarize_geography_draws(
+            geography_draws,
+            baseline_votes=B_base,
+            baseline_year=baseline_year,
+        )
+    finally:
+        del geography_draws
+        geography_tempdir.cleanup()
+
     # Invariant 2: Total seats per sample strictly equals 349
     sample_seat_totals = np.sum(seats_matrix, axis=1)
     if not np.all(sample_seat_totals == 349):
@@ -362,4 +446,5 @@ def simulate_election(
         group_helper=group_helper,
         manifest=manifest,
         quantization_audit=quantization_audit,
+        geography_summary=geography_summary,
     )

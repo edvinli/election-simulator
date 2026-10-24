@@ -13,8 +13,8 @@ from unittest.mock import patch
 
 import numpy as np
 
-from scripts.simulator.config import PARLIAMENTARY_PARTIES_8
-from scripts.simulator.engine import simulate_election
+from scripts.simulator.config import MODEL_PARTIES_9, PARLIAMENTARY_PARTIES_8
+from scripts.simulator.engine import _summarize_geography_draws, simulate_election
 from scripts.simulator.pipeline import build_canonical_summary_dict
 from scripts.simulator.reproducibility import (
     SOURCE_REPOSITORY,
@@ -29,6 +29,7 @@ from scripts.static_exporter.exporter import PUBLICATION_SCHEMA_VERSION
 from scripts.static_exporter.exporter import (
     COALITION_BUILDER_ENTRY_FIELDS,
     COALITION_BUILDER_SUMMARY_FIELDS,
+    CURRENT_PUBLICATION_FILES,
     _histogram_quantile,
     validate_publication_contract,
 )
@@ -78,7 +79,7 @@ class StaticExporterTests(unittest.TestCase):
             version = publication_root / pointer["path"]
             self.assertEqual(
                 {path.name for path in version.iterdir()},
-                {"forecast.json", "parties.json", "seats.json", "groups.json", "calibration.json", "metadata.json", "manifest.json"},
+                {*CURRENT_PUBLICATION_FILES, "manifest.json"},
             )
             self.assertEqual(
                 first["deterministic_content_sha256"],
@@ -89,6 +90,94 @@ class StaticExporterTests(unittest.TestCase):
                 sum(json.loads((version / "seats.json").read_text())["representative_allocation"]["seats"].values()),
                 349,
             )
+            second_version = self._version_dir(root / "second")
+            self.assertEqual(
+                (version / "geography.json").read_bytes(),
+                (second_version / "geography.json").read_bytes(),
+            )
+
+    def test_geography_quantiles_probabilities_and_baseline_are_exact(self) -> None:
+        draws = np.zeros((4, 29, 9), dtype=np.float64)
+        draws[:, 0, MODEL_PARTIES_9.index("M")] = [10.0, 20.0, 30.0, 40.0]
+        draws[1:3, 0, MODEL_PARTIES_9.index("L")] = 50.0
+        draws[3, 0, MODEL_PARTIES_9.index("S")] = 60.0
+        baseline = np.ones((29, 9), dtype=np.float64)
+        baseline[0] = 0.0
+        baseline[0, MODEL_PARTIES_9.index("M")] = 100.0
+        baseline[0, MODEL_PARTIES_9.index("L")] = 200.0
+
+        summary = _summarize_geography_draws(draws, baseline_votes=baseline, baseline_year=2022)
+        constituency = summary["constituencies"][0]
+        expected_quantiles = np.quantile([10.0, 20.0, 30.0, 40.0], [0.05, 0.25, 0.5, 0.75, 0.95])
+        self.assertEqual(summary["sample_count"], 4)
+        self.assertEqual(summary["baseline_year"], 2022)
+        self.assertEqual(constituency["code"], "01")
+        self.assertEqual(constituency["name"], "Stockholms kommun")
+        self.assertEqual(
+            list(constituency["parties"]["M"]["vote_share_quantiles"].values()),
+            [round(float(value), 6) for value in expected_quantiles],
+        )
+        self.assertEqual(constituency["parties"]["M"]["prob_largest"], 0.25)
+        self.assertEqual(constituency["parties"]["L"]["prob_largest"], 0.5)
+        self.assertEqual(constituency["parties"]["S"]["prob_largest"], 0.25)
+        self.assertEqual(constituency["parties"]["REST"]["prob_largest"], 0.0)
+        self.assertEqual(constituency["baseline_actual_vote_share"]["M"], 33.333333)
+        self.assertEqual(constituency["baseline_actual_vote_share"]["L"], 66.666667)
+        self.assertEqual(len(summary["constituencies"]), 29)
+
+    def test_geography_contract_matches_authoritative_summary_and_manifest(self) -> None:
+        result = self._clean_result()
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / "publication"
+            manifest = export_static_data(result, output_dir=output)
+            version = self._version_dir(output)
+            geography = json.loads((version / "geography.json").read_text())
+            self.assertEqual(geography["schema_version"], "1.5")
+            self.assertEqual(geography["party_order"], list(MODEL_PARTIES_9))
+            self.assertEqual(geography["sample_count"], result.summary.total_samples)
+            self.assertEqual(geography["baseline_year"], 2022)
+            self.assertEqual(geography["constituencies"], result.geography_summary["constituencies"])
+            self.assertIn("geography.json", manifest["publication_files"])
+            self.assertIn("geography.json", manifest["deterministic_content_hashes"])
+            self.assertEqual(validate_published_directory(output)["publication_generation"], version.name)
+
+            geography["constituencies"][0]["parties"]["M"]["vote_share_quantiles"]["p50"] += 0.001
+            (version / "geography.json").write_text(json.dumps(geography), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "hashes do not match manifest"):
+                validate_published_directory(output)
+
+    def test_geography_validation_fails_closed_and_schema_1_4_stays_valid(self) -> None:
+        result = self._clean_result()
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / "publication"
+            export_static_data(result, output_dir=output)
+            version = self._version_dir(output)
+            current = {
+                name: json.loads((version / name).read_text())
+                for name in CURRENT_PUBLICATION_FILES
+            }
+            mutations = (
+                ("missing artifact", lambda contracts: contracts.pop("geography.json")),
+                ("sample count", lambda contracts: contracts["geography.json"].__setitem__("sample_count", 1)),
+                ("baseline year", lambda contracts: contracts["geography.json"].__setitem__("baseline_year", 2018)),
+                ("constituency name", lambda contracts: contracts["geography.json"]["constituencies"][0].__setitem__("name", "invalid")),
+                ("non-monotone quantiles", lambda contracts: contracts["geography.json"]["constituencies"][0]["parties"]["M"]["vote_share_quantiles"].__setitem__("p25", 100.0)),
+                ("non-finite quantile", lambda contracts: contracts["geography.json"]["constituencies"][0]["parties"]["M"]["vote_share_quantiles"].__setitem__("p50", float("nan"))),
+                ("probability total", lambda contracts: contracts["geography.json"]["constituencies"][0]["parties"]["M"].__setitem__("prob_largest", 0.5)),
+                ("REST largest", lambda contracts: contracts["geography.json"]["constituencies"][0]["parties"]["REST"].__setitem__("prob_largest", 0.1)),
+            )
+            for label, mutate in mutations:
+                with self.subTest(case=label):
+                    contracts = deepcopy(current)
+                    mutate(contracts)
+                    with self.assertRaises(ValueError):
+                        validate_publication_contract(contracts)
+
+            historical = deepcopy(current)
+            historical.pop("geography.json")
+            for contract in historical.values():
+                contract["schema_version"] = "1.4"
+            validate_publication_contract(historical)
 
     def test_schema_1_3_contains_all_joint_coalitions_histograms_and_preserves_payload_hash(self) -> None:
         result = self._clean_result()
@@ -476,7 +565,7 @@ class StaticExporterTests(unittest.TestCase):
             )
             validate_publication_contract({
                 name: json.loads((version / name).read_text())
-                for name in ("forecast.json", "parties.json", "seats.json", "groups.json", "calibration.json", "metadata.json")
+                for name in CURRENT_PUBLICATION_FILES
             })
 
     def test_pointer_failure_keeps_previous_version_loadable(self) -> None:
@@ -586,7 +675,7 @@ class StaticExporterTests(unittest.TestCase):
             for path in output.rglob("*"):
                 self.assertFalse(path.is_symlink(), f"{path} must not be a symlink")
             version = output / "versions" / manifest["publication_generation"]
-            self.assertEqual(len(list(version.iterdir())), 7)
+            self.assertEqual(len(list(version.iterdir())), 8)
             # A symlinked contract must be refused even if its target is valid.
             forecast = version / "forecast.json"
             replacement = version / "forecast.real.json"

@@ -11,6 +11,7 @@ from .publisher import (
     SITE_HISTORY_RELATIVE,
     SITE_PUBLICATION_RELATIVE,
     SitePublishError,
+    generation_files,
     publish_generation_to_site,
     sync_history_to_site,
 )
@@ -20,6 +21,7 @@ __all__ = [
     "SITE_HISTORY_RELATIVE",
     "SITE_PUBLICATION_RELATIVE",
     "SitePublishError",
+    "generation_files",
     "publish_generation_to_site",
     "sync_history_to_site",
 ]

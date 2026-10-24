@@ -158,6 +158,7 @@ class ActualBrowserConsumerTests(unittest.TestCase):
                     "calibration.json",
                     "metadata.json",
                     "manifest.json",
+                    "geography.json",
                 )
             ],
         )

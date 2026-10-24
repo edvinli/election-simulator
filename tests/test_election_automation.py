@@ -63,7 +63,7 @@ from scripts.forecast_history.generate import (
     update_history_with_production_result,
 )
 from scripts.publication_pipeline.pipeline import run_publication_pipeline
-from scripts.site_publisher import GENERATION_FILES, publish_generation_to_site, sync_history_to_site
+from scripts.site_publisher import generation_files, publish_generation_to_site, sync_history_to_site
 from scripts.static_exporter import validate_published_directory
 from scripts.simulator.config import DEFAULT_ELECTION_DATE
 from scripts.simulator.engine import SimulationResult, simulate_election
@@ -404,6 +404,10 @@ class ElectionAutomationTests(unittest.TestCase):
             group_helper=helper,
             manifest=manifest,
             quantization_audit=None,
+            # The engine keeps no local draw cube, so the tiled draws cannot be
+            # re-summarized; the base run's constituency summary stands in, at
+            # the tiled sample count the publication contract checks.
+            geography_summary={**base.geography_summary, "sample_count": len(votes)},
         )
 
     @classmethod
@@ -2739,7 +2743,7 @@ time.sleep(60)
             publish_generation_to_site(site_repo=site, source_publication_dir=source / "files/election-simulator", generation=generation)
             sync_history_to_site(site_repo=site, source_history_path=source_history)
             validate_published_directory(site / "files/election-simulator")
-            for filename in GENERATION_FILES:
+            for filename in generation_files(source / "files/election-simulator/versions" / generation):
                 self.assertEqual(
                     (source / "files/election-simulator/versions" / generation / filename).read_bytes(),
                     (site / "files/election-simulator/versions" / generation / filename).read_bytes(),
@@ -2782,6 +2786,10 @@ time.sleep(60)
             group_helper=helper,
             manifest=manifest,
             quantization_audit=None,
+            # The engine keeps no local draw cube, so the tiled draws cannot be
+            # re-summarized; the base run's constituency summary stands in, at
+            # the tiled sample count the publication contract checks.
+            geography_summary={**base.geography_summary, "sample_count": len(votes)},
         )
 
         def runner(**kwargs):

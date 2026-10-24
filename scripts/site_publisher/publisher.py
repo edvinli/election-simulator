@@ -10,7 +10,7 @@ The mutation order is always:
 
 1. validate the certified source generation;
 2. refuse to touch an existing destination generation;
-3. stage and atomically install the seven real destination files;
+3. stage and atomically install the manifest-listed destination files;
 4. validate the destination generation independently;
 5. write ``current.json`` last.
 
@@ -31,7 +31,7 @@ import uuid
 from scripts.forecast_history.contract import validate_history_contract
 from scripts.simulator.reproducibility import GENERATION_ID_PATTERN, compute_file_sha256
 from scripts.static_exporter.exporter import (
-    PUBLICATION_FILES,
+    CURRENT_PUBLICATION_FILES,
     SUPPORTED_PUBLICATION_SCHEMA_VERSIONS,
     validate_publication_version,
 )
@@ -40,8 +40,26 @@ from scripts.static_exporter.exporter import (
 SITE_PUBLICATION_RELATIVE = Path("files") / "election-simulator"
 SITE_HISTORY_RELATIVE = SITE_PUBLICATION_RELATIVE / "history" / "coalition-timeseries.json"
 
-# The seven real files that constitute one immutable published generation.
-GENERATION_FILES: tuple[str, ...] = (*PUBLICATION_FILES, "manifest.json")
+# The eight real files of a generation written by the current exporter.  An
+# existing generation is copied and compared by generation_files() instead:
+# schema-1.4 and earlier generations have no geography.json.
+GENERATION_FILES: tuple[str, ...] = (*CURRENT_PUBLICATION_FILES, "manifest.json")
+
+
+def generation_files(version: Path) -> tuple[str, ...]:
+    """The real files of one published generation, as its own manifest lists them.
+
+    Call it on a version ``validate_publication_version`` has accepted: that
+    check pins the manifest's ``publication_files`` to exactly the contracts of
+    the generation's schema, so the set is authoritative for old and new
+    generations alike.
+    """
+
+    manifest = json.loads((version / "manifest.json").read_text(encoding="utf-8"))
+    files = manifest.get("publication_files") if isinstance(manifest, dict) else None
+    if not isinstance(files, dict) or not files:
+        raise SitePublishError(f"Generation manifest lists no publication files: {version}")
+    return (*files, "manifest.json")
 
 
 class SitePublishError(RuntimeError):
@@ -128,6 +146,7 @@ def publish_generation_to_site(
     # The source must already be a fully certified, hash-consistent version.
     # This publisher never repairs, regenerates, or re-certifies a payload.
     source_manifest = validate_publication_version(source_version, expected_generation=generation_name)
+    files = generation_files(source_version)
 
     destination_publication = site_root / SITE_PUBLICATION_RELATIVE
     destination_versions = destination_publication / "versions"
@@ -154,7 +173,7 @@ def publish_generation_to_site(
             "deterministic_content_sha256"
         ):
             raise SitePublishError(f"Existing published generation differs: {destination_version}")
-        for filename in GENERATION_FILES:
+        for filename in files:
             if (destination_version / filename).read_bytes() != (source_version / filename).read_bytes():
                 raise SitePublishError(f"Existing published generation differs: {filename}")
         pointer_status = "ALREADY_MIRRORED"
@@ -163,7 +182,7 @@ def publish_generation_to_site(
         staging = Path(tempfile.mkdtemp(prefix=f".{generation_name}.staging-", dir=destination_versions))
         installed = False
         try:
-            for filename in GENERATION_FILES:
+            for filename in files:
                 source_file = source_version / filename
                 if source_file.is_symlink() or not source_file.is_file():
                     raise SitePublishError(f"Source generation file must be a real file: {source_file}")
@@ -172,7 +191,7 @@ def publish_generation_to_site(
                 shutil.copyfile(source_file, staging / filename)
                 if compute_file_sha256(staging / filename) != compute_file_sha256(source_file):
                     raise SitePublishError(f"Copied publication file does not match its source: {filename}")
-            extra = {path.name for path in staging.iterdir()} - set(GENERATION_FILES)
+            extra = {path.name for path in staging.iterdir()} - set(files)
             if extra:
                 raise SitePublishError(f"Staged generation contains unexpected files: {sorted(extra)}")
 
@@ -218,7 +237,7 @@ def publish_generation_to_site(
         "generation": generation_name,
         "source_version": str(source_version),
         "destination_version": str(destination_version),
-        "files": list(GENERATION_FILES),
+        "files": list(files),
         "pointer_written": pointer_written,
         "pointer_path": str(destination_publication / "current.json") if pointer_written else None,
         "deterministic_content_sha256": destination_manifest.get("deterministic_content_sha256"),
