@@ -493,6 +493,59 @@ class ForecastHistoryTests(unittest.TestCase):
         self.assertEqual(calls, [])
         self.assertEqual(unchanged["series"], filled["series"])
 
+    def test_a_backfill_also_rebuilds_points_whose_inputs_were_revised(self) -> None:
+        # After a MODEL_FILES change every recorded fingerprint is stale. The
+        # daily roll-in carries them; the next backfill that has a hole to
+        # fill rebuilds every stale point with it, because build_history
+        # reuses only points whose inputs still hold. With no hole the
+        # backfill runs nothing and stale points remain until the next one.
+        votes, seats = self._matrices()
+        calls: list[str] = []
+
+        def runner(*, as_of: str, election_date: str, samples: int, seed: int):
+            calls.append(as_of)
+            return SimpleNamespace(
+                vote_shares_matrix=votes,
+                seats_matrix=seats,
+                manifest={"source_git_commit": "b" * 40},
+            )
+
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "polls.csv"
+            self._poll_csv(path)
+            published = build_history(
+                archive_dir=None,
+                dates=["2026-05-24", "2026-05-25", "2026-05-26"],
+                poll_file=path,
+                samples=4,
+                simulation_runner=runner,
+                model_commit="b" * 40,
+                source_worktree_clean=True,
+                production_latest_samples=4,
+            )
+            true_fingerprint = published["reconstruction_inputs"]["dates"]["2026-05-24"]
+            stale = deepcopy(published)
+            stale["reconstruction_inputs"]["dates"]["2026-05-24"] = "0" * 64
+            stale.pop("deterministic_content_sha256", None)
+
+            calls.clear()
+            unchanged, nothing = backfill_reconstructed_curve(
+                stale, poll_file=path, archive_dir=None, samples=4, simulation_runner=runner)
+            self.assertEqual((calls, nothing), ([], []))
+            self.assertEqual(unchanged["reconstruction_inputs"]["dates"]["2026-05-24"], "0" * 64)
+
+            holed = deepcopy(stale)
+            for point in holed["series"]:
+                if point["date"] == "2026-05-25":
+                    point["provenance"] = "prospective_archived"
+            holed["reconstruction_inputs"]["dates"].pop("2026-05-25")
+            calls.clear()
+            filled, _ = backfill_reconstructed_curve(
+                holed, poll_file=path, archive_dir=None, samples=4, simulation_runner=runner)
+        self.assertEqual(sorted(calls), ["2026-05-24", "2026-05-25"])
+        self.assertEqual(filled["reconstruction_inputs"]["dates"]["2026-05-24"], true_fingerprint)
+        self.assertEqual(missing_curve_dates(filled), [])
+
     def test_first_changed_poll_date_ignores_appends_after_the_window(self) -> None:
         def poll(poll_id: str, published: str, m: float = 20.0) -> dict:
             return {

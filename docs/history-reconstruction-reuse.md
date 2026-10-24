@@ -59,3 +59,15 @@ or mismatched legacy provenance, metadata validation, and the live committed
 artifact integration test. At the September 7 refresh, the live integration test
 requires only the genuinely missing September 5 curve point and preserves all
 297 existing reconstructed points.
+
+## After a model change
+
+A change to any `MODEL_FILES` file invalidates every recorded fingerprint, by
+design. Nothing is rebuilt at that moment: the daily roll-in carries each
+point's original fingerprint, and the backfill runs nothing while the curve
+has no hole. The first backfill that has a hole to fill -- the roll-in leaves
+one whenever a publication lands on a new date -- rebuilds every stale point
+along with it (`test_a_backfill_also_rebuilds_points_whose_inputs_were_revised`).
+Until then the publication gate's live-artifact test excuses "no point
+survived" only when the recorded fingerprints are exactly those of the code
+before the latest `MODEL_FILES` change.
