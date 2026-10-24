@@ -1,7 +1,7 @@
 {
-  "schema_version": "1.4",
+  "schema_version": "1.5",
   "publication_state": "COMPLETE",
-  "publication_generation": "20261024T050257Z-429e80fb",
-  "path": "versions/20261024T050257Z-429e80fb",
-  "manifest_sha256": "41b5b70224c933b244091f5ade3fd8546b2991af5db1235f1c3c8b8ea68b8cf8"
+  "publication_generation": "20261024T105028Z-9d343362",
+  "path": "versions/20261024T105028Z-9d343362",
+  "manifest_sha256": "e6c21cf8254ba6dce6bca05f66bdfd7abed384241358d3eca0f4e407c0ae61dc"
 }
