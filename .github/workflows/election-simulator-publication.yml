@@ -482,10 +482,10 @@ jobs:
        (needs.fallback_preflight.result == 'success' &&
         needs.fallback_preflight.outputs.proceed == 'true'))
     permissions:
-      # actions: read lets the job see whether Full CI already passed this
-      # code; see "Check whether Full CI already verified this code".
-      actions: read
       contents: write
+      # Lets the job see whether Full CI already passed this code; see
+      # "Check whether Full CI already verified this code".
+      actions: read
     # The only job that mutates anything, and so the only one that takes the
     # production lock. Scheduled and manual publication serialize with the
     # benchmark exactly as they did when this group sat at workflow level.
