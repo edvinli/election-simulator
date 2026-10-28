@@ -7,8 +7,11 @@ on:
   # afterwards.
   schedule:
     - cron: "0 4 * * *" # 06:00 local: always publish
-    # Hourly 08:00–20:00 local, then the long-standing 22:00 check.
-    - cron: "0 6,7,8,9,10,11,12,13,14,15,16,17,18,20 * * *" # poll-change checks
+    # Hourly from 08:00 Stockholm winter time (07:00Z; 09:00 in summer) to
+    # 18:00Z, then the long-standing 20:00Z check. Polls are not published
+    # overnight, and the Cloudflare poll-change watcher dispatches within
+    # half an hour of one at any hour, so these ticks are the second path.
+    - cron: "0 7,8,9,10,11,12,13,14,15,16,17,18,20 * * *" # poll-change checks
     # 21:00 local. Cron can express a day and month but not a year, so a
     # dated expression would fire again in 2027; this is scheduled daily and
     # stood down in fallback_preflight against the election date itself,
@@ -480,6 +483,9 @@ jobs:
         needs.fallback_preflight.outputs.proceed == 'true'))
     permissions:
       contents: write
+      # Lets the job see whether Full CI already passed this code; see
+      # "Check whether Full CI already verified this code".
+      actions: read
     # The only job that mutates anything, and so the only one that takes the
     # production lock. Scheduled and manual publication serialize with the
     # benchmark exactly as they did when this group sat at workflow level.
@@ -626,8 +632,40 @@ jobs:
           test -z "$(git status --porcelain --untracked-files=all)"
           test -z "$(git -C "$GITHUB_WORKSPACE/website" status --porcelain --untracked-files=all)"
 
-      - name: Run backend and history contract tests
+      # Full CI runs every module against every human push to main, and the
+      # bot's own commits write only forecast data and site artifacts. When
+      # HEAD's code is exactly what a green Full CI run on main tested, the
+      # contract suite below would repeat that run at the cost of ten to
+      # eighteen minutes of publication delay, so it is skipped. The decision
+      # is verify() in scripts/ci/verified_code.py; any doubt -- an unreadable
+      # run list or a failing check included -- is verified=false, and the
+      # suite runs.
+      - name: Check whether Full CI already verified this code
+        id: ci_verified
         if: steps.automation_gate.outputs.disabled != 'true' && steps.precheck.outputs.work != 'false'
+        working-directory: simulator
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          runs="$RUNNER_TEMP/full-ci-runs.json"
+          if ! gh api \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/full.yml/runs?branch=main&status=success&per_page=30" \
+            > "$runs"; then
+            echo '{}' > "$runs"
+          fi
+          if ! uv run python -m scripts.ci.verified_code \
+            --repo-root . \
+            --runs-json "$runs" \
+            --output "$GITHUB_OUTPUT" \
+            --summary-path "$GITHUB_STEP_SUMMARY"; then
+            echo "verified=false" >> "$GITHUB_OUTPUT"
+            echo "reason=CHECK_FAILED" >> "$GITHUB_OUTPUT"
+          fi
+          test -z "$(git status --porcelain --untracked-files=all)"
+
+      - name: Run backend and history contract tests
+        if: steps.automation_gate.outputs.disabled != 'true' && steps.precheck.outputs.work != 'false' && steps.ci_verified.outputs.verified != 'true'
         working-directory: simulator
         run: |
           uv run python -m unittest \

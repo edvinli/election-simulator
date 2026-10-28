@@ -57,22 +57,34 @@ class ShardPlanTests(unittest.TestCase):
         self.assertEqual(len(bins), 5)
 
     def test_shards_are_balanced_by_measured_cost(self) -> None:
-        # With the allocator audit at its reduced size no module dominates, so
-        # the bins should come out close together. A wide spread means the
-        # planner is packing by name or count rather than by duration -- or
-        # that timings.json has drifted badly.
+        # A wide spread means the planner is packing by name or count rather
+        # than by duration -- or that timings.json has drifted badly.
+        #
+        # One module can cost more than an even share on its own
+        # (test_election_automation is ~680s of ~1450s). No split can balance
+        # that, so the property is the one LPT actually delivers: such a
+        # module is alone in its shard, and the remaining shards are close.
         from scripts.ci.test_topology import _timings
 
         timings = _timings()
-        bins = shard(all_test_modules(_REPO_ROOT), 4)
+        modules = all_test_modules(_REPO_ROOT)
+        count = 4
+        bins = shard(modules, count)
         loads = [sum(timings.get(m, 0.0) for m in b) for b in bins]
         self.assertGreater(min(loads), 0, "a shard was given no measured work")
+        even_share = sum(timings.get(m, 0.0) for m in modules) / count
+        dominant = {m for m in modules if timings.get(m, 0.0) > even_share}
+        rest = []
+        for group, load in zip(bins, loads):
+            if dominant & set(group):
+                self.assertEqual(len(group), 1, f"a dominant module shares its shard: {group}")
+            else:
+                rest.append(load)
         self.assertLess(
-            max(loads) / min(loads), 1.5,
+            max(rest) / min(rest), 1.5,
             f"shard loads are poorly balanced: "
             f"{[round(x, 1) for x in loads]}",
         )
-
 
 class NightlyIsAReRunNotAnExclusion(unittest.TestCase):
     """The defect these tests exist for.

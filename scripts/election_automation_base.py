@@ -105,10 +105,12 @@ from scripts.publication_fallback import (
 
 STOCKHOLM = ZoneInfo("Europe/Stockholm")
 DAILY_SCHEDULE_UTC = "0 4 * * *"
-# Hourly 08:00-20:00 Stockholm/Oslo (one offset, UTC+2), then the
-# long-standing 22:00 check. 21:00 local (19:00Z) is deliberately absent here
-# and scheduled separately, because it runs on election day alone.
-INTRADAY_SCHEDULE_UTC = "0 6,7,8,9,10,11,12,13,14,15,16,17,18,20 * * *"
+# Hourly 07:00-18:00Z -- from 08:00 Stockholm winter time (UTC+1), 09:00 in
+# summer -- then the long-standing 20:00Z check. Nothing earlier, because polls
+# are not published overnight and the Cloudflare poll-change watcher dispatches
+# at any hour anyway. 19:00Z is deliberately absent here and scheduled
+# separately, because it runs on election day alone.
+INTRADAY_SCHEDULE_UTC = "0 7,8,9,10,11,12,13,14,15,16,17,18,20 * * *"
 PRODUCTION_SAMPLES = 100_000
 #: Amendment 004's bounded retention window, kept as the historical record.
 #: Amendment 007 extended retention to every newly certified generation, so
