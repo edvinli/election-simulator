@@ -355,6 +355,7 @@ def run_publication_pipeline(
     export_publication: bool = True,
     include_supplementary: bool = True,
     simulation_runner: Callable[..., SimulationResult] | None = None,
+    simulation_workers: int = 1,
     allow_duplicate_payload: bool = False,
     allow_custom_processed_root: bool = False,
     simulation_repo_root: Path | str | None = None,
@@ -391,6 +392,11 @@ def run_publication_pipeline(
             "seed": seed,
             "baseline_year": baseline_year,
         }
+        # Passed only when asked for, so an injected runner that predates
+        # the option keeps its call signature. Serial and parallel runs are
+        # byte-identical, so nothing downstream records which one ran.
+        if simulation_workers != 1:
+            simulation_kwargs["workers"] = simulation_workers
         if allow_custom_processed_root:
             # This explicit opt-in is used only by the automation dry-run,
             # whose disposable processed tree is validated and passed to both

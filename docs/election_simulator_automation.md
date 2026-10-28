@@ -243,7 +243,22 @@ deterministic and do not require that repository.
 
 Each production event runs the existing 100,000-draw simulator once. Its
 validated `SimulationResult` supplies the static publication, immutable
-prospective snapshot, and history point. The history update keeps exactly one
+prospective snapshot, and history point.
+
+The workflow runs that one simulation with `--simulation-workers 4`. The
+national draws are made once, in the parent process; only the per-draw
+geography projection, controlled rounding and seat allocation -- pure
+functions of a draw, using the stateless hash-based tie-breaker -- are split
+across processes, and the parent assembles them in draw order. The arrays,
+payload hash and every certified byte are therefore identical to a serial
+run (`tests/test_parallel_simulation.py` holds this to the bytes on the real
+production inputs), and the worker count is recorded nowhere. About a fifth
+of draws fall back to the exact legal allocator, which costs most of the
+simulation's time; the loop is split into eight chunks per worker so that
+cost spreads evenly. The default is serial, so reconstructed-history workers
+(`--history-workers`) never nest a second pool, and the quantization audit,
+which keeps its first mismatches in sample order, refuses to run in
+parallel. The history update keeps exactly one
 point per calendar date *and provenance*: on a new date the previous current
 point becomes `prospective_archived`; a same-day run replaces that date and
 retains the old immutable archive generation. Reconstructed historical points

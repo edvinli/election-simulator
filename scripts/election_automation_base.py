@@ -112,6 +112,10 @@ DAILY_SCHEDULE_UTC = "0 4 * * *"
 # separately, because it runs on election day alone.
 INTRADAY_SCHEDULE_UTC = "0 7,8,9,10,11,12,13,14,15,16,17,18,20 * * *"
 PRODUCTION_SAMPLES = 100_000
+#: Processes for the production simulation's per-draw loop; the workflow
+#: passes this. The draws, and so every certified byte, are identical to a
+#: serial run -- see simulate_election(workers=...).
+PRODUCTION_SIMULATION_WORKERS = 4
 #: Amendment 004's bounded retention window, kept as the historical record.
 #: Amendment 007 extended retention to every newly certified generation, so
 #: these no longer gate whether a sidecar is written.
@@ -2698,6 +2702,7 @@ def run_production_event(
     pipeline_observer: Callable[[PipelineRun], None] | None = None,
     certification_observer: Callable[[Mapping[str, Any]], None] | None = None,
     history_workers: int = DEFAULT_HISTORY_WORKERS,
+    simulation_workers: int = 1,
 ) -> tuple[PipelineRun, dict[str, Any], dict[str, Any] | None]:
     """Run exactly one production simulation and stage all consumers.
 
@@ -2754,6 +2759,7 @@ def run_production_event(
             append_archive=True,
             export_publication=True,
             simulation_runner=simulation_runner,
+            simulation_workers=simulation_workers,
             allow_duplicate_payload=allow_duplicate_payload,
             allow_custom_processed_root=allow_custom_processed_root,
             simulation_repo_root=root,
@@ -3034,6 +3040,7 @@ def run_automation(
     generated_at_utc: str | None = None,
     stage_callback: StageCallback | None = None,
     history_workers: int = DEFAULT_HISTORY_WORKERS,
+    simulation_workers: int = 1,
 ) -> AutomationResult:
     """Execute one explicit probe, dry-run, or publish event.
 
@@ -3343,6 +3350,7 @@ def run_automation(
                         pipeline_observer=observe_pipeline,
                         certification_observer=observe_certification,
                         history_workers=history_workers,
+                        simulation_workers=simulation_workers,
                     )
             else:
                 _assert_clean(root, label="simulator before production")
@@ -3367,6 +3375,7 @@ def run_automation(
                     pipeline_observer=observe_pipeline,
                     certification_observer=observe_certification,
                     history_workers=history_workers,
+                    simulation_workers=simulation_workers,
                 )
         summary.simulation_samples = int(run.simulation_validation["samples"]) if run.simulation_validation else 0
         summary.publication_generation = str(run.snapshot["generation_id"]) if run.snapshot else "NONE"
@@ -3473,6 +3482,17 @@ def build_parser() -> argparse.ArgumentParser:
             f"Serial by default; production passes {PRODUCTION_HISTORY_WORKERS}. "
             "Capped by os.cpu_count(). Only the curve is affected: the "
             "certified forecast is a single simulation either way."
+        ),
+    )
+    parser.add_argument(
+        "--simulation-workers",
+        type=int,
+        default=1,
+        help=(
+            "Processes for the authoritative simulation's per-draw loop. "
+            f"Serial by default; production passes {PRODUCTION_SIMULATION_WORKERS}. "
+            "Capped by os.cpu_count(). The result is identical to a serial "
+            "run: national draws are made once, before the split."
         ),
     )
     parser.add_argument(
@@ -3761,6 +3781,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         push=push,
         stage_callback=_log_stage,
         history_workers=args.history_workers,
+        simulation_workers=args.simulation_workers,
     )
     rendered = result.summary.render()
     if args.summary_path:
@@ -3796,6 +3817,7 @@ __all__ = [
     "MODEL_RELEVANT_INPUTS",
     "PollingRefresh",
     "PRODUCTION_SAMPLES",
+    "PRODUCTION_SIMULATION_WORKERS",
     "AfterElectionDay",
     "AUTOMATION_ENABLED_ENV",
     "automation_enabled_for_event",

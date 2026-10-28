@@ -199,6 +199,7 @@ jobs:
             --event-name workflow_dispatch \
             --mode dry_run \
             --automation-enabled "$ELECTION_AUTOMATION_ENABLED" \
+            --simulation-workers 4 \
             --summary-path "$GITHUB_STEP_SUMMARY"
 
   browser_diagnostic:
@@ -710,6 +711,11 @@ jobs:
           # pre-warm to place the protected interval at 18:30Z. Raising one
           # without the other lets a publication hold
           # election-simulator-production across a frozen capture.
+          #
+          # --simulation-workers splits the authoritative simulation's
+          # per-draw loop across the runner's cores. Its draws, payload hash
+          # and every certified byte are identical to a serial run, so the
+          # certification boundary is unchanged; only the wall clock is not.
           uv run python -m scripts.election_automation \
             --repo-root "$GITHUB_WORKSPACE/simulator" \
             --site-repo "$GITHUB_WORKSPACE/website" \
@@ -718,4 +724,5 @@ jobs:
             --mode "$MODE" \
             --automation-enabled "$ELECTION_AUTOMATION_ENABLED" \
             --history-workers 4 \
+            --simulation-workers 4 \
             --summary-path "$GITHUB_STEP_SUMMARY"
