@@ -11,8 +11,12 @@ reported as current merely because the fallback file exists.
 The fixed schedules are:
 
 - `0 4 * * *` UTC: 06:00 Europe/Stockholm, always publish.
-- `0 6,8,10,12,14,16,18,20 * * *` UTC: 08:00–22:00 Europe/Stockholm,
-  publish only after a semantic polling-input change.
+- `0 7,8,9,10,11,12,13,14,15,16,17,18,20 * * *` UTC: hourly 08:00–19:00
+  Europe/Stockholm in winter (09:00–20:00 in summer), then 21:00 (22:00);
+  publish only after a semantic polling-input change. Nothing earlier, since
+  polls are not published overnight; the Cloudflare poll-change watcher in
+  `ops/publication-fallback-worker` dispatches at any hour regardless, and
+  GitHub delivers these ticks late or not at all, so they are the second path.
 
 **A check with nothing to publish stops early.** Before the backend contract
 suite (about twelve minutes) the publish job asks
@@ -25,8 +29,25 @@ render, it reports `work=false`, and the suite, the Jekyll/Chromium setup and
 the automation are all skipped; the summary reads
 `Backend contract tests: SKIPPED_NOTHING_TO_PUBLISH`. Every other run type
 always runs in full, and so does any event the precheck cannot read: an
-error there is `work=true`, never a skip. A real publication is unchanged --
-the suite still runs before it.
+error there is `work=true`, never a skip.
+
+**A publication whose code Full CI already passed skips the suite.** Full CI
+runs every module on every human push to main; the bot's publication,
+rendering and benchmark commits start no workflow, but write only the
+forecast-data and site paths listed in `BOT_OWNED_PATHS`
+(`scripts/ci/verified_code.py`). When there is work, the publish job asks
+`scripts.ci.verified_code` whether every commit since the newest green Full CI
+run on main that is an ancestor of HEAD is a bot commit confined to those
+paths. If so the suite (ten to eighteen minutes) is skipped and the summary
+reads `Backend contract tests: SKIPPED_VERIFIED_BY_FULL_CI (commit …, run …)`;
+otherwise -- a human commit Full CI has not passed, a bot commit anywhere
+else, an unreadable run list, any error -- it reads `REQUIRED (<reason>)` and
+the suite runs. Only the suite is skipped: acquisition, validation, the
+website gates and the browser tests are unchanged. What the skip gives up is
+the suite re-reading a few bot-written files against the current tree (one
+historical snapshot pinned by `test_publication_freeze`, the poll file
+`test_forecast_history` backfills March dates from). The `dry_run` mode keeps
+the suite unconditionally.
 
 The workflow also supports an explicit `workflow_dispatch` mode:
 `probe` acquires/normalizes/validates only, `dry_run` runs the complete

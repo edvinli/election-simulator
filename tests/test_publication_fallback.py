@@ -1282,13 +1282,17 @@ class IntradayScheduleShapeTests(unittest.TestCase):
     covered by ScheduledPublicationDeferralTests, not here.
     """
 
-    #: Europe/Oslo is UTC+2 on both remaining campaign dates.
+    #: Europe/Oslo is UTC+2 on the campaign dates (summer time).
     OSLO_OFFSET = 2
+    #: Europe/Stockholm is UTC+1 from 2026-10-25, which is the clock the
+    #: 08:00 start of the intraday checks was requested in.
+    WINTER_OFFSET = 1
 
-    def _local_hours(self, schedules) -> set[int]:
+    def _local_hours(self, schedules, offset: int | None = None) -> set[int]:
+        offset = self.OSLO_OFFSET if offset is None else offset
         hours: set[int] = set()
         for expression in schedules:
-            hours |= {h + self.OSLO_OFFSET for h in _cron_utc_hours(expression)}
+            hours |= {h + offset for h in _cron_utc_hours(expression)}
         return hours
 
     def _hours_on(self, day: date) -> set[int]:
@@ -1304,8 +1308,22 @@ class IntradayScheduleShapeTests(unittest.TestCase):
             schedules.append(ELECTION_DAY_SCHEDULE_UTC)
         return self._local_hours(schedules)
 
-    def test_through_september_12_is_hourly_08_to_20_plus_22(self) -> None:
-        expected = set(range(8, 21)) | {22}
+    def test_winter_checks_are_hourly_08_to_19_plus_21(self) -> None:
+        """Nothing overnight: polls are not published then.
+
+        The poll-change watcher covers any hour regardless, so these ticks
+        are the second path and need only cover the working day.
+        """
+
+        self.assertEqual(
+            self._local_hours([INTRADAY_SCHEDULE_UTC], self.WINTER_OFFSET),
+            set(range(8, 20)) | {21},
+        )
+
+    def test_through_september_12_the_schedule_would_be_hourly_09_to_20_plus_22(self) -> None:
+        """The same UTC crons on a summer-time date: 07:00Z is 09:00 local."""
+
+        expected = set(range(9, 21)) | {22}
         for day in (date(2026, 9, 11), date(2026, 9, 12)):
             with self.subTest(day=day):
                 self.assertEqual(self._hours_on(day), expected)
@@ -1317,8 +1335,8 @@ class IntradayScheduleShapeTests(unittest.TestCase):
             with self.subTest(day=day):
                 self.assertNotIn(21, self._hours_on(day))
 
-    def test_election_day_is_hourly_08_to_22(self) -> None:
-        self.assertEqual(self._hours_on(ELECTION_DAY), set(range(8, 23)))
+    def test_election_day_would_be_hourly_09_to_22(self) -> None:
+        self.assertEqual(self._hours_on(ELECTION_DAY), set(range(9, 23)))
 
     def test_the_22_oclock_check_is_retained_on_the_schedule_throughout(self) -> None:
         """Retained as a cron. Whether it publishes is the preflight's call."""
