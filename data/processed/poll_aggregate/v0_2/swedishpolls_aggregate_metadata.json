@@ -1189,7 +1189,6 @@
     "swp-8327d3da030633fa35b1",
     "swp-92b9d4762d90f58dcb65",
     "swp-92bf6e159ad2ce25018a",
-    "swp-9421a350f295e07bcdc5",
     "swp-a035ecfd270622c7b3e9",
     "swp-acaf6a2c9274d5719746",
     "swp-ad982534fbd0ff6d83bf",
@@ -1216,7 +1215,7 @@
     },
     "polls": {
       "path": "swedishpolls_individual_polls.csv",
-      "sha256": "c87917d6c34be7fbee7ff65310bce983cde321f72c4e3b520e0c518b7237c6e4"
+      "sha256": "4e293e07fce1241ee175dd05964781aa5eac11d1ee7834a0239754bb209a73fc"
     }
   },
   "last_date": "2026-10-27",
