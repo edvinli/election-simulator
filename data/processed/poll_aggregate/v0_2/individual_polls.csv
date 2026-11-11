@@ -1,4 +1,12 @@
 poll_id,pollster,pollster_original,interview_start,interview_end,publication_date,party,support,source_value,support_status,sample_size,poll_method,source_url,retrieved_at,metadata_source_url,metadata_retrieved_at,metadata_match_status,metadata_row_source_references_json
+swp-3cd8b243f8871ddd91ae,Sifo,Sifo,2026-10-26,2026-11-08,2026-11-11,M,23.3,23.3,reported,3104,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-3cd8b243f8871ddd91ae,Sifo,Sifo,2026-10-26,2026-11-08,2026-11-11,L,4.1,4.1,reported,3104,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-3cd8b243f8871ddd91ae,Sifo,Sifo,2026-10-26,2026-11-08,2026-11-11,C,5.7,5.7,reported,3104,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-3cd8b243f8871ddd91ae,Sifo,Sifo,2026-10-26,2026-11-08,2026-11-11,KD,6.3,6.3,reported,3104,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-3cd8b243f8871ddd91ae,Sifo,Sifo,2026-10-26,2026-11-08,2026-11-11,S,26.1,26.1,reported,3104,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-3cd8b243f8871ddd91ae,Sifo,Sifo,2026-10-26,2026-11-08,2026-11-11,V,8.5,8.5,reported,3104,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-3cd8b243f8871ddd91ae,Sifo,Sifo,2026-10-26,2026-11-08,2026-11-11,MP,7.5,7.5,reported,3104,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-3cd8b243f8871ddd91ae,Sifo,Sifo,2026-10-26,2026-11-08,2026-11-11,SD,16.9,16.9,reported,3104,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
 swp-0b7266894ecb4a8f232f,Indikator,Indikator,2026-10-07,2026-10-25,2026-10-29,M,26.3,26.3,reported,1660,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
 swp-0b7266894ecb4a8f232f,Indikator,Indikator,2026-10-07,2026-10-25,2026-10-29,L,3.8,3.8,reported,1660,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
 swp-0b7266894ecb4a8f232f,Indikator,Indikator,2026-10-07,2026-10-25,2026-10-29,C,5.8,5.8,reported,1660,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
