@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.5",
+  "generated_at_utc": "2026-11-12T04:47:31.667982+00:00",
+  "as_of": "2026-11-12",
+  "election_date": "2030-09-08",
+  "model": {
+    "name": "ElectionSimulator",
+    "version": "1.2.0-rc1",
+    "candidate": "A",
+    "candidate_namespace": "botten_ada_benchmark_model_lineage; not the ElectionNoise challenger"
+  },
+  "election_noise_law": "pp_lw_gaussian",
+  "election_noise_candidate": "B",
+  "election_noise_namespace": "ElectionNoise v2 competition; B is the adopted challenger, CONTROL the superseded empirical bootstrap. Unrelated to model.candidate.",
+  "geography_baseline_year": 2026,
+  "source_repository": "edvinli/election-simulator",
+  "source_git_commit": "8b532ac1b8abd8349a05c491718d1ff07820ad19",
+  "source_worktree_clean": true,
+  "input_hashes": {
+    "poll_data_hash": "60cddb512f3cddf1cc17286c9d1defeafb9eab89188eee8ded9066803480ccd8",
+    "election_data_hash": "3a99ffb1b0fbef60d61712764a2136982ecf01c4879a43edc6d9a38ddb4ba0fc",
+    "mandate_data_hash": "444c457061abc8c9516f7aad6f35d6e85bb4d720f8244fb029d9b1438d3bd11e",
+    "geography_data_hash": "fb9f36b0df487c76d25619be3ab8f2a9077148e13a1517aa8651c532889c7e74",
+    "model_config_hash": "bd10af4536fe23a8e4969a73809342d7a6c3b5df0127481c4a90003b1a205d35",
+    "opinion_timeseries_hash": "64798b841f43231582e131e6dea3e21a77131b490e75ef9a5b3bbeb63288cca1",
+    "opinion_polls_hash": "7c85044e991b2f6be3ba4bd50ed95f459502bc2e641241e021817effdf275d8b"
+  },
+  "deterministic_payload_sha256": "210892a4b7f6b3e8b7d39c5ccb0ee497cd245f0ef924a7ad23d25ed7bda27966",
+  "rest_semantics": "REST is aggregate vote mass for modeled-as-ineligible parties; it cannot independently qualify or receive seats.",
+  "interval_semantics": "Central empirical predictive intervals at 50%, 80%, and 90%; they are not confidence intervals.",
+  "validation_note": "Historical validation is retrospective and not independent holdout validation."
+}
