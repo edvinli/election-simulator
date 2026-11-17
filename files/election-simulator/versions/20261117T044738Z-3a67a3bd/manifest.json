@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.5",
+  "publication_state": "COMPLETE",
+  "publication_generation": "20261117T044738Z-3a67a3bd",
+  "generated_at_utc": "2026-11-17T04:47:38.055287+00:00",
+  "publication_files": {
+    "forecast.json": "09ea2a05e68cfd2ddec5f8a2295805770c377472cf24b09572649b8d43b354b3",
+    "parties.json": "effc7c2c7454cae09332e2e9515d3c1fcd2af049a6db27949fa3fabe8d0b5dc3",
+    "seats.json": "b5092d80424d66a8af4dc9b388a94a9e393ec572de94fe7dc704a4a918c07292",
+    "groups.json": "d4f9bcdf0d4afc165220273de4e03377b4c7a07bc28529523e18e9e3491f45cd",
+    "calibration.json": "7880bfd6cbc04df5dd7aa02ce1a78f8c7902737338f61f497b9de5e141222017",
+    "metadata.json": "86de404be7e4db5eaf77d158995c8976915437a807379f1de31c71377bdbdc63",
+    "geography.json": "ef5e2126fe9858fccf5a9b9eaf5bb277a5430b12fbcab6b2c7324f8bc5ddb5e3"
+  },
+  "deterministic_content_hashes": {
+    "forecast.json": "c33ed2b5387461f85fcaa084c9d68e150c43e360e5e1034be32bb44321079fe0",
+    "parties.json": "e557755aa37a9b705692b7418e0bee90db897104f7b9b7d310e33bace5af8874",
+    "seats.json": "f4b39089ed9cce930de7a6b5489ecd3ef70b4899d43eb34b6590efdc26a9e373",
+    "groups.json": "ef37b470fb116988b4d4f4b2563d6a353e7cfa5af056664699c4fd34f1499016",
+    "calibration.json": "309c40cd6b077eb11e1cdafb38335c4840d51c53a6d8287f726b75c0a636a805",
+    "metadata.json": "ebafb55ef044e2c66e76c0219536a49769fcb0d5c39b9b192e586014b1898447",
+    "geography.json": "711e77d54dab41864ae21cd7abe215d6f686260fc1ca005e08a9c273b0acf7db"
+  },
+  "deterministic_content_sha256": "57e5a72cc45b36d07acfae2b6bd9f9ff0c2cb81bc9cb2f4dcf6cdb79ab201253",
+  "model_version": "1.2.0-rc1",
+  "source_repository": "edvinli/election-simulator",
+  "source_git_commit": "22484322db4fca31f293f6b2e28ddb16f2d090c8",
+  "source_worktree_clean": true,
+  "deterministic_payload_sha256": "581cd443ec5624eb89ba32ee30fb58853d9d759a2861bb131b23e2ae131c8114"
+}
