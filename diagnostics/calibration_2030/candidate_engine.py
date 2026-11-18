@@ -275,8 +275,13 @@ def candidate_national_vote_shares(
     samples: int,
     seed: int,
     data_dir: Path | str | None = None,
+    t2_k: tuple[float, int] | None = None,
 ) -> NationalVoteShareSampleResult:
     """The national stage of one arm, in production's result type.
+
+    ``t2_k``: ``inflation_k(arm, ctx, as_of)`` computed beforehand (it is
+    deterministic and costly, so the harness computes it once per origin);
+    ``None`` computes it here.
 
     Production's ``generate_national_vote_shares`` is always called on the
     arm's data root. It fixes ``as_of`` and the horizon exactly as production
@@ -310,7 +315,7 @@ def candidate_national_vote_shares(
         # draws the OU dynamics from z_dyn (T2 §3.6 shares Z_dyn across Ua,
         # Ub1 and Ub2). The `ou` generator is derived and its seed recorded,
         # but nothing is drawn from it.
-        k, k_count = t2.inflation_k(config.state_dynamics, ctx, as_of_date)
+        k, k_count = t2_k if t2_k is not None else t2.inflation_k(config.state_dynamics, ctx, as_of_date)
         base = np.asarray(
             t2.state_dynamics_draws(
                 config.state_dynamics, ctx, as_of_date, prod.election_date,
@@ -390,6 +395,7 @@ def simulate_candidate(
     seed: int,
     data_dir: Path | str | None = None,
     processed_geo_dir: Path | str | None = None,
+    t2_k: tuple[float, int] | None = None,
 ):
     """``simulate_election`` with the arm's national stage. Returns ``(result, national)``."""
 
@@ -400,6 +406,7 @@ def simulate_candidate(
             raise TypeError(f"unexpected national-stage arguments {sorted(extra)}")
         result = candidate_national_vote_shares(
             config, as_of=as_of, election_date=election_date, samples=samples, seed=seed, data_dir=data_dir,
+            t2_k=t2_k,
         )
         captured["national"] = result
         return result

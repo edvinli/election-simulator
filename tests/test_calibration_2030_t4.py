@@ -2,18 +2,24 @@
 
 The C0 self-check runs production ``simulate_election`` and the candidate
 path at n = 2,000 on one 2018 and one 2026 case and requires identical bytes.
-``noise_laws`` and ``t2_arms`` belong to other agents; the tests use small
-local stubs injected into ``sys.modules`` and, when the real ``noise_laws``
-is present, also check C0 through it.
+It is checked through the real ``noise_laws`` LW0 and, independently,
+through a local stub that copies production's law. Amendment 002 cases
+(2014 on ``isolated.votes_to_seats``, 2010 vote-only) and a small CAND draw
+through the real ``t2_arms`` and ``noise_laws`` are checked at small n.
 """
 
 from __future__ import annotations
 
 import hashlib
+from fractions import Fraction
+import json
+import shutil
 import sys
+import tempfile
 import types
 import unittest
 from datetime import date, timedelta
+from pathlib import Path
 from unittest import mock
 
 import numpy as np
@@ -97,9 +103,9 @@ class C0SelfCheckTest(unittest.TestCase):
         ce._POOL_CACHE.clear()
 
     def test_c0_with_the_real_noise_laws_module(self):
-        if ce.noise_laws_module() is None:
-            self.skipTest("noise_laws (T3-rev agent) is not present yet")
-        self._assert_identical(ce.config_c0())
+        config = ce.config_c0()
+        self.assertEqual((config.noise, config.pool), ("LW0", "current_rule"))
+        self._assert_identical(config)
 
 
 class SubSeedTest(unittest.TestCase):
@@ -292,10 +298,120 @@ class SelectionTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             ce.config_cand({"t2_arm": "D0", "noise_law": "LW0"})
 
-    def test_selected_value_paths(self):
-        self.assertEqual(t4._selected_value({"selected": "Ua"}), "Ua")
-        self.assertEqual(t4._selected_value({"decision": {"selected": "NH0"}}), "NH0")
+    def test_selection_from_the_results_records(self):
+        selection, source = t4.load_selection(None)
+        self.assertEqual(selection, {"t2_arm": "Ua", "noise_law": "NH0"})
+        self.assertIn("t2_results_sha256", source)
+        cand = ce.config_cand(selection)
+        self.assertEqual((cand.aggregate, cand.state_dynamics, cand.noise, cand.pool), ("v0.3", "Ua", "NH0", "corrected"))
+        self.assertFalse(ce.cand_equals_fb(selection))
 
+
+class Amendment002Test(unittest.TestCase):
+    """2014 seats on the validated PRE_2018 path; 2010 votes only; pinned hashes enforced."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.TemporaryDirectory()
+        cls.inputs = t4.prepare_inputs(Path(cls.tmp.name), need_v03=True, need_2010=True)
+        cls.truth = t4.load_truth_t4()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmp.cleanup()
+
+    def test_amendment_verifies(self):
+        record = t4.verify_amendment_002()
+        self.assertIn("diagnostics/election_noise_v2/control_baseline_amendment2/harness2/isolated.py",
+                      record["pinned_sha256"])
+
+    def test_pinned_hash_mismatch_refuses(self):
+        from diagnostics.calibration_2030.common import IntegrityError
+
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp)
+            record = json.loads(t4.AMENDMENT_002.read_text(encoding="utf-8"))
+            record["pinned_sha256"]["scripts/mandates/law.py"] = "0" * 64
+            body = json.dumps(record, sort_keys=True).encode()
+            digest = hashlib.sha256(body).hexdigest()
+            (folder / t4.AMENDMENT_002.name).write_bytes(body)
+            (folder / t4.AMENDMENT_002.with_suffix(".sha256").name).write_text(f"{digest}  x\n")
+            index = {"amendments": [{"record": t4.AMENDMENT_002.name, "record_sha256": digest}]}
+            (folder / "index.json").write_text(json.dumps(index))
+            with self.assertRaisesRegex(IntegrityError, "pinned files changed"):
+                t4.verify_amendment_002(folder / t4.AMENDMENT_002.name)
+            (folder / t4.AMENDMENT_002.with_suffix(".sha256").name).write_text("f" * 64 + "  x\n")
+            with self.assertRaisesRegex(IntegrityError, "companion"):
+                t4.verify_amendment_002(folder / t4.AMENDMENT_002.name)
+        tampered = Path(self.tmp.name) / "amend"
+        shutil.copytree(t4.AMENDMENT_002.parent, tampered)
+        (tampered / t4.AMENDMENT_002.name).write_bytes(t4.AMENDMENT_002.read_bytes() + b" ")
+        with self.assertRaises(IntegrityError):
+            t4.verify_amendment_002(tampered / t4.AMENDMENT_002.name)
+
+    def _job(self, arm, config, year, horizon, set_name, n=40, t2_values=None):
+        (job,) = t4.make_jobs(arm, config, [(year, horizon, set_name)], self.inputs, self.truth, n, SEED, t2_values)
+        return job
+
+    def test_2014_seats_come_from_votes_to_seats_under_pre_2018(self):
+        from diagnostics.election_noise_v2.control_baseline_amendment2.harness2 import isolated
+        from scripts.mandates.law import MandateLaw, mandate_law_for_election_year
+
+        self.assertIs(mandate_law_for_election_year(2014).law, MandateLaw.PRE_2018)
+        self.assertEqual(mandate_law_for_election_year(2014).first_divisor, Fraction(7, 5))
+        calls = []
+        original = isolated.votes_to_seats
+
+        def spy(votes, year, *args, **kwargs):
+            calls.append((votes.copy(), year))
+            return original(votes, year, *args, **kwargs)
+
+        config = ce.config_c0()
+        with mock.patch.object(isolated, "votes_to_seats", spy):
+            row = t4.run_case(self._job("C0", config, 2014, 28, "D"))
+        self.assertTrue(row["completed"], row.get("error"))
+        self.assertEqual([y for _, y in calls], [2014])
+        national = ce.candidate_national_vote_shares(config, as_of=date(2014, 8, 17), election_date=date(2014, 9, 14),
+                                                     samples=40, seed=SEED)
+        np.testing.assert_array_equal(calls[0][0], national.nat_shares_matrix * 100.0)
+        seats = original(calls[0][0], 2014)
+        self.assertEqual(row["mean_seats"], "|".join(f"{v:.3f}" for v in seats.mean(axis=0)))
+        self.assertTrue(row["seat_total_always_349"] and row["dates_ok"])
+        self.assertEqual(sum(self.truth[2014]["seats"].values()), 349)
+        self.assertIn("seat_energy_score", row)
+        self.assertIn("brier_coalition", row)
+
+    def test_2010_has_vote_metrics_only(self):
+        row = t4.run_case(self._job("C0", ce.config_c0(), 2010, 112, "D"))
+        self.assertTrue(row["completed"], row.get("error"))
+        for key in ("es_9cat", "crps_8party_mean", "brier_threshold", "coverage_50", "coverage_90"):
+            self.assertIn(key, row)
+        for key in ("seat_energy_score", "brier_coalition", "mean_seats"):
+            self.assertNotIn(key, row)
+        self.assertIsNone(row["seat_total_always_349"])
+        self.assertEqual(row["noise_pool_years"], [2002, 2006])
+
+    def test_u_arm_before_2010_09_26_is_not_computable(self):
+        cand = ce.config_cand({"t2_arm": "Ua", "noise_law": "NH0"})
+        values = t4.t2_origin_values(cand, [date(2010, 5, 30)])
+        self.assertIn("not_computable", values["2010-05-30"])
+        row = t4.run_case(self._job("CAND", cand, 2010, 112, "D", t2_values=values))
+        self.assertEqual((row["completed"], row["status"]), (False, "not computable"))
+
+    def test_cand_draw_through_the_real_modules(self):
+        # k is passed in (inflation_k at a 2018 origin scores every earlier
+        # k = 1 cell, minutes of work); the harness computes it with
+        # t2_origin_values. Everything else is the real T2 and T3-rev code.
+        cand = ce.config_cand({"t2_arm": "Ua", "noise_law": "NH0"})
+        values = {"2018-08-12": {"t2_k": [0.5, 999]}}
+        for year, horizon, set_name in ((2018, 28, "D"), (2014, 28, "D")):
+            if year == 2014:
+                values = {"2014-08-17": {"t2_k": [0.5, 999]}}
+            row = t4.run_case(self._job("CAND", cand, year, horizon, set_name, n=60, t2_values=values))
+            self.assertTrue(row["completed"], row.get("error"))
+            self.assertTrue(row["vote_rows_sum_to_100"] and row["seat_total_always_349"], row)
+            self.assertEqual((row["k"], row["k_eligible_targets"]), (0.5, 999))
+            self.assertTrue(row["dates_ok"])
 
 if __name__ == "__main__":
     unittest.main()
