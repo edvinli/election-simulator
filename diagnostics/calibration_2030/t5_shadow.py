@@ -692,6 +692,22 @@ def prepare_k(ctx: dict, origin: date, workers: int = 1) -> dict:
     return {arm: A.inflation_k(arm, ctx, origin) for arm in U_ARMS}
 
 
+def v03_self_check_reported(rows: Mapping) -> dict:
+    """v03.self_check restricted to the recorded days the snapshot's rows reach (reported only).
+
+    T1 recorded M readings up to 2026-11-18; a capture whose rows end earlier
+    (or a revised snapshot) is reported, never refused: T5 names no self-check.
+    """
+
+    from . import v03
+
+    recorded = json.loads(v03.T1_RESULTS.read_text(encoding="utf-8"))["arms"]["SH"]["m_reading_2026_rolling_weights"]
+    m = PARTIES8.index("M")
+    diffs = {d: abs(rows[date.fromisoformat(d)][1][m] - v) for d, v in recorded.items() if date.fromisoformat(d) in rows}
+    return {"ok": bool(diffs) and all(x < 1e-9 for x in diffs.values()), "abs_diff": diffs,
+            "days_not_in_rows": sorted(d for d in recorded if date.fromisoformat(d) not in rows)}
+
+
 def interim_law():
     """Amendment 001's interim law refitted on the seven corrected residuals; checked against the record."""
 
@@ -1073,7 +1089,6 @@ def capture(repo: Path = ROOT, *, dry_run: bool = False, dry_run_out: Path | Non
         check_clock(clock())
         ctx = build_snapshot_context(export_root, origin, work, n_draws)
         from . import t2_arms as A
-        from .v03 import self_check
 
         timings["context"] = time.time() - t0
         t0 = time.time()
@@ -1155,11 +1170,11 @@ def capture(repo: Path = ROOT, *, dry_run: bool = False, dry_run_out: Path | Non
         st0 = A.origin_state(ctx, origin)
         omega = A.omega_at(ctx, origin)
         theta = A.theta_details(ctx, origin)
-        v03_check = self_check(ctx["rows"])
+        v03_check = v03_self_check_reported(ctx["rows"])
         diagnostics = {
             "capture_date": origin, "h_E": (ELECTION_2030 - origin).days,
             "v03_reading_at_O": dict(zip(PARTIES8, st0["mean"].tolist())),
-            "v03_self_check_ok_reported_only": bool(v03_check["ok"]),
+            "v03_self_check_reported_only": v03_check,
             "omega_O": None if omega is None else omega[0], "omega_centres": None if omega is None else omega[1],
             "k": {arm: {"k": k[arm][0], "eligible_targets": k[arm][1], "errors": 8 * k[arm][1]} for arm in U_ARMS},
             "theta": theta,
