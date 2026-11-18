@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0",
+  "amendments": [
+    {
+      "amendment_id": "001-t3-flag-interim-beta-half",
+      "amends": "docs/calibration_2030_preregistration.md",
+      "record": "001-t3-flag-interim-beta-half.json",
+      "record_sha256": "a29f0d6e293aaf5ba10f0d78f47f46e911517ec1681fe2e2516de0ed87814f88",
+      "text": "docs/calibration_2030_preregistration_amendment_001.md"
+    }
+  ]
+}
