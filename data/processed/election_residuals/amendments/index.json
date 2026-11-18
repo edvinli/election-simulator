@@ -7,6 +7,13 @@
       "record": "001-eve-information-set.json",
       "record_sha256": "f17cfbde10221a04fc302cf9b6e0f1ce52066adeec998c2e3de6d0b498209e27",
       "text": "docs/election_noise_residual_amendment_001.md"
+    },
+    {
+      "amendment_id": "002-missing-key-polls",
+      "subject": "scripts/election_residuals/eve_consensus.py (polls missing a pivot key)",
+      "record": "002-missing-key-polls.json",
+      "record_sha256": "988e4b0649172a84cf09db7bea2c67317ba0952f644dd24f1545056db6de981e",
+      "text": "docs/election_noise_residual_amendment_002.md"
     }
   ]
 }
