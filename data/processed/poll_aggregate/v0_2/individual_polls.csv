@@ -1,4 +1,12 @@
 poll_id,pollster,pollster_original,interview_start,interview_end,publication_date,party,support,source_value,support_status,sample_size,poll_method,source_url,retrieved_at,metadata_source_url,metadata_retrieved_at,metadata_match_status,metadata_row_source_references_json
+swp-d5af2be6c1f0678665d7,Novus,Novus,2026-11-06,2026-11-15,2026-11-18,M,26.5,26.5,reported,2387,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-d5af2be6c1f0678665d7,Novus,Novus,2026-11-06,2026-11-15,2026-11-18,L,3.6,3.6,reported,2387,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-d5af2be6c1f0678665d7,Novus,Novus,2026-11-06,2026-11-15,2026-11-18,C,6.6,6.6,reported,2387,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-d5af2be6c1f0678665d7,Novus,Novus,2026-11-06,2026-11-15,2026-11-18,KD,4.9,4.9,reported,2387,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-d5af2be6c1f0678665d7,Novus,Novus,2026-11-06,2026-11-15,2026-11-18,S,24.9,24.9,reported,2387,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-d5af2be6c1f0678665d7,Novus,Novus,2026-11-06,2026-11-15,2026-11-18,V,7.2,7.2,reported,2387,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-d5af2be6c1f0678665d7,Novus,Novus,2026-11-06,2026-11-15,2026-11-18,MP,7.3,7.3,reported,2387,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-d5af2be6c1f0678665d7,Novus,Novus,2026-11-06,2026-11-15,2026-11-18,SD,17.3,17.3,reported,2387,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
 swp-3cd8b243f8871ddd91ae,Sifo,Sifo,2026-10-26,2026-11-08,2026-11-11,M,23.3,23.3,reported,3104,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
 swp-3cd8b243f8871ddd91ae,Sifo,Sifo,2026-10-26,2026-11-08,2026-11-11,L,4.1,4.1,reported,3104,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
 swp-3cd8b243f8871ddd91ae,Sifo,Sifo,2026-10-26,2026-11-08,2026-11-11,C,5.7,5.7,reported,3104,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]

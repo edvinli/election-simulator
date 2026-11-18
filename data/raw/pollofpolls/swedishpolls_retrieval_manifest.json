@@ -1,8 +1,8 @@
 {
   "acquisition_diagnostics": [
     {
-      "byte_length": 272587,
-      "bytes": 272587,
+      "byte_length": 272693,
+      "bytes": 272693,
       "content_type": "text/plain; charset=utf-8",
       "final_host": "raw.githubusercontent.com",
       "final_host_path": "raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv",
@@ -39,23 +39,23 @@
   },
   "sources": {
     "swedishpolls": {
-      "bytes": 272587,
+      "bytes": 272693,
       "final_host": "raw.githubusercontent.com",
       "final_path": "/MansMeg/SwedishPolls/master/Data/Polls.csv",
       "final_url": "https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv",
       "http_headers": {
-        "content-length": "272587",
+        "content-length": "272693",
         "content-type": "text/plain; charset=utf-8",
-        "date": "Wed, 11 Nov 2026 13:02:07 GMT",
-        "etag": "\"4b4751fc2f051cc7fc13130010dea5069d61631a71cd544b70a77bbc3df88aaf\""
+        "date": "Wed, 18 Nov 2026 08:47:27 GMT",
+        "etag": "\"bd12503064d47ff77272657ae4e71b804c1a10c52d919c6de204b5765fcf8813\""
       },
       "http_status": 200,
       "raw_filename": "swedishpolls_polls.csv",
       "retrieval_method": "direct_repository_http",
       "retrieval_url": "https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv",
-      "retrieved_at": "2026-11-11T13:02:07+00:00",
+      "retrieved_at": "2026-11-18T08:47:27+00:00",
       "semantic_validation": "PASS",
-      "sha256": "c4c5d527d8c52099186e32dd7b46c40c564476445307ad53fb273dcb752d4ef5",
+      "sha256": "bc212727b2f81ebbd74348f6b2557754960eae6a145061b86c0ae7ebea056690",
       "source_key": "swedishpolls",
       "source_page_url": "https://github.com/MansMeg/SwedishPolls/blob/master/Data/Polls.csv",
       "source_url": "https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv",
@@ -69,7 +69,7 @@
       "http_headers": {
         "content-length": "22726",
         "content-type": "text/plain; charset=utf-8",
-        "date": "Wed, 11 Nov 2026 13:02:08 GMT",
+        "date": "Wed, 18 Nov 2026 08:47:27 GMT",
         "etag": "\"8d575ef90c4f8cb29636a1541c97a85df5e5aa8d777ea99715aafdbcd5f725b2\""
       },
       "http_status": 200,
