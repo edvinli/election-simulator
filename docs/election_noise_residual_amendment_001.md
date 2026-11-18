@@ -1,19 +1,19 @@
 # Election-noise residuals, amendment 001: the election-eve information set
 
-**Status: DRAFT, not in effect.** Drafted 2026-11-18T16:32:08Z on branch
-`prereg/calibration-2030-drafts` from `origin/main` `6c4271c`. It takes
-effect only when the user approves it and it is committed with all of the
-following:
+**Status: FINAL.** Approved by the user on 2026-11-18 and finalized at
+2026-11-18T16:41:53Z. It was drafted at 2026-11-18T16:32:08Z on branch
+`prereg/calibration-2030-drafts` from `origin/main` `6c4271c`.
 
-- its finalized JSON record;
+It takes effect when committed with all of the following:
+
+- its JSON record,
+  `data/processed/election_residuals/amendments/001-eve-information-set.json`;
 - that record's SHA-256 companion;
-- an entry in `data/processed/election_residuals/amendments/index.json`,
-  created at finalization;
-- the actual finalization timestamp, written into both this text and the
-  record.
+- its entry in `data/processed/election_residuals/amendments/index.json`.
 
-Until then it changes nothing: not production, not any archived forecast, and
-not any recorded result.
+Taking effect defines the residual rule for the 2030 calibration programme
+(§6). It changes no production forecast, archived forecast or recorded
+result.
 
 It is append-only. It does not edit:
 
