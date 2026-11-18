@@ -1,10 +1,14 @@
 # Calibration programme for the 2030 cycle: preregistration (T1, T3, T4 gates)
 
-**Status: DRAFT, not frozen.** Drafted 2026-11-18 on branch
-`prereg/calibration-2030-drafts` from `origin/main` `6c4271c`. No challenger
-has been implemented or scored under it. It becomes binding only when the
-user approves it and it is frozen by the procedure in §7. Until then any part
-may change, and every change is visible in git.
+**Status: FROZEN.** The user approved the freeze on 2026-11-18. The document
+was drafted the same day on branch `prereg/calibration-2030-drafts` from
+`origin/main` `6c4271c`.
+
+- **Freeze record.** The freeze timestamp, body hash and base commit are in
+  the freeze block at the end of this file and in the freeze record (§7).
+- **Nothing scored before the freeze.** No challenger was implemented or
+  scored before it.
+- **Changes after the freeze** need an append-only amendment.
 
 This programme is not a protocol change of the 2026 prospective benchmark.
 That benchmark's dates, selection, weighting and scoring are untouched.
@@ -16,9 +20,19 @@ intervals covered 0.784 of outcomes
 (`docs/poll_aggregate_replay_v4_results.md`). The review of 2026-11-18 found
 four contributing causes:
 
-1. **The noise residuals leak election-day polls.** They measure the result
-   against a consensus that includes exit polls and other election-day polls.
-   This is fixed by `docs/election_noise_residual_amendment_001.md`.
+1. **The noise residuals leak election-day polls and silently drop polls.**
+   They measure the result against a consensus that includes exit polls and
+   other election-day polls, and that drops polls missing a sample size or a
+   fieldwork start. Two amendments fix this, and both are in effect:
+   - `docs/election_noise_residual_amendment_001.md`, finalized
+     2026-11-18T16:41:53Z;
+   - `docs/election_noise_residual_amendment_002.md`, finalized
+     2026-11-18T16:44:12Z.
+
+   They are implemented by `build_eve_polling_consensus` in
+   `scripts/election_residuals/eve_consensus.py`. On the production pool
+   (2002–2022) the corrected residuals raise the noise law's total variance
+   from 7.29 to 8.39 pp².
 2. **The noise law discards systematic poll bias.** Its draws are centred,
    although S was underestimated in 6 of 6 elections (2002–2022), and V and
    MP were overestimated in 6 of 6.
@@ -29,7 +43,8 @@ four contributing causes:
    112 days. These belong to T2 and are not preregistered here.
 
 **Disclosure of evidence already seen.** Every test here is retrospective.
-The following was computed before this draft and cannot be unseen:
+The following was computed before this preregistration was drafted and cannot
+be unseen:
 
 - **T1.** With the 2026 segment's hyperparameters held fixed, the author ran a
   grid. An election shock to latent support (1e-3 to 3e-3 × shape) plus a
@@ -72,8 +87,14 @@ independent evidence will be prospective (T5).
    | `data/processed/poll_aggregate/v0_2/swedishpolls_aggregate_timeseries.csv` | `e04bca4a6f90340993f2ca79bfe5d2f17d3ddf8a9e36d885a278048986943761` |
    | `data/processed/poll_aggregate/v0_2/swedishpolls_aggregate_metadata.json` | `5c409da0ddac139deb3c5be9709f66ea4903b17ed9c2a9b727ae0aa82082da0a` |
 
+   The corrected residuals come from
+   `scripts/election_residuals/eve_consensus.py` (SHA-256
+   `781bf689cc024f9a874e0b6eddd5ff34795377e99da1ca35dbc05d90040b7d20`), as finalized with amendment 002.
+
    Polls published after 2026-11-18 are not used. A scoring run refuses to
-   start if any hash differs or the checkout is dirty.
+   start if any hash differs or any tracked file has uncommitted changes
+   (`git status --porcelain --untracked-files=no` is not empty). It records
+   the commit it ran at.
 3. **Causality.**
    - Every forecast origin uses only polls published by that origin, and only
      election results available by then.
@@ -118,6 +139,11 @@ segment-refit design in `build.py`, unchanged except as stated.
 | `H` | every house block `+= h_reset × reference_shape` |
 | `SH` | both |
 
+**`C0` uses production's stored segment fits.** These are the
+`hyperparameters_exact` in the pinned v0.2 metadata, and are not refitted.
+Its log-likelihoods are recomputed by the T1 harness with the same filter
+code as the other arms.
+
 `s_shock` and `h_reset` are hyperparameters estimated with the five existing
 ones. Each segment is fitted by maximum likelihood on its fit date, using only
 data known then. The procedure is production's: Nelder–Mead from the
@@ -131,6 +157,11 @@ best point.
 
 The starts are not the grid values in §0.
 
+**One extra start for the non-control arms.** `C0`'s fitted values for the
+same segment, with the new parameters at their starts. The arms nest `C0`
+(at their lower bounds they add negligible variance), so this start keeps a
+poor Nelder–Mead run from showing up as a model difference.
+
 ### 2.2 Scores
 
 - **Score.** Each poll's one-step-ahead log predictive density: the filter's
@@ -138,9 +169,14 @@ The starts are not the grid values in §0.
   nats. It is computed prequentially in fieldwork order, with the
   hyperparameters of the segment the poll falls in. Election observations
   are not scored.
-- **Post-election window `W_e`.** Polls whose fieldwork midpoint is within
-  120 days on or after election day `e`.
-- **Mid-cycle `M_e`.** The rest of segment `e`.
+- **Segments.** A poll belongs to the segment of the last election `e` whose
+  day is on or before its fieldwork midpoint. It is scored with the fit made
+  when `e`'s result became available.
+- **Out of sample only.** Polls published on or before that fit date were in
+  the fit's data, so they are not scored.
+- **Post-election window `W_e`.** Scored polls whose fieldwork midpoint is
+  within 120 days on or after election day `e`.
+- **Mid-cycle `M_e`.** The remaining scored polls of segment `e`.
 - **Decision windows: `e ∈ {2014, 2018, 2022}`.** Each is scored with a fit
   that saw at least one complete earlier post-election window.
   - 2010 is reported but carries no decision weight. Its fit, on
@@ -155,7 +191,7 @@ The starts are not the grid values in §0.
 | --- | --- |
 | T1-G1 post-election gain | summed log score over `W_e` higher than `C0` in at least 2 of the 3 decision windows, **and** higher summed over the three |
 | T1-G2 no mid-cycle harm | for each of `M_2010`, `M_2014`, `M_2018`, `M_2022`: mean log score per poll ≥ `C0`'s − 0.01 nats |
-| T1-G3 integrity | every segment fit completes within its iteration limit; the aggregate stays on the simplex; earlier rows are unchanged when later data are appended (the existing causality test) |
+| T1-G3 integrity | at every fit date, the arm's maximized in-sample log-likelihood is at least `C0`'s − 0.5 nats (it nests `C0`, so a shortfall is an optimizer failure); the aggregate stays on the simplex; earlier rows are unchanged when later data are appended (the existing causality test) |
 
 **Selection.**
 
@@ -173,8 +209,12 @@ published since 2026-09-09.
 
 - **Arm `W`.** Recompute the weights daily: each pollster's share of
   effective sample among polls known on day `T` with fieldwork midpoint in
-  the preceding 365 days. `W` sits on top of the selected filter arm, and
-  changes no likelihood.
+  the preceding 365 days. The test is v0.2's own,
+  `(T − midpoint).days < 365`. `W` sits on top of the selected filter arm,
+  and changes no likelihood.
+- **Effective sample.** A poll's sample size after the aggregate's own
+  missing-size imputation and rolling-tracker overlap discount
+  (`Observation.sample_size`).
 - **Metric.** For each day `T` with at least three polls published in
   `(T, T + 30]`:
   - take the squared error between the reading on `T` and the
@@ -198,13 +238,17 @@ files are not modified.
 
 ## 3. T3: the election-noise law
 
-**Precondition.** T3 freezes only after two things:
+**Precondition: satisfied.** Amendments 001 and 002 are both in effect. Every
+residual in T3 and T4 is
+`result − build_eve_polling_consensus(E, polls, window_days = 14)`, with:
 
-- `docs/election_noise_residual_amendment_001.md` is in effect;
-- the user has decided its §5: whether polls with a missing sample size or
-  fieldwork start enter the consensus.
+- the pinned polls (§1);
+- `result` the certified nine-category result (for 2026, REST is 100 minus
+  the eight parties);
+- the vector zero-sum cleaned as in
+  `scripts/election_layer_v2/residuals_pool.py`.
 
-All residuals below follow those rules.
+These are the corrected residuals.
 
 ### 3.1 Arms
 
@@ -238,16 +282,22 @@ tuned: the options are exactly these.
 Each case:
 
 - **Forecast.** The predictive vote distribution is the target's corrected
-  consensus plus 20,000 draws of `r`. The truth is the certified result.
+  consensus plus 20,000 draws of `r`, applied exactly as the engine applies
+  noise: `apply_batch_simplex_transfer` with `eps` = 0.01 pp. The truth is the
+  certified result.
 - **Primary score.** The nine-category energy score,
   `d1_joint_vote_energy_score`, from
   `diagnostics/election_noise_v2/control_baseline/harness/metrics.py`
   (SHA-256 `ce872a25…3810`).
 - **Secondary scores** (`d2`): CRPS and 50/90 % coverage.
-- **Seeds.** The seed is the first 8 hex digits of
-  `sha256("calibration-2030:T3:<target year>:<design>")`. All arms of a case
+- **Seeds.** The seed is the integer value of the first 8 hex digits of
+  `sha256("calibration-2030:T3:<target year>:<design>")`, where `<design>` is
+  `rolling`, `loo` or `heldout`.
+- **Draw order.** One `numpy.random.default_rng(seed)` draws `Z` (20,000 × 9
+  standard normals) and then `V` (20,000 values of χ²₅). All arms of a case
   share the same `Z` and `V`.
-- **Monte Carlo sensitivity.** Every case is repeated with four more seeds.
+- **Monte Carlo sensitivity.** Every case is repeated with four more seeds,
+  made by appending `:1` to `:4` to the seed string.
   If a gate outcome differs across the five seeds, the gate is reported as
   Monte-Carlo-fragile and is treated as **failed**.
 
@@ -292,7 +342,7 @@ selection itself is not changed.
 | arm | definition |
 | --- | --- |
 | `C0` | production 1.2.0-rc1 as pinned in §1 |
-| `F1` | `C0`, with residuals from amendment 001 (and 002, if adopted) |
+| `F1` | `C0`, with the noise pool built from the corrected residuals (amendments 001 and 002) |
 | `CAND` | `F1` plus the T1 selection, the T3 selection, and any T2 selection under its own preregistration |
 
 `F1` isolates the correction. It removes an information leak, so it is
@@ -358,7 +408,7 @@ Pooled values are unweighted means over the cases of a set.
 
 ## 6. Order
 
-1. Amendment 001 into effect, plus the decision on its §5.
+1. Amendments 001 and 002 into effect (done 2026-11-18).
 2. Freeze this document.
 3. Run T1 and T3, which are independent: T3's residuals do not read the
    aggregate.
@@ -388,5 +438,28 @@ The same body-hash scheme as `docs/election_noise_v2_preregistration.md`
 - **The freeze commit** is reported with the freeze. It cannot be embedded in
   the file it hashes.
 
-The draft record in that location has `"status": "draft"` and a body hash
-that is recomputed at freezing.
+<!-- FREEZE-BLOCK-START -->
+
+```
+PREREGISTRATION STATUS: FROZEN
+
+FREEZE TIMESTAMP (UTC): 2026-11-18T16:46:25Z
+FREEZE BASE COMMIT:     254fb676cb5bbc18b5dc7f19530d95c5e4632db9
+FREEZE COMMIT:          the commit that adds this block (reported with the
+                        freeze; it cannot be embedded in the file it hashes)
+BODY SHA-256:           7707c2afb754ff3a5d6ea8f85034321a6f2e0de54117012220c6da46fa66ee53
+DECIDED BY:             user (approval of 2026-11-18)
+RECORD:                 data/processed/calibration_2030/preregistration.json
+```
+
+BODY SHA-256 covers every byte of this file strictly before the last
+occurrence of the freeze-block marker. Verify with:
+
+```bash
+python3 - <<'PY'
+import hashlib, pathlib
+b = pathlib.Path("docs/calibration_2030_preregistration.md").read_bytes()
+marker = b"<!-- FREEZE-BLOCK-" + b"START -->"
+print(hashlib.sha256(b.rsplit(marker, 1)[0]).hexdigest())
+PY
+```
