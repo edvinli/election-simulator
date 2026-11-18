@@ -797,6 +797,7 @@ def run_t2_targets(ctx: dict, origin: date, k: Mapping[str, tuple[float, int]], 
     election: dict[str, np.ndarray] = {}
     errors: dict[str, str] = {}
     info: dict[str, dict] = {}
+    seconds = dict.fromkeys(T2_ARMS, 0.0)
     for name, target in target_dates(origin).items():
         check_clock(clock())
         seed = t5_seed(origin, name)
@@ -812,6 +813,7 @@ def run_t2_targets(ctx: dict, origin: date, k: Mapping[str, tuple[float, int]], 
         for arm in T2_ARMS:
             if arm in errors:
                 continue
+            t0 = time.time()
             try:
                 if arm == "D0":
                     base[arm] = A.state_dynamics_draws(arm, ctx, origin, target, z_state=z_state, z_dyn=z_dyn,
@@ -829,16 +831,19 @@ def run_t2_targets(ctx: dict, origin: date, k: Mapping[str, tuple[float, int]], 
                         cell_info["Uc_scale"] = float(scale)
             except Exception as exc:  # noqa: BLE001 - recorded as FAILED (§4.3)
                 errors[arm] = f"{name}: {type(exc).__name__}: {exc}"
+            seconds[arm] += time.time() - t0
         # PREREG-AMBIGUITY: if Uc fails, its bootstrap draws are not consumed and
         # Z_noise follows Z_poll directly; the spec orders the draws but does not
         # say what a failed arm consumes. Reading implemented: a failed arm draws nothing.
         if name == "election":
             z_noise = rng.standard_normal((n, len(COLUMNS9)))
             for arm, b in base.items():
+                t0 = time.time()
                 try:
                     election[arm] = apply_noise(b, law.draw(z_noise, b))
                 except Exception as exc:  # noqa: BLE001
                     errors[arm] = f"election noise: {type(exc).__name__}: {exc}"
+                seconds[arm] += time.time() - t0
         else:
             try:
                 poll = A.poll_term(ctx, origin, z_poll)
@@ -851,7 +856,7 @@ def run_t2_targets(ctx: dict, origin: date, k: Mapping[str, tuple[float, int]], 
                     quantiles[arm][name] = poll_quantiles(b[:, :len(PARTIES8)] + poll)
             cell_info["_z_poll"] = z_poll
         info[name] = cell_info
-    return quantiles, election, {"errors": errors, "targets": info}
+    return quantiles, election, {"errors": errors, "targets": info, "seconds": seconds}
 
 
 def run_c0p(export_root: Path, ctx: dict, origin: date, n: int, in_process: bool, workdir: Path,
@@ -1081,6 +1086,7 @@ def capture(repo: Path = ROOT, *, dry_run: bool = False, dry_run_out: Path | Non
         t0 = time.time()
         quantiles, election, t2_info = run_t2_targets(ctx, origin, k, law, n_draws, clock)
         timings["T2_arms"] = time.time() - t0
+        timings.update({f"arm_{a}": s for a, s in t2_info["seconds"].items()})
 
         arm_status: dict[str, dict] = {}
         files: dict[str, bytes] = {}

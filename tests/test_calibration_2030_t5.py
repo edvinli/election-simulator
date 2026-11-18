@@ -386,6 +386,30 @@ class ActivationTest(unittest.TestCase):
                 T.activate_cand(repo, clock=fixed_clock(SAFE))
 
 
+class SnapshotContextTest(unittest.TestCase):
+    """The snapshot data root reproduces T2's pinned context and is causal at O."""
+
+    def test_snapshot_context_matches_pinned_t2_and_cuts_at_origin(self):
+        from diagnostics.calibration_2030 import t2_arms as A
+
+        with tempfile.TemporaryDirectory() as tmp:
+            export = T.export_tree(T.ROOT, "HEAD", Path(tmp) / "snap")
+            ctx = T.build_snapshot_context(export, date(2026, 11, 18), Path(tmp) / "w", n_draws=16)
+            pinned = A.t2_context(n_draws=16, v03_dir=Path(tmp) / "pinned")
+            self.assertEqual(ctx["v03_file_sha256"], pinned["v03_file_sha256"])
+            self.assertEqual(len(ctx["tp_n"]), len(pinned["tp_n"]))
+            self.assertEqual(Path(ctx["polls_file"]), export / T.SNAP_V02_POLLS)
+            self.assertEqual(ctx["election_days"], [*pinned["election_days"], T.ELECTION_2030])
+            early = T.build_snapshot_context(export, date(2026, 10, 1), Path(tmp) / "w2", n_draws=16)
+            self.assertGreater(early["t5_counts"]["polls_after_origin_excluded"], 0)
+            self.assertLessEqual(int(early["tp_avail"].max()), date(2026, 10, 1).toordinal())
+            self.assertLessEqual(early["row_days"][-1], date(2026, 10, 1))
+            # The open-interval shock now includes 2030-09-08 for targets after it, never on it.
+            o = date(2026, 10, 1)
+            self.assertFalse(A.election_shock_cov(early, o, T.ELECTION_2030).any())
+            self.assertTrue(A.election_shock_cov(early, o, T.ELECTION_2030 + timedelta(days=1)).any())
+
+
 class GuardTest(unittest.TestCase):
     def test_frozen_t5_body_and_record(self):
         p = T.verify_t5(allow_dirty=True)
