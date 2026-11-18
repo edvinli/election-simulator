@@ -1215,12 +1215,12 @@
     },
     "polls": {
       "path": "swedishpolls_individual_polls.csv",
-      "sha256": "e0d4180413a7e6962cf0b19668457d9e6151a3d47f53d7241fd356953dfb20c2"
+      "sha256": "18e84e56eff64a5133eb4eeca9767893a7f74b15724552ef573fd9314e8d2828"
     }
   },
   "last_date": "2026-11-18",
   "overlap_discounted_count": 151,
-  "polls_used": 1639,
+  "polls_used": 1640,
   "reported_level": "consensus_reading",
   "rows": 5898,
   "segments": [
