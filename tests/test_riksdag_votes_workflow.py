@@ -13,11 +13,12 @@ import unittest
 from pathlib import Path
 
 from scripts.riksdag_votes.constants import (
+    DATA_BRANCH,
     PROCESSED_DIR_RELATIVE,
     WEBSITE_DIR_RELATIVE,
     WORKFLOW_CONCURRENCY_GROUP,
 )
-from scripts.riksdag_votes.publish import ALLOWED_PATHS
+from scripts.riksdag_votes.publish import ALLOWED_PATHS, ALLOWED_TARGETS, PROTECTED_BRANCHES
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS = REPOSITORY_ROOT / ".github" / "workflows"
@@ -91,24 +92,56 @@ class RiksdagWorkflowTests(unittest.TestCase):
         steps = self.yaml.split("\n      - ")
         pushing = [step for step in steps if "publish commit" in step]
         self.assertEqual(len(pushing), 2)
+        conditions = {}
         for step in pushing:
-            condition = re.search(r"^\s*if: (.*)$", step, re.MULTILINE).group(1)
+            conditions[step.split("\n", 1)[0]] = re.search(r"^\s*if: (.*)$", step, re.MULTILINE).group(1)
+        for condition in conditions.values():
             self.assertIn("env.DRY_RUN != 'true'", condition)
-            self.assertIn("steps.quiet.outputs.quiet == 'yes'", condition)
+        # Only the website push waits for the publication/render quiet window;
+        # nothing else writes the data branch.
+        website = next(c for name, c in conditions.items() if "website" in name)
+        data = next(c for name, c in conditions.items() if "data branch" in name)
+        self.assertIn("steps.quiet.outputs.quiet == 'yes'", website)
+        self.assertNotIn("quiet", data)
 
-    def test_only_the_riksdag_paths_are_staged(self) -> None:
-        self.assertEqual(set(ALLOWED_PATHS), {PROCESSED_DIR_RELATIVE, WEBSITE_DIR_RELATIVE})
-        self.assertEqual((PROCESSED_DIR_RELATIVE, WEBSITE_DIR_RELATIVE), ("data/processed/riksdag_votes", "files/riksdag"))
-        # No raw staging, committing or pushing: all of it goes through publish.py.
-        for forbidden in ("git add", "git commit", "git push", "--force", "push -f", "+refs/"):
-            self.assertNotIn(forbidden, self.commands, forbidden)
+    def commit_targets(self) -> set[tuple[str, str, str]]:
         commits = [line for line in self.commands.splitlines() if "scripts.riksdag_votes.publish commit" in line]
         self.assertEqual(len(commits), 2)
         targets = set()
         for line in commits:
             words = shlex.split(line.split("uv run ", 1)[1])
             targets.add((words[words.index("--repo") + 1], words[words.index("--path") + 1], words[words.index("--branch") + 1]))
-        self.assertEqual(targets, {(".", PROCESSED_DIR_RELATIVE, "main"), ("../website", WEBSITE_DIR_RELATIVE, "master")})
+        return targets
+
+    def test_nothing_is_ever_pushed_to_main(self) -> None:
+        self.assertEqual(
+            self.commit_targets(),
+            {("$DATA_DIR", PROCESSED_DIR_RELATIVE, DATA_BRANCH), ("../website", WEBSITE_DIR_RELATIVE, "master")},
+        )
+        self.assertEqual(DATA_BRANCH, "data/riksdag-votes")
+        for forbidden in ("--branch main", "refs/heads/main", "HEAD:main", "origin main", "push origin"):
+            self.assertNotIn(forbidden, self.commands, forbidden)
+        # main is only ever checked out, at the code it runs.
+        checkout = self.yaml.split("- name: Check out simulator", 1)[1].split("\n      - ", 1)[0]
+        self.assertIn("ref: main", checkout)
+        # Outputs are read from and written to the data-branch worktree; the
+        # main checkout is asserted clean after the build.
+        self.assertIn("scripts.riksdag_votes.publish prepare --repo . --worktree \"$DATA_DIR\"", self.commands)
+        self.assertIn('--output-dir "$DATA_DIR/data/processed/riksdag_votes"', self.commands)
+        self.assertIn('test -z "$(git status --porcelain --untracked-files=all)"', self.commands)
+        # publish.py refuses main itself, whatever the YAML says.
+        self.assertIn("main", PROTECTED_BRANCHES)
+        self.assertNotIn("main", ALLOWED_TARGETS.values())
+
+    def test_only_the_riksdag_paths_are_staged(self) -> None:
+        self.assertEqual(set(ALLOWED_PATHS), {PROCESSED_DIR_RELATIVE, WEBSITE_DIR_RELATIVE})
+        self.assertEqual((PROCESSED_DIR_RELATIVE, WEBSITE_DIR_RELATIVE), ("data/processed/riksdag_votes", "files/riksdag"))
+        self.assertEqual(ALLOWED_TARGETS, {PROCESSED_DIR_RELATIVE: DATA_BRANCH, WEBSITE_DIR_RELATIVE: "master"})
+        # No raw staging, committing or pushing: all of it goes through publish.py.
+        for forbidden in ("git add", "git commit", "git push", "--force", "push -f", "+refs/"):
+            self.assertNotIn(forbidden, self.commands, forbidden)
+        for _repo, path, branch in self.commit_targets():
+            self.assertEqual(ALLOWED_TARGETS[path], branch)
         # The website copy touches only files/riksdag.
         copies = [line.strip() for line in self.commands.splitlines() if re.match(r"\s*(cp|rsync|mv|rm)\b", line)]
         self.assertEqual(copies, ['cp -R "$SITE_DIR/." website/files/riksdag/'])
@@ -137,9 +170,10 @@ class RiksdagWorkflowTests(unittest.TestCase):
             self.assertIn(f"tests.{module}", self.yaml, module)
 
     def test_header_documents_the_trigger_facts(self) -> None:
-        self.assertIn("GITHUB_TOKEN push", self.raw)
-        self.assertIn("starts no workflow", self.raw)
+        self.assertIn("GITHUB_TOKEN\n#     push starts no workflow", self.raw)
         self.assertIn("full.yml", self.raw)
+        self.assertIn("NEVER commits or pushes to simulator main", self.raw)
+        self.assertIn("read from data/riksdag-votes if that branch exists", self.raw)
 
 
 if __name__ == "__main__":

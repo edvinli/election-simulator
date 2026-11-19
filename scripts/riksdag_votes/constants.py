@@ -15,10 +15,15 @@ DEFAULT_OUTPUT_DIR = REPO_ROOT / "data" / "processed" / "riksdag_votes"
 MANIFEST_FILENAME = "manifest.json"
 INDEX_FILENAME = "index.json"
 # Paths the scheduled workflow (.github/workflows/riksdag-votes.yml) may write:
-# the committed outputs in this repository and the published copy on the
+# the outputs on this repository's DATA_BRANCH and the published copy on the
 # website (edvinli/edvinli.github.io, branch master). Nothing else.
 PROCESSED_DIR_RELATIVE = "data/processed/riksdag_votes"
 WEBSITE_DIR_RELATIVE = "files/riksdag"
+# The workflow never writes simulator main. Its record of the outputs is this
+# append-only branch, created from the main commit it checked out on first use;
+# main changes only through normal pull requests.
+DATA_BRANCH = "data/riksdag-votes"
+WEBSITE_BRANCH = "master"
 WORKFLOW_CONCURRENCY_GROUP = "riksdag-votes"
 
 SCHEMA_VERSION = "1.0"

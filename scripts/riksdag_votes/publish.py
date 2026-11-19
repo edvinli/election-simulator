@@ -1,25 +1,40 @@
 """Git steps of the scheduled riksdag workflow (``.github/workflows/riksdag-votes.yml``).
 
-    python -m scripts.riksdag_votes.publish status --repo simulator --path data/processed/riksdag_votes
+    python -m scripts.riksdag_votes.publish prepare --repo simulator --worktree data-branch
+    python -m scripts.riksdag_votes.publish status --repo data-branch --path data/processed/riksdag_votes
+    python -m scripts.riksdag_votes.publish commit --repo data-branch --path data/processed/riksdag_votes \\
+        --branch data/riksdag-votes --message "..."
     python -m scripts.riksdag_votes.publish wait --repository edvinli/election-simulator
-    python -m scripts.riksdag_votes.publish commit --repo simulator --path data/processed/riksdag_votes \\
-        --branch main --message "..."
+    python -m scripts.riksdag_votes.publish commit --repo website --path files/riksdag --branch master --message "..."
+
+The workflow never writes simulator ``main``. It keeps its record of the
+outputs on the append-only branch ``data/riksdag-votes`` and publishes a copy
+to the website's ``master``; those are the only two (path, branch) targets
+``commit`` accepts.
+
+``prepare`` adds a git worktree of ``data/riksdag-votes`` next to the simulator
+checkout: the remote branch if it exists, otherwise a new local branch at the
+checked-out main commit (so the branch shares main's history and is never an
+orphan). The build reads the previous outputs from, and writes the new ones
+to, that worktree.
 
 ``status`` fails if anything outside the allowed path changed and prints
 ``changed=yes|no`` (a change to the source manifest alone is ``no``: a
-re-zipped source with the same votes is not worth a commit). ``commit`` stages exactly that path, commits, and pushes
-with a plain (never forced) push; a rejected push is retried once after
-``git pull --rebase``. The commit touches only riksdag paths, so the rebase
-cannot conflict with the publication or rendering commits that may have landed
-in between. After the push, the remote branch must point at the local commit.
+re-zipped source with the same votes is not worth a commit).
 
-``wait`` blocks until no run of the workflows that push to the same branches
-(publication, rendering, the prospective benchmark) is queued or in progress
--- two consecutive quiet checks -- and until the clock is outside the
-protected 18:30-22:00 UTC interval. Those workflows push with a plain
-``git push`` that does not retry, so pushing while one of them is between its
-checkout and its push would make *it* fail. It exits 3 (deferred) if that does
-not happen before the deadline.
+``commit`` stages exactly that path, commits, and pushes with a plain (never
+forced) push; a rejected push is retried once after ``git pull --rebase``.
+After the push, the remote branch must point at the local commit.
+
+``wait`` is for the website push only. It blocks until no run of the
+workflows that push to website master (publication, rendering; the
+prospective benchmark is included for safety) is queued or in progress -- two
+consecutive quiet checks -- and until the clock is outside the protected
+18:30-22:00 UTC interval. Those workflows push with a plain ``git push`` that
+does not retry, so pushing while one of them is between its checkout and its
+push would make *it* fail. It exits 3 (deferred) if that does not happen
+before the deadline. No other workflow writes ``data/riksdag-votes``, so that
+push does not wait.
 """
 
 from __future__ import annotations
@@ -33,12 +48,21 @@ from datetime import datetime, time as clock_time, timezone
 from pathlib import Path
 from typing import Callable, Sequence
 
-from .constants import MANIFEST_FILENAME, PROCESSED_DIR_RELATIVE, WEBSITE_DIR_RELATIVE
+from .constants import (
+    DATA_BRANCH,
+    MANIFEST_FILENAME,
+    PROCESSED_DIR_RELATIVE,
+    WEBSITE_BRANCH,
+    WEBSITE_DIR_RELATIVE,
+)
 
-ALLOWED_PATHS = (PROCESSED_DIR_RELATIVE, WEBSITE_DIR_RELATIVE)
+# The only places the workflow may write: path -> branch.
+ALLOWED_TARGETS = {PROCESSED_DIR_RELATIVE: DATA_BRANCH, WEBSITE_DIR_RELATIVE: WEBSITE_BRANCH}
+ALLOWED_PATHS = tuple(ALLOWED_TARGETS)
+PROTECTED_BRANCHES = ("main",)
 # Committed with the outputs when they change, never on its own.
 NOT_WORTH_A_COMMIT_ALONE = (f"{PROCESSED_DIR_RELATIVE}/{MANIFEST_FILENAME}",)
-# Workflows whose commits land on simulator main or website master.
+# Workflows whose commits land on website master (or simulator main).
 CONFLICTING_WORKFLOWS = (
     ".github/workflows/election-simulator-publication.yml",
     ".github/workflows/election-simulator-render.yml",
@@ -90,6 +114,13 @@ def check_path(path: str) -> str:
     return path
 
 
+def check_target(path: str, branch: str) -> tuple[str, str]:
+    path = check_path(path)
+    if branch in PROTECTED_BRANCHES or ALLOWED_TARGETS[path] != branch:
+        raise PublishError(f"{path} may only be pushed to {ALLOWED_TARGETS[path]!r}, not {branch!r}")
+    return path, branch
+
+
 def status(repo: Path, path: str) -> bool:
     """Whether ``path`` changed in a way worth a commit; raises if anything
     outside ``path`` changed. A change to the source manifest alone (a
@@ -102,6 +133,30 @@ def status(repo: Path, path: str) -> bool:
     return any(p not in NOT_WORTH_A_COMMIT_ALONE for p in changed)
 
 
+def _remote_branch_exists(repo: Path, branch: str, remote: str) -> bool:
+    result = _git(repo, "ls-remote", "--exit-code", "--heads", remote, branch, check=False)
+    if result.returncode not in (0, 2):
+        raise PublishError(f"git ls-remote {remote} {branch} failed: {result.stderr.strip()}")
+    return result.returncode == 0
+
+
+def prepare_data_branch(
+    repo: Path, worktree: Path, *, branch: str = DATA_BRANCH, remote: str = "origin"
+) -> bool:
+    """Add a worktree of ``branch`` at ``worktree``; True if the branch already
+    existed on the remote, False if it was started at ``repo``'s HEAD."""
+    if branch in PROTECTED_BRANCHES or branch != DATA_BRANCH:
+        raise PublishError(f"refusing to prepare {branch!r}; only {DATA_BRANCH!r}")
+    if _remote_branch_exists(repo, branch, remote):
+        shallow = _git(repo, "rev-parse", "--is-shallow-repository").stdout.strip() == "true"
+        tracking = f"refs/remotes/{remote}/{branch}"
+        _git(repo, "fetch", "-q", *(["--depth=1"] if shallow else []), remote, f"+refs/heads/{branch}:{tracking}")
+        _git(repo, "worktree", "add", "-q", "-B", branch, str(worktree), tracking)
+        return True
+    _git(repo, "worktree", "add", "-q", "-b", branch, str(worktree), "HEAD")
+    return False
+
+
 def commit_and_push(
     repo: Path,
     path: str,
@@ -111,10 +166,11 @@ def commit_and_push(
     push: bool = True,
     remote: str = "origin",
 ) -> str | None:
-    """Commit exactly ``path`` and push it; returns the pushed commit or None if nothing changed."""
+    """Commit exactly ``path`` and push it to ``branch`` (its one allowed
+    target); returns the pushed commit, or None if nothing changed."""
+    path, branch = check_target(path, branch)
     if not status(repo, path):
         return None
-    path = check_path(path)
     _git(repo, "add", "--", path)
     staged = [p for p in _git(repo, "diff", "--cached", "--name-only", "-z").stdout.split("\0") if p]
     if any(not _under(p, path) for p in staged):
@@ -197,6 +253,9 @@ def wait_until_quiet(
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     commands = parser.add_subparsers(dest="command", required=True)
+    prepare_parser = commands.add_parser("prepare")
+    prepare_parser.add_argument("--repo", type=Path, required=True, help="the simulator checkout (main)")
+    prepare_parser.add_argument("--worktree", type=Path, required=True)
     status_parser = commands.add_parser("status")
     status_parser.add_argument("--repo", type=Path, required=True)
     status_parser.add_argument("--path", required=True)
@@ -212,6 +271,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     try:
+        if args.command == "prepare":
+            existed = prepare_data_branch(args.repo, args.worktree)
+            print(f"data_branch_existed={'yes' if existed else 'no'}")
+            return 0
         if args.command == "status":
             print(f"changed={'yes' if status(args.repo, args.path) else 'no'}")
             return 0

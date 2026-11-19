@@ -250,35 +250,60 @@ and deletes nothing.
 Daily at 06:41 UTC, and on `workflow_dispatch` (`dry_run`, default true;
 optional `sessions`). Concurrency group `riksdag-votes` only. Steps: restore
 the raw cache (`actions/cache`, keyed on the session list and date, falling
-back to the newest), run the riksdag tests, build the `--current` sessions
-with `--update --site-dir`, report both diffs, and — unless dry run — wait
-until no publication, rendering or benchmark run is queued or running (two
-checks a minute apart, never inside 18:30–22:00 UTC, deferring to the next day
-after 60 minutes), then commit `data/processed/riksdag_votes` to simulator main
-and `files/riksdag` to website master with `scripts/riksdag_votes/publish.py`:
-explicit path only, no force, one retry after `git pull --rebase`, and a check
-that the remote branch is at the pushed commit. A failure opens or comments on
-the issue "Riksdag votes update failing".
+back to the newest), run the riksdag tests, check out the data branch, build
+the `--current` sessions with `--update --output-dir <data branch> --site-dir`,
+report both diffs, and — unless dry run — push the data branch, then push the
+website copy. All git steps are `scripts/riksdag_votes/publish.py`: one
+explicit path per target, no force, one retry after `git pull --rebase`, and a
+check that the remote branch is at the pushed commit. A failure opens or
+comments on the issue "Riksdag votes update failing".
 
-Completed sessions are not rebuilt daily; their committed outputs are copied to
-the site unchanged. After a pipeline change, rebuild a completed term with
-`build --sessions 2022/23 2023/24 2024/25 2025/26` locally and commit, or
-dispatch the workflow with that `sessions` input.
+**The workflow never commits or pushes to simulator `main`.** `publish.py`
+accepts exactly two (path, branch) targets and refuses `main`:
+
+| Path | Repository | Branch |
+| --- | --- | --- |
+| `data/processed/riksdag_votes` (with `manifest.json`) | edvinli/election-simulator | `data/riksdag-votes` |
+| `files/riksdag` | edvinli/edvinli.github.io | `master` |
+
+`data/riksdag-votes` is append-only: on the first run it is started at the
+main commit the workflow checked out (so it shares main's history and starts
+with main's outputs); every later run adds data commits on top. Main holds the
+riksdag outputs only as updated through normal pull requests.
+
+**Where the previous outputs are read from.** The build needs them to leave
+unchanged files untouched (and so commit nothing on a day without new votes)
+and to copy the completed sessions to the website. They are read from
+`data/riksdag-votes` if it exists, otherwise from main (which is the same
+thing on the first run, since the branch starts there). The branch is checked
+out as a git worktree beside the simulator checkout (`publish.py prepare`), the
+build writes into it with `--output-dir`, and the main checkout is asserted
+clean afterwards. A rebuild that reaches main later through a PR does not flow
+into the branch by itself: dispatch the workflow with `sessions` set to those
+sessions to rebuild them on the branch (the same code gives the same output).
+
+Completed sessions are otherwise not rebuilt; their outputs on the branch are
+copied to the site unchanged. After a pipeline change, rebuild a completed
+term by dispatching with `sessions` = `2022/23 2023/24 2024/25 2025/26` (and,
+to update main too, run `build --sessions …` locally and open a PR).
+
+**Waiting applies to the website push only.** The publication and rendering
+workflows push to website master with a plain `git push` that is not retried.
+Before the website push the workflow waits until no publication, rendering or
+benchmark run is queued or running (two checks a minute apart, never inside
+18:30–22:00 UTC) and defers after 60 minutes; the data branch is already
+pushed then, and the next run sees the website behind and copies it. No other
+workflow writes `data/riksdag-votes`, so that push does not wait.
 
 Interactions with the other workflows:
 
-* The simulator push uses `GITHUB_TOKEN`, which starts no other workflow, so
-  Full CI (`full.yml`, on push to main) does not run on it.
+* The data-branch push uses `GITHUB_TOKEN`, which starts no other workflow,
+  and no workflow triggers on that branch (Full CI, `full.yml`, triggers on
+  push to main only).
+* Because main never moves, `scripts/ci/verified_code.py` and the publication
+  workflow's skip of its contract suite are unaffected.
 * The website push uses `WEBSITE_REPO_TOKEN` and starts the website's own
   push workflows (Full CI on master, Pages), as the render workflow's does.
-* The waiting step exists because the publication, rendering and benchmark
-  workflows push with a plain `git push` that is not retried.
-* `scripts/ci/verified_code.py` lets the publication workflow skip its contract
-  suite only when every commit since the last green Full CI is a bot commit
-  inside `BOT_OWNED_PATHS`, which does not include
-  `data/processed/riksdag_votes/`. Until that path is added there, each
-  riksdag commit makes later publication runs run the 10–18 minute contract
-  suite until the next human push passes Full CI.
 
 ## Caveats
 
