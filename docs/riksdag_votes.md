@@ -10,8 +10,19 @@ rendering code.
 uv run python -m scripts.riksdag_votes.build --sessions 2022/23 2023/24 2024/25 2025/26 2026/27
 ```
 
-Options: `--offline` (use only cached raw files the manifest attests to),
-`--refresh` (re-download everything), `-v` (log progress).
+Options:
+
+* `--current-term` instead of `--sessions`: every begun session of the
+  electoral term containing today's UTC date (2026/27 on 2026-11-19);
+* `--update`: re-download the session listings (register and bulk archive) to
+  pick up new votes; per-vote and per-document files stay cached;
+* `--refresh`: re-download everything; `--offline`: use only cached raw files
+  the manifest attests to (no network at all);
+* `--site-dir DIR`: also write the website layout (below) into `DIR`;
+* `--no-titles`: skip vote titles; `-v`: log progress.
+
+`python -m scripts.riksdag_votes.site --site-dir DIR` writes the website layout
+from the committed outputs without building.
 
 ## Sources
 
@@ -21,6 +32,8 @@ Options: `--offline` (use only cached raw files the manifest attests to),
 | `https://data.riksdagen.se/voteringlista/?rm=<rm>&gruppering=votering_id&utformat=json` | The register: every vote the API recognises, with its Ja/Nej/Frånvarande/Avstår totals. |
 | `https://data.riksdagen.se/votering/<id>/json` | Metadata (beteckning, date) for votes missing from the bulk archive or with `datum: null`. |
 | `https://data.riksdagen.se/voteringlista/?rm=<rm>&bet=<beteckning>&utformat=json` | Rows of a registered vote that is missing from the bulk archive. |
+| `https://data.riksdagen.se/utskottsforslag/<dok_id>.json` | Vote titles: the document title and the heading (`rubrik`) of every förslagspunkt. |
+| `https://data.riksdagen.se/dokumentlista/?rm=<rm>&bet=<beteckning>&utformat=json` | Fallback lookup of a document's `dok_id`. |
 
 **The register decides which votes exist.** The bulk archives are regenerated
 irregularly. On 2026-11-19 they disagreed with the API:
@@ -40,7 +53,58 @@ rows, so rows for a single vote are fetched by `rm` + `bet` and grouped by
 Raw files are cached in `data/raw/riksdag_votes/` (git-ignored).
 `data/processed/riksdag_votes/manifest.json` (committed) records the source
 URL, UTC retrieval time and SHA-256 of every raw file used. A cached file is
-reused only when its bytes match the manifest.
+reused only when its bytes match the manifest. `retrieved_at_utc` is when
+those exact bytes were first downloaded: re-downloading identical bytes (as
+`--update` does daily) leaves the entry unchanged.
+
+Requests are rate limited to 4 per second, with up to five attempts and
+exponential backoff (2, 4, 8, 16 s, or the server's `Retry-After`) after a
+429, a 5xx or a network error; a 404 is not retried.
+
+## Vote titles
+
+Every vote carries `title`, `punkt_title` and `dok_id`. Examples:
+
+| Vote | `title` | `punkt_title` |
+| --- | --- | --- |
+| 2025/26:CU13 punkt 6 | Fastighetsrätt | Förköpslag |
+| 2025/26:UbU7 punkt 15 | Övergripande skolfrågor | Skolor med konfessionell inriktning |
+| 2025/26:TU12 punkt 3 | Luftfartsfrågor | Arlanda och Bromma flygplats |
+| 2026/27:FöU2 punkt 2 | Personalförsörjning av det militära försvaret | Villkor för förlängd värnplikt för tidigare yrkes- och reservofficerare |
+| 2026/27:1015-1 | Prövning av talmannens förslag till statsminister den 15 oktober | – |
+
+**Source.** `utskottsforslag/<dok_id>.json`, one request per document
+(~20 kB): `dokument.titel` is the betänkande title and
+`dokutskottsforslag.utskottsforslag[]` gives each förslagspunkt's `punkt` and
+`rubrik`. Betänkande title plus punkt heading is the clearest Swedish
+description of what was voted on. Alternatives checked on 2026-11-19:
+`votering/<id>/json` has the betänkande title but no punkt heading and embeds
+all 349 rows (~290 kB per vote); `dokumentstatus/<dok_id>.json` has the same
+title and headings but embeds the whole document HTML (~330 kB);
+`dokumentlista` has titles and press headlines but no punkt headings.
+
+Chamber votes with a numeric beteckning (prime-minister votes, votes of no
+confidence) have a `votering` document on the same endpoint titled
+`Omröstning: <subject>`; the prefix is dropped and `punkt_title` is null.
+
+**dok_id.** Derived from the riksdag's numbering: `H` + session character
+(2012/13 = `0`, 2022/23 = `A`, 2025/26 = `D`, 2026/27 = `E`) + series (`01`
+betänkande, `19` votering) + beteckning, e.g. `HD01CU13`. The answer is used
+only if its `rm` and `beteckning` match the vote; otherwise the id is looked up
+with `dokumentlista`. The document is at
+`https://data.riksdagen.se/dokument/<dok_id>`.
+
+**Caching.** Each document is cached by id and recorded in the manifest like
+every other raw file, so a run fetches only documents it has not seen. A
+cached document that lacks a voted punkt (fetched before the riksdag published
+it) is downloaded again, once per run. Offline, a document missing from the
+cache has no title and the same note is written as online, so online and
+offline builds of one cache agree. Outputs record the title files compactly in
+`provenance.title_sources` (count, and a SHA-256 over the sorted
+`<file> <sha256>` lines); the per-file hashes are in the manifest.
+
+On 2026-11-19 all 2,618 votes of 2022/23–2026/27 had a title (905 documents)
+and every vote on a betänkande had a punkt heading.
 
 ## Ingest checks (rule 5)
 
@@ -90,9 +154,9 @@ replace, so each vote's bench mapping shows who actually sat there.
      positive (fallback: the first party in the standard order with a non-zero
      score). This is a reproducibility convention. **Axes are not left/right**;
      read them through `top_loading_votes` and `top_loading_patterns` (the
-     party-line patterns with the largest |loading|, with vote counts —
-     with eight parties many votes share one pattern and therefore one
-     loading).
+     party-line patterns with the largest |loading|, with vote counts and up
+     to three `example_votes` with their titles — with eight parties many
+     votes share one pattern and therefore one loading).
    * The map needs at least 20 map votes (`MIN_MAP_VOTES_FOR_FIT`);
      otherwise `available: false`.
 4. **Independents and feltryckningar.** Members with parti `-` (politiska
@@ -121,12 +185,16 @@ occurred in 2022/23–2026/27.
 
 All files are UTF-8 JSON with sorted keys and compact separators;
 `schema_version: "1.0"`; output is byte-identical for the same raw inputs
-except `generated_at_utc`.
+except the run stamp (`provenance.generated_at_utc`, `code_commit`,
+`code_dirty`). A file whose content is unchanged apart from the run stamp is
+not rewritten, so a run with no new votes changes no file, and the stamp says
+when the content last changed.
 
 * `<YYYY-ZZ>/votes.json` (`role: riksdag_votes_session_votes`):
   `people[i]` (intressent_id, name, …); `seat_holders[j] = [person index,
   parti, valkrets]`; `rosters[k]` = 349 seat-holder indices, element b−1 =
-  occupant of bench b; each vote has its metadata, `roster`, `ballots` (a
+  occupant of bench b; each vote has its metadata (including `title`,
+  `punkt_title`, `dok_id`), `roster`, `ballots` (a
   349-character string, character b−1 = bench b: J/N/A/F) and `counts`
   [Ja, Nej, Avstår, Frånvarande]; `excluded_votes`; `provenance`.
 * `<YYYY-ZZ>/summary.json` and `term-<YYYY-ZZ>/summary.json`
@@ -135,12 +203,74 @@ except `generated_at_utc`.
   (party, parties, valkrets, seated, cast, participation, against-line count
   and vote ids, map position or unplaced reason), `party_against_line`,
   `participation_distribution`, `map`, `caveats`, `rules`, `notes`,
-  `provenance` (source files with SHA-256, `code_commit`, `code_dirty`,
-  `generated_at_utc`). A term summary is written only when the run includes
-  every session of the term that has begun, so a partial run cannot overwrite
-  it with a partial one; `scope.term_complete` says whether all four sessions
-  are in.
+  `provenance` (source files with SHA-256, `title_sources`, `code_commit`,
+  `code_dirty`, `generated_at_utc`). A term summary is written only when the
+  run includes every session of the term that has begun, so a partial run
+  cannot overwrite it with a partial one; `scope.term_complete` says whether
+  all four sessions are in.
 * `manifest.json` (`role: riksdag_votes_source_manifest`).
+
+Sizes on 2026-11-19 in bytes, before → after titles: 2025-26/votes.json
+596,376 → 698,528; 2025-26/summary.json 284,695 → 298,961;
+term-2022-26/summary.json 599,171 → 613,146; manifest.json 6,524 → 246,139
+(one entry per title document).
+
+## Website layout (`files/riksdag/` on edvinli.github.io)
+
+`--site-dir` (or `python -m scripts.riksdag_votes.site`) writes:
+
+```
+index.json                    role riksdag_votes_index
+<YYYY-ZZ>/votes.json          byte copy of data/processed/riksdag_votes/<YYYY-ZZ>/votes.json
+<YYYY-ZZ>/summary.json        byte copy of .../<YYYY-ZZ>/summary.json
+term-<YYYY-ZZ>/summary.json   byte copy of .../term-<YYYY-ZZ>/summary.json
+```
+
+`index.json` has `schema_version`, `role`, `generated_at_utc` (the newest
+`provenance.generated_at_utc` of the listed files, i.e. when the content last
+changed — not the export time, so re-exporting is byte-stable),
+`latest_vote_date`, `source`, `sessions[]` (`rm`, `slug`, `n_votes`,
+`n_votes_analysis`, `n_votes_titled`, `first_vote_date`, `latest_vote_date`,
+`generated_at_utc`, and `files.votes` / `files.summary` each with `path`
+relative to the index, `bytes` and `sha256`) and `terms[]` (`label`,
+`sessions`, `term_complete`, counts, `latest_vote_date`, `files.summary`). The
+manifest is not published. The export writes only inside the site directory
+and deletes nothing.
+
+## Scheduled update (`.github/workflows/riksdag-votes.yml`)
+
+Daily at 06:41 UTC, and on `workflow_dispatch` (`dry_run`, default true;
+optional `sessions`). Concurrency group `riksdag-votes` only. Steps: restore
+the raw cache (`actions/cache`, keyed on the session list and date, falling
+back to the newest), run the riksdag tests, build the current term's sessions
+with `--update --site-dir`, report both diffs, and — unless dry run — wait
+until no publication, rendering or benchmark run is queued or running (two
+checks a minute apart, never inside 18:30–22:00 UTC, deferring to the next day
+after 60 minutes), then commit `data/processed/riksdag_votes` to simulator main
+and `files/riksdag` to website master with `scripts/riksdag_votes/publish.py`:
+explicit path only, no force, one retry after `git pull --rebase`, and a check
+that the remote branch is at the pushed commit. A failure opens or comments on
+the issue "Riksdag votes update failing".
+
+Completed sessions are not rebuilt daily; their committed outputs are copied to
+the site unchanged. After a pipeline change, rebuild a completed term with
+`build --sessions 2022/23 2023/24 2024/25 2025/26` locally and commit, or
+dispatch the workflow with that `sessions` input.
+
+Interactions with the other workflows:
+
+* The simulator push uses `GITHUB_TOKEN`, which starts no other workflow, so
+  Full CI (`full.yml`, on push to main) does not run on it.
+* The website push uses `WEBSITE_REPO_TOKEN` and starts the website's own
+  push workflows (Full CI on master, Pages), as the render workflow's does.
+* The waiting step exists because the publication, rendering and benchmark
+  workflows push with a plain `git push` that is not retried.
+* `scripts/ci/verified_code.py` lets the publication workflow skip its contract
+  suite only when every commit since the last green Full CI is a bot commit
+  inside `BOT_OWNED_PATHS`, which does not include
+  `data/processed/riksdag_votes/`. Until that path is added there, each
+  riksdag commit makes later publication runs run the 10–18 minute contract
+  suite until the next human push passes Full CI.
 
 ## Caveats
 

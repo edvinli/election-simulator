@@ -1,0 +1,246 @@
+# Riksdag roll-call votes: daily data update and website copy.
+#
+# Builds the riksdag_votes outputs (scripts/riksdag_votes/, docs/riksdag_votes.md)
+# for the sessions of the current electoral term, commits them to this
+# repository's main under data/processed/riksdag_votes/, and copies the website
+# layout to edvinli/edvinli.github.io (master) under files/riksdag/. It is
+# independent of the election forecast: it never runs the simulator,
+# certification, publication, rendering or the benchmark, and it never takes
+# their concurrency groups.
+#
+# Completed sessions (2022/23-2025/26 and term-2022-26) are not rebuilt daily;
+# their committed outputs are copied to the website as they are. Rebuild them
+# after a pipeline change by dispatching with `sessions` set to every session
+# of that term (or locally, see docs/riksdag_votes.md).
+#
+# Triggers this workflow's pushes cause, checked against the other workflows:
+#   * The push to simulator main is made with GITHUB_TOKEN. A GITHUB_TOKEN push
+#     starts no workflow (only workflow_dispatch and repository_dispatch are
+#     exempt), so it does not start Full CI (full.yml, on push to main),
+#     the PR layer, or rendering (workflow_run on publication only).
+#   * The website push is made with WEBSITE_REPO_TOKEN, as the render
+#     workflow's is, and does start the website's own push workflows (its
+#     Full CI on master and the GitHub Pages build). That is intended: Pages
+#     must rebuild to serve the files.
+#
+# Collisions. The publication, rendering and benchmark workflows push to
+# simulator main and website master with a plain `git push` that is not
+# retried, so this workflow must not push while one of them is between its
+# checkout and its push. It therefore (1) runs at 06:41 UTC: after the 04:00
+# always-publish run, before the hourly poll checks from 07:00, and outside the
+# protected 18:30-22:00 UTC interval; (2) before pushing, waits until no run of
+# those workflows is queued or in progress on two consecutive checks a minute
+# apart, and never pushes inside 18:30-22:00 UTC -- if that does not happen
+# within 60 minutes it defers to the next day without pushing; (3) stages only
+# data/processed/riksdag_votes (simulator) and files/riksdag (website), never
+# force-pushes, and retries a rejected push once after `git pull --rebase`,
+# which cannot conflict because no other workflow writes those paths. The git
+# steps are scripts/riksdag_votes/publish.py (tested against real bare remotes
+# in tests/test_riksdag_votes_publish.py).
+name: Riksdag votes update
+
+on:
+  schedule:
+    # 06:41 UTC daily; see "Collisions" above.
+    - cron: "41 6 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Build and report the diff without committing or pushing anything"
+        required: false
+        default: true
+        type: boolean
+      sessions:
+        description: "Sessions to rebuild, space-separated, e.g. '2022/23 2023/24 2024/25 2025/26' (default: the current term)"
+        required: false
+        default: ""
+        type: string
+
+concurrency:
+  group: riksdag-votes
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+  actions: read
+
+jobs:
+  update:
+    name: Build and publish riksdag votes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && 'true' || 'false' }}
+      SESSIONS_INPUT: ${{ inputs.sessions || '' }}
+      SITE_DIR: ${{ github.workspace }}/riksdag-site
+    steps:
+      - name: Check out simulator
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: simulator
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: simulator/uv.lock
+      - name: Set up Python
+        run: uv python install 3.12
+      - name: Install the locked dependency set
+        working-directory: simulator
+        run: uv sync --frozen --python 3.12
+
+      - name: Plan the run
+        id: plan
+        working-directory: simulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ -n "$SESSIONS_INPUT" ]; then
+            pattern='^[0-9/ ]+$'
+            if ! [[ "$SESSIONS_INPUT" =~ $pattern ]]; then
+              echo "::error::sessions must look like '2025/26 2026/27'"
+              exit 1
+            fi
+            sessions="$SESSIONS_INPUT"
+          else
+            sessions="$(uv run python -c 'from datetime import datetime, timezone; from scripts.riksdag_votes.build import current_term_sessions; print(" ".join(current_term_sessions(datetime.now(timezone.utc).date())))')"
+          fi
+          key="$(echo "$sessions" | tr -c 'A-Za-z0-9\n' '-')"
+          echo "sessions=$sessions" >> "$GITHUB_OUTPUT"
+          echo "cache_sessions=$key" >> "$GITHUB_OUTPUT"
+          echo "date=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+          echo "Sessions: $sessions; dry run: $DRY_RUN" >> "$GITHUB_STEP_SUMMARY"
+
+      # Raw downloads (git-ignored) carry over between runs, so each run
+      # fetches only new per-vote and per-document files. The key changes
+      # daily so the grown cache is saved; restore falls back to the newest.
+      - name: Restore the raw download cache
+        uses: actions/cache@v4
+        with:
+          path: simulator/data/raw/riksdag_votes
+          key: riksdag-votes-raw-${{ steps.plan.outputs.cache_sessions }}-${{ steps.plan.outputs.date }}
+          restore-keys: |
+            riksdag-votes-raw-${{ steps.plan.outputs.cache_sessions }}-
+            riksdag-votes-raw-
+
+      - name: Test the riksdag pipeline
+        working-directory: simulator
+        run: |
+          uv run python -m unittest \
+            tests.test_riksdag_votes_build \
+            tests.test_riksdag_votes_ingest \
+            tests.test_riksdag_votes_map \
+            tests.test_riksdag_votes_rules \
+            tests.test_riksdag_votes_titles \
+            tests.test_riksdag_votes_publish \
+            tests.test_riksdag_votes_workflow
+
+      - name: Build
+        working-directory: simulator
+        shell: bash
+        env:
+          SESSIONS: ${{ steps.plan.outputs.sessions }}
+        run: |
+          set -euo pipefail
+          read -ra session_args <<< "$SESSIONS"
+          uv run python -m scripts.riksdag_votes.build --update --sessions "${session_args[@]}" --site-dir "$SITE_DIR"
+
+      - name: Report the simulator diff
+        id: simulator_diff
+        working-directory: simulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv run python -m scripts.riksdag_votes.publish status --repo . --path data/processed/riksdag_votes >> "$GITHUB_OUTPUT"
+          git status --short -- data/processed/riksdag_votes
+          {
+            echo '### data/processed/riksdag_votes'
+            echo '```'
+            git diff --stat -- data/processed/riksdag_votes
+            git status --short --untracked-files=all -- data/processed/riksdag_votes
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Check out website
+        uses: actions/checkout@v4
+        with:
+          repository: edvinli/edvinli.github.io
+          ref: master
+          path: website
+          token: ${{ secrets.WEBSITE_REPO_TOKEN }}
+
+      - name: Copy the site layout and report the website diff
+        id: website_diff
+        shell: bash
+        run: |
+          set -euo pipefail
+          git -C website config user.name "github-actions[bot]"
+          git -C website config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          mkdir -p website/files/riksdag
+          cp -R "$SITE_DIR/." website/files/riksdag/
+          (cd simulator && uv run python -m scripts.riksdag_votes.publish status --repo ../website --path files/riksdag) >> "$GITHUB_OUTPUT"
+          {
+            echo '### website files/riksdag'
+            echo '```'
+            git -C website diff --stat -- files/riksdag
+            git -C website status --short --untracked-files=all -- files/riksdag
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Wait until no publication, rendering or benchmark run can collide
+        id: quiet
+        if: env.DRY_RUN != 'true' && (steps.simulator_diff.outputs.changed == 'yes' || steps.website_diff.outputs.changed == 'yes')
+        working-directory: simulator
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -uo pipefail
+          status=0
+          uv run python -m scripts.riksdag_votes.publish wait --repository "$GITHUB_REPOSITORY" --timeout-minutes 60 >> "$GITHUB_OUTPUT" || status=$?
+          if [ "$status" -eq 3 ]; then
+            echo "::warning::Deferred: a publication, rendering or benchmark run stayed active (or the clock was in 18:30-22:00 UTC); nothing pushed, the next run retries."
+            echo "Deferred: nothing pushed." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          exit "$status"
+
+      - name: Commit and push simulator data (never forced)
+        if: env.DRY_RUN != 'true' && steps.quiet.outputs.quiet == 'yes' && steps.simulator_diff.outputs.changed == 'yes'
+        working-directory: simulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          latest="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["latest_vote_date"])' "$SITE_DIR/index.json")"
+          uv run python -m scripts.riksdag_votes.publish commit --repo . --path data/processed/riksdag_votes \
+            --branch main --message "data(riksdag_votes): update roll-call outputs (latest vote $latest)"
+
+      - name: Commit and push the website copy (never forced)
+        if: env.DRY_RUN != 'true' && steps.quiet.outputs.quiet == 'yes' && steps.website_diff.outputs.changed == 'yes'
+        working-directory: simulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          latest="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["latest_vote_date"])' "$SITE_DIR/index.json")"
+          uv run python -m scripts.riksdag_votes.publish commit --repo ../website --path files/riksdag \
+            --branch master --message "data(riksdag): update roll-call files (latest vote $latest)"
+
+      - name: Report a failure as an issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          title="Riksdag votes update failing"
+          body="The riksdag votes workflow failed (event ${{ github.event_name }}, dry run ${DRY_RUN}): ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}. The forecast workflows are unaffected; the riksdag data on the website stays at its last published version."
+          number="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"$title\" in:title" --json number --jq '.[0].number // empty')"
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --repo "$GITHUB_REPOSITORY" --body "$body"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "$body"
+          fi

@@ -3,10 +3,12 @@
 Independent of the election forecast: nothing here imports from, or writes
 to, the simulator, certification, publication or rendering code.
 
-Modules: ``fetch`` (cached raw downloads + manifest), ``ingest`` (parsing,
-validation and bulk/API reconciliation), ``committees``, ``party_lines``,
-``agreement``, ``ideal_points``, ``summarize`` (JSON payloads) and ``build``
-(CLI). Full write-up: ``docs/riksdag_votes.md``.
+Modules: ``fetch`` (rate-limited cached raw downloads + manifest), ``ingest``
+(parsing, validation and bulk/API reconciliation), ``titles`` (what each vote
+was about), ``committees``, ``party_lines``, ``agreement``, ``ideal_points``,
+``summarize`` (JSON payloads), ``build`` (CLI), ``site`` (website layout) and
+``publish`` (git steps of ``.github/workflows/riksdag-votes.yml``). Full
+write-up: ``docs/riksdag_votes.md``.
 
 Rules (user-approved):
 
