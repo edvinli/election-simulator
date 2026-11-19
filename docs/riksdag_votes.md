@@ -215,8 +215,9 @@ marks the analysis set):
 
 ```
 "vote_flags": {
-  "order": "...", "fields": ["ja","nej","avstar","franvarande","margin","against_line","cross_bloc"],
-  "columns": {"ja": [...], "nej": [...], ..., "cross_bloc": [1, 0, null, ...]},
+  "order": "...",
+  "fields": ["ja","nej","avstar","franvarande","margin","against_line","cross_bloc","gov_split"],
+  "columns": {"ja": [...], "nej": [...], ..., "cross_bloc": [1, 0, null, ...], "gov_split": [...]},
   "definitions": {...}
 }
 ```
@@ -224,16 +225,29 @@ marks the analysis set):
 * `ja`, `nej`, `avstar`, `franvarande`: ballot totals; `margin` = |ja − nej|;
 * `against_line`: members casting Ja/Nej/Avstår different from their party's
   non-null line on that vote;
-* `cross_bloc` (1/0, null when `blocs` is null): among parties with a line —
-  not unanimous, and not bloc-aligned (all government_side parties on one line
-  X and all opposition parties on one line Y ≠ X; abstained parties ignored),
-  and at least one government_side party shares its line with at least one
-  opposition party.
+* the two bloc flags (1/0, null when `blocs` is null) use only party lines Ja
+  and Nej; Avstår, ties and no line are ignored, as are abstained-group parties:
+  * `cross_bloc` = 1 iff the outcome cut across both blocs. The winning line
+    is the side with more Ja vs Nej ballots in the chamber (ja == nej: no
+    outcome, 0); at least one government_side party and at least one
+    opposition party have the winning line, and at least one of each has the
+    losing line.
+  * `gov_split` = 1 iff government_side parties have both Ja and Nej lines.
 
-Because riksdag roll calls are almost never unanimous (unanimous decisions are
-taken by acclamation) and the 2022–26 opposition rarely voted as one, most
-votes are cross-bloc by this rule: 2,187 of 2,610 in term-2022-26 (152
-bloc-aligned, 6 unanimous). In 534 of them the government side itself split.
+Counts on 2026-11-19 (all votes / analysis set):
+
+| Summary | votes | cross_bloc | gov_split |
+| --- | --- | --- | --- |
+| 2022-23 | 566 / 558 | 7 / 7 | 106 / 106 |
+| 2023-24 | 595 / 580 | 3 / 3 | 91 / 90 |
+| 2024-25 | 652 / 647 | 6 / 6 | 104 / 102 |
+| 2025-26 | 797 / 784 | 0 / 0 | 11 / 10 |
+| 2026-27 | 8 / 6 | null (no blocs) | null |
+| term-2022-26 | 2,610 / 2,569 | 16 / 16 | 312 / 308 |
+
+The 16 cross-bloc votes of 2022–26 are mostly C and SD against the rest (12),
+twice S and SD winning against the rest, once V and SD losing, and once S, V
+and SD winning (UbU15 p49, 2025-05-22).
 
 ## Committees
 
@@ -283,8 +297,8 @@ Sizes on 2026-11-19 in bytes, before → after titles: 2025-26/votes.json
 596,376 → 698,528; 2025-26/summary.json 284,695 → 298,961;
 term-2022-26/summary.json 599,171 → 613,146; manifest.json 6,524 → 246,139
 (one entry per title document). With blocs and vote_flags (2026-11-19):
-2025-26/summary.json 298,961 → 317,611; term-2022-26/summary.json 613,146 →
-668,985 (+55,839).
+2025-26/summary.json 298,961 → 319,783; term-2022-26/summary.json 613,146 →
+674,783 (+61,637).
 
 ## Website layout (`files/riksdag/` on edvinli.github.io)
 

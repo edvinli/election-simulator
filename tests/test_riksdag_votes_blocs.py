@@ -9,7 +9,7 @@ from pathlib import Path
 
 import numpy as np
 
-from scripts.riksdag_votes.blocs import cross_bloc, find_blocs, is_pm_vote, pm_votes_considered, vote_flags
+from scripts.riksdag_votes.blocs import cross_bloc, find_blocs, gov_split, is_pm_vote, pm_votes_considered, vote_flags
 from scripts.riksdag_votes.build import build, dumps
 from scripts.riksdag_votes.fetch import RawStore, bulk_url, register_url
 from scripts.riksdag_votes.ideal_points import _orient_axis_by_anchor, align_to_reference, fit_party_map
@@ -122,30 +122,44 @@ class BlocsTests(unittest.TestCase):
         self.assertFalse(is_pm_vote(no_confidence))
         self.assertIsNone(find_blocs([no_confidence]))
 
-    def test_cross_bloc(self) -> None:
-        blocs = {"government_side": ["M", "KD", "L", "SD"], "opposition": ["S", "V", "MP", "C"], "abstained": []}
+    BLOCS = {"government_side": ["M", "KD", "L", "SD"], "opposition": ["S", "V", "MP", "C"], "abstained": []}
+    ALIGNED = dict(M="Ja", KD="Ja", L="Ja", SD="Ja", S="Nej", V="Nej", MP="Nej", C="Nej")
 
-        def flag(**lines):
-            return cross_bloc({p: line(v) for p, v in lines.items()}, blocs)
+    def flags(self, ja, nej, blocs=BLOCS, **lines):
+        party_lines = {p: line(v) for p, v in lines.items()}
+        return cross_bloc(party_lines, blocs, ja, nej), gov_split(party_lines, blocs)
 
-        aligned = dict(M="Ja", KD="Ja", L="Ja", SD="Ja", S="Nej", V="Nej", MP="Nej", C="Nej")
-        self.assertFalse(flag(**aligned))
-        self.assertFalse(flag(**{p: "Ja" for p in aligned}))  # unanimous
-        self.assertTrue(flag(**dict(aligned, C="Ja")))  # C sides with the government
-        self.assertTrue(flag(**dict(aligned, SD="Nej")))  # SD sides with the opposition
-        self.assertFalse(flag(**dict(aligned, C="Avstår")))  # no shared line
-        self.assertFalse(flag(**dict(aligned, C=None)))  # no line: ignored
-        self.assertIsNone(cross_bloc({p: line(v) for p, v in aligned.items()}, None))
-        # An abstained-group party is ignored by the bloc test.
-        with_abstained = dict(blocs, government_side=["M", "KD", "L"], abstained=["SD"])
-        self.assertFalse(cross_bloc({p: line(v) for p, v in dict(aligned, SD="Nej").items()}, with_abstained))
+    def test_cross_bloc_and_gov_split(self) -> None:
+        aligned = self.ALIGNED
+        # Bloc against bloc, either way round: neither flag.
+        self.assertEqual(self.flags(180, 160, **aligned), (False, False))
+        self.assertEqual(self.flags(160, 180, **{p: ("Nej" if v == "Ja" else "Ja") for p, v in aligned.items()}), (False, False))
+        # S + SD vs the rest: the outcome cut across both blocs.
+        s_sd = dict(M="Nej", KD="Nej", L="Nej", SD="Ja", S="Ja", V="Nej", MP="Nej", C="Nej")
+        self.assertEqual(self.flags(180, 160, **s_sd), (True, True))
+        self.assertEqual(self.flags(160, 180, **s_sd), (True, True))  # also when S+SD lose
+        # A united government joined by some of the opposition: no losing government party.
+        self.assertEqual(self.flags(200, 140, **dict(aligned, C="Ja", MP="Ja")), (False, False))
+        self.assertEqual(self.flags(170, 170, **s_sd), (False, True))  # tie: no outcome
+        # The government split only through Avstår counts for neither flag.
+        avstar = dict(aligned, SD="Avstår", C="Ja")
+        self.assertEqual(self.flags(150, 140, **avstar), (False, False))
+        # Ties and missing lines are ignored like Avstår.
+        self.assertEqual(self.flags(150, 140, **dict(aligned, SD=None, C="Ja")), (False, False))
+        self.assertEqual(self.flags(150, 140, **dict(aligned, KD="Nej")), (False, True))
+        self.assertEqual(self.flags(10, 20, blocs=None, **aligned), (None, None))
+        # An abstained-group party is not on either side.
+        with_abstained = dict(self.BLOCS, government_side=["M", "KD", "L"], abstained=["SD"])
+        self.assertEqual(self.flags(180, 160, blocs=with_abstained, **dict(s_sd, M="Ja", KD="Ja", L="Ja")), (False, False))
 
     def test_vote_flags_columns(self) -> None:
         votes = synthetic_votes(n_votes=8)
         lines = {v.votering_id: party_lines_for_vote(v) for v in votes}
         flags = vote_flags(votes, lines, {"government_side": ["M", "KD", "L", "SD"], "opposition": ["S", "V", "MP"]})
         columns = flags["columns"]
-        self.assertEqual(flags["fields"], ["ja", "nej", "avstar", "franvarande", "margin", "against_line", "cross_bloc"])
+        self.assertEqual(
+            flags["fields"], ["ja", "nej", "avstar", "franvarande", "margin", "against_line", "cross_bloc", "gov_split"]
+        )
         self.assertTrue(all(len(columns[f]) == 8 for f in flags["fields"]))
         for i, vote in enumerate(votes):
             counts = vote.counts()
@@ -153,6 +167,7 @@ class BlocsTests(unittest.TestCase):
             self.assertEqual(columns["margin"][i], abs(counts["Ja"] - counts["Nej"]))
         self.assertEqual(columns["against_line"][3], 1)  # the rebel S010 on V003
         self.assertTrue(set(columns["cross_bloc"]) <= {0, 1})
+        self.assertTrue(set(columns["gov_split"]) <= {0, 1})
 
 
 class BuildContextTests(unittest.TestCase):

@@ -47,7 +47,7 @@ from .constants import (
     SEATS,
     TOP_LOADING_VOTES,
 )
-from .blocs import BLOCS_RULE, CROSS_BLOC_RULE, vote_flags
+from .blocs import BLOCS_RULE, CROSS_BLOC_RULE, GOV_SPLIT_RULE, vote_flags
 from .ideal_points import align_to_reference, fit_party_map, is_near_unanimous, orient_by_anchors, project_member
 from .ingest import SessionData, Vote
 from .party_lines import PartyLine, against_line, order_parties, party_lines_for_vote
@@ -78,6 +78,7 @@ RULES = {
     ),
     "blocs": BLOCS_RULE,
     "cross_bloc": CROSS_BLOC_RULE,
+    "gov_split": GOV_SPLIT_RULE,
 }
 
 
