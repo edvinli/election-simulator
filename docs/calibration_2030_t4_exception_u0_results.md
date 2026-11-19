@@ -78,3 +78,18 @@ intervals in all:
 - **But at short horizons, `Ua`'s k = 0.5 makes intervals too narrow** for the
   frozen G5 rule.
 - **No arm passed every gate.** The frozen outcome stands.
+
+## Decision (user, 2026-11-19)
+
+- **`U0` is not adopted**, per the frozen rule. It is logged prospectively as T5
+  shadow arm `U0` (T5 amendment 002), and `Ul` is logged as T5 amendment 001.
+- **`F1` is shipped as a correctness fix:** production model 1.2.1-rc1, for
+  2030 targets only, with K = 6 unchanged. It is in
+  `edvinli/election-simulator` PR #55, with methods text in
+  `edvinli/edvinli.github.io` PR #47. A data-corruption fix is not held to the
+  "must improve the backtest" bar. In T4, `F1` matched `C0` (G1 3.667 against
+  3.673; coverage 0.784 for both).
+- **`shadow/2030` is pushed, with scheduled CI** (T5 amendment 003;
+  `edvinli/election-simulator` PR #54).
+- **Backlog items 11 and 12** are added to
+  `docs/calibration_2030_future_candidates.md`.
