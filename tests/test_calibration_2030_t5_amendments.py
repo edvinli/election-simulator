@@ -52,7 +52,7 @@ class AmendmentRecordsTest(unittest.TestCase):
     def test_both_amendments_are_in_force_with_their_arms(self):
         in_force = T.t5_amendments_in_force()
         arms = {a["amendment_id"]: a["arm"] for a in in_force}
-        self.assertEqual(arms, {"001-ul-log-ratio-arm": "Ul", "002-u0-shadow-arm": "U0"})
+        self.assertEqual(arms, {"001-ul-log-ratio-arm": "Ul", "002-u0-shadow-arm": "U0", "003-operations-ci": None})
 
     def test_activation_by_origin(self):
         in_force = [{"amendment_id": "001-ul-log-ratio-arm", "arm": "Ul", "in_effect_from": "2026-11-19"},
@@ -118,7 +118,7 @@ class GuardTest(unittest.TestCase):
     def test_runner_records_the_t5_amendments(self):
         p = T.verify_t5(allow_dirty=True)
         self.assertEqual([a["amendment_id"] for a in p["t5_amendments_in_force"]],
-                         ["001-ul-log-ratio-arm", "002-u0-shadow-arm"])
+                         ["001-ul-log-ratio-arm", "002-u0-shadow-arm", "003-operations-ci"])
 
 
 if __name__ == "__main__":

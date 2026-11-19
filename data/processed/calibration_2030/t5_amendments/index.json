@@ -14,6 +14,13 @@
       "record": "002-u0-shadow-arm.json",
       "record_sha256": "532a78af3e91cddb721d12c90adc5ae7b530ddc68c576e0d1068cb2ff33b9040",
       "text": "docs/calibration_2030_t5_amendment_002.md"
+    },
+    {
+      "amendment_id": "003-operations-ci",
+      "amends": "docs/calibration_2030_t5_shadow_preregistration.md#7",
+      "record": "003-operations-ci.json",
+      "record_sha256": "42e72138bffb6681ba83181808039bd2ddaee403bc96718a09a3b88ff9cace3b",
+      "text": "docs/calibration_2030_t5_amendment_003.md"
     }
   ]
 }
