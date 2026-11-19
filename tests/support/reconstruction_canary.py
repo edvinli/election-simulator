@@ -33,8 +33,11 @@ import sys
 import tempfile
 import time
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 from typing import Any, Mapping
+
+from scripts.simulator.election_cycles import DYNAMICS_CAP_DAYS
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 SOURCE_HISTORY = Path("files/election-simulator/history/coalition-timeseries.json")
@@ -132,10 +135,38 @@ def punch_gap(source: Path, target_date: str) -> None:
 #: stops a known limitation from being read as a clean pass.
 FULL_ACCEPTANCE = "FULL_ACCEPTANCE"
 RECONSTRUCTION_ONLY = "RECONSTRUCTION_ONLY"
+#: Reconstruction verified for a generation more than DYNAMICS_CAP_DAYS before
+#: its election, where production builds neither future view by design. It is
+#: an acceptance for that window only: the views it cannot exercise are
+#: required, and checked, once the window opens.
+OUTSIDE_WINDOW_ACCEPTANCE = "OUTSIDE_WINDOW_ACCEPTANCE"
 FAILED = "FAILED"
 
 #: Exit codes. 2 is deliberately not 0: reconstruction-only is not acceptance.
-EXIT_CODES = {FULL_ACCEPTANCE: 0, FAILED: 1, RECONSTRUCTION_ONLY: 2}
+EXIT_CODES = {FULL_ACCEPTANCE: 0, OUTSIDE_WINDOW_ACCEPTANCE: 0, FAILED: 1, RECONSTRUCTION_ONLY: 2}
+
+#: The renderer's report for a view it does not build outside the window
+#: (scripts/election_automation_base.py VIEW_OUTSIDE_WINDOW).
+VIEW_OUTSIDE_WINDOW = "NOT_REQUIRED_OUTSIDE_CAMPAIGN_WINDOW"
+
+
+def days_before_election(index: Mapping[str, Any], generation: str) -> int | None:
+    """Days from the certified generation's as_of to its election, from the archive index.
+
+    Taken from the certified record, never from the renderer's own report, so
+    the renderer cannot excuse its own missing views. None when the
+    generation is not in the index or lacks either date.
+    """
+
+    for entry in index.get("snapshots") or []:
+        if entry.get("generation_id") == generation:
+            try:
+                as_of = date.fromisoformat(str(entry["as_of"]))
+                election = date.fromisoformat(str(entry["election_date"]))
+            except (KeyError, ValueError):
+                return None
+            return (election - as_of).days
+    return None
 
 
 @dataclass(frozen=True)
@@ -177,6 +208,7 @@ def evaluate(
     after: Mapping[str, RepositoryState],
     pointer_before: bytes,
     pointer_after: bytes,
+    days_to_election: int | None = None,
 ) -> tuple[list[str], str]:
     """Decide what a run established, from state alone.
 
@@ -185,6 +217,11 @@ def evaluate(
     and must not stop the canary from reporting whether production state was
     disturbed, which is the more important question and used to be skipped
     entirely when result parsing raised.
+
+    ``days_to_election`` comes from the certified generation's archive record.
+    Only when it is known and exceeds DYNAMICS_CAP_DAYS may both future views
+    report VIEW_OUTSIDE_WINDOW, and then they must; inside the window, or when
+    it is unknown, that state is a failure, as any view not rebuilt is.
     """
 
     failures: list[str] = []
@@ -233,6 +270,30 @@ def evaluate(
     if curve.get("status") != "COMPLETE":
         failures.append(f"curve status is {curve.get('status')!r}")
 
+    outside_window = days_to_election is not None and days_to_election > DYNAMICS_CAP_DAYS
+    secondary = views.get("secondary_projection")
+    reported_outside = VIEW_OUTSIDE_WINDOW in (views.get("primary_campaign_paths"), secondary)
+    if outside_window:
+        if not (views.get("primary_campaign_paths") == VIEW_OUTSIDE_WINDOW
+                and secondary == VIEW_OUTSIDE_WINDOW
+                and views.get("status") == "COMPLETE"
+                and not (views.get("missing") or [])):
+            failures.append(
+                f"the generation is {days_to_election} days before the election, outside the "
+                f"{DYNAMICS_CAP_DAYS}-day campaign window, but the views are not both "
+                f"{VIEW_OUTSIDE_WINDOW} (views={views})")
+        if exit_code != 0:
+            failures.append(f"the renderer exited {exit_code} outside the campaign window")
+        if failures:
+            return failures, FAILED
+        return failures, OUTSIDE_WINDOW_ACCEPTANCE
+    if reported_outside:
+        when = ("an unknown number of days" if days_to_election is None
+                else f"{days_to_election} days")
+        failures.append(
+            f"the views report {VIEW_OUTSIDE_WINDOW} but the generation is {when} before the "
+            f"election; they are required within {DYNAMICS_CAP_DAYS} days (views={views})")
+
     primary = views.get("primary_campaign_paths")
     parity_omission = (
         primary == "OMITTED"
@@ -241,7 +302,7 @@ def evaluate(
         failures.append(
             f"the primary view was omitted for an unexpected reason: "
             f"{views.get('error')!r}")
-    elif primary not in {"REBUILT", "OMITTED", "NOT_REQUIRED_ON_ELECTION_DAY"}:
+    elif primary not in {"REBUILT", "OMITTED", "NOT_REQUIRED_ON_ELECTION_DAY", VIEW_OUTSIDE_WINDOW}:
         failures.append(f"unrecognised primary view state {primary!r}")
 
     both_views_rebuilt = (
@@ -336,7 +397,12 @@ def main(argv: list[str] | None = None) -> int:
             label: _baseline(repository, protected)
             for label, (repository, protected) in repositories.items()
         }
+        index_path = source / "data/processed/prospective_forecasts/index.json"
+        days_to_election = (
+            days_before_election(json.loads(index_path.read_text(encoding="utf-8")), args.generation)
+            if index_path.exists() else None)
         failures, outcome = evaluate(
+            days_to_election=days_to_election,
             target_date=args.target_date,
             expected_generation=args.generation,
             rendered=rendered,
@@ -355,6 +421,7 @@ def main(argv: list[str] | None = None) -> int:
             "certification_commit": (rendered or {}).get("certification_commit"),
             "status": (rendered or {}).get("status"),
             "renderer_exit_code": completed.returncode,
+            "days_to_election": days_to_election,
             "elapsed_seconds": round(elapsed, 1),
             "reconstructed": curve.get("reconstructed"),
             "curve_status": curve.get("status"),
@@ -367,6 +434,11 @@ def main(argv: list[str] | None = None) -> int:
         if outcome == FULL_ACCEPTANCE:
             print("PASS  reconstruction verified, both views rebuilt, "
                   "every gate passed, production untouched", flush=True)
+        elif outcome == OUTSIDE_WINDOW_ACCEPTANCE:
+            print(f"PASS  reconstruction verified, production untouched; the generation is "
+                  f"{days_to_election} days before the election, so neither future view is "
+                  f"built (both {VIEW_OUTSIDE_WINDOW}) -- they are checked inside the "
+                  f"{DYNAMICS_CAP_DAYS}-day window", flush=True)
         elif outcome == RECONSTRUCTION_ONLY:
             print("PARTIAL  reconstruction verified and production untouched, but "
                   "the primary campaign-path view was omitted on the known parity "
