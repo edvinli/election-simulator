@@ -16,7 +16,7 @@ from typing import Any
 
 import numpy as np
 
-from scripts.election_layer_v2.residuals_pool import load_chronological_pp_residuals
+from scripts.election_layer_v2.production_residuals_pool import load_production_pp_residuals
 from scripts.election_layer_v2.transfer import apply_batch_simplex_transfer
 from scripts.geography.config import DEFAULT_PROCESSED_GEOGRAPHY_DIR, OFFICIAL_CONSTITUENCY_CODES
 from scripts.geography.integerization import biproportional_controlled_rounding
@@ -118,7 +118,7 @@ def _sample_national_shares(
         eligible_count = len(eligible)
 
     base_comp = clr_to_composition_matrix(state_clr + sym_deltas)
-    training_pool = load_chronological_pp_residuals(
+    training_pool = load_production_pp_residuals(
         target_election_year=election_date.year,
         polls_file=data_dir / "pollofpolls" / "swedishpolls_individual_polls.csv",
         elections_file=data_dir / "elections" / "riksdag_election_results.csv",

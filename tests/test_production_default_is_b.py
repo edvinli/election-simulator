@@ -46,8 +46,10 @@ class Defaults(unittest.TestCase):
         self.assertEqual(d, MODEL_ID)
 
     def test_version_follows_the_repository_convention(self):
-        self.assertEqual(MODEL_VERSION, "1.2.0-rc1")
-        self.assertEqual(RELEASE_TAG, "election-simulator-v1.2-rc1")
+        # 1.2.1-rc1 forecasts the 2030 election on; this module's 2026 target
+        # stays 1.2.0-rc1 (tests/test_production_residuals_pool.py).
+        self.assertEqual(MODEL_VERSION, "1.2.1-rc1")
+        self.assertEqual(RELEASE_TAG, "election-simulator-v1.2.1-rc1")
         self.assertEqual(ADOPTED_ELECTION_NOISE_CANDIDATE, "B")
         self.assertEqual(BENCHMARK_LINEAGE_CANDIDATE, "A")
         self.assertTrue(MODEL_VERSION.endswith("-rc1"),
@@ -80,6 +82,7 @@ class DefaultPathIsB(unittest.TestCase):
 
     def test_manifest_declares_the_adopted_law_and_version(self):
         self.assertEqual(self.default.manifest["model_config"]["noise_model"], MODEL_ID)
+        # A 2026 target is still a 1.2.0-rc1 forecast under model 1.2.1-rc1.
         self.assertEqual(self.default.manifest["model_version"], "1.2.0-rc1")
 
     def test_control_manifest_declares_the_legacy_law(self):

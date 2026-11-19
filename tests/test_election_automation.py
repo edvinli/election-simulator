@@ -17,6 +17,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tarfile
 import tempfile
 import unittest
 from types import SimpleNamespace
@@ -165,45 +166,81 @@ def _reuse_partition(existing: dict) -> tuple[set[str], set[str]]:
     return stable, revised
 
 
+#: What a reconstructed point's fingerprint is a function of, in code: the
+#: numerical model files and the module that defines the fingerprint itself.
+FINGERPRINT_CODE = (*MODEL_FILES, "scripts/forecast_history/effective_inputs.py")
+
+#: Run in a subprocess from a checkout of the previous revision's scripts/, so
+#: that every import -- the model files, MODEL_FILES and the selectors -- is
+#: that revision's own.
+_PREVIOUS_FINGERPRINTS = """
+import json, sys
+from datetime import date
+from pathlib import Path
+from scripts.forecast_history.effective_inputs import EffectiveInputs
+request = json.load(sys.stdin)
+inputs = EffectiveInputs(Path(request["data_dir"]), source_root=Path(request["root"]),
+                         election_date=date.fromisoformat(request["election"]), seed=request["seed"])
+json.dump({day: inputs.fingerprint(date.fromisoformat(day)) for day in request["dates"]}, sys.stdout)
+"""
+
+
 def _fingerprinted_before_last_model_change(existing: dict) -> bool:
     """Whether the artifact's points carry the fingerprints of the code just
-    before the most recent change to a numerical model file.
+    before the most recent change to the fingerprinted code.
 
     MODEL_FILES are part of every fingerprint, so such a change invalidates
     every reconstructed point by design. If some recorded fingerprint matches
-    what the previous model code produces for the same inputs, the reuse
-    cache worked and the change alone explains why nothing survives now. A
+    what the previous code produces for the same inputs, the reuse cache
+    worked and the change alone explains why nothing survives now. A
     fingerprint that matches under neither version is not explained, and the
     caller keeps its strict expectation -- as it does when git history is
     unavailable (a shallow clone).
+
+    "The previous code" is that revision's scripts/ tree as a whole, run in a
+    subprocess: its model files *and* its effective_inputs.py, which defines
+    what a fingerprint covers. Feeding only the old model files to today's
+    fingerprint code reproduces nothing once a change also extends what is
+    fingerprinted, as model 1.2.1-rc1 did (the election-eve consensus files
+    and the 2030 training polls).
     """
 
     def git(*args: str) -> subprocess.CompletedProcess:
         return subprocess.run(["git", *args], cwd=REPOSITORY_ROOT, capture_output=True)
 
-    change = git("log", "-1", "--format=%H", "--", *MODEL_FILES).stdout.decode().strip()
+    change = git("log", "-1", "--format=%H", "--", *FINGERPRINT_CODE).stdout.decode().strip()
     if not change or git("cat-file", "-e", f"{change}^{{commit}}").returncode != 0:
         return False
-    with tempfile.TemporaryDirectory() as tmp:
-        for relative in MODEL_FILES:
-            blob = git("show", f"{change}^:{relative}")
-            if blob.returncode != 0:
-                return False
-            target = Path(tmp) / relative
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_bytes(blob.stdout)
-        previous = EffectiveInputs(
-            REPOSITORY_ROOT / "data/processed",
-            source_root=Path(tmp),
-            election_date=date.fromisoformat(existing["election_date"]),
-            seed=int(existing["model"]["seed"]),
-        )
-    recorded = previous_fingerprints(existing)
-    return any(
-        recorded.get(point["date"]) == previous.fingerprint(date.fromisoformat(point["date"]))
-        for point in existing["series"]
+    archive = git("archive", "--format=tar", f"{change}^", "scripts")
+    if archive.returncode != 0:
+        return False
+    dates = [
+        str(point["date"]) for point in existing["series"]
         if point["provenance"] == "reconstructed_current_model"
-    )
+    ]
+    with tempfile.TemporaryDirectory() as tmp:
+        with tarfile.open(fileobj=io.BytesIO(archive.stdout)) as tar:
+            try:
+                tar.extractall(tmp, filter="data")
+            except TypeError:  # a Python without extraction filters
+                tar.extractall(tmp)
+        run = subprocess.run(
+            [sys.executable, "-c", _PREVIOUS_FINGERPRINTS],
+            cwd=tmp,
+            env={**os.environ, "PYTHONPATH": tmp},
+            input=json.dumps({
+                "data_dir": str(REPOSITORY_ROOT / "data/processed"), "root": tmp,
+                "election": existing["election_date"], "seed": int(existing["model"]["seed"]),
+                "dates": dates,
+            }),
+            capture_output=True,
+            text=True,
+        )
+    if run.returncode != 0:
+        return False
+    previous = json.loads(run.stdout)
+    recorded = previous_fingerprints(existing)
+    return any(recorded.get(day) == previous.get(day) for day in dates)
 
 
 def _forecast_utc(hour: int, minute: int = 0) -> datetime:
