@@ -414,7 +414,9 @@ class GuardTest(unittest.TestCase):
     def test_frozen_t5_body_and_record(self):
         p = T.verify_t5(allow_dirty=True)
         self.assertEqual(p["t5_body_sha256"], T.T5_BODY_SHA256)
-        self.assertEqual(p["t5_amendments_in_force"], [])
+        # T5 amendments 001 (Ul) and 002 (U0) are in force from 2026-11-19 (none at freeze).
+        self.assertEqual([a["amendment_id"] for a in p["t5_amendments_in_force"]],
+                         ["001-ul-log-ratio-arm", "002-u0-shadow-arm"])
 
 
 if __name__ == "__main__":

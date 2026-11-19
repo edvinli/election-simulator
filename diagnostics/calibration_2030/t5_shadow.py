@@ -83,6 +83,12 @@ TARGET_NAMES = tuple(f"h{h}" for h in POLL_HORIZONS) + ("election",)
 T2_ARMS = ("D0", "Ua", "Ub1", "Ub2", "Uc")
 U_ARMS = ("Ua", "Ub1", "Ub2", "Uc")
 ENGINE_ARMS = ("FB", "CAND")
+# T5 amendments 001 (Ul) and 002 (U0): arms added from the first capture whose
+# origin is on or after the amendment's in-effect date (its finalization date, UTC).
+T5_AMENDMENT_DIR = ROOT / "data" / "processed" / "calibration_2030" / "t5_amendments"
+AMENDMENT_ARMS = {"001-ul-log-ratio-arm": "Ul", "002-u0-shadow-arm": "U0"}
+POLL_ARMS = (*T2_ARMS, "Ul")
+U0_RESULTS = ROOT / "diagnostics" / "calibration_2030" / "t4_exception_u0_results.json"
 N_DRAWS = 4000
 LEVELS = np.round(np.arange(1, 100) / 100.0, 2)
 PARTIES8 = ("M", "L", "C", "KD", "S", "V", "MP", "SD")
@@ -361,14 +367,58 @@ def verify_t5(allow_dirty: bool = False) -> dict:
     return provenance
 
 
-def t5_amendments_in_force() -> list[dict]:
-    """Calibration amendments whose ``amends`` is the T5 document (none at freeze)."""
+def t5_amendments_in_force(directory: Path = T5_AMENDMENT_DIR) -> list[dict]:
+    """T5 amendments in force: calibration amendments whose ``amends`` is the T5 document (none at
+    freeze), plus every entry of ``t5_amendments/index.json``, each verified against its record,
+    the record's companion hash and its text (T5 amendment 002)."""
 
-    if not CALIBRATION_AMENDMENT_INDEX.exists():
-        return []
-    index = json.loads(CALIBRATION_AMENDMENT_INDEX.read_text(encoding="utf-8"))
-    return [{"amendment_id": a["amendment_id"], "record_sha256": a.get("record_sha256")}
-            for a in index.get("amendments", []) if a.get("amends") == T5_DOC_REL]
+    out = []
+    if CALIBRATION_AMENDMENT_INDEX.exists():
+        index = json.loads(CALIBRATION_AMENDMENT_INDEX.read_text(encoding="utf-8"))
+        out += [{"amendment_id": a["amendment_id"], "record_sha256": a.get("record_sha256")}
+                for a in index.get("amendments", []) if a.get("amends") == T5_DOC_REL]
+    index_path = directory / "index.json"
+    if not index_path.exists():
+        return out
+    index = json.loads(index_path.read_text(encoding="utf-8"))
+    for entry in index.get("amendments", []):
+        path = directory / entry["record"]
+        record_sha = sha256(path)
+        companion = path.with_suffix(".sha256")
+        if not companion.exists() or companion.read_text(encoding="utf-8").split()[0] != record_sha:
+            raise IntegrityError(f"T5 amendment {entry['record']} does not match its SHA-256 companion")
+        if entry.get("record_sha256") != record_sha:
+            raise IntegrityError(f"T5 amendment {entry['record']} is not indexed with its SHA-256")
+        record = json.loads(path.read_text(encoding="utf-8"))
+        if record.get("status") != "final" or record.get("in_effect") is not True:
+            raise IntegrityError(f"T5 amendment {entry['record']} is indexed but not final and in effect")
+        if sha256(ROOT / record["text"]) != record["text_sha256"]:
+            raise IntegrityError(f"T5 amendment {entry['record']} text does not match text_sha256")
+        out.append({"amendment_id": record["amendment_id"], "record_sha256": record_sha,
+                    "arm": record["arm"]["name"], "in_effect_from": record["in_effect_from"]})
+    return out
+
+
+def amendment_arms_active(origin: date, in_force: Sequence[Mapping]) -> dict[str, dict]:
+    """{arm: amendment entry} for amendment arms whose in-effect date is on or before ``origin``."""
+
+    active = {}
+    for a in in_force:
+        arm = AMENDMENT_ARMS.get(a["amendment_id"])
+        if arm is not None and a.get("arm") == arm and date.fromisoformat(a["in_effect_from"]) <= origin:
+            active[arm] = dict(a)
+    return active
+
+
+def u0_label(path: Path = U0_RESULTS) -> dict:
+    """T5 amendment 002's label for U0, read from the committed exception-arm results."""
+
+    record = json.loads(path.read_text(encoding="utf-8"))
+    gates = record["gates"]["U0"]
+    return {"verdict": "T4X_PASS" if gates["pass"] else "T4X_FAIL",
+            "failed_gates": sorted(g for g, v in gates["gates"].items() if not v["pass"]),
+            "flag_2026_raised": bool(gates["flag_2026"]["flagged"]),
+            "t4_exception_results_sha256": sha256(path)}
 
 
 # --------------------------------------------------------------------------- refusals
@@ -652,6 +702,13 @@ def _phase_b(cell: tuple[date, int]) -> tuple:
     return (o, h, _CTX["n_draws"]), A.k1_cell(_CTX, o, h)
 
 
+def _phase_ul(cell: tuple[date, int]) -> tuple:
+    from . import ul_arm
+
+    o, h = cell
+    return (o, h, _CTX["n_draws"]), ul_arm.ul_k1_cell(_CTX, o, h)
+
+
 def _map(workers: int, fn, items: list) -> list:
     if workers <= 1 or len(items) < 2:
         return [fn(x) for x in items]
@@ -660,7 +717,7 @@ def _map(workers: int, fn, items: list) -> list:
         return pool.map(fn, items, chunksize=max(1, len(items) // (workers * 4)))
 
 
-def prepare_k(ctx: dict, origin: date, workers: int = 1) -> dict:
+def prepare_k(ctx: dict, origin: date, workers: int = 1, with_ul: bool = False) -> dict:
     """Per-origin intermediates over the continued grid, then k per U arm at ``origin`` (§2.1).
 
     Workers only fill ``ctx``'s caches with the same deterministic recomputations
@@ -688,8 +745,16 @@ def prepare_k(ctx: dict, origin: date, workers: int = 1) -> dict:
     _CTX = ctx
     for key, value in _map(workers, _phase_b, cells):
         ctx["cache"]["k1"][key] = value
+    out = {arm: A.inflation_k(arm, ctx, origin) for arm in U_ARMS}
+    if with_ul:
+        from . import ul_arm
+
+        _CTX = ctx
+        for key, value in _map(workers, _phase_ul, cells):
+            ctx["cache"].setdefault("k1_ul", {})[key] = value
+        out["Ul"] = ul_arm.ul_inflation_k(ctx, origin)
     _CTX = None
-    return {arm: A.inflation_k(arm, ctx, origin) for arm in U_ARMS}
+    return out
 
 
 def v03_self_check_reported(rows: Mapping) -> dict:
@@ -804,16 +869,22 @@ def target_dates(origin: date) -> dict[str, date]:
 
 
 def run_t2_targets(ctx: dict, origin: date, k: Mapping[str, tuple[float, int]], law, n: int,
-                   clock: Callable[[], datetime]) -> tuple[dict, dict, dict]:
-    """Every T2 arm at every target with §3.3's shared generator. Returns (quantiles, election draws, info)."""
+                   clock: Callable[[], datetime], with_ul: bool = False) -> tuple[dict, dict, dict]:
+    """Every T2 arm at every target with §3.3's shared generator. Returns (quantiles, election draws, info).
+
+    With ``with_ul`` (T5 amendment 001), ``Ul`` is computed from exactly ``Ua``'s ``z_state`` and
+    ``z_dyn`` at each target; it consumes no random numbers, so the other arms' draws are unchanged.
+    """
 
     from . import t2_arms as A
+    from . import ul_arm
 
-    quantiles: dict[str, dict[str, np.ndarray]] = {arm: {} for arm in T2_ARMS}
+    arms = (*T2_ARMS, "Ul") if with_ul else T2_ARMS
+    quantiles: dict[str, dict[str, np.ndarray]] = {arm: {} for arm in arms}
     election: dict[str, np.ndarray] = {}
     errors: dict[str, str] = {}
     info: dict[str, dict] = {}
-    seconds = dict.fromkeys(T2_ARMS, 0.0)
+    seconds = dict.fromkeys(arms, 0.0)
     for name, target in target_dates(origin).items():
         check_clock(clock())
         seed = t5_seed(origin, name)
@@ -848,6 +919,13 @@ def run_t2_targets(ctx: dict, origin: date, k: Mapping[str, tuple[float, int]], 
             except Exception as exc:  # noqa: BLE001 - recorded as FAILED (§4.3)
                 errors[arm] = f"{name}: {type(exc).__name__}: {exc}"
             seconds[arm] += time.time() - t0
+        if with_ul and "Ul" not in errors:
+            t0 = time.time()
+            try:
+                base["Ul"] = ul_arm.ul_draws(ctx, origin, target, z_state=z_state, z_dyn=z_dyn, k=k["Ul"][0])
+            except Exception as exc:  # noqa: BLE001 - recorded as FAILED (§4.3)
+                errors["Ul"] = f"{name}: {type(exc).__name__}: {exc}"
+            seconds["Ul"] += time.time() - t0
         # PREREG-AMBIGUITY: if Uc fails, its bootstrap draws are not consumed and
         # Z_noise follows Z_poll directly; the spec orders the draws but does not
         # say what a failed arm consumes. Reading implemented: a failed arm draws nothing.
@@ -1092,21 +1170,22 @@ def capture(repo: Path = ROOT, *, dry_run: bool = False, dry_run_out: Path | Non
 
         timings["context"] = time.time() - t0
         t0 = time.time()
-        k = prepare_k(ctx, origin, workers)
+        added = amendment_arms_active(origin, provenance["t5_amendments_in_force"])
+        k = prepare_k(ctx, origin, workers, with_ul="Ul" in added)
         timings["k_theta_omega"] = time.time() - t0
         t0 = time.time()
         law = interim_law()
         timings["interim_law"] = time.time() - t0
 
         t0 = time.time()
-        quantiles, election, t2_info = run_t2_targets(ctx, origin, k, law, n_draws, clock)
+        quantiles, election, t2_info = run_t2_targets(ctx, origin, k, law, n_draws, clock, with_ul="Ul" in added)
         timings["T2_arms"] = time.time() - t0
         timings.update({f"arm_{a}": s for a, s in t2_info["seconds"].items()})
 
         arm_status: dict[str, dict] = {}
         files: dict[str, bytes] = {}
         target_names = [f"h{h}" for h in POLL_HORIZONS]
-        for arm in T2_ARMS:
+        for arm in (*T2_ARMS, "Ul") if "Ul" in added else T2_ARMS:
             seeds = {t: {"string": seed_string(origin, t), "int": t5_seed(origin, t)} for t in TARGET_NAMES}
             err = t2_info["errors"].get(arm)
             if err is None and (set(quantiles[arm]) != set(target_names) or arm not in election):
@@ -1118,6 +1197,8 @@ def capture(repo: Path = ROOT, *, dry_run: bool = False, dry_run_out: Path | Non
             files[f"{arm}.npz"] = npz_bytes([("election_draws_centipp", to_centipp(election[arm])),
                                              ("poll_quantiles", q)])
             arm_status[arm] = {"status": "OK", "n": n_draws, "seeds": seeds, "file": f"{arm}.npz"}
+            if arm in added:
+                arm_status[arm]["amendment"] = added[arm]
 
         # C0p (§2.4 a)
         t0 = time.time()
@@ -1145,6 +1226,10 @@ def capture(repo: Path = ROOT, *, dry_run: bool = False, dry_run_out: Path | Non
         engine_arms = [("FB", ce.config_fb(), fb_verdict["label"] if fb_verdict else None)]
         if activation is not None and origin >= date.fromisoformat(activation["completion_day_utc"]):
             engine_arms.append(("CAND", ce.config_cand(activation["selection"]), activation["label"]))
+        if "U0" in added:
+            from .t4_exception_u0 import config_u0
+
+            engine_arms.append(("U0", config_u0(), {**u0_label(), "amendment": added["U0"]}))
         for name, config, label in engine_arms:
             t0 = time.time()
             check_clock(clock())
@@ -1176,7 +1261,8 @@ def capture(repo: Path = ROOT, *, dry_run: bool = False, dry_run_out: Path | Non
             "v03_reading_at_O": dict(zip(PARTIES8, st0["mean"].tolist())),
             "v03_self_check_reported_only": v03_check,
             "omega_O": None if omega is None else omega[0], "omega_centres": None if omega is None else omega[1],
-            "k": {arm: {"k": k[arm][0], "eligible_targets": k[arm][1], "errors": 8 * k[arm][1]} for arm in U_ARMS},
+            "k": {arm: {"k": k[arm][0], "eligible_targets": k[arm][1], "errors": 8 * k[arm][1]}
+                  for arm in (*U_ARMS, "Ul") if arm in k},
             "theta": theta,
             "first_scored_origin": A.first_scored_origin(ctx), "k_grid_scored_origins": len(ctx["scored_origins"]),
             "targets": {t: {kk: vv for kk, vv in v.items() if not kk.startswith("_")}
@@ -1441,7 +1527,7 @@ def report(repo: Path = ROOT, quarter: str = "", *, dry_run: bool = False, clock
             if st.get("status") == "FAILED":
                 failures.append({"capture_date": entry["capture_date"], "arm": arm, "error": st.get("error")})
         arrays = {}
-        for arm in (*T2_ARMS, "C0p", "FB"):
+        for arm in (*POLL_ARMS, "C0p", "FB"):
             blob = git_show_bytes(repo, ref, f"{base}/{arm}.npz")
             if blob is not None:
                 arrays[arm] = load_npz(blob)
@@ -1463,12 +1549,12 @@ def report(repo: Path = ROOT, quarter: str = "", *, dry_run: bool = False, clock
                                   **score_quantiles(arr["poll_quantiles"][i].astype(np.float64), y)})
     by_h: dict[str, dict] = {}
     for h in POLL_HORIZONS:
-        for arm in (*T2_ARMS, "C0p"):
+        for arm in (*POLL_ARMS, "C0p"):
             sel = [c for c in cells if c["h"] == h and c["arm"] == arm]
             if sel:
                 by_h.setdefault(str(h), {})[arm] = _pool_cells(sel)
     pooled = {arm: _pool_cells([c for c in cells if c["arm"] == arm and c["h"] >= 91])
-              for arm in (*T2_ARMS, "C0p") if any(c["arm"] == arm and c["h"] >= 91 for c in cells)}
+              for arm in (*POLL_ARMS, "C0p") if any(c["arm"] == arm and c["h"] >= 91 for c in cells)}
     counted = sorted({c["capture_date"] for c in cells if c["h"] == 91})
     record = {
         "schema": "calibration-2030-t5-report-v1", "quarter": quarter, "generated_utc": fmt_utc(now),
