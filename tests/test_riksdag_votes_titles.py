@@ -10,7 +10,14 @@ from datetime import date
 from email.message import Message
 from pathlib import Path
 
-from scripts.riksdag_votes.build import build, content_of, current_term_sessions, write_json
+from scripts.riksdag_votes.build import (
+    build,
+    content_of,
+    current_term_sessions,
+    sessions_to_update,
+    terms_to_write,
+    write_json,
+)
 from scripts.riksdag_votes.fetch import (
     NotFound,
     PoliteHttpGet,
@@ -337,6 +344,19 @@ class StoreAndOutputStabilityTests(unittest.TestCase):
         self.assertEqual(current_term_sessions(date(2027, 9, 1)), ["2026/27", "2027/28"])
         self.assertEqual(current_term_sessions(date(2030, 6, 1)), ["2026/27", "2027/28", "2028/29", "2029/30"])
         self.assertEqual(current_term_sessions(date(2030, 9, 2)), ["2030/31"])
+
+    def test_sessions_to_update_keep_the_previous_term_through_october_of_an_election_year(self) -> None:
+        self.assertEqual(sessions_to_update(date(2026, 11, 19)), ["2026/27"])
+        self.assertEqual(sessions_to_update(date(2027, 9, 15)), ["2026/27", "2027/28"])
+        previous = ["2026/27", "2027/28", "2028/29", "2029/30"]
+        self.assertEqual(sessions_to_update(date(2030, 8, 31)), previous)
+        self.assertEqual(sessions_to_update(date(2030, 9, 1)), previous + ["2030/31"])
+        self.assertEqual(sessions_to_update(date(2030, 10, 31)), previous + ["2030/31"])
+        self.assertEqual(sessions_to_update(date(2030, 11, 1)), ["2030/31"])
+        # The first term has no previous term in this pipeline.
+        self.assertEqual(sessions_to_update(date(2022, 10, 1)), ["2022/23"])
+        # With every session of the previous term present, its summary is written too.
+        self.assertEqual(set(terms_to_write(sessions_to_update(date(2030, 9, 20)), date(2030, 9, 20))), {"2026-30", "2030-34"})
 
 
 class SiteExportTests(unittest.TestCase):

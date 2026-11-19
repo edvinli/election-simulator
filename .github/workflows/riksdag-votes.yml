@@ -8,10 +8,13 @@
 # certification, publication, rendering or the benchmark, and it never takes
 # their concurrency groups.
 #
-# Completed sessions (2022/23-2025/26 and term-2022-26) are not rebuilt daily;
-# their committed outputs are copied to the website as they are. Rebuild them
-# after a pipeline change by dispatching with `sessions` set to every session
-# of that term (or locally, see docs/riksdag_votes.md).
+# The sessions rebuilt are build.sessions_to_update(today): the current term's
+# begun sessions, plus the whole previous term from 1 September to 31 October
+# of an election year (its last session can still vote in September).
+# Completed sessions (now 2022/23-2025/26 and term-2022-26) are otherwise not
+# rebuilt; their committed outputs are copied to the website as they are.
+# Rebuild them after a pipeline change by dispatching with `sessions` set to
+# every session of that term (or locally, see docs/riksdag_votes.md).
 #
 # Triggers this workflow's pushes cause, checked against the other workflows:
 #   * The push to simulator main is made with GITHUB_TOKEN. A GITHUB_TOKEN push
@@ -51,7 +54,7 @@ on:
         default: true
         type: boolean
       sessions:
-        description: "Sessions to rebuild, space-separated, e.g. '2022/23 2023/24 2024/25 2025/26' (default: the current term)"
+        description: "Sessions to rebuild, space-separated, e.g. '2022/23 2023/24 2024/25 2025/26' (default: the current term; see sessions_to_update)"
         required: false
         default: ""
         type: string
@@ -107,7 +110,7 @@ jobs:
             fi
             sessions="$SESSIONS_INPUT"
           else
-            sessions="$(uv run python -c 'from datetime import datetime, timezone; from scripts.riksdag_votes.build import current_term_sessions; print(" ".join(current_term_sessions(datetime.now(timezone.utc).date())))')"
+            sessions="$(uv run python -c 'from datetime import datetime, timezone; from scripts.riksdag_votes.build import sessions_to_update; print(" ".join(sessions_to_update(datetime.now(timezone.utc).date())))')"
           fi
           key="$(echo "$sessions" | tr -c 'A-Za-z0-9\n' '-')"
           echo "sessions=$sessions" >> "$GITHUB_OUTPUT"

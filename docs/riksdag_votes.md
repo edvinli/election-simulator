@@ -12,8 +12,11 @@ uv run python -m scripts.riksdag_votes.build --sessions 2022/23 2023/24 2024/25 
 
 Options:
 
-* `--current-term` instead of `--sessions`: every begun session of the
-  electoral term containing today's UTC date (2026/27 on 2026-11-19);
+* `--current` instead of `--sessions`: the sessions a daily update rebuilds —
+  every begun session of the electoral term containing today's UTC date
+  (2026/27 on 2026-11-19), plus the whole previous term from 1 September to
+  31 October of an election year, because its last session can still vote in
+  September before the new riksdag convenes;
 * `--update`: re-download the session listings (register and bulk archive) to
   pick up new votes; per-vote and per-document files stay cached;
 * `--refresh`: re-download everything; `--offline`: use only cached raw files
@@ -247,7 +250,7 @@ and deletes nothing.
 Daily at 06:41 UTC, and on `workflow_dispatch` (`dry_run`, default true;
 optional `sessions`). Concurrency group `riksdag-votes` only. Steps: restore
 the raw cache (`actions/cache`, keyed on the session list and date, falling
-back to the newest), run the riksdag tests, build the current term's sessions
+back to the newest), run the riksdag tests, build the `--current` sessions
 with `--update --site-dir`, report both diffs, and — unless dry run — wait
 until no publication, rendering or benchmark run is queued or running (two
 checks a minute apart, never inside 18:30–22:00 UTC, deferring to the next day

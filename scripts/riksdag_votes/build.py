@@ -1,7 +1,7 @@
 """Build the riksdag roll-call outputs.
 
     uv run python -m scripts.riksdag_votes.build --sessions 2022/23 2023/24 2024/25 2025/26 2026/27
-    uv run python -m scripts.riksdag_votes.build --current-term --update --site-dir /tmp/site
+    uv run python -m scripts.riksdag_votes.build --current --update --site-dir /tmp/site
 
 Writes, under ``data/processed/riksdag_votes/``:
 
@@ -120,6 +120,20 @@ def current_term_sessions(today: date) -> list[str]:
     return [session_label(year) for year in range(term_start, start + 1)]
 
 
+def sessions_to_update(today: date) -> list[str]:
+    """The sessions a daily update rebuilds: the current term's begun sessions
+    and, from 1 September to 31 October of an election year, the whole
+    previous term too. Its last session can still vote in September before the
+    newly elected riksdag convenes (the 2022/23 and 2023/24 sessions voted
+    until 13 and 25 September), and its term summary is written only together
+    with all of its sessions."""
+    sessions = current_term_sessions(today)
+    start = current_session_start(today)
+    if sessions == [session_label(start)] and today < date(start, 11, 1) and start - 4 >= FIRST_TERM_START:
+        sessions = [session_label(year) for year in range(start - 4, start)] + sessions
+    return sessions
+
+
 def terms_to_write(sessions: Sequence[str], today: date) -> dict[str, list[str]]:
     selected = {}
     for label, term_sessions in TERMS.items():
@@ -207,9 +221,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     which = parser.add_mutually_exclusive_group()
     which.add_argument("--sessions", nargs="+", help="riksmöten, e.g. 2025/26 (default: 2022/23 to 2026/27)")
     which.add_argument(
-        "--current-term",
+        "--current",
         action="store_true",
-        help="every begun session of the electoral term containing today's UTC date",
+        help="the sessions a daily update rebuilds (today in UTC): every begun session of the current "
+        "term, plus the whole previous term from 1 September to 31 October of an election year",
     )
     parser.add_argument("--cache-dir", type=Path, default=DEFAULT_CACHE_DIR)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
@@ -229,8 +244,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO if args.verbose else logging.WARNING, format="%(levelname)s %(name)s: %(message)s")
 
     now = datetime.now(timezone.utc).replace(microsecond=0)
-    if args.current_term:
-        sessions = current_term_sessions(now.date())
+    if args.current:
+        sessions = sessions_to_update(now.date())
     else:
         sessions = list(args.sessions or DEFAULT_SESSIONS)
     print(f"sessions: {' '.join(sessions)}")
