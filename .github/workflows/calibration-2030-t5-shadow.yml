@@ -1,0 +1,132 @@
+# Calibration programme 2030, T5: the weekly prospective shadow capture.
+#
+# Governed by docs/calibration_2030_t5_shadow_preregistration.md (frozen) and
+# its T5 amendment 003 (operations), both on the shadow/2030 branch. A
+# scheduled workflow runs only from the default branch, so this file lives on
+# main while the runner code and the archive live on shadow/2030.
+#
+# Isolation (T5 §7): this workflow checks out shadow/2030, writes only
+# data/processed/shadow_2030/ there, and never takes the production, render or
+# benchmark concurrency groups. It never invokes publication, certification,
+# rendering or deployment. No workflow triggers on a push to shadow/2030, and
+# a push made with GITHUB_TOKEN starts none anyway.
+name: Calibration 2030 T5 shadow capture
+
+on:
+  schedule:
+    # 07:23 UTC daily: after the 04:00 always-publish run and its render, and
+    # outside the protected 18:30-22:00 UTC interval. Up to seven attempts per
+    # ISO week; a week that already has a capture is skipped.
+    - cron: "23 7 * * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "capture (as scheduled) or verify (check the committed archive only)"
+        required: true
+        default: verify
+        type: choice
+        options:
+          - capture
+          - verify
+
+concurrency:
+  group: calibration-2030-t5-shadow
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  shadow:
+    name: T5 shadow capture
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      SHADOW_BRANCH: shadow/2030
+      MODE: ${{ github.event_name == 'schedule' && 'capture' || inputs.mode }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: shadow/2030
+          fetch-depth: 0
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - name: Set up Python
+        run: uv python install 3.12
+      - name: Install the locked dependency set
+        run: uv sync --frozen --python 3.12
+
+      - name: Identify the run
+        id: week
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          test "$(git rev-parse --abbrev-ref HEAD)" = "$SHADOW_BRANCH"
+          week="$(date -u +%G-W%V)"
+          captured="$(python3 -c 'import json,sys; idx=json.load(open("data/processed/shadow_2030/index.json")); print("yes" if any(c["iso_week"]==sys.argv[1] for c in idx["captures"]) else "no")' "$week")"
+          echo "week=$week" >> "$GITHUB_OUTPUT"
+          echo "captured=$captured" >> "$GITHUB_OUTPUT"
+          echo "ISO week $week; already captured: $captured; mode: $MODE" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Capture
+        id: capture
+        if: env.MODE == 'capture' && steps.week.outputs.captured == 'no'
+        shell: bash
+        run: |
+          set -uo pipefail
+          status=0
+          uv run python -m diagnostics.calibration_2030.t5_shadow capture --workers 4 \
+            > "$RUNNER_TEMP/capture.json" 2> "$RUNNER_TEMP/capture.err" || status=$?
+          cat "$RUNNER_TEMP/capture.err" >&2
+          cat "$RUNNER_TEMP/capture.json"
+          if [ "$status" -eq 0 ]; then
+            echo "committed=yes" >> "$GITHUB_OUTPUT"
+            echo "Capture committed for ${{ steps.week.outputs.week }}." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          # Exit 3 is a refusal. "No certified production generation this week
+          # yet" is retried the next day; on Sunday, the week's last day, it fails.
+          if [ "$status" -eq 3 ] && grep -q "no certified 2030 production generation" "$RUNNER_TEMP/capture.err" \
+             && [ "$(date -u +%u)" != "7" ]; then
+            echo "committed=no" >> "$GITHUB_OUTPUT"
+            echo "::warning::No production anchor yet this week; retrying tomorrow."
+            echo "No production anchor yet for ${{ steps.week.outputs.week }}; retrying tomorrow." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          exit "$status"
+
+      - name: Verify the archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv run python -m diagnostics.calibration_2030.t5_shadow verify --ref HEAD > "$RUNNER_TEMP/verify.json"
+          python3 -c 'import json,sys; r=json.load(open(sys.argv[1])); print(json.dumps({"ok": r["ok"], "chain_errors": r["chain_errors"], "problems": {k: v["problems"] for k, v in r["captures"].items() if v["problems"]}}, indent=2)); sys.exit(0 if r["ok"] else 1)' "$RUNNER_TEMP/verify.json"
+
+      - name: Push shadow/2030 (never forced)
+        if: steps.capture.outputs.committed == 'yes'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git push origin "HEAD:refs/heads/$SHADOW_BRANCH"
+
+      - name: Report a failure as an issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          title="T5 shadow capture failing"
+          body="The T5 shadow workflow failed for ISO week ${{ steps.week.outputs.week || 'unknown' }} (mode ${MODE}): ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}. A week with no committed capture by Monday 00:00 UTC is missed (T5 §3.1, §4.2)."
+          number="$(gh issue list --state open --search "\"$title\" in:title" --json number --jq '.[0].number // empty')"
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --body "$body"
+          else
+            gh issue create --title "$title" --body "$body"
+          fi
