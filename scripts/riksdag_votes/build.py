@@ -44,6 +44,7 @@ from .constants import (
     TERMS,
     session_label,
 )
+from .blocs import find_blocs, pm_votes_considered
 from .fetch import RawStore, session_code, session_slug
 from .ingest import SessionData, load_session
 from .summarize import build_summary, build_votes_payload
@@ -143,6 +144,31 @@ def terms_to_write(sessions: Sequence[str], today: date) -> dict[str, list[str]]
     return selected
 
 
+def term_of(rm: str) -> str | None:
+    return next((label for label, sessions in TERMS.items() if rm in sessions), None)
+
+
+def term_context(label: str, summary: dict) -> dict:
+    """What a session summary takes from its term: blocs and the map to align with."""
+    term_map = summary.get("map") or {}
+    reference = (
+        {"label": f"term-{label}", "party_coordinates": term_map["party_coordinates"]}
+        if term_map.get("available")
+        else None
+    )
+    return {"blocs": summary.get("blocs"), "map_reference": reference}
+
+
+def read_term_context(output_dir: Path, label: str) -> dict:
+    """The term context from the term summary already on disk, for a session
+    rebuilt without the rest of its term; empty if there is none."""
+    path = Path(output_dir) / f"term-{label}" / "summary.json"
+    if not path.is_file():
+        LOGGER.warning("no %s on disk: session summaries get no blocs and use the anchor rule", path)
+        return {}
+    return term_context(label, json.loads(path.read_text(encoding="utf-8")))
+
+
 def session_notes(session: SessionData) -> list[str]:
     notes = [f"{session.rm}: {note}" for note in session.notes]
     if session.excluded:
@@ -179,21 +205,9 @@ def build(
             record["title_sources"] = title_sources_digest(store, title_files)
         return record
 
-    for rm, session in loaded.items():
-        slug = session_slug(rm)
-        prov = provenance([session])
-        path = output_dir / slug / "votes.json"
-        written[str(path)] = write_json(path, build_votes_payload(session, prov))
-        notes = session_notes(session)
-        summary = build_summary(
-            session.votes,
-            scope={"kind": "session", "label": rm, "sessions": [rm]},
-            provenance=prov,
-            notes=notes,
-        )
-        path = output_dir / slug / "summary.json"
-        written[str(path)] = write_json(path, summary)
-
+    # Terms first: a session summary takes its blocs and its map orientation
+    # from its term.
+    contexts: dict[str, dict] = {}
     for label, term_sessions in terms_to_write(list(loaded), today).items():
         votes = [vote for rm in term_sessions for vote in loaded[rm].votes]
         notes = [note for rm in term_sessions for note in session_notes(loaded[rm])]
@@ -207,8 +221,31 @@ def build(
             },
             provenance=provenance([loaded[rm] for rm in term_sessions]),
             notes=notes,
+            blocs=find_blocs(votes),
+            extra={"pm_votes_considered": pm_votes_considered(votes)},
         )
         path = output_dir / f"term-{label}" / "summary.json"
+        written[str(path)] = write_json(path, summary)
+        contexts[label] = term_context(label, summary)
+
+    for rm, session in loaded.items():
+        slug = session_slug(rm)
+        prov = provenance([session])
+        path = output_dir / slug / "votes.json"
+        written[str(path)] = write_json(path, build_votes_payload(session, prov))
+        label = term_of(rm)
+        if label is not None and label not in contexts:
+            contexts[label] = read_term_context(output_dir, label)
+        context = contexts.get(label) or {}
+        summary = build_summary(
+            session.votes,
+            scope={"kind": "session", "label": rm, "sessions": [rm]},
+            provenance=prov,
+            notes=session_notes(session),
+            blocs=context.get("blocs"),
+            map_reference=context.get("map_reference"),
+        )
+        path = output_dir / slug / "summary.json"
         written[str(path)] = write_json(path, summary)
 
     store.write_manifest([session_code(rm) for rm in loaded])

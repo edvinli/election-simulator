@@ -93,12 +93,26 @@ MIN_MP_MAP_VOTES = 50
 MIN_MAP_VOTES_FOR_FIT = 20
 MAP_DIMENSIONS = 2
 TOP_LOADING_VOTES = 10
-# Sign convention: axis k is oriented so that ANCHOR[k] has a positive score.
-# If the anchor's score is numerically zero the first party in PARTY_ORDER with
-# a non-zero score is made positive instead. The anchors are a convention for
-# reproducibility only; they carry no left/right meaning.
-MAP_AXIS_ANCHORS = ("M", "SD")
+# Sign convention for a TERM map: axis k is oriented so that ANCHOR[k] has a
+# positive score. An anchor counts only if its |score| is at least
+# MAP_ANCHOR_MIN_SHARE of the largest |score| on that axis; otherwise the first
+# party in PARTY_ORDER that clears that bar is made positive. (SD, the old
+# axis-2 anchor, sat at ~0 on axis 2, which left that sign arbitrary.) The
+# anchors are a convention for reproducibility only; they carry no left/right
+# meaning.
+MAP_AXIS_ANCHORS = ("M", "V")
+MAP_ANCHOR_MIN_SHARE = 0.1
+# A SESSION map is aligned with its term's map instead: axis k's sign follows
+# the dot product of the session's and the term's party coordinates on axis k
+# (parties in both), unless |cosine| < MAP_ALIGNMENT_MIN_COSINE, in which case
+# the anchor rule above applies to that axis.
+MAP_ALIGNMENT_MIN_COSINE = 0.1
 ROUND_DIGITS = 4
+
+# --- Blocs -------------------------------------------------------------------
+# A speaker's proposal for prime minister is rejected only if more than half of
+# all members vote Nej (RF 6:4): 175 of 349.
+PM_REJECTION_NEJ_THRESHOLD = 175
 
 # --- Terms -------------------------------------------------------------------
 # Four-year electoral terms counted from the 2022 election: "2022-26" is

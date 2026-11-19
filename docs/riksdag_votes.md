@@ -153,9 +153,22 @@ replace, so each vote's bench mapping shows who actually sat there.
      line lands on the party's point regardless of absences (tested).
    * Reported coordinates are divided by √(number of map votes) so that
      periods of different length are comparable.
-   * Signs: axis 1 is oriented so M scores positive, axis 2 so SD scores
-     positive (fallback: the first party in the standard order with a non-zero
-     score). This is a reproducibility convention. **Axes are not left/right**;
+   * Signs. A **term** map is oriented so M scores positive on axis 1 and V on
+     axis 2. An anchor counts only if its |score| is at least 10 %
+     (`MAP_ANCHOR_MIN_SHARE`) of the axis's largest |score|; otherwise the
+     first party in the standard order that clears that bar is made positive.
+     (Until 2026-11-19 axis 2 was anchored on SD, which sits at ~0 on axis 2,
+     so its sign was arbitrary: V was −0.51 in 2022/23 and +0.40…+0.63
+     elsewhere.) A **session** map is aligned with its term's map axis by
+     axis: the sign of the dot product of the two maps' party coordinates over
+     the parties in both; an axis whose |cosine| is below 0.1
+     (`MAP_ALIGNMENT_MIN_COSINE`) falls back to the term rule. Each map
+     records `orientation` (text), `orientation_reference` (`term-<label>`
+     for a session map, null for a term map) and `orientation_axes` (per
+     axis: `method` `aligned` with its `cosine`, or `anchor` with the party
+     used). A session rebuilt without the rest of its term reads the term map
+     from the term summary on disk. This is a reproducibility convention.
+     **Axes are not left/right**;
      read them through `top_loading_votes` and `top_loading_patterns` (the
      party-line patterns with the largest |loading|, with vote counts and up
      to three `example_votes` with their titles — with eight parties many
@@ -174,6 +187,67 @@ replace, so each vote's bench mapping shows who actually sat there.
    where "seated" counts the votes on which the member occupied a bench.
    No rankings: Frånvarande includes kvittning (pairing), which the data does
    not distinguish from other absence.
+
+## Blocs and per-vote flags (`blocs.py`)
+
+**Blocs.** A term's sides come from its statsministeromröstning: the chamber
+vote (numeric beteckning, `avser: frågan`) titled `Prövning av (talmannens)
+förslag till statsminister …`. The speaker's proposal is rejected only if at
+least 175 of 349 members vote Nej (RF 6:4). The latest approved PM vote of the
+term is used: `government_side` = parties whose line was Ja, `opposition` =
+Nej, `abstained` = Avstår, `no_line` = tie or nobody cast; independents are not
+placed. Every term summary has `blocs` (or null) and `pm_votes_considered`
+(each PM vote with `nej` and `approved`); every session summary has its term's
+`blocs`.
+
+* term-2022-26: the 2022-10-17 vote (176 Ja, 173 Nej, approved):
+  government_side M, L, KD, SD; opposition C, S, V, MP.
+* term-2026-30: `null` on 2026-11-19 — both PM votes so far were rejected
+  (2026-10-15: 248 Nej; 2026-11-03: 324 Nej).
+
+`blocs` = `{source_vote_id, rm, date, title, counts [Ja, Nej, Avstår,
+Frånvarande], government_side, opposition, abstained, no_line, rule}`.
+
+**Per-vote flags** (`vote_flags` in every session and term summary), so the
+website can filter without loading `votes.json`. Columnar, one entry per vote
+in the order of `party_lines.votes` (all votes; `party_lines.votes[i].analysis`
+marks the analysis set):
+
+```
+"vote_flags": {
+  "order": "...",
+  "fields": ["ja","nej","avstar","franvarande","margin","against_line","cross_bloc","gov_split"],
+  "columns": {"ja": [...], "nej": [...], ..., "cross_bloc": [1, 0, null, ...], "gov_split": [...]},
+  "definitions": {...}
+}
+```
+
+* `ja`, `nej`, `avstar`, `franvarande`: ballot totals; `margin` = |ja − nej|;
+* `against_line`: members casting Ja/Nej/Avstår different from their party's
+  non-null line on that vote;
+* the two bloc flags (1/0, null when `blocs` is null) use only party lines Ja
+  and Nej; Avstår, ties and no line are ignored, as are abstained-group parties:
+  * `cross_bloc` = 1 iff the outcome cut across both blocs. The winning line
+    is the side with more Ja vs Nej ballots in the chamber (ja == nej: no
+    outcome, 0); at least one government_side party and at least one
+    opposition party have the winning line, and at least one of each has the
+    losing line.
+  * `gov_split` = 1 iff government_side parties have both Ja and Nej lines.
+
+Counts on 2026-11-19 (all votes / analysis set):
+
+| Summary | votes | cross_bloc | gov_split |
+| --- | --- | --- | --- |
+| 2022-23 | 566 / 558 | 7 / 7 | 106 / 106 |
+| 2023-24 | 595 / 580 | 3 / 3 | 91 / 90 |
+| 2024-25 | 652 / 647 | 6 / 6 | 104 / 102 |
+| 2025-26 | 797 / 784 | 0 / 0 | 11 / 10 |
+| 2026-27 | 8 / 6 | null (no blocs) | null |
+| term-2022-26 | 2,610 / 2,569 | 16 / 16 | 312 / 308 |
+
+The 16 cross-bloc votes of 2022–26 are mostly C and SD against the rest (12),
+twice S and SD winning against the rest, once V and SD losing, and once S, V
+and SD winning (UbU15 p49, 2025-05-22).
 
 ## Committees
 
@@ -210,7 +284,8 @@ commit a manifest-only change.
   (three-way and Ja/Nej, overall and per committee, with n), `members`
   (party, parties, valkrets, seated, cast, participation, against-line count
   and vote ids, map position or unplaced reason), `party_against_line`,
-  `participation_distribution`, `map`, `caveats`, `rules`, `notes`,
+  `participation_distribution`, `map`, `blocs`, `vote_flags` (and
+  `pm_votes_considered` in a term summary), `caveats`, `rules`, `notes`,
   `provenance` (source files with SHA-256, `title_sources`, `code_commit`,
   `code_dirty`, `generated_at_utc`). A term summary is written only when the
   run includes every session of the term that has begun, so a partial run
@@ -221,7 +296,9 @@ commit a manifest-only change.
 Sizes on 2026-11-19 in bytes, before → after titles: 2025-26/votes.json
 596,376 → 698,528; 2025-26/summary.json 284,695 → 298,961;
 term-2022-26/summary.json 599,171 → 613,146; manifest.json 6,524 → 246,139
-(one entry per title document).
+(one entry per title document). With blocs and vote_flags (2026-11-19):
+2025-26/summary.json 298,961 → 319,783; term-2022-26/summary.json 613,146 →
+674,783 (+61,637).
 
 ## Website layout (`files/riksdag/` on edvinli.github.io)
 
