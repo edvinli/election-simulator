@@ -90,6 +90,11 @@ class Vote:
     committee_kind: str
     source: str  # "bulk" or "voteringlista"
     ballots: tuple[Ballot, ...]  # ordered by banknummer 1..349
+    # What was voted on (``titles.attach_titles``): the document's title, the
+    # heading of the förslagspunkt and the document id.
+    title: str | None = None
+    punkt_title: str | None = None
+    dok_id: str | None = None
 
     @property
     def in_analysis_set(self) -> bool:
@@ -118,6 +123,7 @@ class SessionData:
     notes: list[str] = field(default_factory=list)
     unknown_committee_prefixes: list[str] = field(default_factory=list)
     source_files: set[str] = field(default_factory=set)
+    title_files: set[str] = field(default_factory=set)
 
 
 def _blank_to_none(value):
@@ -286,13 +292,13 @@ def load_session(rm: str, store: RawStore) -> SessionData:
     session = SessionData(rm=rm, votes=[])
 
     register_name = f"voteringlista-{code}-register.json"
-    register = parse_register(decode_json(store.fetch(register_name, register_url(rm))))
+    register = parse_register(decode_json(store.fetch_listing(register_name, register_url(rm))))
     session.source_files.add(register_name)
 
     bulk_name = f"votering-{code}.json.zip"
     bulk_votes: dict[str, list[dict]] = {}
     try:
-        archive = store.fetch(bulk_name, bulk_url(rm))
+        archive = store.fetch_listing(bulk_name, bulk_url(rm))
     except NotFound:
         session.notes.append(f"bulk archive {bulk_url(rm)} not found; all votes fetched from voteringlista")
     else:
@@ -339,10 +345,16 @@ def load_session(rm: str, store: RawStore) -> SessionData:
             if meta is None or not meta.get("beteckning"):
                 raise IngestError(f"registered vote {vote_id} is absent from the bulk archive and has no metadata")
             bet = str(meta["beteckning"])
+            name = f"voteringlista-{code}-bet-{urllib.parse.quote(bet, safe='')}.json"
             if bet not in rows_by_bet_cache:
-                name = f"voteringlista-{code}-bet-{urllib.parse.quote(bet, safe='')}.json"
                 rows_by_bet_cache[bet] = group_rows_by_vote(decode_json(store.fetch(name, rows_by_beteckning_url(rm, bet))))
                 session.source_files.add(name)
+            if vote_id not in rows_by_bet_cache[bet] and not store.offline and not store.is_fresh(name):
+                # A cached answer predates this vote (a later vote on the same
+                # betänkande); ask again once.
+                rows_by_bet_cache[bet] = group_rows_by_vote(
+                    decode_json(store.fetch(name, rows_by_beteckning_url(rm, bet), refresh=True))
+                )
             rows = rows_by_bet_cache[bet].get(vote_id)
             if rows is None:
                 raise IngestError(f"registered vote {vote_id} ({bet}) not returned by voteringlista")

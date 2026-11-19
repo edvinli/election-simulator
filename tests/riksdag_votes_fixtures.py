@@ -107,6 +107,43 @@ def metadata_payload(beteckning: str, datum: str) -> bytes:
     return json.dumps({"votering": {"dokument": {"beteckning": beteckning, "datum": f"{datum} 00:00:00"}}}).encode()
 
 
+def utskottsforslag_payload(
+    dok_id: str,
+    rm: str,
+    beteckning: str,
+    titel: str,
+    punkter: dict[str, str] | None = None,
+    *,
+    doktyp: str = "bet",
+    single_as_dict: bool = False,
+) -> bytes:
+    """An ``utskottsforslag/<dok_id>.json`` answer (CRLF-indented like the API)."""
+    items = [
+        {"punkt": punkt, "rubrik": rubrik, "beslutstyp": "röstning", "votering_id": "", "rm": rm, "bet": beteckning}
+        for punkt, rubrik in (punkter or {}).items()
+    ]
+    body: dict = {
+        "dokument": {
+            "dok_id": dok_id,
+            "rm": rm,
+            "beteckning": beteckning,
+            "doktyp": doktyp,
+            "titel": titel,
+            "dokument_url_html": f"https://data.riksdagen.se/dokument/{dok_id}",
+            "html": None,
+        }
+    }
+    if items:
+        body["dokutskottsforslag"] = {"utskottsforslag": items[0] if single_as_dict and len(items) == 1 else items}
+    return json.dumps({"utskottsforslag": body}, ensure_ascii=False, indent=2).replace("\n", "\r\n").encode("utf-8")
+
+
+def dokumentlista_payload(hits: list[dict]) -> bytes:
+    return json.dumps(
+        {"dokumentlista": {"@ms": "12.0", "@traffar": str(len(hits)), "dokument": hits}}, ensure_ascii=False
+    ).encode("utf-8")
+
+
 class FakeHttp:
     """URL -> bytes map; records requests; raises NotFound for unknown URLs."""
 

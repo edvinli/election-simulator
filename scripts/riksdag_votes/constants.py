@@ -13,11 +13,19 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CACHE_DIR = REPO_ROOT / "data" / "raw" / "riksdag_votes"
 DEFAULT_OUTPUT_DIR = REPO_ROOT / "data" / "processed" / "riksdag_votes"
 MANIFEST_FILENAME = "manifest.json"
+INDEX_FILENAME = "index.json"
+# Paths the scheduled workflow (.github/workflows/riksdag-votes.yml) may write:
+# the committed outputs in this repository and the published copy on the
+# website (edvinli/edvinli.github.io, branch master). Nothing else.
+PROCESSED_DIR_RELATIVE = "data/processed/riksdag_votes"
+WEBSITE_DIR_RELATIVE = "files/riksdag"
+WORKFLOW_CONCURRENCY_GROUP = "riksdag-votes"
 
 SCHEMA_VERSION = "1.0"
 ROLE_SESSION_VOTES = "riksdag_votes_session_votes"
 ROLE_SUMMARY = "riksdag_votes_summary"
 ROLE_MANIFEST = "riksdag_votes_source_manifest"
+ROLE_INDEX = "riksdag_votes_index"
 
 # --- Sources -----------------------------------------------------------------
 BULK_URL_TEMPLATE = "https://data.riksdagen.se/dataset/votering/votering-{code}.json.zip"
@@ -26,8 +34,20 @@ VOTE_METADATA_URL_TEMPLATE = "https://data.riksdagen.se/votering/{votering_id}/j
 # Page size requested from voteringlista. Every response is checked against
 # its own ``@antal`` so a truncated answer fails instead of being trusted.
 VOTERINGLISTA_PAGE_SIZE = 20000
+# Vote titles: the committee's proposals for one document -- its title and one
+# heading (rubrik) per förslagspunkt -- about 20 kB, one request per document.
+UTSKOTTSFORSLAG_URL_TEMPLATE = "https://data.riksdagen.se/utskottsforslag/{dok_id}.json"
+# Fallback lookup of a document's dok_id by riksmöte + beteckning.
+DOKUMENTLISTA_URL = "https://data.riksdagen.se/dokumentlista/"
+DOCUMENT_URL_TEMPLATE = "https://data.riksdagen.se/dokument/{dok_id}"
 HTTP_TIMEOUT_SECONDS = 120
-HTTP_ATTEMPTS = 3
+HTTP_ATTEMPTS = 5
+# Politeness: at most one request per HTTP_MIN_INTERVAL_SECONDS (4 requests/s)
+# and exponential backoff (2, 4, 8, 16 s, or the server's Retry-After, capped)
+# after a 429, a 5xx or a network error.
+HTTP_MIN_INTERVAL_SECONDS = 0.25
+HTTP_BACKOFF_BASE_SECONDS = 2.0
+HTTP_BACKOFF_MAX_SECONDS = 60.0
 USER_AGENT = "riksdag-votes-pipeline/1.0"
 
 # --- Chamber -----------------------------------------------------------------
@@ -76,9 +96,22 @@ MAP_AXIS_ANCHORS = ("M", "SD")
 ROUND_DIGITS = 4
 
 # --- Terms -------------------------------------------------------------------
+# Four-year electoral terms counted from the 2022 election: "2022-26" is
+# 2022/23..2025/26, "2026-30" is 2026/27..2029/30, and so on. A riksmöte is
+# treated as begun on 1 September of its first year.
+FIRST_TERM_START = 2022
+LAST_TERM_START = 2050
+SESSION_START = (9, 1)  # (month, day)
+
+
+def session_label(start_year: int) -> str:
+    """``2026`` -> ``2026/27``."""
+    return f"{start_year}/{(start_year + 1) % 100:02d}"
+
+
 TERMS = {
-    "2022-26": ("2022/23", "2023/24", "2024/25", "2025/26"),
-    "2026-30": ("2026/27", "2027/28", "2028/29", "2029/30"),
+    f"{start}-{(start + 4) % 100:02d}": tuple(session_label(year) for year in range(start, start + 4))
+    for start in range(FIRST_TERM_START, LAST_TERM_START + 1, 4)
 }
 
 # --- Committees --------------------------------------------------------------
