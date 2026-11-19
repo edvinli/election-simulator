@@ -395,7 +395,7 @@ def t5_amendments_in_force(directory: Path = T5_AMENDMENT_DIR) -> list[dict]:
         if sha256(ROOT / record["text"]) != record["text_sha256"]:
             raise IntegrityError(f"T5 amendment {entry['record']} text does not match text_sha256")
         out.append({"amendment_id": record["amendment_id"], "record_sha256": record_sha,
-                    "arm": record["arm"]["name"], "in_effect_from": record["in_effect_from"]})
+                    "arm": (record.get("arm") or {}).get("name"), "in_effect_from": record["in_effect_from"]})
     return out
 
 
