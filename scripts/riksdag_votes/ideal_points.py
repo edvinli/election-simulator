@@ -18,9 +18,12 @@ members towards the centre of the map.
    lands on (near) the party's point however many votes they missed. Members
    with fewer than ``MIN_MP_MAP_VOTES`` cast map votes are left unplaced.
 
-Signs: an SVD axis is defined only up to sign; axis k is flipped so that
-``MAP_AXIS_ANCHORS[k]`` scores positive (fallback: first party in
-``PARTY_ORDER`` with a non-zero score). Axes are not named left/right.
+Signs: an SVD axis is defined only up to sign. A term map flips axis k so that
+``MAP_AXIS_ANCHORS[k]`` (M, V) scores positive, provided its |score| is at
+least ``MAP_ANCHOR_MIN_SHARE`` of the axis's largest; otherwise the first
+party in ``PARTY_ORDER`` that clears that bar. A session map is aligned with
+its term's map axis by axis (``align_to_reference``). Axes are not named
+left/right.
 """
 
 from __future__ import annotations
@@ -31,6 +34,8 @@ from typing import Sequence
 import numpy as np
 
 from .constants import (
+    MAP_ALIGNMENT_MIN_COSINE,
+    MAP_ANCHOR_MIN_SHARE,
     MAP_AXIS_ANCHORS,
     MAP_DIMENSIONS,
     MIN_MP_MAP_VOTES,
@@ -62,20 +67,69 @@ class PartyMap:
         return project_member(codes, self.mu, self.loadings, min_votes=min_votes)
 
 
-def _orient(scores: np.ndarray, loadings: np.ndarray, parties: Sequence[str], anchors: Sequence[str]) -> None:
-    for axis in range(scores.shape[1]):
-        order = []
-        if axis < len(anchors) and anchors[axis] in parties:
-            order.append(anchors[axis])
-        order += [party for party in PARTY_ORDER if party in parties and party not in order]
-        order += sorted(party for party in parties if party not in order)
-        for party in order:
-            value = scores[list(parties).index(party), axis]
-            if abs(value) > _ZERO:
-                if value < 0:
-                    scores[:, axis] *= -1
-                    loadings[:, axis] *= -1
-                break
+def _orient_axis_by_anchor(
+    scores: np.ndarray, loadings: np.ndarray, parties: Sequence[str], axis: int, anchor: str | None
+) -> str | None:
+    """Make the anchor (or the first qualifying party) positive on ``axis``;
+    returns the party used. A party qualifies when its |score| is at least
+    ``MAP_ANCHOR_MIN_SHARE`` of the largest |score| on the axis."""
+    column = scores[:, axis]
+    bar = max(_ZERO, MAP_ANCHOR_MIN_SHARE * float(np.max(np.abs(column)))) if column.size else _ZERO
+    parties = list(parties)
+    order = [anchor] if anchor in parties else []
+    order += [party for party in PARTY_ORDER if party in parties and party not in order]
+    order += sorted(party for party in parties if party not in order)
+    for party in order:
+        value = column[parties.index(party)]
+        if abs(value) >= bar:
+            if value < 0:
+                scores[:, axis] *= -1
+                loadings[:, axis] *= -1
+            return party
+    return None
+
+
+def _orient(scores: np.ndarray, loadings: np.ndarray, parties: Sequence[str], anchors: Sequence[str]) -> list[str | None]:
+    return [
+        _orient_axis_by_anchor(scores, loadings, parties, axis, anchors[axis] if axis < len(anchors) else None)
+        for axis in range(scores.shape[1])
+    ]
+
+
+def orient_by_anchors(fitted: "PartyMap", anchors: Sequence[str] = MAP_AXIS_ANCHORS) -> list[dict]:
+    """The term rule, applied in place (idempotent); one record per axis."""
+    used = _orient(fitted.party_scores, fitted.loadings, fitted.parties, anchors)
+    return [{"method": "anchor", "anchor": party} for party in used]
+
+
+def align_to_reference(
+    fitted: "PartyMap",
+    reference: dict[str, Sequence[float]],
+    *,
+    anchors: Sequence[str] = MAP_AXIS_ANCHORS,
+    min_cosine: float = MAP_ALIGNMENT_MIN_COSINE,
+) -> list[dict]:
+    """Flip the axes of ``fitted`` in place to agree with ``reference`` (party
+    -> coordinates on the term map). Per axis: the sign of the dot product over
+    the parties in both; if |cosine| < ``min_cosine`` (or no shared party), the
+    anchor rule. Returns one record per axis."""
+    shared = [party for party in fitted.parties if party in reference]
+    records = []
+    for axis in range(fitted.party_scores.shape[1]):
+        own = np.array([fitted.party_scores[fitted.parties.index(p), axis] for p in shared], dtype=float)
+        ref = np.array([float(reference[p][axis]) for p in shared], dtype=float)
+        norm = float(np.linalg.norm(own) * np.linalg.norm(ref)) if shared else 0.0
+        cosine = float(own @ ref) / norm if norm > _ZERO else 0.0
+        if abs(cosine) >= min_cosine:
+            if cosine < 0:
+                fitted.party_scores[:, axis] *= -1
+                fitted.loadings[:, axis] *= -1
+            records.append({"method": "aligned", "cosine": abs(cosine)})
+        else:
+            anchor = anchors[axis] if axis < len(anchors) else None
+            party = _orient_axis_by_anchor(fitted.party_scores, fitted.loadings, fitted.parties, axis, anchor)
+            records.append({"method": "anchor", "cosine": cosine, "anchor": party})
+    return records
 
 
 def fit_party_map(

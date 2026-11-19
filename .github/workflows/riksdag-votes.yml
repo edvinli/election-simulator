@@ -152,6 +152,7 @@ jobs:
         working-directory: simulator
         run: |
           uv run python -m unittest \
+            tests.test_riksdag_votes_blocs \
             tests.test_riksdag_votes_build \
             tests.test_riksdag_votes_ingest \
             tests.test_riksdag_votes_map \

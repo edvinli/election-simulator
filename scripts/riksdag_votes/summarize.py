@@ -27,6 +27,8 @@ from .constants import (
     DOCUMENT_URL_TEMPLATE,
     FRANVARANDE,
     JA,
+    MAP_ALIGNMENT_MIN_COSINE,
+    MAP_ANCHOR_MIN_SHARE,
     MAP_AXIS_ANCHORS,
     MIN_AGREEMENT_CELL_N,
     MIN_MAP_VOTES_FOR_FIT,
@@ -34,6 +36,7 @@ from .constants import (
     NEAR_UNANIMOUS_MINORITY_SHARE,
     NEJ,
     OTHER_COMMITTEE,
+    PARTY_ORDER,
     ROLE_SESSION_VOTES,
     ROLE_SUMMARY,
     ROST_CODES,
@@ -44,7 +47,8 @@ from .constants import (
     SEATS,
     TOP_LOADING_VOTES,
 )
-from .ideal_points import fit_party_map, is_near_unanimous, project_member
+from .blocs import BLOCS_RULE, CROSS_BLOC_RULE, vote_flags
+from .ideal_points import align_to_reference, fit_party_map, is_near_unanimous, orient_by_anchors, project_member
 from .ingest import SessionData, Vote
 from .party_lines import PartyLine, against_line, order_parties, party_lines_for_vote
 
@@ -66,6 +70,14 @@ RULES = {
     "min_map_votes_for_fit": MIN_MAP_VOTES_FOR_FIT,
     "min_mp_map_votes": MIN_MP_MAP_VOTES,
     "map_axis_anchors": list(MAP_AXIS_ANCHORS),
+    "map_anchor_min_share": MAP_ANCHOR_MIN_SHARE,
+    "map_alignment_min_cosine": MAP_ALIGNMENT_MIN_COSINE,
+    "map_orientation": (
+        "term maps: anchor rule (axis 1 M positive, axis 2 V positive); session maps: each axis aligned with "
+        "the term map's axis (sign of the dot product of party coordinates), anchor rule if |cosine| is small"
+    ),
+    "blocs": BLOCS_RULE,
+    "cross_bloc": CROSS_BLOC_RULE,
 }
 
 
@@ -234,8 +246,34 @@ def _vote_label(vote: Vote) -> dict:
     }
 
 
-def _map_section(analysis: Sequence[Vote], lines: dict[str, dict[str, PartyLine]], parties: list[str]):
-    """Returns (map section, {person id: member map entry})."""
+TERM_ORIENTATION = (
+    f"term rule: axis 1 oriented so {MAP_AXIS_ANCHORS[0]} scores positive, axis 2 so {MAP_AXIS_ANCHORS[1]} "
+    f"scores positive (an anchor counts only if its |score| is at least {MAP_ANCHOR_MIN_SHARE} of the axis's "
+    f"largest |score|; otherwise the first party in {'/'.join(PARTY_ORDER)} that does); signs are a "
+    "reproducibility convention, axes are not left/right"
+)
+
+
+def _session_orientation(label: str) -> str:
+    return (
+        f"session rule: each axis's sign agrees with {label} -- the sign of the dot product of this map's and "
+        f"that map's party coordinates on the axis, over the parties in both; an axis with |cosine| < "
+        f"{MAP_ALIGNMENT_MIN_COSINE} falls back to the term rule ({MAP_AXIS_ANCHORS[0]} positive on axis 1, "
+        f"{MAP_AXIS_ANCHORS[1]} on axis 2); see orientation_axes. Axes are not left/right"
+    )
+
+
+def _map_section(
+    analysis: Sequence[Vote],
+    lines: dict[str, dict[str, PartyLine]],
+    parties: list[str],
+    reference: dict | None = None,
+):
+    """Returns (map section, {person id: member map entry}).
+
+    ``reference`` is ``{"label": "term-2022-26", "party_coordinates": {...}}``
+    for a session map (aligned with its term), or None for a term map (anchor
+    rule)."""
     candidates = []
     near_unanimous = missing_line = 0
     for vote in analysis:
@@ -265,6 +303,15 @@ def _map_section(analysis: Sequence[Vote], lines: dict[str, dict[str, PartyLine]
         [[ROST_NUMERIC[lines[vote.votering_id][party].line] for vote in candidates] for party in parties], dtype=float
     )
     fitted = fit_party_map(matrix, parties)
+    if reference is None:
+        orientation_axes = orient_by_anchors(fitted)
+        orientation, orientation_reference = TERM_ORIENTATION, None
+    else:
+        orientation_axes = align_to_reference(fitted, reference["party_coordinates"])
+        orientation, orientation_reference = _session_orientation(reference["label"]), reference["label"]
+    orientation_axes = [
+        dict(record, cosine=_round(record["cosine"])) if "cosine" in record else record for record in orientation_axes
+    ]
     column = {vote.votering_id: index for index, vote in enumerate(candidates)}
     member_codes: dict[str, np.ndarray] = {}
     for vote in candidates:
@@ -329,10 +376,9 @@ def _map_section(analysis: Sequence[Vote], lines: dict[str, dict[str, PartyLine]
         "explained_variance_ratio": [_round(value) for value in fitted.explained_variance_ratio[:2]],
         "explained_variance_ratio_all_components": [_round(value) for value in fitted.explained_variance_ratio],
         "n_votes": counts_section,
-        "orientation": (
-            f"axis 1 oriented so {MAP_AXIS_ANCHORS[0]} scores positive, axis 2 so {MAP_AXIS_ANCHORS[1]} scores "
-            "positive; signs are a reproducibility convention, axes are not left/right"
-        ),
+        "orientation": orientation,
+        "orientation_reference": orientation_reference,
+        "orientation_axes": orientation_axes,
         "top_loading_votes": top_votes,
         "top_loading_patterns": top_patterns,
         "member_rule": f"least squares on the member's own cast map votes; at least {MIN_MP_MAP_VOTES} required",
@@ -346,7 +392,14 @@ def build_summary(
     scope: dict,
     provenance: dict,
     notes: Iterable[str] = (),
+    blocs: dict | None = None,
+    map_reference: dict | None = None,
+    extra: dict | None = None,
 ) -> dict:
+    """``blocs``: the term's government/opposition sides (``blocs.find_blocs``)
+    or None. ``map_reference``: ``{"label", "party_coordinates"}`` of the term
+    map a session map is aligned with; None for a term map. ``extra``: further
+    top-level fields (e.g. ``pm_votes_considered``)."""
     votes = sorted(votes, key=Vote.sort_key)
     analysis = [vote for vote in votes if vote.in_analysis_set]
     lines = {vote.votering_id: party_lines_for_vote(vote) for vote in votes}
@@ -387,7 +440,7 @@ def build_summary(
                 if verdict:
                     entry["against"].append(vote.votering_id)
 
-    map_section, member_map = _map_section(analysis, lines, parties)
+    map_section, member_map = _map_section(analysis, lines, parties, map_reference)
 
     unplaced_default = (
         {"n_cast_map_votes": 0, "unplaced_reason": "not seated for any map vote"} if map_section["available"] else None
@@ -454,9 +507,12 @@ def build_summary(
             "max": max(participations) if participations else None,
         },
         "map": map_section,
+        "blocs": blocs,
+        "vote_flags": vote_flags(votes, lines, blocs),
         "caveats": {"kvittning": CAVEAT_KVITTNING, "feltryckning": CAVEAT_FELTRYCKNING, "map": CAVEAT_MAP},
         "notes": list(notes),
         "provenance": provenance,
+        **(extra or {}),
     }
 
 
