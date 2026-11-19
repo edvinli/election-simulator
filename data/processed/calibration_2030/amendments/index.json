@@ -17,6 +17,16 @@
       "record": "002-t4-2014-seat-path.json",
       "record_sha256": "d131247155b63d0a41e10d340a1ad8adfb43f99d2bfbd2dc0d01e752914e39a3",
       "text": "docs/calibration_2030_preregistration_amendment_002.md"
+    },
+    {
+      "amendment_id": "003-t4-exception-arm-u0",
+      "amends": [
+        "docs/calibration_2030_final_round_preregistration.md#1.4",
+        "docs/calibration_2030_final_round_preregistration.md#6"
+      ],
+      "record": "003-t4-exception-arm-u0.json",
+      "record_sha256": "b6ea21639cfa4a9e2b558e58211e8b9dfb44083e14b464cc28b4c6d0a0a1d19b",
+      "text": "docs/calibration_2030_preregistration_amendment_003.md"
     }
   ]
 }
