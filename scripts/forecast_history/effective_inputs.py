@@ -22,7 +22,7 @@ import numpy as np
 import pandas as pd
 
 from scripts.election_layer_v2.config import ALL_HISTORICAL_ELECTIONS, CANONICAL_WINDOW_DAYS
-from scripts.election_residuals.consensus import build_election_polling_consensus
+from scripts.election_layer_v2.production_residuals_pool import consensus_builder_for
 from scripts.elections.load import load_election_targets_for_forecasting
 from scripts.pollofpolls.state import load_individual_polls_dataset, load_timeseries_dataset, subtract_calendar_years
 from scripts.pollofpolls.state_config import (
@@ -36,6 +36,7 @@ from scripts.simulator.model_inputs import (
     LEGACY_TIMESERIES,
     opinion_inputs,
 )
+from scripts.simulator.config import UNAMENDED_RESIDUAL_CONSENSUS_RULE, residual_consensus_rule_for
 from scripts.simulator.election_cycles import (
     FIXED_SEATS_STAND_IN_YEARS, fixed_seats_for, geography_baseline_year_for,
 )
@@ -53,6 +54,8 @@ MODEL_FILES = tuple(
         "vote_share_calibration/config", "vote_share_calibration/models",
         "election_layer_v2/residuals_pool", "election_layer_v2/transfer", "election_layer_v2/config",
         "election_residuals/consensus", "election_residuals/config", "elections/load",
+        # Model 1.2.1-rc1: the target-routed pool and the election-eve consensus.
+        "election_layer_v2/production_residuals_pool", "election_residuals/eve_consensus",
         "hindcasts/models", "pollofpolls/state", "pollofpolls/state_config",
         "pollofpolls/clr", "pollofpolls/transitions", "pollofpolls/state_math",
         "elections/config", "elections/parse",
@@ -91,7 +94,15 @@ class EffectiveInputs:
     """
 
     def __init__(self, data_dir: Path = ROOT / "data/processed", *,
-                 source_root: Path = ROOT, election_date: date, seed: int):
+                 source_root: Path = ROOT, election_date: date, seed: int,
+                 absent_model_files: frozenset[str] = frozenset()):
+        # ``absent_model_files`` is for legacy recovery only: model files a
+        # recorded revision predates are hashed as None, a faithful "did not
+        # exist" that can never match a current fingerprint. Every other model
+        # file must be present, and is by default.
+        unknown = set(absent_model_files) - set(MODEL_FILES)
+        if unknown:
+            raise ValueError(f"absent_model_files names files outside MODEL_FILES: {sorted(unknown)}")
         self.election = election_date
         self.seed = seed
         opinion = opinion_inputs(data_dir)
@@ -101,11 +112,15 @@ class EffectiveInputs:
         self.polls, _ = load_individual_polls_dataset(opinion.polls)
         polls_df = pd.read_csv(data_dir / DATA_FILES[2])
         targets = load_election_targets_for_forecasting(data_dir / "elections/riksdag_election_results.csv")
+        # The same consensus the target's election-noise pool is fitted on
+        # (residual amendment 001, section 7): the election-eve consensus from
+        # the 2030 target, the unamended one before it.
+        build_consensus = consensus_builder_for(election_date.year)
         self.training = []
         for election in ALL_HISTORICAL_ELECTIONS:
             if election.year >= election_date.year:
                 continue
-            consensus = build_election_polling_consensus(election, polls_df, window_days=CANONICAL_WINDOW_DAYS)
+            consensus = build_consensus(election, polls_df, window_days=CANONICAL_WINDOW_DAYS)
             # The numeric target and selected observations include weights,
             # rather than poll_id (which only transports source identity).
             self.training.append((election, {
@@ -137,7 +152,9 @@ class EffectiveInputs:
                 frame.loc[own, ["valid_votes", "turnout_rate"]] = np.nan
             geography[filename] = _ordered(json.loads(frame.to_json(orient="records")))
         static: dict[str, Any] = {
-            "model": {f: hashlib.sha256((source_root / f).read_bytes()).hexdigest() for f in MODEL_FILES},
+            "model": {f: None if f in absent_model_files
+                      else hashlib.sha256((source_root / f).read_bytes()).hexdigest()
+                      for f in MODEL_FILES},
             "geography": geography,
         }
         # Official fixed seats live in mandates/config.py, which is hashed
@@ -146,6 +163,11 @@ class EffectiveInputs:
         # changes the fingerprint, as it must.
         if election_date.year in FIXED_SEATS_STAND_IN_YEARS:
             static["fixed_seats_stand_in"] = dict(sorted(fixed_seats_for(election_date.year).items()))
+        # The residual consensus rule, by value, where it departs from the
+        # unamended one (model 1.2.1-rc1).
+        consensus_rule = residual_consensus_rule_for(election_date.year)
+        if consensus_rule != UNAMENDED_RESIDUAL_CONSENSUS_RULE:
+            static["residual_consensus_rule"] = consensus_rule
         self.static = digest(static)
 
     def fingerprint(self, as_of: date) -> str:
@@ -227,7 +249,18 @@ def legacy_inputs(payload: Mapping[str, Any], *, repo: Path = ROOT) -> Iterator[
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_bytes(content)
 
-            for relative in (*MODEL_FILES, *("data/processed/" + f for f in DATA_FILES[2:])):
+            def exists(spec: str) -> bool:
+                return subprocess.run(["git", "cat-file", "-e", spec], cwd=repo,
+                                      capture_output=True).returncode == 0
+
+            if not exists(f"{commit}^{{commit}}"):
+                raise ValueError("Legacy source revision is not available locally")
+            # A revision may predate a model file that a later model added
+            # (model 1.2.1-rc1 added two). It is recorded as absent rather
+            # than making the whole revision unrecoverable.
+            absent = frozenset(f for f in MODEL_FILES if not exists(f"{commit}:{f}"))
+            for relative in (*(f for f in MODEL_FILES if f not in absent),
+                             *("data/processed/" + f for f in DATA_FILES[2:])):
                 show(relative)
             # The opinion inputs of that revision: the aggregate from model
             # 1.2.0, the Poll of Polls files before it.
@@ -246,7 +279,8 @@ def legacy_inputs(payload: Mapping[str, Any], *, repo: Path = ROOT) -> Iterator[
                     raise ValueError("Legacy source revision does not match recorded input hashes")
             inputs = EffectiveInputs(root / "data/processed", source_root=root,
                                      election_date=date.fromisoformat(payload["election_date"]),
-                                     seed=int(payload["model"]["seed"]))
+                                     seed=int(payload["model"]["seed"]),
+                                     absent_model_files=absent)
         except (subprocess.CalledProcessError, ValueError, KeyError, OSError):
             inputs = None
         yield inputs

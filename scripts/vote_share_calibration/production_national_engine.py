@@ -18,7 +18,7 @@ from typing import Any
 
 import numpy as np
 
-from scripts.election_layer_v2.residuals_pool import load_chronological_pp_residuals
+from scripts.election_layer_v2.production_residuals_pool import load_production_pp_residuals
 
 from .election_noise_b import (
     LEGACY_MODEL_ID,
@@ -69,7 +69,7 @@ def generate_production_vote_shares(
     root_data = Path(data_dir) if data_dir else Path(__file__).resolve().parents[2] / "data" / "processed"
     p_file = Path(polls_file) if polls_file else root_data / "pollofpolls" / "swedishpolls_individual_polls.csv"
     e_file = Path(elections_file) if elections_file else root_data / "elections" / "riksdag_election_results.csv"
-    pool = load_chronological_pp_residuals(
+    pool = load_production_pp_residuals(
         target_election_year=result.election_date.year,
         polls_file=p_file, elections_file=e_file,
     )

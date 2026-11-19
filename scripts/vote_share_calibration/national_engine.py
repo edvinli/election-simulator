@@ -8,10 +8,8 @@ from pathlib import Path
 from typing import Any
 import numpy as np
 
-from scripts.election_layer_v2.residuals_pool import (
-    ChronologicalPPResidualsPool,
-    load_chronological_pp_residuals,
-)
+from scripts.election_layer_v2.production_residuals_pool import load_production_pp_residuals
+from scripts.election_layer_v2.residuals_pool import ChronologicalPPResidualsPool
 from scripts.election_layer_v2.transfer import apply_batch_simplex_transfer
 from scripts.hindcasts.models import (
     derive_opinion_state_seed,
@@ -21,6 +19,7 @@ from scripts.hindcasts.models import (
 )
 from scripts.pollofpolls.clr import clr_to_composition_matrix
 from scripts.pollofpolls.state import OpinionState, estimate_opinion, load_timeseries_dataset
+from scripts.simulator.config import UNAMENDED_RESIDUAL_CONSENSUS_RULE, residual_consensus_rule_for
 from scripts.simulator.model_inputs import opinion_inputs
 from scripts.pollofpolls.state_config import ALL_CATEGORIES
 from scripts.pollofpolls.transitions import (
@@ -75,7 +74,9 @@ def generate_national_vote_shares(
         2. Dynamics v2 (symmetric_all_history): Sample joint CLR transition vectors S * Delta_h.
            (Strictly NO sqrt(h) scaling).
         3. ElectionNoise: Apply bounded simplex-safe transfer of a joint zero-sum
-           residual draw from the chronological training pool.
+           residual draw from the chronological training pool. From the 2030
+           target (model 1.2.1-rc1) the pool holds the corrected election-eve
+           residuals; earlier targets keep the unamended pool.
 
     ElectionNoise law selection (``noise_model``):
         ``pp_lw_gaussian``   - DEFAULT. The regularized joint Gaussian law selected by
@@ -150,8 +151,9 @@ def generate_national_vote_shares(
     base_clr_matrix = state_clr + sym_deltas
     base_comp_matrix = clr_to_composition_matrix(base_clr_matrix)
 
-    # 5. ElectionNoise
-    training_pool = load_chronological_pp_residuals(
+    # 5. ElectionNoise. The pool is the target's: corrected residuals (model
+    # 1.2.1-rc1) from 2030, the unamended pool for any earlier target.
+    training_pool = load_production_pp_residuals(
         target_election_year=elec_date.year,
         polls_file=p_file,
         elections_file=e_file,
@@ -188,6 +190,11 @@ def generate_national_vote_shares(
             f"unknown noise_model {noise_model!r}; expected "
             f"{ADOPTED_NOISE_MODEL!r} (adopted) or {LEGACY_MODEL_ID!r} (historical)"
         )
+    # Recorded only where it departs from the unamended pool, so an earlier
+    # target's diagnostics stay exactly what they were.
+    consensus_rule = residual_consensus_rule_for(elec_date.year)
+    if consensus_rule != UNAMENDED_RESIDUAL_CONSENSUS_RULE:
+        noise_diagnostics["election_noise_residual_consensus_rule"] = consensus_rule
     # Re-normalize to strictly exact simplex
     nat_shares_matrix = nat_shares_matrix / np.sum(nat_shares_matrix, axis=1, keepdims=True)
 

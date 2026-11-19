@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 import hashlib
 import json
 from pathlib import Path
@@ -10,7 +10,7 @@ import re
 import subprocess
 from typing import Any, Mapping
 
-from .config import MODEL_VERSION
+from .config import model_version_for
 
 
 # Generation ids are embedded in static publication URLs, so they are
@@ -201,7 +201,8 @@ def build_reproducibility_manifest(
 
     The opinion inputs (the SwedishPolls aggregate and its cleaned polls from
     model 1.2.0) are hashed when given, so a change to them is visible in the
-    published provenance.
+    published provenance. ``model_version`` is the version the target election
+    is forecast under (``config.model_version_for``).
     """
     root_dir = Path(repo_dir) if repo_dir else Path(__file__).resolve().parents[2]
     
@@ -219,7 +220,9 @@ def build_reproducibility_manifest(
     }
 
     manifest = {
-        "model_version": MODEL_VERSION,
+        # The version is the target election's: a 2026 target is still a
+        # 1.2.0-rc1 forecast (config.model_version_for).
+        "model_version": model_version_for(date.fromisoformat(str(election_date)).year),
         "as_of": str(as_of),
         "election_date": str(election_date),
         "samples": int(samples),

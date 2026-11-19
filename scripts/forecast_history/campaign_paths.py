@@ -61,7 +61,7 @@ from typing import Any, Mapping, Sequence
 
 import numpy as np
 
-from scripts.election_layer_v2.residuals_pool import load_chronological_pp_residuals
+from scripts.election_layer_v2.production_residuals_pool import load_production_pp_residuals
 from scripts.election_layer_v2.transfer import apply_batch_simplex_transfer
 from scripts.hindcasts.models import derive_opinion_state_seed, derive_shared_dynamics_seed
 from scripts.pollofpolls.clr import clr_to_composition_matrix, composition_to_clr
@@ -505,7 +505,7 @@ def simulate_campaign_paths(
             endpoint_opinion = composition
 
     # 4. Election day: the adopted ElectionNoise law with production's seed.
-    training_pool = load_chronological_pp_residuals(
+    training_pool = load_production_pp_residuals(
         target_election_year=election.year,
         polls_file=root / "pollofpolls" / "swedishpolls_individual_polls.csv",
         elections_file=root / "elections" / "riksdag_election_results.csv",

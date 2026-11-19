@@ -33,6 +33,8 @@ from .config import (
     DEFAULT_SIMULATION_SEED,
     MODEL_PARTIES_9,
     PARLIAMENTARY_PARTIES_8,
+    UNAMENDED_RESIDUAL_CONSENSUS_RULE,
+    residual_consensus_rule_for,
 )
 from .fast_allocator import dispatch_production_allocation, fast_allocate_seats_from_matrix
 from .reproducibility import build_reproducibility_manifest
@@ -537,20 +539,27 @@ def simulate_election(
 
     # 4. Reproducibility Manifest
     opinion = opinion_inputs(data_root or DEFAULT_PROCESSED_ROOT)
+    model_config: dict[str, Any] = {
+        "opinion_model": "OpinionState_v1.1",
+        "dynamics_model": "symmetric_all_history",
+        "noise_model": noise_model,
+        "geography_baseline_year": baseline_year,
+        "total_national_votes": total_national_votes,
+        "constituency_vote_unit": 25,
+        "opinion_input": opinion.source,
+    }
+    # The election-noise residual consensus (model 1.2.1-rc1, 2030 targets
+    # on). Added only where it departs from the unamended pool, so an earlier
+    # target's model_config and its hash are exactly what they were.
+    consensus_rule = residual_consensus_rule_for(target_year)
+    if consensus_rule != UNAMENDED_RESIDUAL_CONSENSUS_RULE:
+        model_config["residual_consensus_rule"] = consensus_rule
     manifest = build_reproducibility_manifest(
         as_of=as_of_date.isoformat(),
         election_date=elec_date.isoformat(),
         samples=samples,
         base_seed=seed,
-        model_config={
-            "opinion_model": "OpinionState_v1.1",
-            "dynamics_model": "symmetric_all_history",
-            "noise_model": noise_model,
-            "geography_baseline_year": baseline_year,
-            "total_national_votes": total_national_votes,
-            "constituency_vote_unit": 25,
-            "opinion_input": opinion.source,
-        },
+        model_config=model_config,
         poll_data_path=(data_root / "pollofpolls" / "swedishpolls_individual_polls.csv") if data_root else None,
         election_data_path=(data_root / "elections" / "riksdag_election_results.csv") if data_root else None,
         mandate_data_path=(data_root / "mandates" / "historical_certified_mandates.csv") if data_root else None,

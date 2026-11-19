@@ -75,7 +75,19 @@ SWEDISHPOLLS_MIGRATION_CHANGED = {
     "scripts/simulator/reproducibility.py",
     "scripts/vote_share_calibration/national_engine.py",
 }
-KNOWN_POST_FREEZE_CHANGES = PART7B1_METADATA_CHANGED | AUTOMATION_CHANGED | SWEDISHPOLLS_MIGRATION_CHANGED
+# Model 1.2.1-rc1 fits ElectionNoise B on the corrected election-eve residuals
+# for 2030 targets. The diagnostic wrapper loads its pool through the same
+# target router as the national engine (a one-call change), so its fit detail
+# stays paired with the forecast; for a 2026 target the router returns the
+# unchanged pool. The freeze is not re-issued
+# (docs/election_simulator_model_1_2_1.md).
+CORRECTED_RESIDUALS_CHANGED = {
+    "scripts/vote_share_calibration/production_national_engine.py",
+}
+KNOWN_POST_FREEZE_CHANGES = (
+    PART7B1_METADATA_CHANGED | AUTOMATION_CHANGED | SWEDISHPOLLS_MIGRATION_CHANGED
+    | CORRECTED_RESIDUALS_CHANGED
+)
 
 
 def _sha(b: bytes) -> str:

@@ -28,8 +28,56 @@ DEFAULT_MAJORITY_THRESHOLD: int = 175
 # ElectionNoise law is unchanged. This is a model-input change, so the minor
 # version advances. It was released under an explicit exception: replay v4
 # failed only G5 calibration (docs/poll_aggregate_replay_protocol_v4_amendment_001.md).
-MODEL_VERSION: str = "1.2.0-rc1"
-RELEASE_TAG: str = "election-simulator-v1.2-rc1"
+#
+# Advanced from 1.2.0-rc1 when ElectionNoise B was refitted on the corrected
+# election-noise residuals of residual amendments 001 and 002: the certified
+# result minus the election-eve poll consensus, with no election-day poll and no
+# poll silently dropped (docs/election_simulator_model_1_2_1.md). The law, its
+# K = 6 pool of 2002-2022 and every other layer are unchanged. A correction of
+# the training inputs is a fix, so the patch version advances.
+#
+# 1.2.1-rc1 applies to forecasts that target the 2030 election or later. A
+# forecast of an earlier election is still produced under 1.2.0-rc1, bit for
+# bit: model_version_for() routes the version and residual_consensus_rule_for()
+# the pool, both by target year.
+MODEL_VERSION: str = "1.2.1-rc1"
+RELEASE_TAG: str = "election-simulator-v1.2.1-rc1"
+PREVIOUS_MODEL_VERSION: str = "1.2.0-rc1"
+PREVIOUS_RELEASE_TAG: str = "election-simulator-v1.2-rc1"
+
+#: The first target election forecast under MODEL_VERSION.
+CORRECTED_RESIDUALS_FIRST_TARGET_YEAR: int = 2030
+#: The residual consensus a target's election-noise pool is fitted on. The
+#: corrected rule is ``scripts/election_residuals/eve_consensus.py::RULE_ID``.
+UNAMENDED_RESIDUAL_CONSENSUS_RULE: str = "unamended-election-polling-consensus"
+CORRECTED_RESIDUAL_CONSENSUS_RULE: str = "election-eve-consensus-amendments-001-002"
+
+
+def _target_year(election_year: int) -> int:
+    if not isinstance(election_year, int) or isinstance(election_year, bool):
+        raise TypeError(f"target election year must be an int: {election_year!r}")
+    return election_year
+
+
+def model_version_for(election_year: int) -> str:
+    """The model version a forecast of ``election_year`` is produced under."""
+    if _target_year(election_year) >= CORRECTED_RESIDUALS_FIRST_TARGET_YEAR:
+        return MODEL_VERSION
+    return PREVIOUS_MODEL_VERSION
+
+
+def release_tag_for(election_year: int) -> str:
+    """The release tag matching ``model_version_for(election_year)``."""
+    if _target_year(election_year) >= CORRECTED_RESIDUALS_FIRST_TARGET_YEAR:
+        return RELEASE_TAG
+    return PREVIOUS_RELEASE_TAG
+
+
+def residual_consensus_rule_for(election_year: int) -> str:
+    """The residual consensus the election-noise pool of ``election_year`` uses."""
+    if _target_year(election_year) >= CORRECTED_RESIDUALS_FIRST_TARGET_YEAR:
+        return CORRECTED_RESIDUAL_CONSENSUS_RULE
+    return UNAMENDED_RESIDUAL_CONSENSUS_RULE
 
 # TWO DISTINCT NAMESPACES SHARE THE LETTER "B". Do not merge them.
 #

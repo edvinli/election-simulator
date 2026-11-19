@@ -1,0 +1,1542 @@
+{
+  "checks": {
+    "2002_identical_under_eve_rule": false,
+    "any_poll_published_on_election_day_with_earlier_fieldwork": true,
+    "elections_changed_by_eve_rule": [
+      "2006-09-17",
+      "2010-09-19",
+      "2014-09-14",
+      "2018-09-09",
+      "2022-09-11",
+      "2026-09-13"
+    ],
+    "eve_rule_equals_aggregate_exclusion_for_all": false
+  },
+  "elections": [
+    {
+      "current": {
+        "consensus_pct": {
+          "C": 5.165,
+          "KD": 10.3145,
+          "L": 12.5505,
+          "M": 18.139,
+          "MP": 4.7617,
+          "REST": 2.4288,
+          "S": 36.38,
+          "SD": 0.0,
+          "V": 10.2605
+        },
+        "contributing_polls": [
+          {
+            "interview_end": "2002-09-12",
+            "interview_start": "2002-09-11",
+            "poll_id": "swp-0e14a2608c516f169db3",
+            "pollster": "Sifo",
+            "publication_date": "2002-09-14",
+            "sample_size": 1917,
+            "weight": 1.3846
+          },
+          {
+            "interview_end": "2002-09-12",
+            "interview_start": "2002-09-11",
+            "poll_id": "swp-76ae6293ea7e81ff2d87",
+            "pollster": "Ipsos",
+            "publication_date": "2002-09-14",
+            "sample_size": 1668,
+            "weight": 1.2915
+          },
+          {
+            "interview_end": "2002-09-12",
+            "interview_start": "2002-09-10",
+            "poll_id": "swp-15a3d2552201c3c38001",
+            "pollster": "Novus",
+            "publication_date": "2002-09-13",
+            "sample_size": 1480,
+            "weight": 1.2166
+          },
+          {
+            "interview_end": "2002-09-12",
+            "interview_start": "2002-09-06",
+            "poll_id": "swp-c3e3a722c7dabd5a902d",
+            "pollster": "Skop",
+            "publication_date": "2002-09-13",
+            "sample_size": 1572,
+            "weight": 1.2538
+          },
+          {
+            "interview_end": "2002-09-11",
+            "interview_start": "2002-09-06",
+            "poll_id": "swp-7853539fa759c79e444b",
+            "pollster": "Demoskop",
+            "publication_date": "2002-09-13",
+            "sample_size": 1002,
+            "weight": 1.001
+          }
+        ],
+        "eligible_polls_in_window": 44,
+        "residual_norm_pp": 5.4459,
+        "residual_pp": {
+          "C": 1.028,
+          "KD": -1.1647,
+          "L": 0.8435,
+          "M": -2.8833,
+          "MP": -0.1156,
+          "REST": -0.7489,
+          "S": 3.4743,
+          "SD": 1.4388,
+          "V": -1.8721
+        }
+      },
+      "election": "2002-09-15",
+      "eve": {
+        "consensus_pct": {
+          "C": 5.165,
+          "KD": 10.3145,
+          "L": 12.5505,
+          "M": 18.139,
+          "MP": 4.7617,
+          "REST": 2.4288,
+          "S": 36.38,
+          "SD": 0.0,
+          "V": 10.2605
+        },
+        "contributing_polls": [
+          {
+            "interview_end": "2002-09-12",
+            "interview_start": "2002-09-11",
+            "poll_id": "swp-0e14a2608c516f169db3",
+            "pollster": "Sifo",
+            "publication_date": "2002-09-14",
+            "sample_size": 1917,
+            "weight": 1.3846
+          },
+          {
+            "interview_end": "2002-09-12",
+            "interview_start": "2002-09-11",
+            "poll_id": "swp-76ae6293ea7e81ff2d87",
+            "pollster": "Ipsos",
+            "publication_date": "2002-09-14",
+            "sample_size": 1668,
+            "weight": 1.2915
+          },
+          {
+            "interview_end": "2002-09-12",
+            "interview_start": "2002-09-10",
+            "poll_id": "swp-15a3d2552201c3c38001",
+            "pollster": "Novus",
+            "publication_date": "2002-09-13",
+            "sample_size": 1480,
+            "weight": 1.2166
+          },
+          {
+            "interview_end": "2002-09-12",
+            "interview_start": "2002-09-06",
+            "poll_id": "swp-c3e3a722c7dabd5a902d",
+            "pollster": "Skop",
+            "publication_date": "2002-09-13",
+            "sample_size": 1572,
+            "weight": 1.2538
+          },
+          {
+            "interview_end": "2002-09-11",
+            "interview_start": "2002-09-06",
+            "poll_id": "swp-7853539fa759c79e444b",
+            "pollster": "Demoskop",
+            "publication_date": "2002-09-13",
+            "sample_size": 1002,
+            "weight": 1.001
+          }
+        ],
+        "eligible_polls_in_window": 41,
+        "residual_norm_pp": 5.4459,
+        "residual_pp": {
+          "C": 1.028,
+          "KD": -1.1647,
+          "L": 0.8435,
+          "M": -2.8833,
+          "MP": -0.1156,
+          "REST": -0.7489,
+          "S": 3.4743,
+          "SD": 1.4388,
+          "V": -1.8721
+        }
+      },
+      "eve_rule_identical_to_aggregate_exclusion": true,
+      "eve_rule_identical_to_current": true,
+      "published_on_election_day_with_fieldwork_ending_before": [],
+      "removed_by_eve_rule": [
+        {
+          "interview_end": "2002-09-15",
+          "interview_start": "2002-09-05",
+          "poll_id": "swp-83c32702f4db7d873674",
+          "pollster": "SVT",
+          "publication_date": "2002-09-15"
+        },
+        {
+          "interview_end": "2002-09-15",
+          "interview_start": "2002-09-15",
+          "poll_id": "swp-a3edd52c7dae0322581d",
+          "pollster": "Demoskop",
+          "publication_date": "2002-09-15"
+        },
+        {
+          "interview_end": "2002-09-15",
+          "interview_start": "2002-09-15",
+          "poll_id": "swp-ea1d32c0a9ad605cad89",
+          "pollster": "YouGov",
+          "publication_date": "2002-09-15"
+        }
+      ]
+    },
+    {
+      "current": {
+        "consensus_pct": {
+          "C": 7.0368,
+          "KD": 7.3896,
+          "L": 8.7243,
+          "M": 26.0983,
+          "MP": 5.7691,
+          "REST": 2.9002,
+          "S": 33.6913,
+          "SD": 2.3108,
+          "V": 6.0796
+        },
+        "contributing_polls": [
+          {
+            "interview_end": "2006-09-17",
+            "interview_start": "2006-09-04",
+            "poll_id": "swp-f51e67d1fbc73b193d3e",
+            "pollster": "SVT",
+            "publication_date": "2006-09-17",
+            "sample_size": 12316,
+            "weight": 1.5
+          },
+          {
+            "interview_end": "2006-09-14",
+            "interview_start": "2006-09-13",
+            "poll_id": "swp-400566ead7fb6ae09e8b",
+            "pollster": "Sifo",
+            "publication_date": "2006-09-16",
+            "sample_size": 1932,
+            "weight": 1.39
+          },
+          {
+            "interview_end": "2006-09-14",
+            "interview_start": "2006-09-12",
+            "poll_id": "swp-28753669efcde86db2ce",
+            "pollster": "Skop",
+            "publication_date": "2006-09-16",
+            "sample_size": 1600,
+            "weight": 1.2649
+          },
+          {
+            "interview_end": "2006-09-14",
+            "interview_start": "2006-09-12",
+            "poll_id": "swp-3a7c48290891de516146",
+            "pollster": "Ipsos",
+            "publication_date": "2006-09-16",
+            "sample_size": 1587,
+            "weight": 1.2598
+          },
+          {
+            "interview_end": "2006-09-12",
+            "interview_start": "2006-09-09",
+            "poll_id": "swp-7b34d855d18916e02269",
+            "pollster": "Demoskop",
+            "publication_date": "2006-09-14",
+            "sample_size": 1012,
+            "weight": 1.006
+          }
+        ],
+        "eligible_polls_in_window": 25,
+        "residual_norm_pp": 2.2801,
+        "residual_pp": {
+          "C": 0.8423,
+          "KD": -0.7966,
+          "L": -1.1874,
+          "M": 0.1301,
+          "MP": -0.5249,
+          "REST": -0.1522,
+          "S": 1.3029,
+          "SD": 0.6158,
+          "V": -0.2301
+        }
+      },
+      "election": "2006-09-17",
+      "eve": {
+        "consensus_pct": {
+          "C": 6.6213,
+          "KD": 7.6303,
+          "L": 8.9145,
+          "M": 26.0063,
+          "MP": 5.4853,
+          "REST": 2.0487,
+          "S": 34.7251,
+          "SD": 2.8,
+          "V": 5.7685
+        },
+        "contributing_polls": [
+          {
+            "interview_end": "2006-09-14",
+            "interview_start": "2006-09-13",
+            "poll_id": "swp-400566ead7fb6ae09e8b",
+            "pollster": "Sifo",
+            "publication_date": "2006-09-16",
+            "sample_size": 1932,
+            "weight": 1.39
+          },
+          {
+            "interview_end": "2006-09-14",
+            "interview_start": "2006-09-12",
+            "poll_id": "swp-28753669efcde86db2ce",
+            "pollster": "Skop",
+            "publication_date": "2006-09-16",
+            "sample_size": 1600,
+            "weight": 1.2649
+          },
+          {
+            "interview_end": "2006-09-14",
+            "interview_start": "2006-09-12",
+            "poll_id": "swp-3a7c48290891de516146",
+            "pollster": "Ipsos",
+            "publication_date": "2006-09-16",
+            "sample_size": 1587,
+            "weight": 1.2598
+          },
+          {
+            "interview_end": "2006-09-12",
+            "interview_start": "2006-09-09",
+            "poll_id": "swp-7b34d855d18916e02269",
+            "pollster": "Demoskop",
+            "publication_date": "2006-09-14",
+            "sample_size": 1012,
+            "weight": 1.006
+          }
+        ],
+        "eligible_polls_in_window": 23,
+        "residual_norm_pp": 2.2907,
+        "residual_pp": {
+          "C": 1.2578,
+          "KD": -1.0373,
+          "L": -1.3776,
+          "M": 0.2221,
+          "MP": -0.2411,
+          "REST": 0.6993,
+          "S": 0.2691,
+          "SD": 0.1266,
+          "V": 0.081
+        }
+      },
+      "eve_rule_identical_to_aggregate_exclusion": true,
+      "eve_rule_identical_to_current": false,
+      "published_on_election_day_with_fieldwork_ending_before": [],
+      "removed_by_eve_rule": [
+        {
+          "interview_end": "2006-09-17",
+          "interview_start": "2006-09-04",
+          "poll_id": "swp-f51e67d1fbc73b193d3e",
+          "pollster": "SVT",
+          "publication_date": "2006-09-17"
+        },
+        {
+          "interview_end": "2006-09-17",
+          "interview_start": "2006-09-17",
+          "poll_id": "swp-2e162b8f7f57f24ba8ef",
+          "pollster": "Demoskop",
+          "publication_date": "2006-09-17"
+        }
+      ]
+    },
+    {
+      "current": {
+        "consensus_pct": {
+          "C": 6.694,
+          "KD": 5.9446,
+          "L": 7.2139,
+          "M": 29.482,
+          "MP": 8.6599,
+          "REST": 1.6003,
+          "S": 29.3557,
+          "SD": 5.1147,
+          "V": 5.9349
+        },
+        "contributing_polls": [
+          {
+            "interview_end": "2010-09-19",
+            "interview_start": "2010-09-11",
+            "poll_id": "swp-fdff1e1a4798248e4c46",
+            "pollster": "SVT",
+            "publication_date": "2010-09-19",
+            "sample_size": 11889,
+            "weight": 1.5
+          },
+          {
+            "interview_end": "2010-09-17",
+            "interview_start": "2010-09-15",
+            "poll_id": "swp-a76e3b09ef476dc8ecbb",
+            "pollster": "United Minds",
+            "publication_date": "2010-09-18",
+            "sample_size": 1554,
+            "weight": 1.2466
+          },
+          {
+            "interview_end": "2010-09-17",
+            "interview_start": "2010-09-15",
+            "poll_id": "swp-36445b93b73ab28e7e69",
+            "pollster": "Novus",
+            "publication_date": "2010-09-18",
+            "sample_size": 1500,
+            "weight": 1.2247
+          },
+          {
+            "interview_end": "2010-09-16",
+            "interview_start": "2010-09-15",
+            "poll_id": "swp-62e6089d30e0e9600878",
+            "pollster": "Sifo",
+            "publication_date": "2010-09-18",
+            "sample_size": 1941,
+            "weight": 1.3932
+          },
+          {
+            "interview_end": "2010-09-16",
+            "interview_start": "2010-09-07",
+            "poll_id": "swp-800fbc372a238808a641",
+            "pollster": "Skop",
+            "publication_date": "2010-09-18",
+            "sample_size": 2000,
+            "weight": 1.4142
+          },
+          {
+            "interview_end": "2010-09-16",
+            "interview_start": "2010-09-07",
+            "poll_id": "swp-69499f1508f245faa30e",
+            "pollster": "Ipsos",
+            "publication_date": "2010-09-18",
+            "sample_size": 1820,
+            "weight": 1.3491
+          },
+          {
+            "interview_end": "2010-09-15",
+            "interview_start": "2010-09-09",
+            "poll_id": "swp-710f90868234051fcca2",
+            "pollster": "Demoskop",
+            "publication_date": "2010-09-17",
+            "sample_size": 1527,
+            "weight": 1.2357
+          }
+        ],
+        "eligible_polls_in_window": 27,
+        "residual_norm_pp": 2.1038,
+        "residual_pp": {
+          "C": -0.1373,
+          "KD": -0.3461,
+          "L": -0.1586,
+          "M": 0.5791,
+          "MP": -1.3209,
+          "REST": -0.1738,
+          "S": 1.3049,
+          "SD": 0.5831,
+          "V": -0.3304
+        }
+      },
+      "election": "2010-09-19",
+      "eve": {
+        "consensus_pct": {
+          "C": 6.6165,
+          "KD": 5.9913,
+          "L": 7.2166,
+          "M": 29.5549,
+          "MP": 8.5951,
+          "REST": 1.6766,
+          "S": 29.2328,
+          "SD": 5.2128,
+          "V": 5.9034
+        },
+        "contributing_polls": [
+          {
+            "interview_end": "2010-09-17",
+            "interview_start": "2010-09-15",
+            "poll_id": "swp-a76e3b09ef476dc8ecbb",
+            "pollster": "United Minds",
+            "publication_date": "2010-09-18",
+            "sample_size": 1554,
+            "weight": 1.2466
+          },
+          {
+            "interview_end": "2010-09-17",
+            "interview_start": "2010-09-15",
+            "poll_id": "swp-36445b93b73ab28e7e69",
+            "pollster": "Novus",
+            "publication_date": "2010-09-18",
+            "sample_size": 1500,
+            "weight": 1.2247
+          },
+          {
+            "interview_end": "2010-09-16",
+            "interview_start": "2010-09-15",
+            "poll_id": "swp-62e6089d30e0e9600878",
+            "pollster": "Sifo",
+            "publication_date": "2010-09-18",
+            "sample_size": 1941,
+            "weight": 1.3932
+          },
+          {
+            "interview_end": "2010-09-16",
+            "interview_start": "2010-09-07",
+            "poll_id": "swp-800fbc372a238808a641",
+            "pollster": "Skop",
+            "publication_date": "2010-09-18",
+            "sample_size": 2000,
+            "weight": 1.4142
+          },
+          {
+            "interview_end": "2010-09-16",
+            "interview_start": "2010-09-07",
+            "poll_id": "swp-69499f1508f245faa30e",
+            "pollster": "Ipsos",
+            "publication_date": "2010-09-18",
+            "sample_size": 1820,
+            "weight": 1.3491
+          },
+          {
+            "interview_end": "2010-09-15",
+            "interview_start": "2010-09-09",
+            "poll_id": "swp-710f90868234051fcca2",
+            "pollster": "Demoskop",
+            "publication_date": "2010-09-17",
+            "sample_size": 1527,
+            "weight": 1.2357
+          }
+        ],
+        "eligible_polls_in_window": 26,
+        "residual_norm_pp": 2.108,
+        "residual_pp": {
+          "C": -0.0598,
+          "KD": -0.3928,
+          "L": -0.1613,
+          "M": 0.5062,
+          "MP": -1.2561,
+          "REST": -0.2501,
+          "S": 1.4278,
+          "SD": 0.485,
+          "V": -0.2989
+        }
+      },
+      "eve_rule_identical_to_aggregate_exclusion": true,
+      "eve_rule_identical_to_current": false,
+      "published_on_election_day_with_fieldwork_ending_before": [],
+      "removed_by_eve_rule": [
+        {
+          "interview_end": "2010-09-19",
+          "interview_start": "2010-09-11",
+          "poll_id": "swp-fdff1e1a4798248e4c46",
+          "pollster": "SVT",
+          "publication_date": "2010-09-19"
+        }
+      ]
+    },
+    {
+      "current": {
+        "consensus_pct": {
+          "C": 6.2698,
+          "KD": 5.2054,
+          "L": 6.2894,
+          "M": 21.9586,
+          "MP": 8.8075,
+          "REST": 4.7408,
+          "S": 29.9124,
+          "SD": 9.9722,
+          "V": 6.8439
+        },
+        "contributing_polls": [
+          {
+            "interview_end": "2014-09-14",
+            "interview_start": "2014-09-08",
+            "poll_id": "swp-00a80913e3d488d5b946",
+            "pollster": "SVT",
+            "publication_date": "2014-09-14",
+            "sample_size": 12909,
+            "weight": 1.5
+          },
+          {
+            "interview_end": "2014-09-13",
+            "interview_start": "2014-09-05",
+            "poll_id": "swp-5b29d8a45c8e3bfdb057",
+            "pollster": "Skop",
+            "publication_date": "2014-09-13",
+            "sample_size": 1200,
+            "weight": 1.0954
+          },
+          {
+            "interview_end": "2014-09-12",
+            "interview_start": "2014-09-09",
+            "poll_id": "swp-2284dbec9979c9fb33df",
+            "pollster": "Novus",
+            "publication_date": "2014-09-13",
+            "sample_size": 1550,
+            "weight": 1.245
+          },
+          {
+            "interview_end": "2014-09-12",
+            "interview_start": "2014-09-06",
+            "poll_id": "swp-96227f1197e095428838",
+            "pollster": "Demoskop",
+            "publication_date": "2014-09-12",
+            "sample_size": 2001,
+            "weight": 1.4146
+          },
+          {
+            "interview_end": "2014-09-11",
+            "interview_start": "2014-09-10",
+            "poll_id": "swp-e69ca0a73a308e4869d6",
+            "pollster": "Sifo",
+            "publication_date": "2014-09-13",
+            "sample_size": 2445,
+            "weight": 1.5
+          },
+          {
+            "interview_end": "2014-09-11",
+            "interview_start": "2014-09-08",
+            "poll_id": "swp-4cbba757947d956d64e4",
+            "pollster": "United Minds",
+            "publication_date": "2014-09-12",
+            "sample_size": 1343,
+            "weight": 1.1589
+          },
+          {
+            "interview_end": "2014-09-11",
+            "interview_start": "2014-09-07",
+            "poll_id": "swp-ac44e33dc57d4340050a",
+            "pollster": "Ipsos",
+            "publication_date": "2014-09-12",
+            "sample_size": 1551,
+            "weight": 1.2454
+          },
+          {
+            "interview_end": "2014-09-10",
+            "interview_start": "2014-09-08",
+            "poll_id": "swp-53205b4789e4e727d426",
+            "pollster": "YouGov",
+            "publication_date": "2014-09-11",
+            "sample_size": 1517,
+            "weight": 1.2317
+          },
+          {
+            "interview_end": "2014-09-08",
+            "interview_start": "2014-09-02",
+            "poll_id": "swp-4966ad496c36f29d2080",
+            "pollster": "Sentio",
+            "publication_date": "2014-09-09",
+            "sample_size": 1042,
+            "weight": 1.0208
+          }
+        ],
+        "eligible_polls_in_window": 23,
+        "residual_norm_pp": 4.2374,
+        "residual_pp": {
+          "C": -0.1568,
+          "KD": -0.635,
+          "L": -0.8691,
+          "M": 1.3664,
+          "MP": -1.9188,
+          "REST": -0.648,
+          "S": 1.1024,
+          "SD": 2.8846,
+          "V": -1.1257
+        }
+      },
+      "election": "2014-09-14",
+      "eve": {
+        "consensus_pct": {
+          "C": 6.235,
+          "KD": 5.2365,
+          "L": 6.2727,
+          "M": 21.9826,
+          "MP": 8.8086,
+          "REST": 4.4292,
+          "S": 30.0958,
+          "SD": 10.2707,
+          "V": 6.6689
+        },
+        "contributing_polls": [
+          {
+            "interview_end": "2014-09-13",
+            "interview_start": "2014-09-05",
+            "poll_id": "swp-5b29d8a45c8e3bfdb057",
+            "pollster": "Skop",
+            "publication_date": "2014-09-13",
+            "sample_size": 1200,
+            "weight": 1.0954
+          },
+          {
+            "interview_end": "2014-09-12",
+            "interview_start": "2014-09-09",
+            "poll_id": "swp-2284dbec9979c9fb33df",
+            "pollster": "Novus",
+            "publication_date": "2014-09-13",
+            "sample_size": 1550,
+            "weight": 1.245
+          },
+          {
+            "interview_end": "2014-09-12",
+            "interview_start": "2014-09-06",
+            "poll_id": "swp-96227f1197e095428838",
+            "pollster": "Demoskop",
+            "publication_date": "2014-09-12",
+            "sample_size": 2001,
+            "weight": 1.4146
+          },
+          {
+            "interview_end": "2014-09-11",
+            "interview_start": "2014-09-10",
+            "poll_id": "swp-e69ca0a73a308e4869d6",
+            "pollster": "Sifo",
+            "publication_date": "2014-09-13",
+            "sample_size": 2445,
+            "weight": 1.5
+          },
+          {
+            "interview_end": "2014-09-11",
+            "interview_start": "2014-09-08",
+            "poll_id": "swp-4cbba757947d956d64e4",
+            "pollster": "United Minds",
+            "publication_date": "2014-09-12",
+            "sample_size": 1343,
+            "weight": 1.1589
+          },
+          {
+            "interview_end": "2014-09-11",
+            "interview_start": "2014-09-07",
+            "poll_id": "swp-ac44e33dc57d4340050a",
+            "pollster": "Ipsos",
+            "publication_date": "2014-09-12",
+            "sample_size": 1551,
+            "weight": 1.2454
+          },
+          {
+            "interview_end": "2014-09-10",
+            "interview_start": "2014-09-08",
+            "poll_id": "swp-53205b4789e4e727d426",
+            "pollster": "YouGov",
+            "publication_date": "2014-09-11",
+            "sample_size": 1517,
+            "weight": 1.2317
+          },
+          {
+            "interview_end": "2014-09-08",
+            "interview_start": "2014-09-02",
+            "poll_id": "swp-4966ad496c36f29d2080",
+            "pollster": "Sentio",
+            "publication_date": "2014-09-09",
+            "sample_size": 1042,
+            "weight": 1.0208
+          }
+        ],
+        "eligible_polls_in_window": 22,
+        "residual_norm_pp": 3.9016,
+        "residual_pp": {
+          "C": -0.122,
+          "KD": -0.6661,
+          "L": -0.8524,
+          "M": 1.3424,
+          "MP": -1.9199,
+          "REST": -0.3364,
+          "S": 0.919,
+          "SD": 2.5861,
+          "V": -0.9507
+        }
+      },
+      "eve_rule_identical_to_aggregate_exclusion": true,
+      "eve_rule_identical_to_current": false,
+      "published_on_election_day_with_fieldwork_ending_before": [],
+      "removed_by_eve_rule": [
+        {
+          "interview_end": "2014-09-14",
+          "interview_start": "2014-09-08",
+          "poll_id": "swp-00a80913e3d488d5b946",
+          "pollster": "SVT",
+          "publication_date": "2014-09-14"
+        }
+      ]
+    },
+    {
+      "current": {
+        "consensus_pct": {
+          "C": 8.5294,
+          "KD": 6.0747,
+          "L": 5.9566,
+          "M": 17.7732,
+          "MP": 4.9823,
+          "REST": 3.1247,
+          "S": 25.096,
+          "SD": 18.5856,
+          "V": 9.8775
+        },
+        "contributing_polls": [
+          {
+            "interview_end": "2018-09-09",
+            "interview_start": "2018-09-09",
+            "poll_id": "swp-0b770adafc009cef05bf",
+            "pollster": "SVT",
+            "publication_date": "2018-09-09",
+            "sample_size": 11808,
+            "weight": 1.5
+          },
+          {
+            "interview_end": "2018-09-09",
+            "interview_start": "2018-09-09",
+            "poll_id": "swp-50de6b93b5ff8cc6ad97",
+            "pollster": "TV4",
+            "publication_date": "2018-09-09",
+            "sample_size": 5591,
+            "weight": 1.5
+          },
+          {
+            "interview_end": "2018-09-07",
+            "interview_start": "2018-09-02",
+            "poll_id": "swp-c1c5acbdcbe9d9d1ae01",
+            "pollster": "Skop",
+            "publication_date": "2018-09-09",
+            "sample_size": 2487,
+            "weight": 1.5
+          },
+          {
+            "interview_end": "2018-09-07",
+            "interview_start": "2018-09-03",
+            "poll_id": "swp-62472f4c2ebf3b8181fb",
+            "pollster": "Inizio",
+            "publication_date": "2018-09-08",
+            "sample_size": 1661,
+            "weight": 1.2888
+          },
+          {
+            "interview_end": "2018-09-06",
+            "interview_start": "2018-09-05",
+            "poll_id": "swp-11e946cd703608c5fe1e",
+            "pollster": "Sifo",
+            "publication_date": "2018-09-07",
+            "sample_size": 3480,
+            "weight": 1.5
+          },
+          {
+            "interview_end": "2018-09-06",
+            "interview_start": "2018-09-04",
+            "poll_id": "swp-c851968477041d91d630",
+            "pollster": "Novus",
+            "publication_date": "2018-09-07",
+            "sample_size": 1847,
+            "weight": 1.359
+          },
+          {
+            "interview_end": "2018-09-06",
+            "interview_start": "2018-09-01",
+            "poll_id": "swp-378627d9acb9b1714c30",
+            "pollster": "Demoskop",
+            "publication_date": "2018-09-07",
+            "sample_size": 1673,
+            "weight": 1.2934
+          },
+          {
+            "interview_end": "2018-09-05",
+            "interview_start": "2018-09-02",
+            "poll_id": "swp-e013db11d4143c669b4e",
+            "pollster": "Ipsos",
+            "publication_date": "2018-09-06",
+            "sample_size": 1874,
+            "weight": 1.3689
+          },
+          {
+            "interview_end": "2018-09-01",
+            "interview_start": "2018-08-30",
+            "poll_id": "swp-360ab1f1bff5fc28d489",
+            "pollster": "YouGov",
+            "publication_date": "2018-09-05",
+            "sample_size": 1511,
+            "weight": 1.2292
+          },
+          {
+            "interview_end": "2018-08-28",
+            "interview_start": "2018-08-20",
+            "poll_id": "swp-851275c00c0f49e7fd43",
+            "pollster": "Sentio",
+            "publication_date": "2018-08-31",
+            "sample_size": 807,
+            "weight": 0.8983
+          }
+        ],
+        "eligible_polls_in_window": 35,
+        "residual_norm_pp": 4.6939,
+        "residual_pp": {
+          "C": 0.0783,
+          "KD": 0.2476,
+          "L": -0.467,
+          "M": 2.0624,
+          "MP": -0.568,
+          "REST": -1.594,
+          "S": 3.165,
+          "SD": -1.0516,
+          "V": -1.8726
+        }
+      },
+      "election": "2018-09-09",
+      "eve": {
+        "consensus_pct": {
+          "C": 8.351,
+          "KD": 5.8805,
+          "L": 6.016,
+          "M": 17.6362,
+          "MP": 5.0922,
+          "REST": 3.6491,
+          "S": 24.4913,
+          "SD": 18.8689,
+          "V": 10.0148
+        },
+        "contributing_polls": [
+          {
+            "interview_end": "2018-09-07",
+            "interview_start": "2018-09-03",
+            "poll_id": "swp-62472f4c2ebf3b8181fb",
+            "pollster": "Inizio",
+            "publication_date": "2018-09-08",
+            "sample_size": 1661,
+            "weight": 1.2888
+          },
+          {
+            "interview_end": "2018-09-06",
+            "interview_start": "2018-09-05",
+            "poll_id": "swp-11e946cd703608c5fe1e",
+            "pollster": "Sifo",
+            "publication_date": "2018-09-07",
+            "sample_size": 3480,
+            "weight": 1.5
+          },
+          {
+            "interview_end": "2018-09-06",
+            "interview_start": "2018-09-04",
+            "poll_id": "swp-c851968477041d91d630",
+            "pollster": "Novus",
+            "publication_date": "2018-09-07",
+            "sample_size": 1847,
+            "weight": 1.359
+          },
+          {
+            "interview_end": "2018-09-06",
+            "interview_start": "2018-09-01",
+            "poll_id": "swp-378627d9acb9b1714c30",
+            "pollster": "Demoskop",
+            "publication_date": "2018-09-07",
+            "sample_size": 1673,
+            "weight": 1.2934
+          },
+          {
+            "interview_end": "2018-09-06",
+            "interview_start": "2018-08-30",
+            "poll_id": "swp-4f741fa211b58ce0c6c6",
+            "pollster": "Skop",
+            "publication_date": "2018-09-06",
+            "sample_size": 2928,
+            "weight": 1.5
+          },
+          {
+            "interview_end": "2018-09-05",
+            "interview_start": "2018-09-02",
+            "poll_id": "swp-e013db11d4143c669b4e",
+            "pollster": "Ipsos",
+            "publication_date": "2018-09-06",
+            "sample_size": 1874,
+            "weight": 1.3689
+          },
+          {
+            "interview_end": "2018-09-01",
+            "interview_start": "2018-08-30",
+            "poll_id": "swp-360ab1f1bff5fc28d489",
+            "pollster": "YouGov",
+            "publication_date": "2018-09-05",
+            "sample_size": 1511,
+            "weight": 1.2292
+          },
+          {
+            "interview_end": "2018-08-28",
+            "interview_start": "2018-08-20",
+            "poll_id": "swp-851275c00c0f49e7fd43",
+            "pollster": "Sentio",
+            "publication_date": "2018-08-31",
+            "sample_size": 807,
+            "weight": 0.8983
+          }
+        ],
+        "eligible_polls_in_window": 32,
+        "residual_norm_pp": 5.5096,
+        "residual_pp": {
+          "C": 0.2567,
+          "KD": 0.4418,
+          "L": -0.5264,
+          "M": 2.1994,
+          "MP": -0.6779,
+          "REST": -2.1184,
+          "S": 3.7697,
+          "SD": -1.3349,
+          "V": -2.0099
+        }
+      },
+      "eve_rule_identical_to_aggregate_exclusion": false,
+      "eve_rule_identical_to_current": false,
+      "published_on_election_day_with_fieldwork_ending_before": [
+        "swp-c1c5acbdcbe9d9d1ae01"
+      ],
+      "removed_by_eve_rule": [
+        {
+          "interview_end": "2018-09-09",
+          "interview_start": "2018-09-09",
+          "poll_id": "swp-0b770adafc009cef05bf",
+          "pollster": "SVT",
+          "publication_date": "2018-09-09"
+        },
+        {
+          "interview_end": "2018-09-09",
+          "interview_start": "2018-09-09",
+          "poll_id": "swp-50de6b93b5ff8cc6ad97",
+          "pollster": "TV4",
+          "publication_date": "2018-09-09"
+        },
+        {
+          "interview_end": "2018-09-07",
+          "interview_start": "2018-09-02",
+          "poll_id": "swp-c1c5acbdcbe9d9d1ae01",
+          "pollster": "Skop",
+          "publication_date": "2018-09-09"
+        }
+      ]
+    },
+    {
+      "current": {
+        "consensus_pct": {
+          "C": 7.4266,
+          "KD": 5.6444,
+          "L": 4.8774,
+          "M": 17.6464,
+          "MP": 5.6374,
+          "REST": 1.2458,
+          "S": 28.8393,
+          "SD": 21.0329,
+          "V": 7.6498
+        },
+        "contributing_polls": [
+          {
+            "interview_end": "2022-09-11",
+            "interview_start": "2022-09-11",
+            "poll_id": "swp-796bc5283a4305d2792e",
+            "pollster": "SVT",
+            "publication_date": "2022-09-11",
+            "sample_size": 11160,
+            "weight": 1.5
+          },
+          {
+            "interview_end": "2022-09-11",
+            "interview_start": "2022-09-11",
+            "poll_id": "swp-bb76f2e9e517d3906a44",
+            "pollster": "Sifo",
+            "publication_date": "2022-09-11",
+            "sample_size": 4046,
+            "weight": 1.5
+          },
+          {
+            "interview_end": "2022-09-09",
+            "interview_start": "2022-09-05",
+            "poll_id": "swp-f80fe8be10e10f174db5",
+            "pollster": "Skop",
+            "publication_date": "2022-09-10",
+            "sample_size": 1919,
+            "weight": 1.3853
+          },
+          {
+            "interview_end": "2022-09-09",
+            "interview_start": "2022-09-01",
+            "poll_id": "swp-9395df25e29f3cd8b812",
+            "pollster": "Demoskop",
+            "publication_date": "2022-09-10",
+            "sample_size": 2321,
+            "weight": 1.5
+          },
+          {
+            "interview_end": "2022-09-09",
+            "interview_start": "2022-09-06",
+            "poll_id": "swp-d47b2a651884228bca35",
+            "pollster": "Ipsos",
+            "publication_date": "2022-09-09",
+            "sample_size": 1992,
+            "weight": 1.4114
+          },
+          {
+            "interview_end": "2022-09-08",
+            "interview_start": "2022-09-06",
+            "poll_id": "swp-24c3e9c729d51627b8a4",
+            "pollster": "Novus",
+            "publication_date": "2022-09-09",
+            "sample_size": 3903,
+            "weight": 1.5
+          },
+          {
+            "interview_end": "2022-08-29",
+            "interview_start": "2022-08-25",
+            "poll_id": "swp-cc9d5c3dbbc8a1dde82f",
+            "pollster": "Sentio",
+            "publication_date": "2022-08-30",
+            "sample_size": 1016,
+            "weight": 1.008
+          }
+        ],
+        "eligible_polls_in_window": 47,
+        "residual_norm_pp": 2.5423,
+        "residual_pp": {
+          "C": -0.7124,
+          "KD": -0.3077,
+          "L": -0.2688,
+          "M": 1.4557,
+          "MP": -0.5549,
+          "REST": 0.3018,
+          "S": 1.4862,
+          "SD": -0.4968,
+          "V": -0.9031
+        }
+      },
+      "election": "2022-09-11",
+      "eve": {
+        "consensus_pct": {
+          "C": 7.2328,
+          "KD": 5.7789,
+          "L": 5.1082,
+          "M": 17.4741,
+          "MP": 5.6802,
+          "REST": 1.236,
+          "S": 28.6297,
+          "SD": 21.0207,
+          "V": 7.8394
+        },
+        "contributing_polls": [
+          {
+            "interview_end": "2022-09-09",
+            "interview_start": "2022-09-05",
+            "poll_id": "swp-f80fe8be10e10f174db5",
+            "pollster": "Skop",
+            "publication_date": "2022-09-10",
+            "sample_size": 1919,
+            "weight": 1.3853
+          },
+          {
+            "interview_end": "2022-09-09",
+            "interview_start": "2022-09-01",
+            "poll_id": "swp-9395df25e29f3cd8b812",
+            "pollster": "Demoskop",
+            "publication_date": "2022-09-10",
+            "sample_size": 2321,
+            "weight": 1.5
+          },
+          {
+            "interview_end": "2022-09-09",
+            "interview_start": "2022-09-06",
+            "poll_id": "swp-d47b2a651884228bca35",
+            "pollster": "Ipsos",
+            "publication_date": "2022-09-09",
+            "sample_size": 1992,
+            "weight": 1.4114
+          },
+          {
+            "interview_end": "2022-09-08",
+            "interview_start": "2022-09-06",
+            "poll_id": "swp-24c3e9c729d51627b8a4",
+            "pollster": "Novus",
+            "publication_date": "2022-09-09",
+            "sample_size": 3903,
+            "weight": 1.5
+          },
+          {
+            "interview_end": "2022-09-08",
+            "interview_start": "2022-09-06",
+            "poll_id": "swp-16857190fd9d0fd92eec",
+            "pollster": "Sifo",
+            "publication_date": "2022-09-09",
+            "sample_size": 2358,
+            "weight": 1.5
+          },
+          {
+            "interview_end": "2022-08-29",
+            "interview_start": "2022-08-25",
+            "poll_id": "swp-cc9d5c3dbbc8a1dde82f",
+            "pollster": "Sentio",
+            "publication_date": "2022-08-30",
+            "sample_size": 1016,
+            "weight": 1.008
+          }
+        ],
+        "eligible_polls_in_window": 45,
+        "residual_norm_pp": 2.8501,
+        "residual_pp": {
+          "C": -0.5186,
+          "KD": -0.4422,
+          "L": -0.4996,
+          "M": 1.628,
+          "MP": -0.5977,
+          "REST": 0.3116,
+          "S": 1.6958,
+          "SD": -0.4846,
+          "V": -1.0927
+        }
+      },
+      "eve_rule_identical_to_aggregate_exclusion": true,
+      "eve_rule_identical_to_current": false,
+      "published_on_election_day_with_fieldwork_ending_before": [],
+      "removed_by_eve_rule": [
+        {
+          "interview_end": "2022-09-11",
+          "interview_start": "2022-09-11",
+          "poll_id": "swp-bb76f2e9e517d3906a44",
+          "pollster": "Sifo",
+          "publication_date": "2022-09-11"
+        },
+        {
+          "interview_end": "2022-09-11",
+          "interview_start": "2022-09-11",
+          "poll_id": "swp-796bc5283a4305d2792e",
+          "pollster": "SVT",
+          "publication_date": "2022-09-11"
+        }
+      ]
+    },
+    {
+      "current": {
+        "consensus_pct": {
+          "C": 7.7832,
+          "KD": 6.436,
+          "L": 5.0847,
+          "M": 17.276,
+          "MP": 7.2207,
+          "REST": 1.8739,
+          "S": 27.8881,
+          "SD": 18.6316,
+          "V": 7.8058
+        },
+        "contributing_polls": [
+          {
+            "interview_end": "2026-09-13",
+            "interview_start": "2026-09-07",
+            "poll_id": "swp-37b33c6b9ec78b3804ae",
+            "pollster": "Novus",
+            "publication_date": "2026-09-13",
+            "sample_size": 4045,
+            "weight": 1.5
+          },
+          {
+            "interview_end": "2026-09-13",
+            "interview_start": "2026-08-26",
+            "poll_id": "swp-ad6ba75285ffda4599c6",
+            "pollster": "SVT",
+            "publication_date": "2026-09-13",
+            "sample_size": 13709,
+            "weight": 1.5
+          },
+          {
+            "interview_end": "2026-09-11",
+            "interview_start": "2026-09-05",
+            "poll_id": "swp-a379a566e00785a3bbdb",
+            "pollster": "Infostat",
+            "publication_date": "2026-09-12",
+            "sample_size": 2578,
+            "weight": 1.5
+          },
+          {
+            "interview_end": "2026-09-11",
+            "interview_start": "2026-09-07",
+            "poll_id": "swp-c97c0e58c765abdf2816",
+            "pollster": "Demoskop",
+            "publication_date": "2026-09-11",
+            "sample_size": 1419,
+            "weight": 1.1912
+          },
+          {
+            "interview_end": "2026-09-10",
+            "interview_start": "2026-09-07",
+            "poll_id": "swp-1b777d29b3033ce40b71",
+            "pollster": "Ipsos",
+            "publication_date": "2026-09-11",
+            "sample_size": 1800,
+            "weight": 1.3416
+          },
+          {
+            "interview_end": "2026-09-10",
+            "interview_start": "2026-09-04",
+            "poll_id": "swp-faf24f8da8ce50de3786",
+            "pollster": "Sifo",
+            "publication_date": "2026-09-11",
+            "sample_size": 3063,
+            "weight": 1.5
+          },
+          {
+            "interview_end": "2026-09-10",
+            "interview_start": "2026-09-02",
+            "poll_id": "swp-f732d4f42b29ccca4489",
+            "pollster": "Indikator",
+            "publication_date": "2026-09-11",
+            "sample_size": 2189,
+            "weight": 1.4795
+          },
+          {
+            "interview_end": "2026-09-09",
+            "interview_start": "2026-09-03",
+            "poll_id": "swp-62ea3ab82c592c1e2589",
+            "pollster": "Sentio",
+            "publication_date": "2026-09-10",
+            "sample_size": 848,
+            "weight": 0.9209
+          }
+        ],
+        "eligible_polls_in_window": 17,
+        "residual_norm_pp": 3.2121,
+        "residual_pp": {
+          "C": -0.7528,
+          "KD": -0.2669,
+          "L": 0.2524,
+          "M": 2.5757,
+          "MP": -1.0986,
+          "REST": -0.2899,
+          "S": 0.1283,
+          "SD": -1.1471,
+          "V": 0.5989
+        }
+      },
+      "election": "2026-09-13",
+      "eve": {
+        "consensus_pct": {
+          "C": 7.86,
+          "KD": 6.41,
+          "L": 4.9869,
+          "M": 17.2403,
+          "MP": 7.0968,
+          "REST": 1.822,
+          "S": 27.8385,
+          "SD": 19.0183,
+          "V": 7.7272
+        },
+        "contributing_polls": [
+          {
+            "interview_end": "2026-09-11",
+            "interview_start": "2026-09-05",
+            "poll_id": "swp-a379a566e00785a3bbdb",
+            "pollster": "Infostat",
+            "publication_date": "2026-09-12",
+            "sample_size": 2578,
+            "weight": 1.5
+          },
+          {
+            "interview_end": "2026-09-11",
+            "interview_start": "2026-09-07",
+            "poll_id": "swp-c97c0e58c765abdf2816",
+            "pollster": "Demoskop",
+            "publication_date": "2026-09-11",
+            "sample_size": 1419,
+            "weight": 1.1912
+          },
+          {
+            "interview_end": "2026-09-10",
+            "interview_start": "2026-09-07",
+            "poll_id": "swp-5b34147f3e4ad84bb7ff",
+            "pollster": "Novus",
+            "publication_date": "2026-09-11",
+            "sample_size": 5928,
+            "weight": 1.5
+          },
+          {
+            "interview_end": "2026-09-10",
+            "interview_start": "2026-09-07",
+            "poll_id": "swp-1b777d29b3033ce40b71",
+            "pollster": "Ipsos",
+            "publication_date": "2026-09-11",
+            "sample_size": 1800,
+            "weight": 1.3416
+          },
+          {
+            "interview_end": "2026-09-10",
+            "interview_start": "2026-09-04",
+            "poll_id": "swp-faf24f8da8ce50de3786",
+            "pollster": "Sifo",
+            "publication_date": "2026-09-11",
+            "sample_size": 3063,
+            "weight": 1.5
+          },
+          {
+            "interview_end": "2026-09-10",
+            "interview_start": "2026-09-02",
+            "poll_id": "swp-f732d4f42b29ccca4489",
+            "pollster": "Indikator",
+            "publication_date": "2026-09-11",
+            "sample_size": 2189,
+            "weight": 1.4795
+          },
+          {
+            "interview_end": "2026-09-09",
+            "interview_start": "2026-09-03",
+            "poll_id": "swp-62ea3ab82c592c1e2589",
+            "pollster": "Sentio",
+            "publication_date": "2026-09-10",
+            "sample_size": 848,
+            "weight": 0.9209
+          }
+        ],
+        "eligible_polls_in_window": 15,
+        "residual_norm_pp": 3.3968,
+        "residual_pp": {
+          "C": -0.8296,
+          "KD": -0.2409,
+          "L": 0.3502,
+          "M": 2.6114,
+          "MP": -0.9747,
+          "REST": -0.238,
+          "S": 0.1779,
+          "SD": -1.5338,
+          "V": 0.6775
+        }
+      },
+      "eve_rule_identical_to_aggregate_exclusion": true,
+      "eve_rule_identical_to_current": false,
+      "published_on_election_day_with_fieldwork_ending_before": [],
+      "removed_by_eve_rule": [
+        {
+          "interview_end": "2026-09-13",
+          "interview_start": "2026-09-07",
+          "poll_id": "swp-37b33c6b9ec78b3804ae",
+          "pollster": "Novus",
+          "publication_date": "2026-09-13"
+        },
+        {
+          "interview_end": "2026-09-13",
+          "interview_start": "2026-08-26",
+          "poll_id": "swp-ad6ba75285ffda4599c6",
+          "pollster": "SVT",
+          "publication_date": "2026-09-13"
+        }
+      ]
+    }
+  ],
+  "inputs_sha256": {
+    "data/processed/elections/riksdag_election_results.csv": "3a99ffb1b0fbef60d61712764a2136982ecf01c4879a43edc6d9a38ddb4ba0fc",
+    "data/processed/pollofpolls/swedishpolls_individual_polls.csv": "18e84e56eff64a5133eb4eeca9767893a7f74b15724552ef573fd9314e8d2828",
+    "data/raw/elections/val2026/official_result_manifest.json": "6bdcbd284f602d9c9b1b9605ab3d52b5700528b54232565f3242d01d107f788d",
+    "scripts/election_residuals/consensus.py": "702f75a2371f08abba521112d7edd3188a6a7b7811b75c33e472f1a421a4f46c"
+  },
+  "pools": {
+    "current": {
+      "2002-2022": {
+        "k": 6,
+        "lw_delta": 0.795693,
+        "mean_bias_pp": {
+          "C": 0.157,
+          "KD": -0.5004,
+          "L": -0.3512,
+          "M": 0.4518,
+          "MP": -0.8339,
+          "REST": -0.5025,
+          "S": 1.9726,
+          "SD": 0.6623,
+          "V": -1.0557
+        },
+        "noise_sd_pp": {
+          "C": 0.8479,
+          "KD": 0.8274,
+          "L": 0.8535,
+          "M": 1.0858,
+          "MP": 0.8479,
+          "REST": 0.8474,
+          "S": 0.9135,
+          "SD": 0.9898,
+          "V": 0.8558
+        },
+        "total_variance_pp2": 7.2945
+      },
+      "2002-2026": {
+        "k": 7,
+        "lw_delta": 0.667697,
+        "mean_bias_pp": {
+          "C": 0.0271,
+          "KD": -0.467,
+          "L": -0.265,
+          "M": 0.7552,
+          "MP": -0.8717,
+          "REST": -0.4721,
+          "S": 1.7091,
+          "SD": 0.4038,
+          "V": -0.8193
+        },
+        "noise_sd_pp": {
+          "C": 0.86,
+          "KD": 0.8126,
+          "L": 0.8567,
+          "M": 1.2372,
+          "MP": 0.8419,
+          "REST": 0.8406,
+          "S": 1.0027,
+          "SD": 1.0966,
+          "V": 0.9144
+        },
+        "total_variance_pp2": 8.1242
+      }
+    },
+    "eve": {
+      "2002-2022": {
+        "k": 6,
+        "lw_delta": 0.826887,
+        "mean_bias_pp": {
+          "C": 0.307,
+          "KD": -0.5435,
+          "L": -0.429,
+          "M": 0.5025,
+          "MP": -0.8014,
+          "REST": -0.4072,
+          "S": 1.9259,
+          "SD": 0.4695,
+          "V": -1.0239
+        },
+        "noise_sd_pp": {
+          "C": 0.942,
+          "KD": 0.93,
+          "L": 0.9475,
+          "M": 1.1359,
+          "MP": 0.94,
+          "REST": 0.9779,
+          "S": 1.0496,
+          "SD": 1.0475,
+          "V": 0.9575
+        },
+        "total_variance_pp2": 8.8961
+      },
+      "2002-2026": {
+        "k": 7,
+        "lw_delta": 0.748073,
+        "mean_bias_pp": {
+          "C": 0.1447,
+          "KD": -0.5003,
+          "L": -0.3176,
+          "M": 0.8038,
+          "MP": -0.8262,
+          "REST": -0.383,
+          "S": 1.6762,
+          "SD": 0.1833,
+          "V": -0.7808
+        },
+        "noise_sd_pp": {
+          "C": 0.9636,
+          "KD": 0.9292,
+          "L": 0.9593,
+          "M": 1.2363,
+          "MP": 0.9407,
+          "REST": 0.9877,
+          "S": 1.1182,
+          "SD": 1.1289,
+          "V": 1.0073
+        },
+        "total_variance_pp2": 9.6408
+      }
+    }
+  },
+  "purpose": "Evidence for docs/election_noise_residual_amendment_001.md; changes nothing.",
+  "window_days": 14
+}

@@ -14,7 +14,10 @@ evidence stays pinned to 2026.
 - **The model.** `MODEL_VERSION` is unchanged, and so is the methodology: the
   OpinionState, Dynamics v2 with its 112-day cap, ElectionNoise B, the
   geographic projection and the mandate allocator. The frozen implementation
-  files are byte-identical.
+  files are byte-identical. (This described the cycle switch. Model
+  1.2.1-rc1 later corrected the election-noise residuals for 2030 targets
+  only, and a 2026 target still forecasts under 1.2.0-rc1:
+  `docs/election_simulator_model_1_2_1.md`.)
 - **The election-noise pool.** It stays K = 6 (2002–2022). Adding 2026 would
   change the model, and that is a separate, governed decision.
 - **2026-target forecasts are bit-identical.** A 2026 target still resolves
