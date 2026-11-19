@@ -15,10 +15,14 @@ from __future__ import annotations
 import unittest
 
 from tests.support.reconstruction_canary import (
+    EXIT_CODES,
     FAILED,
     FULL_ACCEPTANCE,
+    OUTSIDE_WINDOW_ACCEPTANCE,
     RECONSTRUCTION_ONLY,
+    VIEW_OUTSIDE_WINDOW,
     RepositoryState,
+    days_before_election,
     evaluate,
 )
 
@@ -299,6 +303,71 @@ class ExitCodeTests(unittest.TestCase):
         self.assertNotEqual(
             EXIT_CODES[RECONSTRUCTION_ONLY], EXIT_CODES[FAILED],
             "a known limitation and a real failure must be distinguishable")
+
+OUTSIDE = {"secondary_projection": VIEW_OUTSIDE_WINDOW, "primary_campaign_paths": VIEW_OUTSIDE_WINDOW}
+
+
+class CampaignWindowTests(unittest.TestCase):
+    """Outside the final 112 days production builds neither future view.
+
+    The canary accepts that only when the certified generation's own archive
+    record puts it more than 112 days before its election, so the views are
+    still demanded -- and a regression still caught -- once the window opens.
+    """
+
+    def test_outside_the_window_both_views_not_required_is_acceptance(self) -> None:
+        failures, outcome = verdict(views=OUTSIDE, days_to_election=1389)
+        self.assertEqual(failures, [])
+        self.assertEqual(outcome, OUTSIDE_WINDOW_ACCEPTANCE)
+        self.assertEqual(EXIT_CODES[outcome], 0)
+
+    def test_outside_the_window_a_reconstruction_failure_still_fails(self) -> None:
+        failures, outcome = verdict(views=OUTSIDE, days_to_election=1389,
+                                    curve={"reconstructed": []})
+        self.assertEqual(outcome, FAILED)
+        self.assertTrue(any("was not reconstructed" in f for f in failures), failures)
+
+    def test_outside_the_window_safety_checks_still_apply(self) -> None:
+        failures, outcome = verdict(views=OUTSIDE, days_to_election=1389,
+                                    pointer_after=b"{}")
+        self.assertEqual(outcome, FAILED)
+        self.assertIn("the website pointer changed", failures)
+
+    def test_outside_the_window_any_other_view_state_fails(self) -> None:
+        for views in ({"secondary_projection": "REBUILT", "primary_campaign_paths": VIEW_OUTSIDE_WINDOW},
+                      {"secondary_projection": VIEW_OUTSIDE_WINDOW, "primary_campaign_paths": "OMITTED"},
+                      {**OUTSIDE, "missing": ["secondary_projection"]}):
+            with self.subTest(views=views):
+                failures, outcome = verdict(views=views, days_to_election=1389)
+                self.assertEqual(outcome, FAILED)
+
+    def test_inside_the_window_not_required_is_a_failure(self) -> None:
+        for days in (112, 30, 0):
+            with self.subTest(days=days):
+                failures, outcome = verdict(views=OUTSIDE, days_to_election=days)
+                self.assertEqual(outcome, FAILED)
+                self.assertTrue(any("required within 112 days" in f for f in failures), failures)
+
+    def test_the_boundary_is_strictly_more_than_112_days(self) -> None:
+        self.assertEqual(verdict(views=OUTSIDE, days_to_election=113)[1], OUTSIDE_WINDOW_ACCEPTANCE)
+        self.assertEqual(verdict(views=OUTSIDE, days_to_election=112)[1], FAILED)
+
+    def test_an_unknown_distance_does_not_excuse_the_views(self) -> None:
+        failures, outcome = verdict(views=OUTSIDE)
+        self.assertEqual(outcome, FAILED)
+        self.assertTrue(any("unknown number of days" in f for f in failures), failures)
+
+    def test_inside_the_window_a_clean_run_is_still_full_acceptance(self) -> None:
+        self.assertEqual(verdict(days_to_election=30), ([], FULL_ACCEPTANCE))
+
+    def test_distance_comes_from_the_certified_archive_record(self) -> None:
+        index = {"snapshots": [
+            {"generation_id": "other", "as_of": "2030-09-01", "election_date": "2030-09-08"},
+            {"generation_id": GENERATION, "as_of": "2026-11-19", "election_date": "2030-09-08"},
+        ]}
+        self.assertEqual(days_before_election(index, GENERATION), 1389)
+        self.assertIsNone(days_before_election(index, "missing"))
+        self.assertIsNone(days_before_election({"snapshots": [{"generation_id": GENERATION}]}, GENERATION))
 
 
 if __name__ == "__main__":
