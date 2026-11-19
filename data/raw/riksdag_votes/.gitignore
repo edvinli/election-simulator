@@ -1,0 +1,4 @@
+# Raw riksdag voting downloads are a local cache; provenance lives in
+# data/processed/riksdag_votes/manifest.json.
+*
+!.gitignore
