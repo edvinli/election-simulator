@@ -83,6 +83,20 @@ class PublishGitTests(unittest.TestCase):
         self.assertIsNone(commit_and_push(repo, PATH, "msg", branch="main"))
         self.assertEqual(git(repo, "rev-parse", "HEAD"), before)
 
+    def test_a_manifest_only_change_is_not_committed_but_rides_along(self) -> None:
+        repo = self.clone("work")
+        before = git(repo, "rev-parse", "HEAD")
+        write(repo, f"{PATH}/manifest.json", '{"files": {"rezipped": 1}}\n')
+        self.assertFalse(status(repo, PATH))
+        self.assertIsNone(commit_and_push(repo, PATH, "msg", branch="main"))
+        self.assertEqual(git(self.remote, "rev-parse", "main"), before)
+        write(repo, f"{PATH}/2026-27/votes.json", '{"v": "new vote"}\n')
+        commit = commit_and_push(repo, PATH, "msg", branch="main")
+        self.assertEqual(
+            sorted(git(repo, "show", "--name-only", "--format=", commit).splitlines()),
+            [f"{PATH}/2026-27/votes.json", f"{PATH}/manifest.json"],
+        )
+
     def test_push_lands_and_is_verified_in_a_fresh_clone(self) -> None:
         repo = self.clone("work")
         write(repo, f"{PATH}/2026-27/votes.json", '{"v": "new"}\n')

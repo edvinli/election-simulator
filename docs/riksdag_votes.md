@@ -186,9 +186,14 @@ occurred in 2022/23–2026/27.
 All files are UTF-8 JSON with sorted keys and compact separators;
 `schema_version: "1.0"`; output is byte-identical for the same raw inputs
 except the run stamp (`provenance.generated_at_utc`, `code_commit`,
-`code_dirty`). A file whose content is unchanged apart from the run stamp is
-not rewritten, so a run with no new votes changes no file, and the stamp says
-when the content last changed.
+`code_dirty`). A file whose content apart from `provenance` is unchanged is
+not rewritten, so a run with no new votes changes no output. Its provenance
+then stays that of the build that produced the content: the bulk archive URL
+can serve differently zipped bytes with the same votes (on 2026-11-19 the
+2026/27 archive alternated between two SHA-256s within an hour), and that
+alone is not a change. The manifest does record the new
+bytes, so offline rebuilds keep working; the scheduled workflow does not
+commit a manifest-only change.
 
 * `<YYYY-ZZ>/votes.json` (`role: riksdag_votes_session_votes`):
   `people[i]` (intressent_id, name, …); `seat_holders[j] = [person index,

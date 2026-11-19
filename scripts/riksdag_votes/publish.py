@@ -6,7 +6,8 @@
         --branch main --message "..."
 
 ``status`` fails if anything outside the allowed path changed and prints
-``changed=yes|no``. ``commit`` stages exactly that path, commits, and pushes
+``changed=yes|no`` (a change to the source manifest alone is ``no``: a
+re-zipped source with the same votes is not worth a commit). ``commit`` stages exactly that path, commits, and pushes
 with a plain (never forced) push; a rejected push is retried once after
 ``git pull --rebase``. The commit touches only riksdag paths, so the rebase
 cannot conflict with the publication or rendering commits that may have landed
@@ -32,9 +33,11 @@ from datetime import datetime, time as clock_time, timezone
 from pathlib import Path
 from typing import Callable, Sequence
 
-from .constants import PROCESSED_DIR_RELATIVE, WEBSITE_DIR_RELATIVE
+from .constants import MANIFEST_FILENAME, PROCESSED_DIR_RELATIVE, WEBSITE_DIR_RELATIVE
 
 ALLOWED_PATHS = (PROCESSED_DIR_RELATIVE, WEBSITE_DIR_RELATIVE)
+# Committed with the outputs when they change, never on its own.
+NOT_WORTH_A_COMMIT_ALONE = (f"{PROCESSED_DIR_RELATIVE}/{MANIFEST_FILENAME}",)
 # Workflows whose commits land on simulator main or website master.
 CONFLICTING_WORKFLOWS = (
     ".github/workflows/election-simulator-publication.yml",
@@ -88,13 +91,15 @@ def check_path(path: str) -> str:
 
 
 def status(repo: Path, path: str) -> bool:
-    """Whether ``path`` changed; raises if anything else in ``repo`` did."""
+    """Whether ``path`` changed in a way worth a commit; raises if anything
+    outside ``path`` changed. A change to the source manifest alone (a
+    re-zipped source with the same votes) is not worth one."""
     path = check_path(path)
     changed = changed_paths(repo)
     outside = [p for p in changed if not _under(p, path)]
     if outside:
         raise PublishError(f"unexpected changes outside {path}: {outside[:10]}")
-    return bool(changed)
+    return any(p not in NOT_WORTH_A_COMMIT_ALONE for p in changed)
 
 
 def commit_and_push(

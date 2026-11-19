@@ -11,9 +11,10 @@ Writes, under ``data/processed/riksdag_votes/``:
   term summary with a partial one);
 * ``manifest.json`` -- URL, retrieval time (UTC) and SHA-256 of every raw file.
 
-An output whose content is unchanged apart from its run stamp
-(``provenance.generated_at_utc``, ``code_commit``, ``code_dirty``) is left
-untouched, so a rebuild with no new votes changes no file.
+An output whose content is unchanged apart from its ``provenance`` is left
+untouched, so a rebuild with no new votes changes no output (the manifest
+may still record re-zipped source bytes; the scheduled workflow does not
+commit a manifest-only change).
 
 ``--site-dir`` additionally writes the website layout (see ``site.py``) from
 everything in the output directory, including sessions this run did not
@@ -53,25 +54,26 @@ LOGGER = logging.getLogger("scripts.riksdag_votes.build")
 DEFAULT_SESSIONS = ("2022/23", "2023/24", "2024/25", "2025/26", "2026/27")
 
 # Provenance keys that stamp the run rather than describe the content.
-VOLATILE_PROVENANCE_KEYS = ("generated_at_utc", "code_commit", "code_dirty")
-
-
 def dumps(payload: dict) -> str:
     """Deterministic JSON: sorted keys, compact separators, UTF-8, trailing newline."""
     return json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False) + "\n"
 
 
 def content_of(payload: dict) -> dict:
-    """``payload`` without the run stamp in its top-level ``provenance``."""
-    provenance = payload.get("provenance")
-    if not isinstance(provenance, dict):
-        return payload
-    stripped = {key: value for key, value in provenance.items() if key not in VOLATILE_PROVENANCE_KEYS}
-    return dict(payload, provenance=stripped)
+    """``payload`` without its top-level ``provenance``.
+
+    Provenance changes on every run (``generated_at_utc``, ``code_commit``)
+    and whenever the riksdag regenerates a source file without changing what
+    it says (the bulk archives are re-zipped with new bytes), so it does not
+    count as a change of content.
+    """
+    return {key: value for key, value in payload.items() if key != "provenance"}
 
 
 def write_json(path: Path, payload: dict) -> int:
-    """Write ``payload`` unless the file already holds the same content.
+    """Write ``payload`` unless the file already holds the same content
+    (apart from provenance), in which case the file, and with it the
+    provenance of the build that produced that content, is left untouched.
 
     Returns the size of the file on disk afterwards.
     """

@@ -315,18 +315,20 @@ class StoreAndOutputStabilityTests(unittest.TestCase):
             store.fetch_listing("a-202526", "https://x/a")
             self.assertEqual(store.entries["a-202526"]["retrieved_at_utc"], "2026-02-01T00:00:00Z")
 
-    def test_write_json_ignores_the_run_stamp(self) -> None:
+    def test_write_json_ignores_provenance_only_changes(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "x.json"
             first = {"a": 1, "provenance": {"generated_at_utc": "T1", "code_commit": "c1", "code_dirty": False, "sources": [1]}}
             write_json(path, first)
             original = path.read_bytes()
-            second = {"a": 1, "provenance": {"generated_at_utc": "T2", "code_commit": "c2", "code_dirty": True, "sources": [1]}}
+            # New run stamp and a re-zipped source with the same content.
+            second = {"a": 1, "provenance": {"generated_at_utc": "T2", "code_commit": "c2", "code_dirty": True, "sources": [2]}}
             write_json(path, second)
             self.assertEqual(path.read_bytes(), original)
             write_json(path, dict(second, a=2))
-            self.assertEqual(json.loads(path.read_bytes())["provenance"]["generated_at_utc"], "T2")
-            self.assertEqual(content_of(second)["provenance"], {"sources": [1]})
+            written = json.loads(path.read_bytes())
+            self.assertEqual((written["a"], written["provenance"]["generated_at_utc"]), (2, "T2"))
+            self.assertEqual(content_of(second), {"a": 1})
 
     def test_current_term_sessions(self) -> None:
         self.assertEqual(current_term_sessions(date(2026, 11, 19)), ["2026/27"])
