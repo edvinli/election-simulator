@@ -1,13 +1,15 @@
 # T5 amendment 001: add shadow arm `Ul`, log-ratio drift
 
-**Status: DRAFT, not in effect.** Drafted 2026-11-18 on branch
-`prereg/calibration-2030-drafts`. It takes effect only when all of the
-following hold:
+**Status: FINAL.** Drafted 2026-11-18 on branch
+`prereg/calibration-2030-drafts`. Approved by the user on 2026-11-19 ("Yes,
+finalize Ul"). Finalized at 2026-11-19T09:08:59Z.
 
-- the user approves it;
-- it is finalized with its actual timestamp;
-- it is committed with its JSON record, the record's SHA-256 companion and an
-  entry in `data/processed/calibration_2030/t5_amendments/index.json`.
+It takes effect when committed with all of the following:
+
+- its JSON record,
+  `data/processed/calibration_2030/t5_amendments/001-ul-log-ratio-arm.json`;
+- that record's SHA-256 companion;
+- its entry in `data/processed/calibration_2030/t5_amendments/index.json`.
 
 It is append-only. It amends `docs/calibration_2030_t5_shadow_preregistration.md`
 (frozen, body SHA-256 `bf93c128…`) §2 by adding one arm. Nothing else in T5
@@ -96,7 +98,8 @@ transform of `Ua`'s draws, and the `Ua`–`Ul` comparison is perfectly paired.
 - k in `diagnostics.json`.
 
 **From when.** From the first capture whose origin is on or after the date
-this amendment takes effect. No backfill.
+this amendment takes effect, 2026-11-19. No backfill. The week-47 capture (origin
+2026-11-16) therefore does not carry `Ul`.
 
 ## Disclosure and limits
 
