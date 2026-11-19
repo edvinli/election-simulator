@@ -24,6 +24,7 @@ from .constants import (
     CAVEAT_KVITTNING,
     CAVEAT_MAP,
     COMMITTEES,
+    DOCUMENT_URL_TEMPLATE,
     FRANVARANDE,
     JA,
     MAP_AXIS_ANCHORS,
@@ -131,6 +132,9 @@ def build_votes_payload(session: SessionData, provenance: dict) -> dict:
                 "date": vote.date,
                 "date_source": vote.date_source,
                 "committee": vote.committee,
+                "title": vote.title,
+                "punkt_title": vote.punkt_title,
+                "dok_id": vote.dok_id,
                 "analysis": vote.in_analysis_set,
                 "source": vote.source,
                 "roster": roster_index[roster],
@@ -148,6 +152,13 @@ def build_votes_payload(session: SessionData, provenance: dict) -> dict:
             "counts": list(ROST_VALUES),
             "seat_holders": "[person index, parti, valkrets]",
             "rosters": "349 seat_holders indices, element b-1 = occupant of bench b (member or substitute)",
+            "title": (
+                "title of the document voted on (betänkande title; for a chamber vote with a numeric "
+                "beteckning, its subject) from data.riksdagen.se/utskottsforslag/<dok_id>.json; null if none found"
+            ),
+            "punkt_title": "heading (rubrik) of the förslagspunkt voted on; null for chamber votes or if none found",
+            "dok_id": "riksdag document id of the betänkande (or chamber vote); the document is at "
+            + DOCUMENT_URL_TEMPLATE.format(dok_id="<dok_id>"),
         },
         "people": people,
         "seat_holders": [[p, parti, valkrets or None] for p, parti, valkrets in holder_keys],
@@ -201,10 +212,25 @@ def _vote_brief(vote: Vote, vote_lines: dict[str, PartyLine], parties: list[str]
         "punkt": vote.punkt,
         "committee": vote.committee,
         "date": vote.date,
+        "title": vote.title,
+        "punkt_title": vote.punkt_title,
         "parties_ja": by_line[JA],
         "parties_nej": by_line[NEJ],
         "parties_avstar": by_line[AVSTAR],
         "parties_no_line": by_line["none"],
+    }
+
+
+def _vote_label(vote: Vote) -> dict:
+    """What a vote was about, for readers of the top-loading patterns."""
+    return {
+        "id": vote.votering_id,
+        "rm": vote.rm,
+        "beteckning": vote.beteckning,
+        "punkt": vote.punkt,
+        "date": vote.date,
+        "title": vote.title,
+        "punkt_title": vote.punkt_title,
     }
 
 
@@ -285,6 +311,7 @@ def _map_section(analysis: Sequence[Vote], lines: dict[str, dict[str, PartyLine]
                 "parties_nej": [party for party, line in zip(parties, pattern) if line == NEJ],
                 "parties_avstar": [party for party, line in zip(parties, pattern) if line == AVSTAR],
                 "example_vote_ids": [candidates[i].votering_id for i in members_[:3]],
+                "example_votes": [_vote_label(candidates[i]) for i in members_[:3]],
             }
             for pattern, members_ in ranked[:TOP_LOADING_VOTES]
         ]
