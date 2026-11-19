@@ -1,0 +1,133 @@
+{
+ "description": "Raw files downloaded from data.riksdagen.se and used to build the derived riksdag_votes outputs. The files themselves are a local, uncommitted cache.",
+ "files": {
+  "votering-202223.json.zip": {
+   "bytes": 8950795,
+   "retrieved_at_utc": "2026-11-19T17:11:59Z",
+   "sha256": "b6ac79eae3d436f440b359dfbba0c9a991c0ca54d219c8254101096d40bcc02f",
+   "url": "https://data.riksdagen.se/dataset/votering/votering-202223.json.zip"
+  },
+  "votering-202324.json.zip": {
+   "bytes": 9457762,
+   "retrieved_at_utc": "2026-11-19T17:12:05Z",
+   "sha256": "e0eb3777781202783982bd0ed14462f6d3f855caa667bfb3f6ae7528d81e145e",
+   "url": "https://data.riksdagen.se/dataset/votering/votering-202324.json.zip"
+  },
+  "votering-202425.json.zip": {
+   "bytes": 10430982,
+   "retrieved_at_utc": "2026-11-19T17:12:10Z",
+   "sha256": "277c506512d700fbbe1a4b78710ca6e198bb876204796e57f540c8f2044a0e93",
+   "url": "https://data.riksdagen.se/dataset/votering/votering-202425.json.zip"
+  },
+  "votering-202526.json.zip": {
+   "bytes": 12624120,
+   "retrieved_at_utc": "2026-11-19T17:12:14Z",
+   "sha256": "ff9a625f43cb6eb9c8b125dcb3b3d6f715429e9fe550c279314d14f9fe390d37",
+   "url": "https://data.riksdagen.se/dataset/votering/votering-202526.json.zip"
+  },
+  "votering-202627.json.zip": {
+   "bytes": 124661,
+   "retrieved_at_utc": "2026-11-19T17:12:20Z",
+   "sha256": "92b8141d3d652d82807c2dba79c4939bcaf3f5f4bca8a7d4ec1da9acb748e5b7",
+   "url": "https://data.riksdagen.se/dataset/votering/votering-202627.json.zip"
+  },
+  "votering-meta-202223-1238B135-3B17-41B6-9AF5-42A2D6A0BF13.json": {
+   "bytes": 292918,
+   "retrieved_at_utc": "2026-11-19T17:12:01Z",
+   "sha256": "75aa29341de135760260d675d93049e7b4da07aaa9441481bdaaf70d3db214ab",
+   "url": "https://data.riksdagen.se/votering/1238B135-3B17-41B6-9AF5-42A2D6A0BF13/json"
+  },
+  "votering-meta-202223-55EFD67E-C7B7-4E40-BE63-F7616A95EDB7.json": {
+   "bytes": 1160,
+   "retrieved_at_utc": "2026-11-19T17:12:02Z",
+   "sha256": "01baec20dd4e27c4a755005916a5e6cac29ccd01b35ba476cb7c63bb564e9f6b",
+   "url": "https://data.riksdagen.se/votering/55EFD67E-C7B7-4E40-BE63-F7616A95EDB7/json"
+  },
+  "votering-meta-202324-81C765F9-8BB1-4370-BC7C-00A206D0CD6E.json": {
+   "bytes": 1166,
+   "retrieved_at_utc": "2026-11-19T17:12:07Z",
+   "sha256": "6a26d4651be3eb44ad811c53f76bfc5606c4dc8cdf5fbbbda99a32ac58a85eda",
+   "url": "https://data.riksdagen.se/votering/81C765F9-8BB1-4370-BC7C-00A206D0CD6E/json"
+  },
+  "votering-meta-202526-80C0BE09-4795-45D8-A51E-5CA1F8D751DA.json": {
+   "bytes": 1202,
+   "retrieved_at_utc": "2026-11-19T17:12:17Z",
+   "sha256": "68ebf3e80c5e1e8e9846dad028f1d65ec504a1b542a96529f95a9d35c1d91fb8",
+   "url": "https://data.riksdagen.se/votering/80C0BE09-4795-45D8-A51E-5CA1F8D751DA/json"
+  },
+  "votering-meta-202526-CA4CE393-FB64-4B3F-B78C-F77A6AD02228.json": {
+   "bytes": 1188,
+   "retrieved_at_utc": "2026-11-19T17:12:18Z",
+   "sha256": "8f49a9a1620eb20bb44ad127727ce585c6c27a01153dc8ba092363790378e68a",
+   "url": "https://data.riksdagen.se/votering/CA4CE393-FB64-4B3F-B78C-F77A6AD02228/json"
+  },
+  "votering-meta-202526-E8FB66FF-62FC-4999-9745-FDB0009ADCD5.json": {
+   "bytes": 1164,
+   "retrieved_at_utc": "2026-11-19T17:12:19Z",
+   "sha256": "8fd3590ab776e544a9a625c5e9170dc8bb2d7e65081313cefad315c4a0c4ea7a",
+   "url": "https://data.riksdagen.se/votering/E8FB66FF-62FC-4999-9745-FDB0009ADCD5/json"
+  },
+  "votering-meta-202627-1B990602-1D92-432B-A378-E867376E0A6B.json": {
+   "bytes": 1186,
+   "retrieved_at_utc": "2026-11-19T17:12:21Z",
+   "sha256": "216cb17bd0c5c0e8fd687e169592ce527a7e1500519a90767a19e797e7269207",
+   "url": "https://data.riksdagen.se/votering/1B990602-1D92-432B-A378-E867376E0A6B/json"
+  },
+  "votering-meta-202627-3C26FA04-DAA4-4E03-B135-C55FD0B8567F.json": {
+   "bytes": 1186,
+   "retrieved_at_utc": "2026-11-19T17:12:22Z",
+   "sha256": "63a32006937bb29502e31a3d14474cfac8b27687f2a06fa29e8329a3192a3c23",
+   "url": "https://data.riksdagen.se/votering/3C26FA04-DAA4-4E03-B135-C55FD0B8567F/json"
+  },
+  "voteringlista-202223-bet-1017-1.json": {
+   "bytes": 280381,
+   "retrieved_at_utc": "2026-11-19T17:12:03Z",
+   "sha256": "b78eab7a1ad7ebd141eda6a54370645e796e321ee034de5630a2c95f8a539b1e",
+   "url": "https://data.riksdagen.se/voteringlista/?rm=2022%2F23&bet=1017-1&sz=20000&utformat=json&gruppering="
+  },
+  "voteringlista-202223-bet-KU32.json": {
+   "bytes": 285450,
+   "retrieved_at_utc": "2026-11-19T17:12:02Z",
+   "sha256": "d06246b537ea77d781474778df9e48ba052bdfa3516dc3bfc09eaa5710f216b6",
+   "url": "https://data.riksdagen.se/voteringlista/?rm=2022%2F23&bet=KU32&sz=20000&utformat=json&gruppering="
+  },
+  "voteringlista-202223-register.json": {
+   "bytes": 103515,
+   "retrieved_at_utc": "2026-11-19T17:11:58Z",
+   "sha256": "c4c58f459db73bd2dd6ec531d9a61f61fd17741f594305acc803952e41bdb88f",
+   "url": "https://data.riksdagen.se/voteringlista/?rm=2022%2F23&sz=20000&utformat=json&gruppering=votering_id"
+  },
+  "voteringlista-202324-bet-0117-1.json": {
+   "bytes": 280902,
+   "retrieved_at_utc": "2026-11-19T17:12:07Z",
+   "sha256": "b94d757e5e5198c2128c9738ae404f44476f488a74454e2d3adadb95e00aa159",
+   "url": "https://data.riksdagen.se/voteringlista/?rm=2023%2F24&bet=0117-1&sz=20000&utformat=json&gruppering="
+  },
+  "voteringlista-202324-register.json": {
+   "bytes": 108804,
+   "retrieved_at_utc": "2026-11-19T17:12:04Z",
+   "sha256": "550c26f64a9286655cac73fb0733d25a705e13ca335c22fb4755dd669d8ee1f9",
+   "url": "https://data.riksdagen.se/voteringlista/?rm=2023%2F24&sz=20000&utformat=json&gruppering=votering_id"
+  },
+  "voteringlista-202425-register.json": {
+   "bytes": 119278,
+   "retrieved_at_utc": "2026-11-19T17:12:08Z",
+   "sha256": "3edba85adf6ee2d8d9e1d9fbaf8f693763a2c9701c47dbcbd4584c9bb28d0aba",
+   "url": "https://data.riksdagen.se/voteringlista/?rm=2024%2F25&sz=20000&utformat=json&gruppering=votering_id"
+  },
+  "voteringlista-202526-register.json": {
+   "bytes": 145412,
+   "retrieved_at_utc": "2026-11-19T17:12:12Z",
+   "sha256": "b0cdca2cbbd5ea6ec2c3f8ab4e9cd91853ec0f6e7f326e473210c7fffb349b5b",
+   "url": "https://data.riksdagen.se/voteringlista/?rm=2025%2F26&sz=20000&utformat=json&gruppering=votering_id"
+  },
+  "voteringlista-202627-register.json": {
+   "bytes": 1744,
+   "retrieved_at_utc": "2026-11-19T17:12:20Z",
+   "sha256": "c9d9a345ee783e03094b24f4cc7e063cc95f5a5083d7ccd3d39584397f125e79",
+   "url": "https://data.riksdagen.se/voteringlista/?rm=2026%2F27&sz=20000&utformat=json&gruppering=votering_id"
+  }
+ },
+ "role": "riksdag_votes_source_manifest",
+ "schema_version": "1.0"
+}
