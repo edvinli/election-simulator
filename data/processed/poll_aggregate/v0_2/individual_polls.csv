@@ -1,4 +1,12 @@
 poll_id,pollster,pollster_original,interview_start,interview_end,publication_date,party,support,source_value,support_status,sample_size,poll_method,source_url,retrieved_at,metadata_source_url,metadata_retrieved_at,metadata_match_status,metadata_row_source_references_json
+swp-a4b4051806f9a2a0dfb1,Sentio,Sentio,2026-11-12,2026-11-19,2026-11-23,M,24.4,24.4,reported,869,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-a4b4051806f9a2a0dfb1,Sentio,Sentio,2026-11-12,2026-11-19,2026-11-23,L,3.3,3.3,reported,869,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-a4b4051806f9a2a0dfb1,Sentio,Sentio,2026-11-12,2026-11-19,2026-11-23,C,4.5,4.5,reported,869,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-a4b4051806f9a2a0dfb1,Sentio,Sentio,2026-11-12,2026-11-19,2026-11-23,KD,5.8,5.8,reported,869,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-a4b4051806f9a2a0dfb1,Sentio,Sentio,2026-11-12,2026-11-19,2026-11-23,S,27.5,27.5,reported,869,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-a4b4051806f9a2a0dfb1,Sentio,Sentio,2026-11-12,2026-11-19,2026-11-23,V,8.7,8.7,reported,869,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-a4b4051806f9a2a0dfb1,Sentio,Sentio,2026-11-12,2026-11-19,2026-11-23,MP,5.6,5.6,reported,869,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-a4b4051806f9a2a0dfb1,Sentio,Sentio,2026-11-12,2026-11-19,2026-11-23,SD,18.1,18.1,reported,869,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
 swp-d5af2be6c1f0678665d7,Novus,Novus,2026-11-06,2026-11-15,2026-11-18,M,26.5,26.5,reported,2387,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
 swp-d5af2be6c1f0678665d7,Novus,Novus,2026-11-06,2026-11-15,2026-11-18,L,3.6,3.6,reported,2387,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
 swp-d5af2be6c1f0678665d7,Novus,Novus,2026-11-06,2026-11-15,2026-11-18,C,6.6,6.6,reported,2387,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
