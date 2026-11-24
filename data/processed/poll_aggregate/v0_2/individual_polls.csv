@@ -1,4 +1,12 @@
 poll_id,pollster,pollster_original,interview_start,interview_end,publication_date,party,support,source_value,support_status,sample_size,poll_method,source_url,retrieved_at,metadata_source_url,metadata_retrieved_at,metadata_match_status,metadata_row_source_references_json
+swp-a9369ab4eaeec4c29958,Ipsos,Ipsos,2026-11-10,2026-11-23,2026-11-24,M,25.0,25.0,reported,1609,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-a9369ab4eaeec4c29958,Ipsos,Ipsos,2026-11-10,2026-11-23,2026-11-24,L,3.0,3.0,reported,1609,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-a9369ab4eaeec4c29958,Ipsos,Ipsos,2026-11-10,2026-11-23,2026-11-24,C,6.0,6.0,reported,1609,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-a9369ab4eaeec4c29958,Ipsos,Ipsos,2026-11-10,2026-11-23,2026-11-24,KD,5.0,5.0,reported,1609,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-a9369ab4eaeec4c29958,Ipsos,Ipsos,2026-11-10,2026-11-23,2026-11-24,S,26.0,26.0,reported,1609,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-a9369ab4eaeec4c29958,Ipsos,Ipsos,2026-11-10,2026-11-23,2026-11-24,V,8.0,8.0,reported,1609,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-a9369ab4eaeec4c29958,Ipsos,Ipsos,2026-11-10,2026-11-23,2026-11-24,MP,7.0,7.0,reported,1609,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
+swp-a9369ab4eaeec4c29958,Ipsos,Ipsos,2026-11-10,2026-11-23,2026-11-24,SD,18.0,18.0,reported,1609,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
 swp-ae45e90e7230a6727abb,Demoskop,Demoskop,2026-11-12,2026-11-19,2026-11-24,M,25.8,25.8,reported,2801,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
 swp-ae45e90e7230a6727abb,Demoskop,Demoskop,2026-11-12,2026-11-19,2026-11-24,L,3.2,3.2,reported,2801,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
 swp-ae45e90e7230a6727abb,Demoskop,Demoskop,2026-11-12,2026-11-19,2026-11-24,C,5.3,5.3,reported,2801,,https://raw.githubusercontent.com/MansMeg/SwedishPolls/master/Data/Polls.csv,,,,swedishpolls,[]
