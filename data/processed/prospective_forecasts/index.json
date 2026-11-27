@@ -1563,7 +1563,23 @@
       "canonical_artifact_sha256": "6cd7a121e94ff0449c62ef06224a936e5edd14e835a8d087e0308548050cd0d9",
       "snapshot_file_sha256": "ebd91187b61f430ab8b02f8987f6a8132005ab89d9bf7dfdf09258689bf69155",
       "path": "20261126T044845Z-b18bd440/snapshot.json"
+    },
+    {
+      "snapshot_id": "2aaa8e3a95287116e80654244287a90efa826958fc64d36b027186f4a4c06395",
+      "generation_id": "20261127T044805Z-2aaa8e3a",
+      "snapshot_date": "2026-11-27",
+      "as_of": "2026-11-27",
+      "election_date": "2030-09-08",
+      "generated_at_utc": "2026-11-27T04:48:05.983992+00:00",
+      "source_git_commit": "3f2dbab8e802072e79a8a538d669bc4b75f1b05d",
+      "model_version": "1.2.1-rc1",
+      "seed": 12345,
+      "deterministic_payload_sha256": "f96babd174d161cdd834eae2ae0d020501d7c230e9818d955d5961139865bb05",
+      "duplicate_payload_allowed": true,
+      "canonical_artifact_sha256": "29476201172c86c7b884bc378432f0098f9db8063f6f35d9f61446f99dc64cf1",
+      "snapshot_file_sha256": "5c7cbb46157e95d77ae6810a8520236b7921e3d65394ab1a4ce410c375b02915",
+      "path": "20261127T044805Z-2aaa8e3a/snapshot.json"
     }
   ],
-  "updated_at_utc": "2026-11-26T04:53:29.454805+00:00"
+  "updated_at_utc": "2026-11-27T04:53:06.190090+00:00"
 }
